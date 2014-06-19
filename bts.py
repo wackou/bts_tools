@@ -74,7 +74,7 @@ if sys.platform == 'darwin':
 else:
     configure = lambda: run('cmake .')
 
-build = lambda: run('make -j4')
+build = lambda: run('make')
 
 
 def install_last_built_bin():
