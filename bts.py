@@ -4,6 +4,7 @@
 from os.path import join, dirname, exists, islink
 from subprocess import Popen, PIPE
 from collections import namedtuple
+from argparse import RawTextHelpFormatter
 import argparse
 import os
 import sys
@@ -21,9 +22,17 @@ exec(open(config_file).read())
 # "brew link --force readline" to take precedence over the outdated readline
 
 # parse commandline args
-parser = argparse.ArgumentParser()
+DESC="""following commands are available:
+ - clean      : clean build directory
+ - build      : update and build bts client
+ - run [hash] : run latest compiled bts client, or the one with the given hash
+ - list_bins  : list installed bitshares client binaries
+"""
+parser = argparse.ArgumentParser(description=DESC,
+                                 formatter_class=RawTextHelpFormatter)
 parser.add_argument('command', help='the command to run',
                     choices=['build', 'run', 'clean', 'list'])
+parser.add_argument('hash', help='the hash of the desired commit', nargs='?')
 args = parser.parse_args()
 
 
@@ -113,16 +122,24 @@ if args.command == 'build':
     install_last_built_bin()
 
 elif args.command == 'run':
-    # run latest version
-    # if git rev specified, runs specific version
+    if args.hash:
+        # if git rev specified, runs specific version
+        print('Running specific instance of the bts client: %s' % args.hash)
+        bin_name = run('ls %s' % join(Config.BITSHARES_BIN_DIR,
+                                      'bitshares_client_*%s*' % args.hash),
+                       io=True).stdout.strip()
+    else:
+        # run latest version
+        bin_name = join(Config.BITSHARES_BIN_DIR, 'bitshares_client')
+
     if not exists(Config.BITSHARES_HOME_DIR):
         # run without --server the first time as we don't have a config.json yet
-        run('%s %s' % (join(Config.BITSHARES_BIN_DIR, 'bitshares_client'),
-                       '--maximum-number-of-connections=128'))
+        run('"%s" %s' % (bin_name,
+                         '--maximum-number-of-connections=128'))
     else:
-        run('%s %s %s' % (join(Config.BITSHARES_BIN_DIR, 'bitshares_client'),
-                          '--maximum-number-of-connections=128',
-                          '--server'))
+        run('"%s" %s %s' % (bin_name,
+                            '--maximum-number-of-connections=128',
+                            '--server'))
 
 elif args.command == 'clean':
     run('rm -fr "%s"' % Config.BITSHARES_BUILD_DIR)
