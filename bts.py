@@ -145,4 +145,4 @@ elif args.command == 'clean':
     run('rm -fr "%s"' % Config.BITSHARES_BUILD_DIR)
 
 elif args.command == 'list':
-    run('ls -l "%s"' % Config.BITSHARES_BIN_DIR)
+    run('ls -ltr "%s"' % Config.BITSHARES_BIN_DIR)
