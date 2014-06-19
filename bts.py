@@ -17,17 +17,25 @@ config_file = join(dirname(__file__), 'config.py')
 exec(open(config_file).read())
 
 
+# on mac osx, readline needs to be installed by brew and
+# "brew link --force readline" to take precedence over the outdated readline
+
 # parse commandline args
 parser = argparse.ArgumentParser()
 parser.add_argument('command', help='the command to run',
-                    choices=['build', 'run', 'clean'])
+                    choices=['build', 'run', 'clean', 'list'])
 args = parser.parse_args()
 
 
 def _run(cmd, io=False):
+    print('-'*80)
+    print('running command: %s\n' % cmd)
     if io:
         p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
+        if sys.version_info[0] >= 3:
+            stdout, stderr = (str(stdout, encoding='utf-8'),
+                              str(stderr, encoding='utf-8'))
         return IOStream(p.returncode, stdout, stderr)
     else:
         return IOStream(os.system(cmd), None, None)
@@ -46,9 +54,18 @@ def clone():
         run('git submodule init')
 
 
+
 update = lambda: run('git pull && git submodule update')
-configure = lambda: run('cmake .')
-build = lambda: run('make -j1')
+clean_config = lambda: run('rm -f CMakeCache.txt')
+
+if sys.platform == 'darwin':
+    # assumes openssl installed from brew
+    path = '/usr/local/opt/openssl/lib/pkgconfig'
+    configure = lambda: run('PKG_CONFIG_PATH=%s:$PKG_CONFIG_PATH cmake .' % path)
+else:
+    configure = lambda: run('cmake .')
+
+build = lambda: run('make -j4')
 
 
 def install_last_built_bin():
@@ -89,6 +106,7 @@ if args.command == 'build':
 
     os.chdir(Config.BITSHARES_BUILD_DIR)
     update()
+    clean_config()
     configure()
     build()
 
@@ -97,8 +115,17 @@ if args.command == 'build':
 elif args.command == 'run':
     # run latest version
     # if git rev specified, runs specific version
-    run('%s %s' % (join(Config.BITSHARES_BIN_DIR, 'bitshares_client'),
-                      '--maximum-number-of-connections=128'))
+    if not exists(Config.BITSHARES_HOME_DIR):
+        # run without --server the first time as we don't have a config.json yet
+        run('%s %s' % (join(Config.BITSHARES_BIN_DIR, 'bitshares_client'),
+                       '--maximum-number-of-connections=128'))
+    else:
+        run('%s %s %s' % (join(Config.BITSHARES_BIN_DIR, 'bitshares_client'),
+                          '--maximum-number-of-connections=128',
+                          '--server'))
 
 elif args.command == 'clean':
     run('rm -fr "%s"' % Config.BITSHARES_BUILD_DIR)
+
+elif args.command == 'list':
+    run('ls -l "%s"' % Config.BITSHARES_BIN_DIR)
