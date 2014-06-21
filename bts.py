@@ -102,7 +102,7 @@ def install_last_built_bin():
     branch = run('git rev-parse --abbrev-ref HEAD', io=True).stdout.strip()
     commit = run('git log -1', io=True).stdout.splitlines()[0].split()[1]
 
-    bin_filename = 'bitshares_client_%s_%s_%s' % (date, branch, commit[:6])
+    bin_filename = 'bitshares_client_%s_%s_%s' % (date, branch, commit[:8])
 
     def install(src, dst):
         print('Installing %s' % dst)
@@ -147,7 +147,7 @@ elif args.command == 'run':
         # if git rev specified, runs specific version
         print('Running specific instance of the bts client: %s' % args.hash)
         bin_name = run('ls %s' % join(BITSHARES_BIN_DIR,
-                                      'bitshares_client_*%s*' % args.hash),
+                                      'bitshares_client_*%s*' % args.hash[:8]),
                        io=True).stdout.strip()
     else:
         # run latest version
