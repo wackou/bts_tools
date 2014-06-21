@@ -1,5 +1,5 @@
 {
-    "linux":
+    "linux2":
     {
         "BITSHARES_HOME_DIR": "~/.BitSharesXTS",
         "BITSHARES_BUILD_DIR": "~/.bitshares_toolkit",
