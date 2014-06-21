@@ -34,19 +34,17 @@ IOStream = namedtuple('IOStream', 'status, stdout, stderr')
 
 # load config
 config = json.load(open(join(dirname(__file__), 'config.json')))
-try:
-    config = config[sys.platform]
-except KeyError:
+if sys.platform not in config:
     raise OSError('OS not supported yet, please submit a patch :)')
 
 # expand '~' in path names to the user's home dir
-for attr, path in config.items():
-    config[attr] = expanduser(path)
+for attr, path in config[sys.platform].items():
+    config[sys.platform][attr] = expanduser(path)
 
 
-BITSHARES_BUILD_DIR = config['BITSHARES_BUILD_DIR']
-BITSHARES_HOME_DIR = config['BITSHARES_HOME_DIR']
-BITSHARES_BIN_DIR = config['BITSHARES_BIN_DIR']
+BITSHARES_BUILD_DIR = config[sys.platform]['BITSHARES_BUILD_DIR']
+BITSHARES_HOME_DIR = config[sys.platform]['BITSHARES_HOME_DIR']
+BITSHARES_BIN_DIR = config[sys.platform]['BITSHARES_BIN_DIR']
 
 # on mac osx, readline needs to be installed by brew and
 # "brew link --force readline" to take precedence over the
@@ -111,7 +109,7 @@ if sys.platform == 'darwin':
 else:
     configure = lambda: run('cmake .')
 
-build = lambda: run('make')
+build = lambda: run(['make']+config.get('make_args', []))
 
 
 def install_last_built_bin():
@@ -171,7 +169,7 @@ elif args.command == 'run':
         # run latest version
         bin_name = join(BITSHARES_BIN_DIR, 'bitshares_client')
 
-    run_args = ['--maximum-number-of-connections=128']
+    run_args = config.get('run_args', [])
     if args.rpc:
         run_args.append('--server')
 

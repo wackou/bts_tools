@@ -1,4 +1,7 @@
 {
+    "run_args": ["--maximum-number-of-connections=128"],
+    "make_args": ["-j1"],
+
     "linux2":
     {
         "BITSHARES_HOME_DIR": "~/.BitSharesXTS",
