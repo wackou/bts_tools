@@ -1,0 +1,14 @@
+{
+    "linux":
+    {
+        "BITSHARES_HOME_DIR": "~/.BitSharesXTS",
+        "BITSHARES_BUILD_DIR": "~/.bitshares_toolkit",
+        "BITSHARES_BIN_DIR": "~/.BitSharesXTS_bin"
+    },
+    "darwin":
+    {
+        "BITSHARES_HOME_DIR": "~/Library/Application Support/BitShares XTS",
+        "BITSHARES_BUILD_DIR": "~/.bitshares_toolkit",
+        "BITSHARES_BIN_DIR": "~/.BitSharesXTS_bin"
+    }
+}
