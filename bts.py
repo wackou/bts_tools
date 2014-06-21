@@ -58,7 +58,8 @@ DESC="""following commands are available:
  - run [hash]    : run latest compiled bts client, or the one with the given hash
  - list_bins     : list installed bitshares client binaries
 """
-parser = argparse.ArgumentParser(description=DESC,
+EPILOG="""You should also look into config.json to tune it to your liking."""
+parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
                                  formatter_class=RawTextHelpFormatter)
 parser.add_argument('command', choices=['clean_homedir', 'clean', 'build', 'run', 'list'],
                     help='the command to run')
