@@ -56,7 +56,7 @@ DESC="""following commands are available:
  - clean         : clean build directory
  - build [hash]  : update and build bts client
  - run [hash]    : run latest compiled bts client, or the one with the given hash
- - list_bins     : list installed bitshares client binaries
+ - list          : list installed bitshares client binaries
 """
 EPILOG="""You should also look into config.json to tune it to your liking."""
 parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,

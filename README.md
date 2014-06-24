@@ -1,7 +1,7 @@
 BitShares delegate tools
 ------------------------
 
-just run the bts.py file with the command of your liking:
+just run the bts.py file with the command you want to execute:
 
     $ python bts.py -h
     usage: bts.py [-h] [-r] {clean_homedir,clean,build,run,list} [hash]
@@ -11,7 +11,7 @@ just run the bts.py file with the command of your liking:
      - clean         : clean build directory
      - build [hash]  : update and build bts client
      - run [hash]    : run latest compiled bts client, or the one with the given hash
-     - list_bins     : list installed bitshares client binaries
+     - list          : list installed bitshares client binaries
 
     positional arguments:
       {clean_homedir,clean,build,run,list}
