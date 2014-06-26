@@ -174,7 +174,11 @@ elif args.command == 'run':
     if args.rpc:
         run_args.append('--server')
 
-    run([bin_name] + run_args)
+    # on linux, run with "gdb -ex run ./bts_client"
+    if sys.platform == 'linux2':
+        run(['gdb', '-ex', '"%s"' % ' '.join(['run'] + run_args), bin_name])
+    else:
+        run([bin_name] + run_args)
 
 elif args.command == 'clean':
     run('rm -fr "%s"' % BITSHARES_BUILD_DIR)
