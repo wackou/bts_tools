@@ -176,7 +176,7 @@ elif args.command == 'run':
 
     # on linux, run with "gdb -ex run ./bts_client"
     if sys.platform == 'linux2':
-        run(['gdb', '-ex', '"%s"' % ' '.join(['run'] + run_args), bin_name])
+        run(['gdb', '-ex', 'run', '--args', bin_name] + run_args)
     else:
         run([bin_name] + run_args)
 
