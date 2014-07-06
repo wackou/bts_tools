@@ -2,7 +2,7 @@
     "run_args": ["--max-connections=128"],
     "make_args": ["-j1"],
 
-    "rpc_port": 5678
+    "rpc_port": 5678,
     "rpc_user": "",
     "rpc_password": "",
 
