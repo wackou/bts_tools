@@ -1,0 +1,29 @@
+<div class="navbar navbar-default navbar-static-top">
+	<div class="container">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a href="#" class="navbar-brand">BitShares delegate tools</a>
+		</div>
+
+        <div class="collapse navbar-collapse">
+			<ul class="nav navbar-nav">
+                <li {% if request.path == '/info' %}class="active"{% endif %}><a href="/info">Info</a></li>
+                <li {% if request.path == '/delegates' %}class="active"{% endif %}><a href="/delegates">Delegates</a></li>
+            </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="#">Status:
+                {% if bitshares_delegate_tools.core.is_online %}
+                    <div class="btn btn-xs btn-success">online</div>
+                {% else %}
+                    <div class="btn btn-xs btn-danger">offline</div>
+                {% endif %}
+                </a></li>
+            </ul>
+        </div><!-- /.navbar-collapse -->
+	</div>
+</div>

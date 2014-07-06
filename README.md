@@ -1,10 +1,10 @@
 BitShares delegate tools
 ------------------------
 
-just run the bts.py file with the command you want to execute:
+just run the ``bts`` script with the command you want to execute:
 
-    $ python bts.py -h
-    usage: bts.py [-h] [-r] {clean_homedir,clean,build,run,list} [hash]
+    $ bts -h
+    usage: bts [-h] [-r] {clean_homedir,clean,build,run,list} [hash]
 
     following commands are available:
      - clean_homedir : clean home directory. WARNING: this will delete your wallet!

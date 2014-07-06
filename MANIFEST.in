@@ -1,0 +1,3 @@
+include *.rst
+recursive-include bitshares_delegate_tools/static *
+recursive-include bitshares_delegate_tools/templates *

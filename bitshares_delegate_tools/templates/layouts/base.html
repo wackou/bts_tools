@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}BitShares delegate tools{% endblock %}</title>
+
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/jquery.dataTables.1.10RC1.css">
+    <link rel="stylesheet" href="/static/css/dataTables.bootstrap.css">
+</head>
+
+
+<body>
+
+<div id="wrap">
+    {% include 'layouts/header.html' %}
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
+    <div id="push"></div>
+</div>
+
+{% include 'layouts/footer.html' %}
+
+<!-- NOTE: most (all) JS should go at the end of the document for better page loading performance -->
+
+<!-- NOTE: we may need to move this higher up (in the <head> section) if needed -->
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+<script src="/static/js/underscore.js"></script>
+
+<script src="/static/js/jquery.dataTables.1.10RC1.js"></script>
+<script src="/static/js/dataTables.bootstrap.js"></script>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

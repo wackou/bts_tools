@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# bitshares_delegate_tools - Some tools to ease the management of the
-#                            bitshares client
+# bitshares_delegate_tools - Tools to easily manage the bitshares client
 # Copyright (c) 2014 Nicolas Wack <wackou@gmail.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -23,6 +22,7 @@ from os.path import join, dirname, exists, islink, expanduser
 from subprocess import Popen, PIPE
 from collections import namedtuple
 from argparse import RawTextHelpFormatter
+import requests
 import argparse
 import os
 import sys
@@ -50,27 +50,10 @@ BITSHARES_BIN_DIR = config[sys.platform]['BITSHARES_BIN_DIR']
 # "brew link --force readline" to take precedence over the
 # outdated version of the system
 
-# parse commandline args
-DESC="""following commands are available:
- - clean_homedir : clean home directory. WARNING: this will delete your wallet!
- - clean         : clean build directory
- - build [hash]  : update and build bts client
- - run [hash]    : run latest compiled bts client, or the one with the given hash
- - list          : list installed bitshares client binaries
-"""
-EPILOG="""You should also look into config.json to tune it to your liking."""
-parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
-                                 formatter_class=RawTextHelpFormatter)
-parser.add_argument('command', choices=['clean_homedir', 'clean', 'build', 'run', 'list'],
-                    help='the command to run')
-parser.add_argument('-r', '--rpc', action='store_true',
-                    help='run binary with RPC server activated')
-parser.add_argument('hash',
-                    help='the hash of the desired commit', nargs='?')
-args = parser.parse_args()
-
 
 def _run(cmd, io=False):
+    if isinstance(cmd, list):
+        cmd = cmd[0] + ' "' + '" "'.join(cmd[1:]) + '"'
     print('-'*80)
     print('running command: %s\n' % cmd)
     if io:
@@ -146,45 +129,67 @@ def install_last_built_bin():
     os.symlink(c, last_installed)
 
 
-if args.command == 'build':
-    clone()
 
-    os.chdir(BITSHARES_BUILD_DIR)
-    update()
-    if args.hash:
-        run('git checkout %s && git submodule update' % args.hash)
-    clean_config()
-    configure()
-    build()
+def main():
+    # parse commandline args
+    DESC="""following commands are available:
+     - clean_homedir : clean home directory. WARNING: this will delete your wallet!
+     - clean         : clean build directory
+     - build [hash]  : update and build bts client
+     - run [hash]    : run latest compiled bts client, or the one with the given hash
+     - list          : list installed bitshares client binaries
+    """
+    EPILOG="""You should also look into config.json to tune it to your liking."""
+    parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
+                                     formatter_class=RawTextHelpFormatter)
+    parser.add_argument('command', choices=['clean_homedir', 'clean', 'build', 'run', 'list'],
+                        help='the command to run')
+    parser.add_argument('-r', '--rpc', action='store_true',
+                        help='run binary with RPC server activated')
+    parser.add_argument('hash',
+                        help='the hash of the desired commit', nargs='?')
+    args = parser.parse_args()
 
-    install_last_built_bin()
 
-elif args.command == 'run':
-    if args.hash:
-        # if git rev specified, runs specific version
-        print('Running specific instance of the bts client: %s' % args.hash)
-        bin_name = run('ls %s' % join(BITSHARES_BIN_DIR,
-                                      'bitshares_client_*%s*' % args.hash[:8]),
-                       io=True).stdout.strip()
-    else:
-        # run latest version
-        bin_name = join(BITSHARES_BIN_DIR, 'bitshares_client')
+    if args.command == 'build':
+        clone()
 
-    run_args = config.get('run_args', [])
-    if args.rpc:
-        run_args.append('--server')
+        os.chdir(BITSHARES_BUILD_DIR)
+        update()
+        if args.hash:
+            run('git checkout %s && git submodule update' % args.hash)
+        clean_config()
+        configure()
+        build()
 
-    # on linux, run with "gdb -ex run ./bts_client"
-    if sys.platform == 'linux2':
-        run(' '.join(['gdb', '-ex', 'run', '--args', bin_name] + run_args))
-    else:
-        run([bin_name] + run_args)
+        install_last_built_bin()
 
-elif args.command == 'clean':
-    run('rm -fr "%s"' % BITSHARES_BUILD_DIR)
+    elif args.command == 'run':
+        if args.hash:
+            # if git rev specified, runs specific version
+            print('Running specific instance of the bts client: %s' % args.hash)
+            bin_name = run('ls %s' % join(BITSHARES_BIN_DIR,
+                                          'bitshares_client_*%s*' % args.hash[:8]),
+                           io=True).stdout.strip()
+        else:
+            # run latest version
+            bin_name = join(BITSHARES_BIN_DIR, 'bitshares_client')
 
-elif args.command == 'clean_homedir':
-    run('rm -fr "%s"' % BITSHARES_HOME_DIR)
+        run_args = config.get('run_args', [])
+        if args.rpc:
+            run_args = ['--server'] + run_args
 
-elif args.command == 'list':
-    run('ls -ltr "%s"' % BITSHARES_BIN_DIR)
+        # on linux, run with "gdb -ex run ./bts_client"
+        if sys.platform == 'linux2':
+            run(' '.join(['gdb', '-ex', 'run', '--args', bin_name] + run_args))
+        else:
+            run([bin_name] + run_args)
+
+    elif args.command == 'clean':
+        run('rm -fr "%s"' % BITSHARES_BUILD_DIR)
+
+    elif args.command == 'clean_homedir':
+        run('rm -fr "%s"' % BITSHARES_HOME_DIR)
+
+    elif args.command == 'list':
+        run('ls -ltr "%s"' % BITSHARES_BIN_DIR)
