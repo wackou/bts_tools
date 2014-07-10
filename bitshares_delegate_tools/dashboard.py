@@ -39,9 +39,10 @@ def offline():
 
 @bp.route('/unauthorized')
 def unauthorized():
+    config_path = os.path.dirname(bitshares_delegate_tools.__file__)
     return render_template('error.html',
                            msg='Unauthorized. Make sure you have correctly set '
-                               'the rpc user and password in the config.json file')
+                               'the rpc user and password in the %s/config.json file' % config_path)
 
 def catch_error(f):
     @wraps(f)
@@ -72,7 +73,13 @@ def homepage():
 @bp.route('/info')
 @catch_error
 def view_info():
-    return render_template('tableview.html', data=sorted(rpc.get_info().items()))
+    info_items = sorted(rpc.get_info().items())
+    n = len(info_items)
+    if n % 2 == 1:
+        info_items.append(('', ''))
+        n += 1
+    info_items = [(a,b,c,d) for (a,b),(c,d) in zip(info_items[:int(n/2)], info_items[int(n/2):])]
+    return render_template('tableview.html', data=info_items, attrs={'bold': [1, 3]})
 
 
 @bp.route('/delegates')

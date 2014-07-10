@@ -22,7 +22,6 @@ from os.path import join, dirname, exists, islink, expanduser
 from subprocess import Popen, PIPE
 from collections import namedtuple
 from argparse import RawTextHelpFormatter
-import requests
 import argparse
 import os
 import sys
@@ -31,20 +30,24 @@ import json
 
 IOStream = namedtuple('IOStream', 'status, stdout, stderr')
 
+platform = sys.platform
+if platform.startswith('linux'):
+    platform = 'linux'
 
 # load config
 config = json.load(open(join(dirname(__file__), 'config.json')))
-if sys.platform not in config:
+
+if platform not in config:
     raise OSError('OS not supported yet, please submit a patch :)')
 
 # expand '~' in path names to the user's home dir
-for attr, path in config[sys.platform].items():
-    config[sys.platform][attr] = expanduser(path)
+for attr, path in config[platform].items():
+    config[platform][attr] = expanduser(path)
 
 
-BITSHARES_BUILD_DIR = config[sys.platform]['BITSHARES_BUILD_DIR']
-BITSHARES_HOME_DIR = config[sys.platform]['BITSHARES_HOME_DIR']
-BITSHARES_BIN_DIR = config[sys.platform]['BITSHARES_BIN_DIR']
+BITSHARES_BUILD_DIR = config[platform]['BITSHARES_BUILD_DIR']
+BITSHARES_HOME_DIR = config[platform]['BITSHARES_HOME_DIR']
+BITSHARES_BIN_DIR = config[platform]['BITSHARES_BIN_DIR']
 
 # on mac osx, readline needs to be installed by brew and
 # "brew link --force readline" to take precedence over the
@@ -86,7 +89,7 @@ def clone():
 update = lambda: run('git checkout master && git pull && git submodule update')
 clean_config = lambda: run('rm -f CMakeCache.txt')
 
-if sys.platform == 'darwin':
+if platform == 'darwin':
     # assumes openssl installed from brew
     path = '/usr/local/opt/openssl/lib/pkgconfig'
     configure = lambda: run('PKG_CONFIG_PATH=%s:$PKG_CONFIG_PATH cmake .' % path)
@@ -180,7 +183,7 @@ def main():
             run_args = ['--server'] + run_args
 
         # on linux, run with "gdb -ex run ./bts_client"
-        if sys.platform == 'linux2':
+        if platform == 'linux':
             run(' '.join(['gdb', '-ex', 'run', '--args', bin_name] + run_args))
         else:
             run([bin_name] + run_args)

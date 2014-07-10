@@ -29,7 +29,7 @@ HISTORY = """Unreleased as of yet"""
 VERSION = '0.1.dev1'
 
 
-install_requires = ['Flask'] #, 'SQLAlchemy', 'Flask-SQLAlchemy']
+install_requires = ['Flask', 'requests'] #, 'SQLAlchemy', 'Flask-SQLAlchemy']
 
 setup_requires = []
 

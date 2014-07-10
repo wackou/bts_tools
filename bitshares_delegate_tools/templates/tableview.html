@@ -24,7 +24,13 @@
         {% for fields in data %}
             <tr>
             {% for f in fields %}
-                <td>{{ f }}</td>
+                <td>
+                    {% if attrs and loop.index in attrs.get('bold', []) %}
+                        <b>{{ f }}</b>
+                    {% else %}
+                        {{ f }}
+                    {% endif %}
+                </td>
             {% endfor %}
             </tr>
         {% endfor %}
