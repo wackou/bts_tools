@@ -18,31 +18,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from os.path import join, dirname, exists, islink, expanduser
+from os.path import join, dirname, exists, islink
 from subprocess import Popen, PIPE
 from collections import namedtuple
 from argparse import RawTextHelpFormatter
+from bitshares_delegate_tools.core import config, platform, rpc_call
 import argparse
 import os
 import sys
 import shutil
 import json
+import logging
 
 IOStream = namedtuple('IOStream', 'status, stdout, stderr')
-
-platform = sys.platform
-if platform.startswith('linux'):
-    platform = 'linux'
-
-# load config
-config = json.load(open(join(dirname(__file__), 'config.json')))
-
-if platform not in config:
-    raise OSError('OS not supported yet, please submit a patch :)')
-
-# expand '~' in path names to the user's home dir
-for attr, path in config[platform].items():
-    config[platform][attr] = expanduser(path)
 
 
 BITSHARES_BUILD_DIR = config[platform]['BITSHARES_BUILD_DIR']
@@ -196,3 +184,25 @@ def main():
 
     elif args.command == 'list':
         run('ls -ltr "%s"' % BITSHARES_BIN_DIR)
+
+
+def main_rpc_call():
+    # parse commandline args
+    DESC="""Run the given command using JSON-RPC."""
+    EPILOG="""You should look into config.json to configure the rpc user and password."""
+    parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
+                                     formatter_class=RawTextHelpFormatter)
+    parser.add_argument('method',
+                        help='the command to run')
+    parser.add_argument('args',
+                        help='the hash of the desired commit', nargs='*')
+    args = parser.parse_args()
+
+    logging.getLogger('bitshares_delegate_tools').setLevel(logging.WARNING)
+
+    try:
+        result = rpc_call(args.method, *args.args)
+    except Exception as e:
+        result = { 'error': str(e), 'type': e.__class__.__name__ }
+
+    print(json.dumps(result))

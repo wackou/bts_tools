@@ -20,13 +20,28 @@
 
 #from flask_sqlalchemy import SQLAlchemy
 #from flask_security import Security
-from bitshares_delegate_tools.cmdline import config
+from os.path import join, dirname, expanduser
 import requests
+import sys
 import json
 import itertools
 import logging
 
 log = logging.getLogger(__name__)
+
+platform = sys.platform
+if platform.startswith('linux'):
+    platform = 'linux'
+
+# load config
+config = json.load(open(join(dirname(__file__), 'config.json')))
+
+if platform not in config:
+    raise OSError('OS not supported yet, please submit a patch :)')
+
+# expand '~' in path names to the user's home dir
+for attr, path in config[platform].items():
+    config[platform][attr] = expanduser(path)
 
 #: Flask-SQLAlchemy extension instance
 #db = SQLAlchemy()
