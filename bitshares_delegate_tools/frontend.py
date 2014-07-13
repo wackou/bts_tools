@@ -58,7 +58,7 @@ def create_app(settings_override=None):
     app.jinja_env.filters['datetime'] = format_datetime
 
     # make bitshares_delegate_tools module available in all the templates
-    app.jinja_env.globals.update(bitshares_delegate_tools=bitshares_delegate_tools)
+    app.jinja_env.globals.update(bts=bitshares_delegate_tools)
 
     app.debug = True
 

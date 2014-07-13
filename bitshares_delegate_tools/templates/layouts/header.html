@@ -16,13 +16,33 @@
             </ul>
 
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="#">Status:
-                {% if bitshares_delegate_tools.core.is_online %}
-                    <div class="btn btn-xs btn-success">online</div>
+            {% if bts.core.is_online %}
+
+                {% set producing, n = bts.core.get_streak() %}
+                {% if producing %}
+                    <li><a href="#">Status: <div class="btn btn-xs btn-success">Last {{ n }} produced</div></a></li>
                 {% else %}
-                    <div class="btn btn-xs btn-danger">offline</div>
+                    <li><a href="#">Status: <div class="btn btn-xs btn-danger">Last {{ n }} missed </div></a></li>
                 {% endif %}
+
+
+                <li><a href="#">Block num:
+                {% if 'second' in bts.rpc.get_info()['blockchain_head_block_age'] %}
+                    <div class="btn btn-xs btn-success">
+                {% else %}
+                    <div class="btn btn-xs btn-info">
+                {% endif %}
+                        {{ bts.rpc.get_info(cached=True)['blockchain_head_block_num'] }}
+                    </div>
                 </a></li>
+
+                <li><a href="#">Status: <div class="btn btn-xs btn-success">online</div></a></li>
+
+            {% else %}
+
+                <li><a href="#">Status: <div class="btn btn-xs btn-danger">offline</div></a></li>
+
+            {% endif %}
             </ul>
         </div><!-- /.navbar-collapse -->
 	</div>

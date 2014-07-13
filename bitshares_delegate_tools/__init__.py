@@ -30,3 +30,5 @@ ch.setFormatter(SimpleFormatter())
 
 logging.getLogger('bitshares_delegate_tools').addHandler(ch)
 logging.getLogger('bitshares_delegate_tools').setLevel(logging.DEBUG)
+
+from .core import rpc

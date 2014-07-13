@@ -23,6 +23,7 @@
 from bitshares_delegate_tools.cmdline import config
 import requests
 import json
+import itertools
 import logging
 
 log = logging.getLogger(__name__)
@@ -82,3 +83,19 @@ def rpc_call(funcname, *args, cached=False):
 class BTSProxy(object):
     def __getattr__(self, funcname):
         return lambda *args, **kwargs: rpc_call(funcname, *args, **kwargs)
+
+
+rpc = BTSProxy()
+
+
+#### util functions we want to be able to access easily, such as in templates
+
+def delegate_name():
+    # FIXME: should parse my accounts to know the actual delegate name
+    return 'wackou-delegate'
+
+
+def get_streak():
+    slots = rpc.blockchain_get_delegate_slot_records(delegate_name())[::-1]
+    streak = itertools.takewhile(lambda x: (x['block_produced'] == slots[0]['block_produced']), slots)
+    return slots[0]['block_produced'], len(list(streak))

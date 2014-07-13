@@ -19,8 +19,9 @@
 #
 
 from flask import Blueprint, render_template, request, redirect, send_from_directory
-from bitshares_delegate_tools.core import rpc_call, BTSProxy
+from bitshares_delegate_tools.core import rpc
 from functools import wraps
+from collections import defaultdict
 import bitshares_delegate_tools
 import requests.exceptions
 import logging
@@ -28,7 +29,14 @@ import logging
 log = logging.getLogger(__name__)
 
 bp = Blueprint('web', __name__, static_folder='static', template_folder='templates')
-rpc = BTSProxy()
+
+
+@bp.route('/robots.txt')
+#@bp.route('/sitemap.xml')
+def static_from_root():
+    """Allows to serve static files directly from the root url instead of the
+    static folder. Files still need to be put inside the static folder."""
+    return send_from_directory(bp.static_folder, request.path[1:])
 
 
 @bp.route('/offline')
@@ -37,12 +45,14 @@ def offline():
                            msg='The BitShares client is currently offline. '
                                'Please run it and activate the HTTP RPC server.')
 
+
 @bp.route('/unauthorized')
 def unauthorized():
     config_path = os.path.dirname(bitshares_delegate_tools.__file__)
     return render_template('error.html',
                            msg='Unauthorized. Make sure you have correctly set '
                                'the rpc user and password in the %s/config.json file' % config_path)
+
 
 def catch_error(f):
     @wraps(f)
@@ -57,35 +67,66 @@ def catch_error(f):
     return wrapper
 
 
-@bp.route('/robots.txt')
-#@bp.route('/sitemap.xml')
-def static_from_root():
-    """Allows to serve static files directly from the root url instead of the
-    static folder. Files still need to be put inside the static folder."""
-    return send_from_directory(bp.static_folder, request.path[1:])
-
-
 @bp.route('/')
 def homepage():
-    return redirect('/delegates')
+    return redirect('/info')
 
+def split_columns(items, attrs):
+    # split into 2 columns, more readable on a laptop
+    n = len(items)
+    if n % 2 == 1:
+        items.append(('', ''))
+        n += 1
+    offset = int(n/2)
+
+    items = [(a,b,c,d) for (a,b),(c,d) in zip(items[:offset],
+                                              items[offset:])]
+    for a, l in attrs.items():
+        for i, v in enumerate(l):
+            l[i] = ((l[i][0], l[i][1])
+                    if l[i][0] < offset
+                    else (l[i][0] - offset, l[i][1] + 2))
+
+    return items, attrs
 
 @bp.route('/info')
 @catch_error
 def view_info():
+    attrs = defaultdict(list)
     info_items = sorted(rpc.get_info().items())
-    n = len(info_items)
-    if n % 2 == 1:
-        info_items.append(('', ''))
-        n += 1
-    info_items = [(a,b,c,d) for (a,b),(c,d) in zip(info_items[:int(n/2)], info_items[int(n/2):])]
-    return render_template('tableview.html', data=info_items, attrs={'bold': [1, 3]})
+
+    attrs['bold'] = [(i, 0) for i in range(len(info_items))]
+    for i, (prop, value) in enumerate(info_items):
+        def green_if_true(cond):
+            if cond:
+                attrs['green'].append((i, 1))
+            else:
+                attrs['red'].append((i, 1))
+
+        if prop in ('wallet_open',
+                 'wallet_unlocked',
+                 'wallet_block_production_enabled'):
+            green_if_true(value)
+
+        elif prop == 'network_num_connections':
+            green_if_true(value >= 5)
+
+        elif prop == 'blockchain_head_block_age':
+            green_if_true('second' in value)
+
+        elif prop == 'wallet_next_block_production_time':
+            if value and 'second' in value:
+                attrs['orange'].append((i, 1))
+
+    info_items, attrs = split_columns(info_items, attrs)
+
+    return render_template('tableview.html', data=info_items, attrs=attrs)
 
 
 @bp.route('/delegates')
 @catch_error
 def view_delegates():
-    response = rpc_call('blockchain_list_delegates', 0, 101)
+    response = rpc.blockchain_list_delegates(0, 101)
 
     headers = ['Position', 'Delegate name', 'Votes for', 'Last block', 'Produced', 'Missed']
 

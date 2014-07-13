@@ -22,10 +22,19 @@
 
         <tbody>
         {% for fields in data %}
+            {% set field = loop %}
             <tr>
             {% for f in fields %}
+                {% if attrs and (field.index-1, loop.index-1) in attrs.get('green', []) %}
+                <td style="background-color: limegreen">
+                {% elif attrs and (field.index-1, loop.index-1) in attrs.get('red', []) %}
+                <td style="background-color: red;">
+                {% elif attrs and (field.index-1, loop.index-1) in attrs.get('orange', []) %}
+                <td style="background-color: orange;">
+                {% else %}
                 <td>
-                    {% if attrs and loop.index in attrs.get('bold', []) %}
+                {% endif %}
+                    {% if attrs and (field.index-1, loop.index-1) in attrs.get('bold', []) %}
                         <b>{{ f }}</b>
                     {% else %}
                         {{ f }}

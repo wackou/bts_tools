@@ -1,5 +1,5 @@
 {
-    "run_args": ["--max-connections=128"],
+    "run_args": [],
     "make_args": ["-j1"],
 
     "rpc_port": 5678,
