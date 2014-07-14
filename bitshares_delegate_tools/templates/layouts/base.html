@@ -9,12 +9,77 @@
     <link rel="stylesheet" href="/static/css/dataTables.bootstrap.css">
 </head>
 
+{% macro green_if_true(cond) -%}
+    {% if cond %}
+        <div class="btn btn-xs btn-success">{{ cond }}</div>
+    {% else %}
+        <div class="btn btn-xs btn-danger">{{ cond }}</div>
+    {% endif %}
+{%- endmacro %}
 
 <body>
 
 <div id="wrap">
     {% include 'layouts/header.html' %}
     <div class="container">
+        <div class="well">
+            <b>Delegate:</b> {{ bts.core.delegate_name() }}&nbsp;&nbsp; &nbsp;&nbsp;
+
+            {% if bts.core.rpc.is_online() %}
+                <b>Blocks:</b>
+                {% set producing, n = bts.core.get_streak() %}
+                {% if producing %}
+                    <div class="btn btn-xs btn-success">Last {{ n }} produced</div>
+                {% else %}
+                    <div class="btn btn-xs btn-danger">Last {{ n }} missed </div>
+                {% endif %}
+            {% endif %}
+            <br><br>
+
+
+            <table class="table table-hover">
+            <thead><tr>
+                <th>Host</th>
+                <th>Status</th>
+                <th>Block head</th>
+                <th>Wallet open</th>
+                <th>Wallet unlocked</th>
+                <th>Block production enabled</th>
+            </tr></thead>
+            <tbody>
+            {% for node in bts.core.nodes %}
+                <tr>
+                    <td>{{ node.host }}</td>
+                    {% if node.is_online() %}
+                        <td>
+                            <div class="btn btn-xs btn-success">online</div>
+                        </td>
+                        <td>
+                        {% if 'second' in node.get_info()['blockchain_head_block_age'] %}
+                            <div class="btn btn-xs btn-success">
+                        {% else %}
+                            <div class="btn btn-xs btn-info">
+                        {% endif %}
+                                {{ node.get_info(cached=True)['blockchain_head_block_num'] }}
+                            </div>
+                        </td>
+
+                        {% set info = node.get_info() %}
+                        <td>{{ green_if_true(info['wallet_open']) }}</td>
+                        <td>{{ green_if_true(info['wallet_unlocked']) }}</td>
+                        <td>{{ green_if_true(info['wallet_block_production_enabled']) }}</td>
+
+                    {% else %}
+                        <td><div class="btn btn-xs btn-danger">offline</div></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody></table>
+        </div>
         {% block content %}
         {% endblock %}
     </div>

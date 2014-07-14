@@ -2,9 +2,21 @@
     "run_args": [],
     "make_args": ["-j1"],
 
-    "rpc_port": 5678,
-    "rpc_user": "",
-    "rpc_password": "",
+    "nodes": [
+        {
+            "host": "localhost",
+            "rpc_port": 5678,
+            "rpc_user": "",
+            "rpc_password": ""
+        },
+        {
+            "host": "example.com",
+            "rpc_port": 5678,
+            "rpc_user": "",
+            "rpc_password": "",
+            "venv_path": "~/.virtualenvs/bitshares_delegate_tools"
+        }
+    ],
 
     "linux2":
     {

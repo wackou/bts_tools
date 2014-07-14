@@ -19,18 +19,14 @@
 #
 
 from os.path import join, dirname, exists, islink
-from subprocess import Popen, PIPE
-from collections import namedtuple
 from argparse import RawTextHelpFormatter
-from bitshares_delegate_tools.core import config, platform, rpc_call
+from bitshares_delegate_tools.core import config, platform, rpc, run
 import argparse
 import os
-import sys
 import shutil
 import json
 import logging
 
-IOStream = namedtuple('IOStream', 'status, stdout, stderr')
 
 
 BITSHARES_BUILD_DIR = config[platform]['BITSHARES_BUILD_DIR']
@@ -40,31 +36,6 @@ BITSHARES_BIN_DIR = config[platform]['BITSHARES_BIN_DIR']
 # on mac osx, readline needs to be installed by brew and
 # "brew link --force readline" to take precedence over the
 # outdated version of the system
-
-
-def _run(cmd, io=False):
-    if isinstance(cmd, list):
-        cmd = cmd[0] + ' "' + '" "'.join(cmd[1:]) + '"'
-    print('-'*80)
-    print('running command: %s\n' % cmd)
-    if io:
-        p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = p.communicate()
-        if sys.version_info[0] >= 3:
-            stdout, stderr = (str(stdout, encoding='utf-8'),
-                              str(stderr, encoding='utf-8'))
-        return IOStream(p.returncode, stdout, stderr)
-
-    else:
-        p = Popen(cmd, shell=True)
-        p.communicate()
-        return IOStream(p.returncode, None, None)
-
-def run(cmd, io=False):
-    r = _run(cmd, io)
-    if r.status != 0:
-        raise RuntimeError('Failed running: %s' % cmd)
-    return r
 
 
 def clone():
@@ -201,7 +172,7 @@ def main_rpc_call():
     logging.getLogger('bitshares_delegate_tools').setLevel(logging.WARNING)
 
     try:
-        result = rpc_call(args.method, *args.args)
+        result = getattr(rpc, args.method)(*args.args)
     except Exception as e:
         result = { 'error': str(e), 'type': e.__class__.__name__ }
 
