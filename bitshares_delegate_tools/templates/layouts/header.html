@@ -23,6 +23,22 @@
                     </ul>
                 </li>
             </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="#"><b>Delegate name: </b> {{ bts.core.delegate_name()}}</a></li>
+                {% if bts.core.rpc.is_online() %}
+                    <li><a href="#">
+                        <b>Blocks:</b>
+                        {% set producing, n = bts.core.get_streak() %}
+                        {% if producing %}
+                            <div class="btn btn-xs btn-success">Last {{ n }} produced</div>
+                        {% else %}
+                            <div class="btn btn-xs btn-danger">Last {{ n }} missed </div>
+                        {% endif %}
+                    </a></li>
+                {% endif %}
+            </ul>
+
         </div><!-- /.navbar-collapse -->
 	</div>
 </div>
