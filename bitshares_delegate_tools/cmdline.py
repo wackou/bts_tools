@@ -174,6 +174,7 @@ def main_rpc_call():
     try:
         result = getattr(rpc, args.method)(*args.args)
     except Exception as e:
-        result = { 'error': str(e), 'type': e.__class__.__name__ }
+        result = { 'error': str(e), 'type': '%s.%s' % (e.__class__.__module__,
+                                                       e.__class__.__name__) }
 
     print(json.dumps(result))
