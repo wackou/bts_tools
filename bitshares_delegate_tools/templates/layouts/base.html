@@ -70,7 +70,7 @@
                         <td>{{ green_if_true(info['wallet_block_production_enabled']) }}</td>
 
                     {% else %}
-                        <td><div class="btn btn-xs btn-danger">offline</div></td>
+                        <td><div class="btn btn-xs btn-danger">{{ node.status() }}</div></td>
                         <td></td>
                         <td></td>
                         <td></td>

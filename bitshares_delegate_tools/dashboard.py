@@ -22,6 +22,7 @@ from flask import Blueprint, render_template, request, redirect, send_from_direc
 from bitshares_delegate_tools.core import rpc
 from functools import wraps
 from collections import defaultdict
+from os.path import dirname
 import bitshares_delegate_tools
 import requests.exceptions
 import logging
@@ -48,7 +49,7 @@ def offline():
 
 @bp.route('/unauthorized')
 def unauthorized():
-    config_path = os.path.dirname(bitshares_delegate_tools.__file__)
+    config_path = dirname(bitshares_delegate_tools.__file__)
     return render_template('error.html',
                            msg='Unauthorized. Make sure you have correctly set '
                                'the rpc user and password in the %s/config.json file' % config_path)

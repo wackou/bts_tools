@@ -143,13 +143,19 @@ class BTSProxy(object):
                 return result
             self._rpc_call = remote_call
 
-    def is_online(self):
+    def status(self):
         try:
             self._rpc_call('about')
-            return True
+            return 'online'
 
         except requests.exceptions.ConnectionError:
-            return False
+            return 'offline'
+
+        except UnauthorizedError:
+            return 'unauthorized'
+
+    def is_online(self):
+        return self.status() == 'online'
 
     def __getattr__(self, funcname):
         def call(*args, cached=False):
