@@ -137,6 +137,7 @@ class BTSProxy(object):
 
                 result = json.loads(run(cmd, io=True).stdout)
                 if 'error' in result:
+                    exec('raise %s("%s")' % (result['type'], result['error']))
                     # TODO: raise exception
                     pass
 
@@ -191,5 +192,7 @@ def delegate_name():
 
 def get_streak():
     slots = rpc.blockchain_get_delegate_slot_records(delegate_name())[::-1]
+    if not slots:
+        return True, 0
     streak = itertools.takewhile(lambda x: (x['block_produced'] == slots[0]['block_produced']), slots)
     return slots[0]['block_produced'], len(list(streak))

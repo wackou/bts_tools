@@ -19,10 +19,10 @@
 #
 
 from flask import Blueprint, render_template, request, redirect, send_from_directory
-from bitshares_delegate_tools.core import rpc
 from functools import wraps
 from collections import defaultdict
 from os.path import dirname
+import bitshares_delegate_tools.core as bts
 import bitshares_delegate_tools
 import requests.exceptions
 import logging
@@ -61,9 +61,9 @@ def catch_error(f):
         try:
             return f(*args, **kwargs)
         except requests.exceptions.ConnectionError:
-            bitshares_delegate_tools.core.is_online = False
+            bts.is_online = False
             return offline()
-        except bitshares_delegate_tools.core.UnauthorizedError:
+        except bts.UnauthorizedError:
             return unauthorized()
     return wrapper
 
@@ -94,7 +94,7 @@ def split_columns(items, attrs):
 @catch_error
 def view_info():
     attrs = defaultdict(list)
-    info_items = sorted(rpc.get_info().items())
+    info_items = sorted(bts.rpc.get_info().items())
 
     attrs['bold'] = [(i, 0) for i in range(len(info_items))]
     for i, (prop, value) in enumerate(info_items):
@@ -124,17 +124,31 @@ def view_info():
     return render_template('tableview.html', data=info_items, attrs=attrs)
 
 
+@bp.route('/rpchost/<host>')
+@catch_error
+def set_rpchost(host):
+    for node in bts.nodes:
+        if node.host == host:
+            bts.rpc = node
+            break
+    else:
+        # invalid host name
+        pass
+
+    return redirect('/info')
+
+
 @bp.route('/delegates')
 @catch_error
 def view_delegates():
-    response = rpc.blockchain_list_delegates(0, 101)
+    response = bts.rpc.blockchain_list_delegates(0, 101)
 
     headers = ['Position', 'Delegate name', 'Votes for', 'Last block', 'Produced', 'Missed']
 
     data = [ (i+1,
               d['name'],
               '%.8f%%' % (d['delegate_info']['votes_for'] * 100 /
-                          rpc.get_info(cached=True)['blockchain_share_supply']),
+                          bts.rpc.get_info(cached=True)['blockchain_share_supply']),
               d['delegate_info']['last_block_num_produced'],
               d['delegate_info']['blocks_produced'],
               d['delegate_info']['blocks_missed'])
