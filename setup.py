@@ -36,7 +36,8 @@ setup_requires = []
 entry_points = {
     'console_scripts': [
         'bts = bitshares_delegate_tools.cmdline:main',
-        'bts-rpc = bitshares_delegate_tools.cmdline:main_rpc_call'
+        'bts-rpc = bitshares_delegate_tools.cmdline:main_rpc_call',
+        'bts-notify = bitshares_delegate_tools.cmdline:main_bts_notify'
     ],
 }
 

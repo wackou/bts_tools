@@ -21,6 +21,8 @@
 from os.path import join, dirname, exists, islink
 from argparse import RawTextHelpFormatter
 from bitshares_delegate_tools.core import config, platform, rpc, run
+import random
+import apnsclient
 import argparse
 import os
 import shutil
@@ -178,3 +180,52 @@ def main_rpc_call():
                                                        e.__class__.__name__) }
 
     print(json.dumps(result))
+
+
+def send_notification(msg):
+    print('Sending message...')
+
+    conn = apnsclient.Session().new_connection('push_sandbox', cert_file=config['apns_cert'])
+    message = apnsclient.Message(config['apns_tokens'],
+                                 alert=msg,
+                                 sound='base_under_attack_%s.caf' % random.choice(['terran', 'zerg', 'protoss']),
+                                 badge=1)
+
+    # Send the message.
+    srv = apnsclient.APNs(conn)
+    try:
+        res = srv.send(message)
+    except:
+        print("Can't connect to APNs, looks like network is down")
+    else:
+        # Check failures. Check codes in APNs reference docs.
+        for token, reason in res.failed.items():
+            code, errmsg = reason
+            # according to APNs protocol the token reported here
+            # is garbage (invalid or empty), stop using and remove it.
+            print('Device failed: {0}, reason: {1}'.format(token, errmsg))
+
+        # Check failures not related to devices.
+        for code, errmsg in res.errors:
+            print('Error: {}'.format(errmsg))
+
+        # Check if there are tokens that can be retried
+        if res.needs_retry():
+            # repeat with retry_message or reschedule your task
+            print('Needs retry...')
+            retry_message = res.retry()
+            print('Did retry: %s' % retry_message)
+
+    print('done sending notification!')
+
+
+def main_bts_notify():
+    # parse commandline args
+    DESC="""Send the given message using push notifications."""
+    parser = argparse.ArgumentParser(description=DESC,
+                                     formatter_class=RawTextHelpFormatter)
+    parser.add_argument('msg',
+                        help='the message to send')
+    args = parser.parse_args()
+
+    send_notification(args.msg)

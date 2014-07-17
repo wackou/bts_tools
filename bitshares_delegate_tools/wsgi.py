@@ -28,7 +28,7 @@ frontend_app = frontend.create_app()
 
 application = DispatcherMiddleware(frontend_app)
 
-DEBUG = True
+DEBUG = False
 
 def main():
     print('-'*100)

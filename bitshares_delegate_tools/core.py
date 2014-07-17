@@ -27,6 +27,8 @@ import requests
 import sys
 import json
 import itertools
+import time
+import threading
 import logging
 
 log = logging.getLogger(__name__)
@@ -176,9 +178,9 @@ class BTSProxy(object):
         return result
 
 
-    def status(self):
+    def status(self, cached=True):
         try:
-            self.rpc_call('about')
+            self.rpc_call('about', cached=cached)
             return 'online'
 
         except requests.exceptions.ConnectionError:
@@ -187,8 +189,8 @@ class BTSProxy(object):
         except UnauthorizedError:
             return 'unauthorized'
 
-    def is_online(self):
-        return self.status() == 'online'
+    def is_online(self, cached=True):
+        return self.status(cached=cached) == 'online'
 
     def __getattr__(self, funcname):
         def call(*args, cached=True):
@@ -223,3 +225,28 @@ def get_streak():
     except:
         # can fail with RPCError when delegate has not been registered yet
         return False, -1
+
+
+def check_online_thread():
+    from bitshares_delegate_tools.cmdline import send_notification
+    for n in nodes:
+        if n.host == config['monitor_host']:
+            node = n
+            break
+    else:
+        raise ValueError('"%s" is not a valid host name. Available: %s' % (config['monitor_host'], ', '.join(n.host for n in nodes)))
+
+    last_state = 'online'
+
+    while True:
+        if node.is_online(cached=False):
+            print('---- NODE ONLINE ----')
+            last_state = 'online'
+        else:
+            print('**** NODE OFFLINE ****')
+            if last_state == 'online':
+                send_notification('Delegate just went offline...')
+            last_state = 'offline'
+
+        time.sleep(10)
+

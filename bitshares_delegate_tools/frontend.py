@@ -22,6 +22,7 @@ from functools import wraps
 from flask import render_template, Flask
 from bitshares_delegate_tools import dashboard
 import bitshares_delegate_tools
+import threading
 import logging
 
 log = logging.getLogger(__name__)
@@ -61,6 +62,11 @@ def create_app(settings_override=None):
     app.jinja_env.globals.update(bts=bitshares_delegate_tools)
 
     app.debug = True
+
+    if bitshares_delegate_tools.core.config['monitor_host']:
+        t = threading.Thread(target=bitshares_delegate_tools.core.check_online_thread)
+        t.daemon = True
+        t.start()
 
     return app
 

@@ -19,6 +19,10 @@
         }
     ],
 
+    "monitor_host": "example.com",
+    "apns_cert": "bts_apns.pem",
+    "apns_tokens": [],
+
     "linux":
     {
         "BITSHARES_HOME_DIR": "~/.BitSharesXTS",
