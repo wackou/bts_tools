@@ -40,14 +40,12 @@ def static_from_root():
     return send_from_directory(bp.static_folder, request.path[1:])
 
 
-@bp.route('/offline')
 def offline():
     return render_template('error.html',
                            msg='The BitShares client is currently offline. '
                                'Please run it and activate the HTTP RPC server.')
 
 
-@bp.route('/unauthorized')
 def unauthorized():
     config_path = dirname(bitshares_delegate_tools.__file__)
     return render_template('error.html',
@@ -65,6 +63,19 @@ def catch_error(f):
             return offline()
         except bts.UnauthorizedError:
             return unauthorized()
+    return wrapper
+
+
+# Note: before each view, we clear the rpc cache, and have cached=True by default
+# this allows to ensure we only perform a given rpc call once with a given set
+# of args, no matter how many times we call it from the view (ie: we might need
+# to call 'is_online' or 'info' quite a few times, and we don't want to be sending
+# all these requests over ssh...)
+def clear_rpc_cache(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        bts.clear_rpc_cache()
+        return f(*args, **kwargs)
     return wrapper
 
 
@@ -91,6 +102,7 @@ def split_columns(items, attrs):
     return items, attrs
 
 @bp.route('/info')
+@clear_rpc_cache
 @catch_error
 def view_info():
     attrs = defaultdict(list)
@@ -139,6 +151,7 @@ def set_rpchost(host):
 
 
 @bp.route('/delegates')
+@clear_rpc_cache
 @catch_error
 def view_delegates():
     response = bts.rpc.blockchain_list_delegates(0, 101)
@@ -148,7 +161,7 @@ def view_delegates():
     data = [ (i+1,
               d['name'],
               '%.8f%%' % (d['delegate_info']['votes_for'] * 100 /
-                          bts.rpc.get_info(cached=True)['blockchain_share_supply']),
+                          bts.rpc.get_info()['blockchain_share_supply']),
               d['delegate_info']['last_block_num_produced'],
               d['delegate_info']['blocks_produced'],
               d['delegate_info']['blocks_missed'])

@@ -30,10 +30,14 @@
                     <li><a href="#">
                         <b>Blocks:</b>
                         {% set producing, n = bts.core.get_streak() %}
-                        {% if producing %}
-                            <div class="btn btn-xs btn-success">Last {{ n }} produced</div>
+                        {% if n >= 0 %}
+                            {% if producing %}
+                                <div class="btn btn-xs btn-success">Last {{ n }} produced</div>
+                            {% else %}
+                                <div class="btn btn-xs btn-danger">Last {{ n }} missed </div>
+                            {% endif %}
                         {% else %}
-                            <div class="btn btn-xs btn-danger">Last {{ n }} missed </div>
+                            <div class="btn btn-xs btn-danger">NO DATA / ERROR</div>
                         {% endif %}
                     </a></li>
                 {% endif %}

@@ -47,7 +47,7 @@
                         {% else %}
                             <div class="btn btn-xs btn-info">
                         {% endif %}
-                                {{ node.get_info(cached=True)['blockchain_head_block_num'] }}
+                                {{ node.get_info()['blockchain_head_block_num'] }}
                             </div>
                         </td>
 

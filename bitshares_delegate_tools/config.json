@@ -2,6 +2,7 @@
     "run_args": [],
     "make_args": ["-j1"],
 
+    "delegate": "wackou-delegate",
     "nodes": [
         {
             "host": "localhost",

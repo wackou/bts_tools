@@ -51,8 +51,7 @@ IOStream = namedtuple('IOStream', 'status, stdout, stderr')
 def _run(cmd, io=False):
     if isinstance(cmd, list):
         cmd = cmd[0] + ' "' + '" "'.join(cmd[1:]) + '"'
-    print('-'*80)
-    print('running command: %s\n' % cmd)
+    log.debug('SHELL: running command: %s\n' % cmd)
     if io:
         p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
@@ -73,17 +72,21 @@ def run(cmd, io=False):
     return r
 
 
-CACHED_RPC_CALLS = ['get_info']
-
-is_online = False
-
 _rpc_cache = {}
+
+def clear_rpc_cache():
+    log.debug("------------ clearing rpc cache ------------")
+    global _rpc_cache
+    _rpc_cache = {}
 
 class UnauthorizedError(Exception):
     pass
 
+class RPCError(Exception):
+    pass
+
 def rpc_call(host, port, user, password,
-             funcname, *args, cached=False):
+             funcname, *args):
     url = "http://%s:%d/rpc" % (host, port)
     headers = {'content-type': 'application/json'}
 
@@ -99,15 +102,17 @@ def rpc_call(host, port, user, password,
                              data=json.dumps(payload),
                              headers=headers)
 
-    global is_online
-    is_online = True
-
-    log.debug('RPC received: %s %s' % (type(response), response))
+    log.debug('  received: %s %s' % (type(response), response))
 
     if response.status_code == 401:
         raise UnauthorizedError()
 
-    return response.json()['result']
+    r = response.json()
+
+    if 'error' in r:
+        raise RPCError(r['error']['detail'])
+
+    return r['result']
 
 
 class BTSProxy(object):
@@ -137,16 +142,43 @@ class BTSProxy(object):
 
                 result = json.loads(run(cmd, io=True).stdout)
                 if 'error' in result:
+                    # re-raise original exception
+                    # FIXME: this should be done properly without exec, could
+                    #        potentially be a security issue
                     exec('raise %s("%s")' % (result['type'], result['error']))
-                    # TODO: raise exception
-                    pass
 
                 return result
             self._rpc_call = remote_call
 
+    def rpc_call(self, funcname, *args, cached=True):
+        log.debug('RPC call @ %s: %s(%s)' % (self.host, funcname, ', '.join(repr(arg) for arg in args)))
+        if cached:
+            if (self.host, funcname, args) in _rpc_cache:
+                result = _rpc_cache[(self.host, funcname, args)]
+                if isinstance(result, Exception):
+                    log.debug('  using cached exception %s' % result.__class__)
+                    raise result
+                else:
+                    log.debug('  using cached result')
+                    return result
+
+        try:
+            result = self._rpc_call(funcname, *args)
+        except Exception as e:
+            # also cache when exceptions are raised
+            _rpc_cache[(self.host, funcname, args)] = e
+            log.debug('  added exception %s in cache' % e.__class__)
+            raise
+
+        _rpc_cache[(self.host, funcname, args)] = result
+        log.debug('  added result in cache')
+
+        return result
+
+
     def status(self):
         try:
-            self._rpc_call('about')
+            self.rpc_call('about')
             return 'online'
 
         except requests.exceptions.ConnectionError:
@@ -159,18 +191,8 @@ class BTSProxy(object):
         return self.status() == 'online'
 
     def __getattr__(self, funcname):
-        def call(*args, cached=False):
-            if cached and funcname in CACHED_RPC_CALLS:
-                if (self.host, funcname, args) in _rpc_cache:
-                    return _rpc_cache[(self.host, funcname, args)]
-
-            result = self._rpc_call(funcname, *args)
-
-            if funcname in CACHED_RPC_CALLS:
-                _rpc_cache[(self.host, funcname, args)] = result
-
-            return result
-
+        def call(*args, cached=True):
+            return self.rpc_call(funcname, *args, cached=cached)
         return call
 
 
@@ -186,13 +208,18 @@ rpc = nodes[0]
 #### util functions we want to be able to access easily, such as in templates
 
 def delegate_name():
-    # FIXME: should parse my accounts to know the actual delegate name
-    return 'wackou-delegate'
+    # TODO: should parse my accounts to know the actual delegate name
+    return config['delegate']
 
 
 def get_streak():
-    slots = rpc.blockchain_get_delegate_slot_records(delegate_name())[::-1]
-    if not slots:
-        return True, 0
-    streak = itertools.takewhile(lambda x: (x['block_produced'] == slots[0]['block_produced']), slots)
-    return slots[0]['block_produced'], len(list(streak))
+    try:
+        slots = rpc.blockchain_get_delegate_slot_records(delegate_name())[::-1]
+        if not slots:
+            return True, 0
+        streak = itertools.takewhile(lambda x: (x['block_produced'] == slots[0]['block_produced']), slots)
+        return slots[0]['block_produced'], len(list(streak))
+
+    except:
+        # can fail with RPCError when delegate has not been registered yet
+        return False, -1
