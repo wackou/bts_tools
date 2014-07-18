@@ -29,6 +29,7 @@ import shutil
 import json
 import logging
 
+log = logging.getLogger(__name__)
 
 
 BITSHARES_BUILD_DIR = config[platform]['BITSHARES_BUILD_DIR']
@@ -185,7 +186,10 @@ def main_rpc_call():
 def send_notification(msg):
     print('Sending message...')
 
-    conn = apnsclient.Session().new_connection('push_sandbox', cert_file=config['apns_cert'])
+    certfile = join(dirname(__file__), config['apns_cert'])
+    if not exists(certfile):
+        log.error('Missing certificate file for APNs service: %s' % certfile)
+    conn = apnsclient.Session().new_connection('push_sandbox', cert_file=certfile)
     message = apnsclient.Message(config['apns_tokens'],
                                  alert=msg,
                                  sound='base_under_attack_%s.caf' % random.choice(['terran', 'zerg', 'protoss']),
@@ -196,27 +200,27 @@ def send_notification(msg):
     try:
         res = srv.send(message)
     except:
-        print("Can't connect to APNs, looks like network is down")
+        log.error('Can\'t connect to APNs, looks like network is down')
     else:
         # Check failures. Check codes in APNs reference docs.
         for token, reason in res.failed.items():
             code, errmsg = reason
             # according to APNs protocol the token reported here
             # is garbage (invalid or empty), stop using and remove it.
-            print('Device failed: {0}, reason: {1}'.format(token, errmsg))
+            log.error('Device failed: {0}, reason: {1}'.format(token, errmsg))
 
         # Check failures not related to devices.
         for code, errmsg in res.errors:
-            print('Error: {}'.format(errmsg))
+            log.error('Error: {}'.format(errmsg))
 
         # Check if there are tokens that can be retried
         if res.needs_retry():
             # repeat with retry_message or reschedule your task
-            print('Needs retry...')
+            log.error('Needs retry...')
             retry_message = res.retry()
-            print('Did retry: %s' % retry_message)
+            log.error('Did retry: %s' % retry_message)
 
-    print('done sending notification!')
+    log.info('Done sending notification: %s' % msg)
 
 
 def main_bts_notify():

@@ -1,3 +1,5 @@
 include *.rst
+include bitshares_delegate_tools/bts_apns.pem
+include bitshares_delegate_tools/config.json
 recursive-include bitshares_delegate_tools/static *
 recursive-include bitshares_delegate_tools/templates *

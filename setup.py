@@ -29,7 +29,7 @@ HISTORY = """Unreleased as of yet"""
 VERSION = '0.1.dev1'
 
 
-install_requires = ['Flask', 'requests'] #, 'SQLAlchemy', 'Flask-SQLAlchemy']
+install_requires = ['Flask', 'requests', 'apns-client']
 
 setup_requires = []
 
@@ -62,7 +62,6 @@ args = dict(name='bitshares_delegate_tools',
             url='https://github.com/wackou/bitshares_delegate_tools',
             packages=find_packages(),
             include_package_data=True,
-            #package_data = { 'bitshares_delegate_tools': ['bitshares_delegate_tools/static/css/*'] },
             install_requires=install_requires,
             setup_requires=setup_requires,
             entry_points=entry_points,

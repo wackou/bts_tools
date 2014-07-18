@@ -18,9 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-#from flask_sqlalchemy import SQLAlchemy
-#from flask_security import Security
-from os.path import join, dirname, expanduser
+from os.path import join, dirname, expanduser, exists
 from collections import namedtuple
 from subprocess import Popen, PIPE
 import requests
@@ -37,8 +35,26 @@ platform = sys.platform
 if platform.startswith('linux'):
     platform = 'linux'
 
-# load config
-config = json.load(open(join(dirname(__file__), 'config.json')))
+def load_config():
+    try:
+        config_file = join(dirname(__file__), 'config.json')
+        config_contents = open(config_file).read()
+    except:
+        log.error('Could not read config file: %s' % config_file)
+        raise
+
+    try:
+        config = json.loads(config_contents)
+    except:
+        log.error('-'*100)
+        log.error('Config file contents is not a valid JSON object:')
+        log.error(config)
+        log.error('-'*100)
+        raise
+
+    return config
+
+config = load_config()
 
 if platform not in config:
     raise OSError('OS not supported yet, please submit a patch :)')
@@ -49,6 +65,7 @@ for attr, path in config[platform].items():
 
 
 IOStream = namedtuple('IOStream', 'status, stdout, stderr')
+
 
 def _run(cmd, io=False):
     if isinstance(cmd, list):
@@ -67,6 +84,7 @@ def _run(cmd, io=False):
         p.communicate()
         return IOStream(p.returncode, None, None)
 
+
 def run(cmd, io=False):
     r = _run(cmd, io)
     if r.status != 0:
@@ -76,16 +94,20 @@ def run(cmd, io=False):
 
 _rpc_cache = {}
 
+
 def clear_rpc_cache():
     log.debug("------------ clearing rpc cache ------------")
     global _rpc_cache
     _rpc_cache = {}
 
+
 class UnauthorizedError(Exception):
     pass
 
+
 class RPCError(Exception):
     pass
+
 
 def rpc_call(host, port, user, password,
              funcname, *args):
@@ -142,7 +164,15 @@ class BTSProxy(object):
                     cmd += 'source %s/bin/activate; ' % self.venv_path
                 cmd += 'bts-rpc %s %s"' % (funcname, ' '.join(str(arg) for arg in args))
 
-                result = json.loads(run(cmd, io=True).stdout)
+                result = run(cmd, io=True).stdout
+                try:
+                    result = json.loads(result)
+                except:
+                    print('-'*40 + ' Error while parsing JSON: ' + '-'*40)
+                    print(result)
+                    print('-'*108)
+                    raise
+
                 if 'error' in result:
                     # re-raise original exception
                     # FIXME: this should be done properly without exec, could
@@ -177,7 +207,6 @@ class BTSProxy(object):
 
         return result
 
-
     def status(self, cached=True):
         try:
             self.rpc_call('about', cached=cached)
@@ -207,7 +236,9 @@ nodes = [ BTSProxy(host=node['host'],
 
 rpc = nodes[0]
 
+
 #### util functions we want to be able to access easily, such as in templates
+
 
 def delegate_name():
     # TODO: should parse my accounts to know the actual delegate name
@@ -236,16 +267,16 @@ def check_online_thread():
     else:
         raise ValueError('"%s" is not a valid host name. Available: %s' % (config['monitor_host'], ', '.join(n.host for n in nodes)))
 
-    last_state = 'online'
+    last_state = 'offline'
 
     while True:
         if node.is_online(cached=False):
-            print('---- NODE ONLINE ----')
+            log.debug('---- NODE ONLINE ----')
             last_state = 'online'
         else:
-            print('**** NODE OFFLINE ****')
+            log.debug('**** NODE OFFLINE ****')
             if last_state == 'online':
-                send_notification('Delegate just went offline...')
+                send_notification('Delegate %s just went offline...' % config['monitor_host'])
             last_state = 'offline'
 
         time.sleep(10)
