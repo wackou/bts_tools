@@ -70,7 +70,7 @@ IOStream = namedtuple('IOStream', 'status, stdout, stderr')
 def _run(cmd, io=False):
     if isinstance(cmd, list):
         cmd = cmd[0] + ' "' + '" "'.join(cmd[1:]) + '"'
-    log.debug('SHELL: running command: %s\n' % cmd)
+    log.debug('SHELL: running command: %s' % cmd)
     if io:
         p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
@@ -183,7 +183,8 @@ class BTSProxy(object):
             self._rpc_call = remote_call
 
     def rpc_call(self, funcname, *args, cached=True):
-        log.debug('RPC call @ %s: %s(%s)' % (self.host, funcname, ', '.join(repr(arg) for arg in args)))
+        log.debug(('RPC call @ %s: %s(%s)' % (self.host, funcname, ', '.join(repr(arg) for arg in args))
+                  + ' (cached = False)' if cached == False else ''))
         if cached:
             if (self.host, funcname, args) in _rpc_cache:
                 result = _rpc_cache[(self.host, funcname, args)]
