@@ -55,13 +55,14 @@ def load_config():
     return config
 
 config = load_config()
+env = config['env'][config['env']['active']]
 
-if platform not in config:
+if platform not in env:
     raise OSError('OS not supported yet, please submit a patch :)')
 
 # expand '~' in path names to the user's home dir
-for attr, path in config[platform].items():
-    config[platform][attr] = expanduser(path)
+for attr, path in env[platform].items():
+    env[platform][attr] = expanduser(path)
 
 
 IOStream = namedtuple('IOStream', 'status, stdout, stderr')

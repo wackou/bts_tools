@@ -20,22 +20,24 @@
 
 from os.path import join, dirname, exists, islink
 from argparse import RawTextHelpFormatter
-from bitshares_delegate_tools.core import config, platform, rpc, run
+from bitshares_delegate_tools.core import config, env, platform, rpc, run
 import random
 import apnsclient
 import argparse
 import os
+import sys
 import shutil
 import json
 import logging
 
 log = logging.getLogger(__name__)
 
+BITSHARES_GIT_REPO  = env['git_repo']
+BITSHARES_BUILD_DIR = env[platform]['BITSHARES_BUILD_DIR']
+BITSHARES_HOME_DIR  = env[platform]['BITSHARES_HOME_DIR']
+BITSHARES_BIN_DIR   = env[platform]['BITSHARES_BIN_DIR']
 
-BITSHARES_BUILD_DIR = config[platform]['BITSHARES_BUILD_DIR']
-BITSHARES_HOME_DIR = config[platform]['BITSHARES_HOME_DIR']
-BITSHARES_BIN_DIR = config[platform]['BITSHARES_BIN_DIR']
-
+# TODO: move this comment somewhere appropriate
 # on mac osx, readline needs to be installed by brew and
 # "brew link --force readline" to take precedence over the
 # outdated version of the system
@@ -43,7 +45,7 @@ BITSHARES_BIN_DIR = config[platform]['BITSHARES_BIN_DIR']
 
 def clone():
     if not exists(BITSHARES_BUILD_DIR):
-        run('git clone https://github.com/BitShares/bitshares_toolkit.git "%s"' % BITSHARES_BUILD_DIR)
+        run('git clone %s "%s"' % (BITSHARES_GIT_REPO, BITSHARES_BUILD_DIR))
         os.chdir(BITSHARES_BUILD_DIR)
         run('git submodule init')
 
@@ -137,7 +139,7 @@ def main():
                                           'bitshares_client_*%s*' % args.hash[:8]),
                            io=True).stdout.strip()
         else:
-            # run latest version
+            # run last built version
             bin_name = join(BITSHARES_BIN_DIR, 'bitshares_client')
 
         run_args = config.get('run_args', [])
@@ -154,7 +156,14 @@ def main():
         run('rm -fr "%s"' % BITSHARES_BUILD_DIR)
 
     elif args.command == 'clean_homedir':
-        run('rm -fr "%s"' % BITSHARES_HOME_DIR)
+        cmd = 'rm -fr "%s"' % BITSHARES_HOME_DIR
+        if config['env']['active'] == 'production':
+            print('WARNING: you are about to delete your wallet on the real BTSX chain.')
+            print('         you may lose some real money if you do this!...')
+            print('If you really want to do it, you\'ll have to manually run the command:')
+            print(cmd)
+            sys.exit(1)
+        run(cmd)
 
     elif args.command == 'list':
         run('ls -ltr "%s"' % BITSHARES_BIN_DIR)

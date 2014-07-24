@@ -23,16 +23,37 @@
     "apns_cert": "bts_apns.pem",
     "apns_tokens": [],
 
-    "linux":
-    {
-        "BITSHARES_HOME_DIR": "~/.BitSharesXTS",
-        "BITSHARES_BUILD_DIR": "~/.bitshares_toolkit",
-        "BITSHARES_BIN_DIR": "~/.BitSharesXTS_bin"
-    },
-    "darwin":
-    {
-        "BITSHARES_HOME_DIR": "~/Library/Application Support/BitShares XTS",
-        "BITSHARES_BUILD_DIR": "~/.bitshares_toolkit",
-        "BITSHARES_BIN_DIR": "~/.BitSharesXTS_bin"
+    "env": {
+        "active": "production",
+
+        "development": {
+            "git_repo": "https://github.com/BitShares/bitshares_toolkit.git",
+
+            "linux": {
+                "BITSHARES_HOME_DIR": "~/.BitSharesXTS",
+                "BITSHARES_BUILD_DIR": "~/.BitSharesXTS_build",
+                "BITSHARES_BIN_DIR": "~/.BitSharesXTS_bin"
+            },
+            "darwin": {
+                "BITSHARES_HOME_DIR": "~/Library/Application Support/BitShares XTS",
+                "BITSHARES_BUILD_DIR": "~/.BitSharesXTS_build",
+                "BITSHARES_BIN_DIR": "~/.BitSharesXTS_bin"
+            }
+        },
+
+        "production": {
+            "git_repo": "https://github.com/dacsunlimited/bitsharesx.git",
+
+            "linux": {
+                "BITSHARES_HOME_DIR": "~/.BitSharesX",
+                "BITSHARES_BUILD_DIR": "~/.BitSharesX_build",
+                "BITSHARES_BIN_DIR": "~/.BitSharesX_bin"
+            },
+            "darwin": {
+                "BITSHARES_HOME_DIR": "~/Library/Application Support/BitShares X",
+                "BITSHARES_BUILD_DIR": "~/.BitSharesX_build",
+                "BITSHARES_BIN_DIR": "~/.BitSharesX_bin"
+            }
+        }
     }
 }
