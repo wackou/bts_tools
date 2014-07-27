@@ -19,9 +19,18 @@
         }
     ],
 
-    "monitor_host": "example.com",
-    "apns_cert": "bts_apns.pem",
-    "apns_tokens": [],
+    "monitoring": {
+        "active": false,
+        "host": "example.com",
+
+        "email": {
+            "TODO": "TODO"
+        },
+        "apns": {
+            "cert": "bts_apns.pem",
+            "tokens": []
+        }
+    },
 
     "env": {
         "active": "production",

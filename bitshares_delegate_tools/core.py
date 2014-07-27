@@ -48,7 +48,7 @@ def load_config():
     except:
         log.error('-'*100)
         log.error('Config file contents is not a valid JSON object:')
-        log.error(config)
+        log.error(config_contents)
         log.error('-'*100)
         raise
 
@@ -263,7 +263,7 @@ def get_streak():
 def check_online_thread():
     from bitshares_delegate_tools.cmdline import send_notification
     for n in nodes:
-        if n.host == config['monitor_host']:
+        if n.host == config['monitoring']['host']:
             node = n
             break
     else:

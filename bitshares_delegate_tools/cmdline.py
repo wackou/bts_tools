@@ -195,11 +195,11 @@ def main_rpc_call():
 def send_notification(msg):
     print('Sending message...')
 
-    certfile = join(dirname(__file__), config['apns_cert'])
+    certfile = join(dirname(__file__), config['monitoring']['apns']['cert'])
     if not exists(certfile):
         log.error('Missing certificate file for APNs service: %s' % certfile)
     conn = apnsclient.Session().new_connection('push_sandbox', cert_file=certfile)
-    message = apnsclient.Message(config['apns_tokens'],
+    message = apnsclient.Message(config['monitoring']['apns']['tokens'],
                                  alert=msg,
                                  sound='base_under_attack_%s.caf' % random.choice(['terran', 'zerg', 'protoss']),
                                  badge=1)
