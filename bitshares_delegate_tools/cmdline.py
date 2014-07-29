@@ -111,8 +111,8 @@ def main():
                                      formatter_class=RawTextHelpFormatter)
     parser.add_argument('command', choices=['clean_homedir', 'clean', 'build', 'run', 'list'],
                         help='the command to run')
-    parser.add_argument('-r', '--rpc', action='store_true',
-                        help='run binary with RPC server activated')
+    parser.add_argument('-r', '--norpc', action='store_true',
+                        help='run binary with RPC server deactivated')
     parser.add_argument('hash',
                         help='the hash of the desired commit', nargs='?')
     args = parser.parse_args()
@@ -143,7 +143,7 @@ def main():
             bin_name = join(BITSHARES_BIN_DIR, 'bitshares_client')
 
         run_args = config.get('run_args', [])
-        if args.rpc:
+        if not args.norpc:
             run_args = ['--server'] + run_args
 
         # on linux, run with "gdb -ex run ./bts_client"
