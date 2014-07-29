@@ -21,12 +21,14 @@
 from os.path import join, dirname, expanduser, exists
 from collections import namedtuple
 from subprocess import Popen, PIPE
+from collections import defaultdict
+from datetime import datetime
 import requests
 import sys
 import json
 import itertools
 import time
-import threading
+import psutil
 import logging
 
 log = logging.getLogger(__name__)
@@ -93,13 +95,12 @@ def run(cmd, io=False):
     return r
 
 
-_rpc_cache = {}
+_rpc_cache = defaultdict(dict)
 
 
 def clear_rpc_cache():
     log.debug("------------ clearing rpc cache ------------")
-    global _rpc_cache
-    _rpc_cache = {}
+    _rpc_cache.clear()
 
 
 class UnauthorizedError(Exception):
@@ -135,7 +136,10 @@ def rpc_call(host, port, user, password,
     r = response.json()
 
     if 'error' in r:
-        raise RPCError(r['error']['detail'])
+        if 'detail' in r['error']:
+            raise RPCError(r['error']['detail'])
+        else:
+            raise RPCError(r['error']['message'])
 
     return r['result']
 
@@ -185,10 +189,10 @@ class BTSProxy(object):
 
     def rpc_call(self, funcname, *args, cached=True):
         log.debug(('RPC call @ %s: %s(%s)' % (self.host, funcname, ', '.join(repr(arg) for arg in args))
-                  + ' (cached = False)' if cached == False else ''))
+                  + (' (cached = False)' if not cached else '')))
         if cached:
-            if (self.host, funcname, args) in _rpc_cache:
-                result = _rpc_cache[(self.host, funcname, args)]
+            if (funcname, args) in _rpc_cache[self.host]:
+                result = _rpc_cache[self.host][(funcname, args)]
                 if isinstance(result, Exception):
                     log.debug('  using cached exception %s' % result.__class__)
                     raise result
@@ -200,18 +204,25 @@ class BTSProxy(object):
             result = self._rpc_call(funcname, *args)
         except Exception as e:
             # also cache when exceptions are raised
-            _rpc_cache[(self.host, funcname, args)] = e
+            _rpc_cache[self.host][(funcname, args)] = e
             log.debug('  added exception %s in cache' % e.__class__)
             raise
 
-        _rpc_cache[(self.host, funcname, args)] = result
+        _rpc_cache[self.host][(funcname, args)] = result
         log.debug('  added result in cache')
 
         return result
 
+    def clear_rpc_cache(self):
+        try:
+            log.debug('Clearing RPC cache for host: %s' % self.host)
+            del _rpc_cache[self.host]
+        except KeyError:
+            pass
+
     def status(self, cached=True):
         try:
-            self.rpc_call('about', cached=cached)
+            self.rpc_call('get_info', cached=cached)
             return 'online'
 
         except requests.exceptions.ConnectionError:
@@ -260,7 +271,7 @@ def get_streak():
         return False, -1
 
 
-def check_online_thread():
+def monitoring_thread():
     from bitshares_delegate_tools.cmdline import send_notification
     for n in nodes:
         if n.host == config['monitoring']['host']:
@@ -269,17 +280,55 @@ def check_online_thread():
     else:
         raise ValueError('"%s" is not a valid host name. Available: %s' % (config['monitor_host'], ', '.join(n.host for n in nodes)))
 
-    last_state = 'offline'
+    MONITOR_INTERVAL = 10 # in seconds
+    last_state = None
+    connection_status = None
+
+    stats = []
 
     while True:
-        if node.is_online(cached=False):
-            log.debug('---- NODE ONLINE ----')
+        time.sleep(MONITOR_INTERVAL)
+        log.debug('-------- Monitoring status of the BitShares client --------')
+        node.clear_rpc_cache()
+
+        if node.is_online():
+            if last_state == 'offline':
+                send_notification('Delegate just came online!')
             last_state = 'online'
         else:
-            log.debug('**** NODE OFFLINE ****')
             if last_state == 'online':
-                send_notification('Delegate %s just went offline...' % config['monitor_host'])
+                send_notification('Delegate just went offline...', alert=True)
             last_state = 'offline'
+            continue
 
-        time.sleep(10)
+        info = node.get_info()
+        if info['network_num_connections'] <= 5:
+            if connection_status == 'connected':
+                send_notification('Fewer than 5 network connections...', alert=True)
+                connection_status = 'starved'
+        else:
+            if connection_status == 'starved':
+                send_notification('Got more than 5 connections now')
+                connection_status = 'connected'
+
+        # only monitor cpu and network if we are monitoring localhost
+        if node.host != 'localhost':
+            continue
+
+        # find bitshares process
+        p = next(filter(lambda p: 'bitshares_client' in p.name(),
+                        psutil.process_iter()))
+
+        s = dict(cpu=p.cpu_percent(interval=1), # note: this blocks for 1 second
+                 mem=p.memory_info().rss,
+                 conn=info['network_num_connections'],
+                 timestamp=datetime.utcnow().isoformat())
+
+        stats.append(s)
+
+        # write stats only now and then
+        if len(stats) % (15 * (60 / MONITOR_INTERVAL)) == 0:
+            with open(config['monitoring']['stats_file'], 'w') as f:
+                json.dump(stats, f)
+
 

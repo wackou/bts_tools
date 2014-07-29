@@ -39,5 +39,5 @@ def main():
                use_reloader=DEBUG,
                use_debugger=DEBUG)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

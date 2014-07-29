@@ -64,7 +64,7 @@ def create_app(settings_override=None):
     app.debug = True
 
     if bitshares_delegate_tools.core.config['monitoring']['active']:
-        t = threading.Thread(target=bitshares_delegate_tools.core.check_online_thread)
+        t = threading.Thread(target=bitshares_delegate_tools.core.monitoring_thread)
         t.daemon = True
         t.start()
 

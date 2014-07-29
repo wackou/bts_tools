@@ -192,17 +192,26 @@ def main_rpc_call():
     print(json.dumps(result))
 
 
-def send_notification(msg):
+def send_notification(msg, alert=False):
+    """Sends an APNs notification. 'alert' means something wrong is happening,
+    otherwise it's just a normal info message."""
     print('Sending message...')
 
     certfile = join(dirname(__file__), config['monitoring']['apns']['cert'])
     if not exists(certfile):
         log.error('Missing certificate file for APNs service: %s' % certfile)
+        return
     conn = apnsclient.Session().new_connection('push_sandbox', cert_file=certfile)
-    message = apnsclient.Message(config['monitoring']['apns']['tokens'],
-                                 alert=msg,
-                                 sound='base_under_attack_%s.caf' % random.choice(['terran', 'zerg', 'protoss']),
-                                 badge=1)
+    if alert:
+        message = apnsclient.Message(config['monitoring']['apns']['tokens'],
+                                     alert=msg,
+                                     sound='base_under_attack_%s.caf' % random.choice(['terran', 'zerg', 'protoss']),
+                                     badge=1)
+    else:
+        message = apnsclient.Message(config['monitoring']['apns']['tokens'],
+                                     alert=msg,
+                                     badge=1)
+
 
     # Send the message.
     srv = apnsclient.APNs(conn)
