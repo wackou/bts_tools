@@ -19,16 +19,10 @@
 #
 
 import logging
+from .slogging import setupLogging
 
-class SimpleFormatter(logging.Formatter):
-    def __init__(self):
-        self.fmt = '[%(asctime)s] %(levelname)-8s %(module)s:%(funcName)s -- %(message)s'
-        logging.Formatter.__init__(self, self.fmt)
+setupLogging(with_time=True, with_lineno=True)
 
-ch = logging.StreamHandler()
-ch.setFormatter(SimpleFormatter())
-
-logging.getLogger('bitshares_delegate_tools').addHandler(ch)
 logging.getLogger('bitshares_delegate_tools').setLevel(logging.DEBUG)
 
 from .core import rpc
