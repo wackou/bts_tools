@@ -291,44 +291,47 @@ def monitoring_thread():
         log.debug('-------- Monitoring status of the BitShares client --------')
         node.clear_rpc_cache()
 
-        if node.is_online():
-            if last_state == 'offline':
-                send_notification('Delegate just came online!')
-            last_state = 'online'
-        else:
-            if last_state == 'online':
-                send_notification('Delegate just went offline...', alert=True)
-            last_state = 'offline'
-            continue
+        try:
+            if node.is_online():
+                if last_state == 'offline':
+                    send_notification('Delegate just came online!')
+                last_state = 'online'
+            else:
+                if last_state == 'online':
+                    send_notification('Delegate just went offline...', alert=True)
+                last_state = 'offline'
+                continue
 
-        info = node.get_info()
-        if info['network_num_connections'] <= 5:
-            if connection_status == 'connected':
-                send_notification('Fewer than 5 network connections...', alert=True)
-                connection_status = 'starved'
-        else:
-            if connection_status == 'starved':
-                send_notification('Got more than 5 connections now')
-                connection_status = 'connected'
+            info = node.get_info()
+            if info['network_num_connections'] <= 5:
+                if connection_status == 'connected':
+                    send_notification('Fewer than 5 network connections...', alert=True)
+                    connection_status = 'starved'
+            else:
+                if connection_status == 'starved':
+                    send_notification('Got more than 5 connections now')
+                    connection_status = 'connected'
 
-        # only monitor cpu and network if we are monitoring localhost
-        if node.host != 'localhost':
-            continue
+            # only monitor cpu and network if we are monitoring localhost
+            if node.host != 'localhost':
+                continue
 
-        # find bitshares process
-        p = next(filter(lambda p: 'bitshares_client' in p.name(),
-                        psutil.process_iter()))
+            # find bitshares process
+            p = next(filter(lambda p: 'bitshares_client' in p.name(),
+                            psutil.process_iter()))
 
-        s = dict(cpu=p.cpu_percent(interval=1), # note: this blocks for 1 second
-                 mem=p.memory_info().rss,
-                 conn=info['network_num_connections'],
-                 timestamp=datetime.utcnow().isoformat())
+            s = dict(cpu=p.cpu_percent(interval=1), # note: this blocks for 1 second
+                     mem=p.memory_info().rss,
+                     conn=info['network_num_connections'],
+                     timestamp=datetime.utcnow().isoformat())
 
-        stats.append(s)
+            stats.append(s)
 
-        # write stats only now and then
-        if len(stats) % (15 * (60 / MONITOR_INTERVAL)) == 0:
-            with open(config['monitoring']['stats_file'], 'w') as f:
-                json.dump(stats, f)
+            # write stats only now and then
+            if len(stats) % (15 * (60 / MONITOR_INTERVAL)) == 0:
+                with open(config['monitoring']['stats_file'], 'w') as f:
+                    json.dump(stats, f)
 
-
+        except Exception as e:
+            log.error('An exception occurred in the monitoring thread:')
+            log.exception(e)
