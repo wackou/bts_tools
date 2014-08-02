@@ -125,7 +125,7 @@ def view_info():
             green_if_true(value >= 5)
 
         elif prop == 'blockchain_head_block_age':
-            green_if_true('second' in value)
+            green_if_true(value < 60)
 
         elif prop == 'wallet_next_block_production_time':
             if value and 'second' in value:

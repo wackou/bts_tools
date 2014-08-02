@@ -42,7 +42,7 @@
                             <div class="btn btn-xs btn-success">online</div>
                         </td>
                         <td>
-                        {% if 'second' in node.get_info()['blockchain_head_block_age'] %}
+                        {% if node.get_info()['blockchain_head_block_age'] < 60 %}
                             <div class="btn btn-xs btn-success">
                         {% else %}
                             <div class="btn btn-xs btn-info">

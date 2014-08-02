@@ -225,7 +225,8 @@ class BTSProxy(object):
             self.rpc_call('get_info', cached=cached)
             return 'online'
 
-        except requests.exceptions.ConnectionError:
+        except (requests.exceptions.ConnectionError, # http connection refused
+                RuntimeError): # host is down, ssh doesn't work
             return 'offline'
 
         except UnauthorizedError:
