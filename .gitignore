@@ -3,3 +3,5 @@
 *.egg-info
 __pycache__
 dist
+apncerts.p12
+bts_apns.pem

@@ -157,11 +157,11 @@ def view_delegates():
     response = bts.rpc.blockchain_list_delegates(0, 300)
 
     headers = ['Position', 'Delegate name', 'Votes for', 'Last block', 'Produced', 'Missed']
+    total_shares = bts.rpc.get_info()['blockchain_share_supply']
 
     data = [ (i+1,
               d['name'],
-              '%.8f%%' % (d['delegate_info']['votes_for'] * 100 / 100000 /
-                          float(bts.rpc.get_info()['blockchain_share_supply'].split()[0].replace(',', ''))),
+              '%.8f%%' % (d['delegate_info']['votes_for'] * 100 / total_shares),
               d['delegate_info']['last_block_num_produced'],
               d['delegate_info']['blocks_produced'],
               d['delegate_info']['blocks_missed'])
