@@ -117,8 +117,8 @@ def view_info():
                 attrs['red'].append((i, 1))
 
         if prop in ('wallet_open',
-                 'wallet_unlocked',
-                 'wallet_block_production_enabled'):
+                    'wallet_unlocked',
+                    'wallet_block_production_enabled'):
             green_if_true(value)
 
         elif prop == 'network_num_connections':
@@ -128,7 +128,7 @@ def view_info():
             green_if_true(value < 60)
 
         elif prop == 'wallet_next_block_production_time':
-            if value and 'second' in value:
+            if value and value < 60:
                 attrs['orange'].append((i, 1))
 
     info_items, attrs = split_columns(info_items, attrs)
