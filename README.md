@@ -29,7 +29,7 @@ just run the ``bts`` script with the command you want to execute:
 
     optional arguments:
       -h, --help            show this help message and exit
-      -r, --rpc             run binary with RPC server activated
+      -r, --norpc           run binary with RPC server deactivated
 
     You should also look into config.json to tune it to your liking.
 

@@ -22,7 +22,8 @@ from flask import Blueprint, render_template, request, redirect, send_from_direc
 from functools import wraps
 from collections import defaultdict
 from os.path import dirname
-import bitshares_delegate_tools.core as bts
+import bitshares_delegate_tools.rpcutils as rpc
+from bitshares_delegate_tools import core
 import bitshares_delegate_tools
 import requests.exceptions
 import logging
@@ -59,9 +60,9 @@ def catch_error(f):
         try:
             return f(*args, **kwargs)
         except requests.exceptions.ConnectionError:
-            bts.is_online = False
+            core.is_online = False
             return offline()
-        except bts.UnauthorizedError:
+        except core.UnauthorizedError:
             return unauthorized()
     return wrapper
 
@@ -74,7 +75,7 @@ def catch_error(f):
 def clear_rpc_cache(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        bts.clear_rpc_cache()
+        bitshares_delegate_tools.rpcutils.clear_rpc_cache()
         return f(*args, **kwargs)
     return wrapper
 
@@ -106,7 +107,7 @@ def split_columns(items, attrs):
 @catch_error
 def view_info():
     attrs = defaultdict(list)
-    info_items = sorted(bts.rpc.get_info().items())
+    info_items = sorted(rpc.main_node.get_info().items())
 
     attrs['bold'] = [(i, 0) for i in range(len(info_items))]
     for i, (prop, value) in enumerate(info_items):
@@ -139,9 +140,9 @@ def view_info():
 @bp.route('/rpchost/<host>')
 @catch_error
 def set_rpchost(host):
-    for node in bts.nodes:
+    for node in rpc.nodes:
         if node.host == host:
-            bts.rpc = node
+            rpc.main_node = node
             break
     else:
         # invalid host name
@@ -154,10 +155,10 @@ def set_rpchost(host):
 @clear_rpc_cache
 @catch_error
 def view_delegates():
-    response = bts.rpc.blockchain_list_delegates(0, 300)
+    response = rpc.main_node.blockchain_list_delegates(0, 300)
 
     headers = ['Position', 'Delegate name', 'Votes for', 'Last block', 'Produced', 'Missed']
-    total_shares = bts.rpc.get_info()['blockchain_share_supply']
+    total_shares = rpc.main_node.get_info()['blockchain_share_supply']
 
     data = [ (i+1,
               d['name'],

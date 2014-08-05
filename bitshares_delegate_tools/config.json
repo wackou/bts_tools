@@ -1,4 +1,9 @@
 {
+    "logging": {
+        "bitshares_delegate_tools": "DEBUG",
+        "bitshares_delegate_tools.rpcutils": "INFO"
+    },
+
     "run_args": [],
     "make_args": ["-j1"],
 

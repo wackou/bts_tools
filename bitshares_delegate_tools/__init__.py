@@ -23,6 +23,7 @@ from .slogging import setupLogging
 
 setupLogging(with_time=True, with_lineno=True)
 
-logging.getLogger('bitshares_delegate_tools').setLevel(logging.DEBUG)
+# default logging levels
+logging.getLogger('bitshares_delegate_tools').setLevel(logging.INFO)
 
-from .core import rpc
+from .rpcutils import main_node as rpc

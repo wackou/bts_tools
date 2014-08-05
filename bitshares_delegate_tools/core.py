@@ -18,12 +18,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from os.path import join, dirname, expanduser, exists
+from os.path import join, dirname, expanduser
 from collections import namedtuple
 from subprocess import Popen, PIPE
-from collections import defaultdict
 from datetime import datetime
-import requests
 import sys
 import json
 import itertools
@@ -66,6 +64,10 @@ if platform not in env:
 for attr, path in env[platform].items():
     env[platform][attr] = expanduser(path)
 
+# setup logging levels from config file
+for name, level in config.get('logging', {}).items():
+    logging.getLogger(name).setLevel(getattr(logging, level))
+
 
 IOStream = namedtuple('IOStream', 'status, stdout, stderr')
 
@@ -95,160 +97,12 @@ def run(cmd, io=False):
     return r
 
 
-_rpc_cache = defaultdict(dict)
-
-
-def clear_rpc_cache():
-    log.debug("------------ clearing rpc cache ------------")
-    _rpc_cache.clear()
-
-
 class UnauthorizedError(Exception):
     pass
 
 
 class RPCError(Exception):
     pass
-
-
-def rpc_call(host, port, user, password,
-             funcname, *args):
-    url = "http://%s:%d/rpc" % (host, port)
-    headers = {'content-type': 'application/json'}
-
-    payload = {
-        "method": funcname,
-        "params": args,
-        "jsonrpc": "2.0",
-        "id": 0,
-    }
-
-    response = requests.post(url,
-                             auth=(user, password),
-                             data=json.dumps(payload),
-                             headers=headers)
-
-    log.debug('  received: %s %s' % (type(response), response))
-
-    if response.status_code == 401:
-        raise UnauthorizedError()
-
-    r = response.json()
-
-    if 'error' in r:
-        if 'detail' in r['error']:
-            raise RPCError(r['error']['detail'])
-        else:
-            raise RPCError(r['error']['message'])
-
-    return r['result']
-
-
-class BTSProxy(object):
-    def __init__(self, host, port, user, password, venv_path=None):
-        self.host = host
-        self.port = port
-        self.user = user
-        self.password = password
-        self.venv_path = venv_path
-
-        if self.host == 'localhost' or self.host == '127.0.0.1':
-            # direct json-rpc call
-            def local_call(funcname, *args):
-                result = rpc_call(self.host, self.port,
-                                  self.user, self.password,
-                                  funcname, *args)
-                return result
-            self._rpc_call = local_call
-
-        else:
-            # do it over ssh using bts-rpc
-            def remote_call(funcname, *args):
-                cmd = 'ssh %s "' % self.host
-                if self.venv_path:
-                    cmd += 'source %s/bin/activate; ' % self.venv_path
-                cmd += 'bts-rpc %s %s"' % (funcname, ' '.join(str(arg) for arg in args))
-
-                result = run(cmd, io=True).stdout
-                try:
-                    result = json.loads(result)
-                except:
-                    print('-'*40 + ' Error while parsing JSON: ' + '-'*40)
-                    print(result)
-                    print('-'*108)
-                    raise
-
-                if 'error' in result:
-                    # re-raise original exception
-                    # FIXME: this should be done properly without exec, could
-                    #        potentially be a security issue
-                    exec('raise %s("%s")' % (result['type'], result['error']))
-
-                return result
-            self._rpc_call = remote_call
-
-    def rpc_call(self, funcname, *args, cached=True):
-        log.debug(('RPC call @ %s: %s(%s)' % (self.host, funcname, ', '.join(repr(arg) for arg in args))
-                  + (' (cached = False)' if not cached else '')))
-        if cached:
-            if (funcname, args) in _rpc_cache[self.host]:
-                result = _rpc_cache[self.host][(funcname, args)]
-                if isinstance(result, Exception):
-                    log.debug('  using cached exception %s' % result.__class__)
-                    raise result
-                else:
-                    log.debug('  using cached result')
-                    return result
-
-        try:
-            result = self._rpc_call(funcname, *args)
-        except Exception as e:
-            # also cache when exceptions are raised
-            _rpc_cache[self.host][(funcname, args)] = e
-            log.debug('  added exception %s in cache' % e.__class__)
-            raise
-
-        _rpc_cache[self.host][(funcname, args)] = result
-        log.debug('  added result in cache')
-
-        return result
-
-    def clear_rpc_cache(self):
-        try:
-            log.debug('Clearing RPC cache for host: %s' % self.host)
-            del _rpc_cache[self.host]
-        except KeyError:
-            pass
-
-    def status(self, cached=True):
-        try:
-            self.rpc_call('get_info', cached=cached)
-            return 'online'
-
-        except (requests.exceptions.ConnectionError, # http connection refused
-                RuntimeError): # host is down, ssh doesn't work
-            return 'offline'
-
-        except UnauthorizedError:
-            return 'unauthorized'
-
-    def is_online(self, cached=True):
-        return self.status(cached=cached) == 'online'
-
-    def __getattr__(self, funcname):
-        def call(*args, cached=True):
-            return self.rpc_call(funcname, *args, cached=cached)
-        return call
-
-
-nodes = [ BTSProxy(host=node['host'],
-                   port=node['rpc_port'],
-                   user=node['rpc_user'],
-                   password=node['rpc_password'],
-                   venv_path=node.get('venv_path', None))
-          for node in config['nodes'] ]
-
-rpc = nodes[0]
 
 
 #### util functions we want to be able to access easily, such as in templates
@@ -260,8 +114,9 @@ def delegate_name():
 
 
 def get_streak():
+    from . import rpcutils as rpc
     try:
-        slots = rpc.blockchain_get_delegate_slot_records(delegate_name())[::-1]
+        slots = rpc.main_node.blockchain_get_delegate_slot_records(delegate_name())[::-1]
         if not slots:
             return True, 0
         streak = itertools.takewhile(lambda x: (x['block_produced'] == slots[0]['block_produced']), slots)
@@ -273,7 +128,9 @@ def get_streak():
 
 
 def monitoring_thread():
-    from bitshares_delegate_tools.cmdline import send_notification
+    from .cmdline import send_notification
+    from .rpcutils import nodes
+
     for n in nodes:
         if n.host == config['monitoring']['host']:
             node = n
@@ -289,7 +146,7 @@ def monitoring_thread():
 
     while True:
         time.sleep(MONITOR_INTERVAL)
-        log.debug('-------- Monitoring status of the BitShares client --------')
+        #log.debug('-------- Monitoring status of the BitShares client --------')
         node.clear_rpc_cache()
 
         try:

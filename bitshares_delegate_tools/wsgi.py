@@ -24,11 +24,12 @@ from bitshares_delegate_tools import frontend
 import logging
 log = logging.getLogger(__name__)
 
+DEBUG = False
+
 frontend_app = frontend.create_app()
+frontend_app.debug = DEBUG
 
 application = DispatcherMiddleware(frontend_app)
-
-DEBUG = False
 
 def main():
     print('-'*100)

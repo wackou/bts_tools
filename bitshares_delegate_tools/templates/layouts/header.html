@@ -15,9 +15,9 @@
                 <li {% if request.path == '/delegates' %}class="active"{% endif %}><a href="/delegates">Delegates</a></li>
 
                 <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">RPC Host: {{ bts.core.rpc.host }} <span class="caret"></span></a>
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">RPC Host: {{ rpc.main_node.host }} <span class="caret"></span></a>
                     <ul class="dropdown-menu" role="menu">
-                        {% for node in bts.core.nodes %}
+                        {% for node in rpc.nodes %}
                         <li><a href="/rpchost/{{ node.host }}">{{ node.host }}</a></li>
                         {% endfor %}
                     </ul>
@@ -25,11 +25,11 @@
             </ul>
 
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="#"><b>Delegate name: </b> {{ bts.core.delegate_name()}}</a></li>
-                {% if bts.core.rpc.is_online() %}
+                <li><a href="#"><b>Delegate name: </b> {{ core.delegate_name()}}</a></li>
+                {% if rpc.main_node.is_online() %}
                     <li><a href="#">
                         <b>Blocks:</b>
-                        {% set producing, n = bts.core.get_streak() %}
+                        {% set producing, n = core.get_streak() %}
                         {% if n >= 0 %}
                             {% if producing %}
                                 <div class="btn btn-xs btn-success">Last {{ n }} produced</div>

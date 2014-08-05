@@ -20,7 +20,8 @@
 
 from os.path import join, dirname, exists, islink
 from argparse import RawTextHelpFormatter
-from bitshares_delegate_tools.core import config, env, platform, rpc, run
+from bitshares_delegate_tools.core import config, env, platform, run
+from bitshares_delegate_tools import rpc
 import random
 import apnsclient
 import argparse

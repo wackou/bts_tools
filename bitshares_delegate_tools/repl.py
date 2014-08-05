@@ -7,6 +7,7 @@
 from bitshares_delegate_tools.wsgi import application
 ctx = application.app.test_request_context()
 
-from bitshares_delegate_tools.core import rpc
+import bitshares_delegate_tools.rpcutils as rpc
+import bitshares_delegate_tools.core as core
 
 ctx.push()

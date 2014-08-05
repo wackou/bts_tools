@@ -34,7 +34,7 @@
                 <th>Block production enabled</th>
             </tr></thead>
             <tbody>
-            {% for node in bts.core.nodes %}
+            {% for node in rpc.nodes %}
                 <tr>
                     <td>{{ node.host }}</td>
                     {% if node.is_online() %}

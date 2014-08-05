@@ -40,7 +40,6 @@ def format_datetime(value, fmt='full'):
     return value.strftime(fmt)
 
 
-
 def create_app(settings_override=None):
     """Returns the BitShares Delegate Tools Server dashboard application instance"""
 
@@ -59,9 +58,8 @@ def create_app(settings_override=None):
     app.jinja_env.filters['datetime'] = format_datetime
 
     # make bitshares_delegate_tools module available in all the templates
-    app.jinja_env.globals.update(bts=bitshares_delegate_tools)
-
-    app.debug = True
+    app.jinja_env.globals.update(core=bitshares_delegate_tools.core,
+                                 rpc=bitshares_delegate_tools.rpcutils)
 
     if bitshares_delegate_tools.core.config['monitoring']['active']:
         t = threading.Thread(target=bitshares_delegate_tools.core.monitoring_thread)
