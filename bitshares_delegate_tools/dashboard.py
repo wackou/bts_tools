@@ -22,6 +22,7 @@ from flask import Blueprint, render_template, request, redirect, send_from_direc
 from functools import wraps
 from collections import defaultdict
 from os.path import dirname
+from datetime import datetime
 import bitshares_delegate_tools.rpcutils as rpc
 from bitshares_delegate_tools import core
 import bitshares_delegate_tools
@@ -84,6 +85,21 @@ def clear_rpc_cache(f):
 def homepage():
     return redirect('/info')
 
+
+@bp.route('/status')
+@clear_rpc_cache
+@catch_error
+def view_status():
+    stats = list(core.stats)
+    points = []
+    for stat in stats:
+        points.append([int((stat.timestamp - datetime(1970,1,1)).total_seconds() * 1000),
+                       stat.cpu,
+                       int(stat.mem / (1024*1024)),
+                       stat.connections])
+    return render_template('status.html', title='BTS Client - Status', points=points)
+
+
 def split_columns(items, attrs):
     # split into 2 columns, more readable on a laptop
     n = len(items)
@@ -101,6 +117,7 @@ def split_columns(items, attrs):
                     else (l[i][0] - offset, l[i][1] + 2))
 
     return items, attrs
+
 
 @bp.route('/info')
 @clear_rpc_cache
@@ -134,7 +151,7 @@ def view_info():
 
     info_items, attrs = split_columns(info_items, attrs)
 
-    return render_template('tableview.html', data=info_items, attrs=attrs)
+    return render_template('tableview.html', title='BTS Client - Info', data=info_items, attrs=attrs)
 
 
 @bp.route('/rpchost/<host>')

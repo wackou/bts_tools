@@ -19,7 +19,7 @@
 #
 
 from os.path import join, dirname, expanduser
-from collections import namedtuple
+from collections import namedtuple, deque
 from subprocess import Popen, PIPE
 from datetime import datetime
 import sys
@@ -70,6 +70,7 @@ for name, level in config.get('logging', {}).items():
 
 
 IOStream = namedtuple('IOStream', 'status, stdout, stderr')
+StatsFrame = namedtuple('StatsFrame', 'cpu, mem, connections, timestamp')
 
 
 def _run(cmd, io=False):
@@ -127,6 +128,11 @@ def get_streak():
         return False, -1
 
 
+MONITOR_INTERVAL = 1 # in seconds
+STATS_RANGE = 5 # time range in minutes for plots
+
+stats = deque(maxlen=int(STATS_RANGE*60/MONITOR_INTERVAL))
+
 def monitoring_thread():
     from .cmdline import send_notification
     from .rpcutils import nodes
@@ -138,11 +144,8 @@ def monitoring_thread():
     else:
         raise ValueError('"%s" is not a valid host name. Available: %s' % (config['monitor_host'], ', '.join(n.host for n in nodes)))
 
-    MONITOR_INTERVAL = 10 # in seconds
     last_state = None
     connection_status = None
-
-    stats = []
 
     while True:
         time.sleep(MONITOR_INTERVAL)
@@ -158,6 +161,7 @@ def monitoring_thread():
                 if last_state == 'online':
                     send_notification('Delegate just went offline...', alert=True)
                 last_state = 'offline'
+                stats.append(StatsFrame(cpu=0, mem=0, connections=0, timestamp=datetime.utcnow()))
                 continue
 
             info = node.get_info()
@@ -178,17 +182,17 @@ def monitoring_thread():
             p = next(filter(lambda p: 'bitshares_client' in p.name(),
                             psutil.process_iter()))
 
-            s = dict(cpu=p.cpu_percent(interval=1), # note: this blocks for 1 second
-                     mem=p.memory_info().rss,
-                     conn=info['network_num_connections'],
-                     timestamp=datetime.utcnow().isoformat())
+            s = StatsFrame(cpu=p.cpu_percent(interval=1), # note: this blocks for 1 second
+                           mem=p.memory_info().rss,
+                           connections=info['network_num_connections'],
+                           timestamp=datetime.utcnow())
 
             stats.append(s)
 
             # write stats only now and then
-            if len(stats) % (15 * (60 / MONITOR_INTERVAL)) == 0:
-                with open(config['monitoring']['stats_file'], 'w') as f:
-                    json.dump(stats, f)
+            #if len(stats) % (15 * (60 / MONITOR_INTERVAL)) == 0:
+            #    with open(config['monitoring']['stats_file'], 'w') as f:
+            #        json.dump(stats, f)
 
         except Exception as e:
             log.error('An exception occurred in the monitoring thread:')

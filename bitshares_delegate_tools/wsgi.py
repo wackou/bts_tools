@@ -21,10 +21,11 @@
 from werkzeug.serving import run_simple
 from werkzeug.wsgi import DispatcherMiddleware
 from bitshares_delegate_tools import frontend
+from bitshares_delegate_tools.core import config
 import logging
 log = logging.getLogger(__name__)
 
-DEBUG = False
+DEBUG = config['debug']
 
 frontend_app = frontend.create_app()
 frontend_app.debug = DEBUG

@@ -1,4 +1,6 @@
 {
+    "debug": false,
+
     "logging": {
         "bitshares_delegate_tools": "DEBUG",
         "bitshares_delegate_tools.rpcutils": "INFO"
