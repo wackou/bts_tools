@@ -23,6 +23,7 @@ from datetime import datetime
 from .core import config, StatsFrame
 from .cmdline import send_notification
 from .rpcutils import nodes
+import pickle
 import time
 import psutil
 import logging
@@ -94,6 +95,8 @@ def monitoring_thread():
 
             log.debug('appending to stats: %s' % hex(id(stats)))
             stats.append(s)
+            pickle.dump(stats, open(config['monitoring']['stats_file'], 'w'))
+            log.debug('stats len: %d' % len(stats))
 
             # write stats only now and then
             #if len(stats) % (15 * (60 / MONITOR_INTERVAL)) == 0:

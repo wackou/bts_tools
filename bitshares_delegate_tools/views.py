@@ -27,6 +27,7 @@ import bitshares_delegate_tools.rpcutils as rpc
 from bitshares_delegate_tools import core, monitor
 import bitshares_delegate_tools
 import requests.exceptions
+import pickle
 import logging
 
 log = logging.getLogger(__name__)
@@ -92,7 +93,12 @@ def homepage():
 def view_status():
     log.debug('getting stats from: %s' % hex(id(monitor.stats)))
 
+    log.warning('size: %d' % len(monitor.stats))
+    log.warning('size: %d' % len(bitshares_delegate_tools.monitor.stats))
+
     stats = list(monitor.stats)
+    stats = pickle.load(open(core.config['monitoring']['stats_file']))
+
     points = []
     for stat in stats:
         points.append([int((stat.timestamp - datetime(1970,1,1)).total_seconds() * 1000),
