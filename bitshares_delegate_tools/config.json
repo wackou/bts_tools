@@ -45,6 +45,7 @@
 
         "development": {
             "git_repo": "https://github.com/BitShares/bitshares_toolkit.git",
+            "git_branch": "develop",
 
             "linux": {
                 "BITSHARES_HOME_DIR": "~/.BitSharesXTS",
@@ -60,6 +61,7 @@
 
         "production": {
             "git_repo": "https://github.com/dacsunlimited/bitsharesx.git",
+            "git_branch": "master",
 
             "linux": {
                 "BITSHARES_HOME_DIR": "~/.BitSharesX",

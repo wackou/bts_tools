@@ -33,10 +33,11 @@ import logging
 
 log = logging.getLogger(__name__)
 
-BITSHARES_GIT_REPO  = env['git_repo']
-BITSHARES_BUILD_DIR = env[platform]['BITSHARES_BUILD_DIR']
-BITSHARES_HOME_DIR  = env[platform]['BITSHARES_HOME_DIR']
-BITSHARES_BIN_DIR   = env[platform]['BITSHARES_BIN_DIR']
+BITSHARES_GIT_REPO   = env['git_repo']
+BITSHARES_GIT_BRANCH = env['git_branch']
+BITSHARES_BUILD_DIR  = env[platform]['BITSHARES_BUILD_DIR']
+BITSHARES_HOME_DIR   = env[platform]['BITSHARES_HOME_DIR']
+BITSHARES_BIN_DIR    = env[platform]['BITSHARES_BIN_DIR']
 
 # TODO: move this comment somewhere appropriate
 # on mac osx, readline needs to be installed by brew and
@@ -51,7 +52,7 @@ def clone():
         run('git submodule init')
 
 
-update = lambda: run('git checkout master && git pull && git submodule update')
+update = lambda: run('git checkout %s && git pull && git submodule update' % BITSHARES_GIT_BRANCH)
 clean_config = lambda: run('rm -f CMakeCache.txt')
 
 if platform == 'darwin':
