@@ -20,7 +20,7 @@
 
 from functools import wraps
 from flask import render_template, Flask
-from bitshares_delegate_tools import dashboard
+from bitshares_delegate_tools import views
 import bitshares_delegate_tools
 import bitshares_delegate_tools.monitor
 import threading
@@ -49,7 +49,7 @@ def create_app(settings_override=None):
 
     app.config.from_object(settings_override)
 
-    app.register_blueprint(dashboard.bp)
+    app.register_blueprint(views.bp)
 
     # Register custom error handlers
     app.errorhandler(404)(lambda e: (render_template('errors/404.html'), 404))
