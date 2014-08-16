@@ -20,8 +20,6 @@
         {
             "host": "example.com",
             "rpc_port": 5678,
-            "rpc_user": "",
-            "rpc_password": "",
             "venv_path": "~/.virtualenvs/bitshares_delegate_tools"
         }
     ],

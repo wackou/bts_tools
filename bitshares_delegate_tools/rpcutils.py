@@ -166,8 +166,8 @@ class BTSProxy(object):
 
 nodes = [ BTSProxy(host=node['host'],
                    port=node['rpc_port'],
-                   user=node['rpc_user'],
-                   password=node['rpc_password'],
+                   user=node.get('rpc_user', None),
+                   password=node.get('rpc_password', None),
                    venv_path=node.get('venv_path', None))
           for node in config['nodes'] ]
 
