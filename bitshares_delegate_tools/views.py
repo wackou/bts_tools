@@ -97,7 +97,7 @@ def view_status():
     log.warning('size: %d' % len(bitshares_delegate_tools.monitor.stats))
 
     stats = list(monitor.stats)
-    stats = pickle.load(open(core.config['monitoring']['stats_file']))
+    stats = pickle.load(open(core.config['monitoring']['stats_file'], 'rb'))
 
     points = []
     for stat in stats:

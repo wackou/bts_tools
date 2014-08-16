@@ -95,7 +95,7 @@ def monitoring_thread():
 
             log.debug('appending to stats: %s' % hex(id(stats)))
             stats.append(s)
-            pickle.dump(stats, open(config['monitoring']['stats_file'], 'w'))
+            pickle.dump(stats, open(config['monitoring']['stats_file'], 'wb'))
             log.debug('stats len: %d' % len(stats))
 
             # write stats only now and then
