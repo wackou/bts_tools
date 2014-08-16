@@ -70,7 +70,12 @@ def install_last_built_bin():
     branch = run('git rev-parse --abbrev-ref HEAD', io=True).stdout.strip()
     commit = run('git log -1', io=True).stdout.splitlines()[0].split()[1]
 
-    bin_filename = 'bitshares_client_%s_%s_%s' % (date, branch, commit[:8])
+    r = run('git describe --tags %s' % commit, io=True)
+    if r.status == 0:
+        # we are on a tag, use it for naming binary
+        bin_filename = 'bitshares_client_%s_v%s' % (date, r.stdout.strip())
+    else:
+        bin_filename = 'bitshares_client_%s_%s_%s' % (date, branch, commit[:8])
 
     def install(src, dst):
         print('Installing %s' % dst)
