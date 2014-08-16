@@ -22,6 +22,7 @@ from functools import wraps
 from flask import render_template, Flask
 from bitshares_delegate_tools import dashboard
 import bitshares_delegate_tools
+import bitshares_delegate_tools.monitor
 import threading
 import logging
 
@@ -62,7 +63,7 @@ def create_app(settings_override=None):
                                  rpc=bitshares_delegate_tools.rpcutils)
 
     if bitshares_delegate_tools.core.config['monitoring']['active']:
-        t = threading.Thread(target=bitshares_delegate_tools.core.monitoring_thread)
+        t = threading.Thread(target=bitshares_delegate_tools.monitor.monitoring_thread)
         t.daemon = True
         t.start()
 

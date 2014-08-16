@@ -19,14 +19,11 @@
 #
 
 from os.path import join, dirname, expanduser
-from collections import namedtuple, deque
+from collections import namedtuple
 from subprocess import Popen, PIPE
-from datetime import datetime
 import sys
 import json
 import itertools
-import time
-import psutil
 import logging
 
 log = logging.getLogger(__name__)
@@ -127,73 +124,3 @@ def get_streak():
         # can fail with RPCError when delegate has not been registered yet
         return False, -1
 
-
-MONITOR_INTERVAL = 1 # in seconds
-STATS_RANGE = 5 # time range in minutes for plots
-
-stats = deque(maxlen=int(STATS_RANGE*60/MONITOR_INTERVAL))
-
-def monitoring_thread():
-    from .cmdline import send_notification
-    from .rpcutils import nodes
-
-    for n in nodes:
-        if n.host == config['monitoring']['host']:
-            node = n
-            break
-    else:
-        raise ValueError('"%s" is not a valid host name. Available: %s' % (config['monitor_host'], ', '.join(n.host for n in nodes)))
-
-    last_state = None
-    connection_status = None
-
-    while True:
-        time.sleep(MONITOR_INTERVAL)
-        #log.debug('-------- Monitoring status of the BitShares client --------')
-        node.clear_rpc_cache()
-
-        try:
-            if node.is_online():
-                if last_state == 'offline':
-                    send_notification('Delegate just came online!')
-                last_state = 'online'
-            else:
-                if last_state == 'online':
-                    send_notification('Delegate just went offline...', alert=True)
-                last_state = 'offline'
-                stats.append(StatsFrame(cpu=0, mem=0, connections=0, timestamp=datetime.utcnow()))
-                continue
-
-            info = node.get_info()
-            if info['network_num_connections'] <= 5:
-                if connection_status == 'connected':
-                    send_notification('Fewer than 5 network connections...', alert=True)
-                    connection_status = 'starved'
-            else:
-                if connection_status == 'starved':
-                    send_notification('Got more than 5 connections now')
-                    connection_status = 'connected'
-
-            # only monitor cpu and network if we are monitoring localhost
-            if node.host != 'localhost':
-                continue
-
-            # find bitshares process
-            p = next(filter(lambda p: 'bitshares_client' in p.name(),
-                            psutil.process_iter()))
-
-            s = StatsFrame(cpu=p.cpu_percent(interval=1), # note: this blocks for 1 second
-                           mem=p.memory_info().rss,
-                           connections=info['network_num_connections'],
-                           timestamp=datetime.utcnow())
-
-            stats.append(s)
-
-            # write stats only now and then
-            #if len(stats) % (15 * (60 / MONITOR_INTERVAL)) == 0:
-            #    with open(config['monitoring']['stats_file'], 'w') as f:
-            #        json.dump(stats, f)
-
-        except Exception as e:
-            log.error('An exception occurred in the monitoring thread:')
-            log.exception(e)

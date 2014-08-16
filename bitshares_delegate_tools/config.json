@@ -3,7 +3,8 @@
 
     "logging": {
         "bitshares_delegate_tools": "DEBUG",
-        "bitshares_delegate_tools.rpcutils": "INFO"
+        "bitshares_delegate_tools.rpcutils": "INFO",
+        "bitshares_delegate_tools.monitor": "INFO"
     },
 
     "run_args": [],

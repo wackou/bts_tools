@@ -24,7 +24,7 @@ from collections import defaultdict
 from os.path import dirname
 from datetime import datetime
 import bitshares_delegate_tools.rpcutils as rpc
-from bitshares_delegate_tools import core
+from bitshares_delegate_tools import core, monitor
 import bitshares_delegate_tools
 import requests.exceptions
 import logging
@@ -90,7 +90,9 @@ def homepage():
 @clear_rpc_cache
 @catch_error
 def view_status():
-    stats = list(core.stats)
+    log.debug('getting stats from: %s' % hex(id(monitor.stats)))
+
+    stats = list(monitor.stats)
     points = []
     for stat in stats:
         points.append([int((stat.timestamp - datetime(1970,1,1)).total_seconds() * 1000),
