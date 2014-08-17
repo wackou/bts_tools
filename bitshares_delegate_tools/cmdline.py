@@ -39,11 +39,6 @@ BITSHARES_BUILD_DIR  = env[platform]['BITSHARES_BUILD_DIR']
 BITSHARES_HOME_DIR   = env[platform]['BITSHARES_HOME_DIR']
 BITSHARES_BIN_DIR    = env[platform]['BITSHARES_BIN_DIR']
 
-# TODO: move this comment somewhere appropriate
-# on mac osx, readline needs to be installed by brew and
-# "brew link --force readline" to take precedence over the
-# outdated version of the system
-
 
 def clone():
     if not exists(BITSHARES_BUILD_DIR):
@@ -202,12 +197,17 @@ def main_rpc_call():
 def send_notification(msg, alert=False):
     """Sends an APNs notification. 'alert' means something wrong is happening,
     otherwise it's just a normal info message."""
-    print('Sending message...')
+    log.debug('Sending notification: %s' % msg)
+
+    if not config['monitoring']['apns']['tokens']:
+        log.warning('Could not send notification: no device tokens configured')
+        return
 
     certfile = join(dirname(__file__), config['monitoring']['apns']['cert'])
     if not exists(certfile):
         log.error('Missing certificate file for APNs service: %s' % certfile)
         return
+
     conn = apnsclient.Session().new_connection('push_sandbox', cert_file=certfile)
     if alert:
         message = apnsclient.Message(config['monitoring']['apns']['tokens'],

@@ -22,7 +22,7 @@ from setuptools import setup, find_packages
 import os.path
 
 here = os.path.abspath(os.path.dirname(__file__))
-#README = open(os.path.join(here, 'README.rst')).read()
+README = open(os.path.join(here, 'README.md')).read()
 #HISTORY = open(os.path.join(here, 'HISTORY.rst')).read()
 HISTORY = """Unreleased as of yet"""
 
@@ -45,7 +45,7 @@ entry_points = {
 args = dict(name='bitshares_delegate_tools',
             version=VERSION,
             description='BitShares delegate tools',
-            long_description='BitShares delegate tools',
+            long_description=README,
             # Get strings from
             # http://pypi.python.org/pypi?%3Aaction=list_classifiers
             classifiers=['Development Status :: 2 - Pre-Alpha',

@@ -6,7 +6,7 @@
 {% block content %}
 
 <div id="cpu_plot" style="width: 100%; height: 200px;"></div>
-<div id="connections_plot" style="width: 96%; margin: 0; left: 16px; height: 200px;"></div>
+<div id="connections_plot" style="width: 96%; margin: 0; left: 32px; height: 200px;"></div>
 
 {% endblock %}
 
@@ -26,8 +26,8 @@ var conn = [{% for pt in points %}[{{ pt[0]}}, {{ pt[3] }}], {% endfor %}];
 $.plot("#cpu_plot", [{data: cpu, label: "CPU %", lines: {fill: true}},
                      {data: mem, label: "Memory (MB)", yaxis: 2}], {
     xaxes: [{mode: "time", timezone: "browser", lines: { fill: true } }],
-    yaxes: [{min: 0, /*max: 100,*/ tickFormatter: function(v, axis) { return v + " %" }},
-            {min: 0, position: "right", tickFormatter: function(v, axis) { return v + " MB" }}],
+    yaxes: [{min: 0, /*max: 100,*/ position: "right", tickFormatter: function(v, axis) { return v + " %" }},
+            {min: 0, position: "left", tickFormatter: function(v, axis) { return v + " MB" }}],
 });
 
 $.plot("#connections_plot", [{data: conn, label: "Number of connections"}], {

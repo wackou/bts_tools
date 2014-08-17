@@ -23,7 +23,7 @@ from datetime import datetime
 from .core import config, StatsFrame
 from .cmdline import send_notification
 from .rpcutils import nodes
-import pickle
+import os.path
 import time
 import psutil
 import logging
@@ -32,9 +32,29 @@ log = logging.getLogger(__name__)
 
 
 MONITOR_INTERVAL = 1 # in seconds
-STATS_RANGE = 15 * 60 # time range in seconds for plots
+STATS_RANGE = 10 * 60 # time range in seconds for plots
 
 stats = deque(maxlen=int(STATS_RANGE/MONITOR_INTERVAL))
+
+
+def find_bts_binary():
+    log.debug('find bts binary')
+    # find bitshares process
+    p = next(filter(lambda p: 'bitshares_client' in p.name(),
+                    psutil.process_iter()))
+
+    log.debug('found bts binary')
+    return p
+
+
+def binary_description():
+    """Returns a human readable version description of the binary, either tag
+    version of git revision"""
+    name = os.path.realpath(find_bts_binary().cmdline()[0])
+    if '_v' in name: # weak check for detecting tags...
+        return name[name.index('_v')+1:]
+    return name.split('bitshares_client_')[1]
+
 
 def monitoring_thread():
     for n in nodes:
@@ -45,6 +65,7 @@ def monitoring_thread():
         raise ValueError('"%s" is not a valid host name. Available: %s' % (config['monitor_host'], ', '.join(n.host for n in nodes)))
 
     last_state = None
+    last_state_consecutive = 0
     connection_status = None
 
     log.debug('Starting monitoring thread...')
@@ -57,13 +78,27 @@ def monitoring_thread():
         try:
             if node.is_online():
                 if last_state == 'offline':
-                    send_notification('Delegate just came online!')
+                    last_state_consecutive = 0
                 last_state = 'online'
+                last_state_consecutive += 1
+
+                if last_state_consecutive == 3:
+                    # wait for 3 "confirmations" that we are online, to avoid
+                    # reacting too much on temporary connection errors
+                    send_notification('Delegate just came online!')
+
             else:
                 log.debug('Offline')
                 if last_state == 'online':
-                    send_notification('Delegate just went offline...', alert=True)
+                    last_state_consecutive = 0
                 last_state = 'offline'
+                last_state_consecutive += 1
+
+                if last_state_consecutive == 3:
+                    # wait for 3 "confirmations" that we are offline, to avoid
+                    # reacting too much on temporary connection errors
+                    send_notification('Delegate just went offline...', alert=True)
+
                 stats.append(StatsFrame(cpu=0, mem=0, connections=0, timestamp=datetime.utcnow()))
                 continue
 
@@ -82,12 +117,7 @@ def monitoring_thread():
             if node.host != 'localhost':
                 continue
 
-            log.debug('find bts')
-            # find bitshares process
-            p = next(filter(lambda p: 'bitshares_client' in p.name(),
-                            psutil.process_iter()))
-
-            log.debug('found bts')
+            p = find_bts_binary()
             s = StatsFrame(cpu=p.cpu_percent(),
                            mem=p.memory_info().rss,
                            connections=info['network_num_connections'],
@@ -95,13 +125,7 @@ def monitoring_thread():
 
             log.debug('appending to stats: %s' % hex(id(stats)))
             stats.append(s)
-            pickle.dump(stats, open(config['monitoring']['stats_file'], 'wb'))
             log.debug('stats len: %d' % len(stats))
-
-            # write stats only now and then
-            #if len(stats) % (15 * (60 / MONITOR_INTERVAL)) == 0:
-            #    with open(config['monitoring']['stats_file'], 'w') as f:
-            #        json.dump(stats, f)
 
         except Exception as e:
             log.error('An exception occurred in the monitoring thread:')

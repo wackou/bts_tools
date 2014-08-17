@@ -6,7 +6,7 @@
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
 			</button>
-			<a href="#" class="navbar-brand">BitShares delegate tools</a>
+			<a href="#" class="navbar-brand">BTS tools</a>
 		</div>
 
         <div class="collapse navbar-collapse">
@@ -26,6 +26,10 @@
             </ul>
 
             <ul class="nav navbar-nav navbar-right">
+                <li><a href="#">
+                    <div class="btn btn-xs btn-info">{{ core.config['env']['active'] }}: {{ monitor.binary_description() }}</div>
+                </a></li>
+
                 <li><a href="#"><b>Delegate name: </b> {{ core.delegate_name()}}</a></li>
                 {% if rpc.main_node.is_online() %}
                     <li><a href="#">

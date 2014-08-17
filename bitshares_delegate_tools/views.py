@@ -27,7 +27,6 @@ import bitshares_delegate_tools.rpcutils as rpc
 from bitshares_delegate_tools import core, monitor
 import bitshares_delegate_tools
 import requests.exceptions
-import pickle
 import logging
 
 log = logging.getLogger(__name__)
@@ -91,20 +90,20 @@ def homepage():
 @clear_rpc_cache
 @catch_error
 def view_status():
-    log.debug('getting stats from: %s' % hex(id(monitor.stats)))
+    #log.debug('getting stats from: %s' % hex(id(monitor.stats)))
 
-    log.warning('size: %d' % len(monitor.stats))
-    log.warning('size: %d' % len(bitshares_delegate_tools.monitor.stats))
+    # note: in uWSGI, without lazy-apps=true, monitor.stats seems to not be
+    #       properly shared and always returns an empty deque...
+    #log.debug('stats size: %d' % len(monitor.stats))
 
     stats = list(monitor.stats)
-    stats = pickle.load(open(core.config['monitoring']['stats_file'], 'rb'))
 
-    points = []
-    for stat in stats:
-        points.append([int((stat.timestamp - datetime(1970,1,1)).total_seconds() * 1000),
-                       stat.cpu,
-                       int(stat.mem / (1024*1024)),
-                       stat.connections])
+    points = [ [int((stat.timestamp - datetime(1970,1,1)).total_seconds() * 1000),
+                stat.cpu,
+                int(stat.mem / (1024*1024)),
+                stat.connections]
+               for stat in stats ]
+
     return render_template('status.html', title='BTS Client - Status', points=points)
 
 

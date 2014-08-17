@@ -60,7 +60,8 @@ def create_app(settings_override=None):
 
     # make bitshares_delegate_tools module available in all the templates
     app.jinja_env.globals.update(core=bitshares_delegate_tools.core,
-                                 rpc=bitshares_delegate_tools.rpcutils)
+                                 rpc=bitshares_delegate_tools.rpcutils,
+                                 monitor=bitshares_delegate_tools.monitor)
 
     if bitshares_delegate_tools.core.config['monitoring']['active']:
         t = threading.Thread(target=bitshares_delegate_tools.monitor.monitoring_thread)
