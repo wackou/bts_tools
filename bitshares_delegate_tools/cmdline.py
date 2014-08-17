@@ -20,7 +20,7 @@
 
 from os.path import join, dirname, exists, islink
 from argparse import RawTextHelpFormatter
-from bitshares_delegate_tools.core import config, env, platform, run
+from bitshares_delegate_tools.core import config, env, platform, run, BTS_TOOLS_HOMEDIR
 from bitshares_delegate_tools import rpc
 import random
 import apnsclient
@@ -200,10 +200,10 @@ def send_notification(msg, alert=False):
     log.debug('Sending notification: %s' % msg)
 
     if not config['monitoring']['apns']['tokens']:
-        log.warning('Could not send notification: no device tokens configured')
+        log.warning('Cannot send notification: no device tokens configured')
         return
 
-    certfile = join(dirname(__file__), config['monitoring']['apns']['cert'])
+    certfile = join(BTS_TOOLS_HOMEDIR, config['monitoring']['apns']['cert'])
     if not exists(certfile):
         log.error('Missing certificate file for APNs service: %s' % certfile)
         return
