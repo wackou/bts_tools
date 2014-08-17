@@ -22,7 +22,7 @@ from collections import deque
 from datetime import datetime
 from .core import config, StatsFrame
 from .cmdline import send_notification
-from .rpcutils import nodes
+from .rpcutils import nodes, main_node
 import os.path
 import time
 import psutil
@@ -57,6 +57,7 @@ def binary_description():
 
 
 def monitoring_thread():
+    # find node object to be monitored
     for n in nodes:
         if n.host == config['monitoring']['host']:
             node = n
@@ -68,6 +69,7 @@ def monitoring_thread():
     last_state_consecutive = 0
     last_stable_state = None
     connection_status = None
+    last_producing = True
 
     log.debug('Starting monitoring thread...')
 
@@ -109,6 +111,8 @@ def monitoring_thread():
 
             log.debug('Online')
             info = node.get_info()
+
+            # check for minimum number of connections for delegate to produce
             if info['network_num_connections'] <= 5:
                 if connection_status == 'connected':
                     send_notification('Fewer than 5 network connections...', alert=True)
@@ -117,6 +121,13 @@ def monitoring_thread():
                 if connection_status == 'starved':
                     send_notification('Got more than 5 connections now')
                     connection_status = 'connected'
+
+            # monitor for missed blocks
+            producing, n = node.get_streak()
+            if last_producing and not producing:
+                send_notification('Missed a block!', alert=True)
+            last_producing = producing
+
 
             # only monitor cpu and network if we are monitoring localhost
             if node.host != 'localhost':

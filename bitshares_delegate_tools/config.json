@@ -28,7 +28,6 @@
     "monitoring": {
         "active": true,
         "host": "localhost",
-        "stats_file": "/tmp/delegate_stats.json",
 
         "email": {
             "TODO": "TODO"

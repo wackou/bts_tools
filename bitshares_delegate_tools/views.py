@@ -51,8 +51,9 @@ def offline():
 def unauthorized():
     config_path = dirname(bitshares_delegate_tools.__file__)
     return render_template('error.html',
-                           msg='Unauthorized. Make sure you have correctly set '
-                               'the rpc user and password in the %s/config.json file' % config_path)
+                           msg=('Unauthorized. Make sure you have correctly set '
+                                'the rpc user and password in the %s file'
+                                % core.BTS_TOOLS_CONFIG_FILE))
 
 
 def catch_error(f):
@@ -95,6 +96,8 @@ def view_status():
     # note: in uWSGI, without lazy-apps=true, monitor.stats seems to not be
     #       properly shared and always returns an empty deque...
     #log.debug('stats size: %d' % len(monitor.stats))
+    if rpc.main_node.status() == 'unauthorized':
+        return unauthorized()
 
     stats = list(monitor.stats)
 

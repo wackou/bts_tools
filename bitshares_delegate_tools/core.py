@@ -18,12 +18,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from os.path import join, dirname, expanduser
+from os.path import join, dirname, expanduser, exists
 from collections import namedtuple
 from subprocess import Popen, PIPE
 import sys
+import os
+import shutil
 import json
-import itertools
 import logging
 
 log = logging.getLogger(__name__)
@@ -32,12 +33,23 @@ platform = sys.platform
 if platform.startswith('linux'):
     platform = 'linux'
 
+BTS_TOOLS_HOMEDIR = '~/.bts_tools'
+BTS_TOOLS_HOMEDIR = expanduser(BTS_TOOLS_HOMEDIR)
+BTS_TOOLS_CONFIG_FILE = join(BTS_TOOLS_HOMEDIR, 'config.json')
+
 def load_config():
+    if not exists(BTS_TOOLS_CONFIG_FILE):
+        try:
+            os.makedirs(BTS_TOOLS_HOMEDIR)
+        except OSError:
+            pass
+        shutil.copyfile(join(dirname(__file__), 'config.json'),
+                        BTS_TOOLS_CONFIG_FILE)
+
     try:
-        config_file = join(dirname(__file__), 'config.json')
-        config_contents = open(config_file).read()
+        config_contents = open(BTS_TOOLS_CONFIG_FILE).read()
     except:
-        log.error('Could not read config file: %s' % config_file)
+        log.error('Could not read config file: %s' % BTS_TOOLS_CONFIG_FILE)
         raise
 
     try:
@@ -109,18 +121,4 @@ class RPCError(Exception):
 def delegate_name():
     # TODO: should parse my accounts to know the actual delegate name
     return config['delegate']
-
-
-def get_streak():
-    from . import rpcutils as rpc
-    try:
-        slots = rpc.main_node.blockchain_get_delegate_slot_records(delegate_name())[::-1]
-        if not slots:
-            return True, 0
-        streak = itertools.takewhile(lambda x: (x['block_produced'] == slots[0]['block_produced']), slots)
-        return slots[0]['block_produced'], len(list(streak))
-
-    except:
-        # can fail with RPCError when delegate has not been registered yet
-        return False, -1
 

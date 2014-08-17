@@ -34,7 +34,7 @@
                 {% if rpc.main_node.is_online() %}
                     <li><a href="#">
                         <b>Blocks:</b>
-                        {% set producing, n = core.get_streak() %}
+                        {% set producing, n = rpc.main_node.get_streak() %}
                         {% if n >= 0 %}
                             {% if producing %}
                                 <div class="btn btn-xs btn-success">Last {{ n }} produced</div>

@@ -18,9 +18,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from .core import UnauthorizedError, RPCError, run, config
+from .core import UnauthorizedError, RPCError, run, config, delegate_name
 from collections import defaultdict
 import requests
+import itertools
 import json
 import logging
 
@@ -110,6 +111,11 @@ class BTSProxy(object):
                 return result
             self._rpc_call = remote_call
 
+    def __getattr__(self, funcname):
+        def call(*args, cached=True):
+            return self.rpc_call(funcname, *args, cached=cached)
+        return call
+
     def rpc_call(self, funcname, *args, cached=True):
         log.debug(('RPC call @ %s: %s(%s)' % (self.host, funcname, ', '.join(repr(arg) for arg in args))
                   + (' (cached = False)' if not cached else '')))
@@ -158,10 +164,19 @@ class BTSProxy(object):
     def is_online(self, cached=True):
         return self.status(cached=cached) == 'online'
 
-    def __getattr__(self, funcname):
-        def call(*args, cached=True):
-            return self.rpc_call(funcname, *args, cached=cached)
-        return call
+    def get_streak(self, cached=True):
+        try:
+            slots = self.blockchain_get_delegate_slot_records(delegate_name(),
+                                                              cached=cached)[::-1]
+            if not slots:
+                return True, 0
+            streak = itertools.takewhile(lambda x: (x['block_produced'] == slots[0]['block_produced']), slots)
+            return slots[0]['block_produced'], len(list(streak))
+
+        except:
+            # can fail with RPCError when delegate has not been registered yet
+            return False, -1
+
 
 
 nodes = [ BTSProxy(host=node['host'],

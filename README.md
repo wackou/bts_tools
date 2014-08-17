@@ -59,9 +59,13 @@ running backup nodes and re-compiling your main node.
 Things to know (best practices and "issues") READ IT !!!
 ========================================================
 
-- to properly build the bitshares client in MacOSX, ```readline``` needs to be
-  installed by brew and you need to run ```brew link --force readline``` to
-  take precedence over the outdated version of the system
+- to properly build the bitshares client in MacOSX:
+  + you can (and should) build the binary with only homebrew libraries.
+    Previous versions had trouble compiling and could require you to hand-compile
+    some dependencies, but newer homebrew libs should compile properly
+  + ```readline``` needs to be installed by brew and you need to run
+    ```brew link --force readline``` to take precedence over the outdated
+    version of the system
 
 - when running the web client in uWSGI, make sure to:
   + set ```enable-threads = true```, otherwise you won't get the monitoring
