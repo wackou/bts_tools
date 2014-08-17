@@ -43,9 +43,17 @@ You should edit the bitshares_delegate_tools/config.json file and then run:
 
     $ python -m bitshares_delegate_tools.wsgi
      
-Obligatory screenshot:
 
-![Obligatory screenshot](bts_tools_screenshot.png)
+### Screenshots ###
+
+Monitoring the status of your running bts client binary
+
+![Status screenshot](bts_tools_screenshot.png)
+
+Monitoring multiple instances at the same time, to have an overview while
+running backup nodes and re-compiling your main node.
+
+![Info screenshot](bts_tools_screenshot2.png)
 
 
 Things to know (best practices and "issues") READ IT !!!
