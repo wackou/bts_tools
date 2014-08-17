@@ -66,6 +66,7 @@ def monitoring_thread():
 
     last_state = None
     last_state_consecutive = 0
+    last_stable_state = None
     connection_status = None
 
     log.debug('Starting monitoring thread...')
@@ -82,10 +83,12 @@ def monitoring_thread():
                 last_state = 'online'
                 last_state_consecutive += 1
 
+                # wait for 3 "confirmations" that we are online, to avoid
+                # reacting too much on temporary connection errors
                 if last_state_consecutive == 3:
-                    # wait for 3 "confirmations" that we are online, to avoid
-                    # reacting too much on temporary connection errors
-                    send_notification('Delegate just came online!')
+                    if last_stable_state and last_stable_state != last_state:
+                        send_notification('Delegate just came online!')
+                    last_stable_state = last_state
 
             else:
                 log.debug('Offline')
@@ -94,10 +97,12 @@ def monitoring_thread():
                 last_state = 'offline'
                 last_state_consecutive += 1
 
+                # wait for 3 "confirmations" that we are offline, to avoid
+                # reacting too much on temporary connection errors
                 if last_state_consecutive == 3:
-                    # wait for 3 "confirmations" that we are offline, to avoid
-                    # reacting too much on temporary connection errors
-                    send_notification('Delegate just went offline...', alert=True)
+                    if last_stable_state and last_stable_state != last_state:
+                        send_notification('Delegate just went offline...', alert=True)
+                    last_stable_state = last_state
 
                 stats.append(StatsFrame(cpu=0, mem=0, connections=0, timestamp=datetime.utcnow()))
                 continue
