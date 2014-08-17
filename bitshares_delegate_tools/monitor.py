@@ -32,7 +32,7 @@ log = logging.getLogger(__name__)
 
 
 MONITOR_INTERVAL = 1 # in seconds
-STATS_RANGE = 5 * 60 # time range in seconds for plots
+STATS_RANGE = 15 * 60 # time range in seconds for plots
 
 stats = deque(maxlen=int(STATS_RANGE/MONITOR_INTERVAL))
 
@@ -88,7 +88,7 @@ def monitoring_thread():
                             psutil.process_iter()))
 
             log.debug('found bts')
-            s = StatsFrame(cpu=p.cpu_percent(interval=1), # note: this blocks for 1 second
+            s = StatsFrame(cpu=p.cpu_percent(),
                            mem=p.memory_info().rss,
                            connections=info['network_num_connections'],
                            timestamp=datetime.utcnow())
