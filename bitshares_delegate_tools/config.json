@@ -4,13 +4,14 @@
     "logging": {
         "bitshares_delegate_tools": "DEBUG",
         "bitshares_delegate_tools.rpcutils": "INFO",
-        "bitshares_delegate_tools.monitor": "INFO"
+        "bitshares_delegate_tools.monitor": "INFO",
+        "bitshares_delegate_tools.notification": "INFO"
     },
 
     "run_args": [],
     "make_args": ["-j1"],
 
-    "delegate": "wackou-delegate",
+    "delegate": "",
     "nodes": [
         {
             "host": "localhost",
@@ -20,19 +21,23 @@
         },
         {
             "host": "example.com",
-            "rpc_port": 5678,
             "venv_path": "~/.virtualenvs/bitshares_delegate_tools"
         }
     ],
 
     "monitoring": {
-        "active": true,
         "host": "localhost",
 
         "email": {
-            "TODO": "TODO"
+            "active": false,
+            "smtp_server": "",
+            "smtp_user": "",
+            "smtp_password": "",
+            "identity": "BTS Monitor",
+            "recipient": ""
         },
         "apns": {
+            "active": false,
             "cert": "bts_apns.pem",
             "tokens": []
         }

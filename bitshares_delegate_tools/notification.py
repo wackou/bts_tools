@@ -20,17 +20,50 @@
 
 from os.path import join, exists
 from .core import config, BTS_TOOLS_HOMEDIR
+import smtplib
 import random
 import apnsclient
 import logging
 
 log = logging.getLogger(__name__)
 
+def send_email(to, subject, body, bcc=None, replyto=None):
+    """Return True if the email could be sent, raise an exception
+    otherwise."""
+    c = config['monitoring']['email']
 
-def send_notification(msg, alert=False):
-    """Sends an APNs notification. 'alert' means something wrong is happening,
+    fromaddr = replyto or c['identity']
+    #toaddrs = [ to, fromaddr ]
+    toaddrs = [ to ]
+
+    # create the email string with correct headers
+    message = ("From: %s\r\n" % fromaddr +
+               "To: %s\r\n" % to +
+               ("BCC: %s\r\n" % bcc if bcc else '') +
+               "Subject: %s\r\n" % subject +
+               "\r\n" +
+               body)
+
+    # Send the message via the configured SMTP server
+    s = smtplib.SMTP_SSL(c['smtp_server'])
+    s.login(c['smtp_user'], c['smtp_password'])
+    s.sendmail(fromaddr, toaddrs, message)
+    s.quit()
+
+    return True
+
+
+def send_notification_email(msg, alert=False):
+    log.debug('Sending notification by email: %s' % msg)
+    c = config['monitoring']['email']
+    send_email(c['recipient'], 'BTS notification', msg)
+    log.info('Done sending email notification: %s' % msg)
+
+
+def send_notification_apns(msg, alert=False):
+    """Sends an APNS notification. 'alert' means something wrong is happening,
     otherwise it's just a normal info message."""
-    log.debug('Sending notification: %s' % msg)
+    log.debug('Sending notification via APNS: %s' % msg)
 
     if not config['monitoring']['apns']['tokens']:
         log.warning('Cannot send notification: no device tokens configured')
@@ -78,5 +111,12 @@ def send_notification(msg, alert=False):
             retry_message = res.retry()
             log.error('Did retry: %s' % retry_message)
 
-    log.info('Done sending notification: %s' % msg)
+    log.info('Done sending APNS notification: %s' % msg)
 
+
+def send_notification(msg, alert=False):
+    c = config['monitoring']
+    if c['email']['active']:
+        send_notification_email(msg, alert)
+    if c['apns']['active']:
+        send_notification_apns(msg, alert)

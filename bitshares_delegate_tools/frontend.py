@@ -63,7 +63,9 @@ def create_app(settings_override=None):
                                  monitor=bitshares_delegate_tools.monitor,
                                  process=bitshares_delegate_tools.process)
 
-    if bitshares_delegate_tools.core.config['monitoring']['active']:
+    c = bitshares_delegate_tools.core.config
+    if (c['monitoring']['email']['active'] or
+        c['monitoring']['apns']['active']):
         t = threading.Thread(target=bitshares_delegate_tools.monitor.monitoring_thread)
         t.daemon = True
         t.start()

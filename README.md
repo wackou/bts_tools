@@ -3,8 +3,8 @@ BitShares delegate tools
 
 there are 2 tools currently provided:
  - command line util allowing to quickly build and run the bitshares client
- - web app allowing to monitor a running instance of the client with rpc
-   activated
+ - web app allowing to monitor a running instance of the client
+   and send an email or push notification on failure
 
 
 Command-line client
