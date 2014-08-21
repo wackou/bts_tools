@@ -27,6 +27,8 @@
 
     "monitoring": {
         "host": "localhost",
+        "time_interval": 5,
+        "time_span": 3600,
 
         "email": {
             "active": false,

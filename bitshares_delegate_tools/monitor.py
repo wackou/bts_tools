@@ -29,10 +29,9 @@ import logging
 
 log = logging.getLogger(__name__)
 
-MONITOR_INTERVAL = 5 # in seconds
-STATS_RANGE = 10 * 60 # time range in seconds for plots
+cfg = config['monitoring']
 
-stats = deque(maxlen=int(STATS_RANGE/MONITOR_INTERVAL))
+stats = deque(maxlen=int(cfg['time_span'] / cfg['time_interval']))
 
 
 def monitoring_thread():
@@ -53,7 +52,7 @@ def monitoring_thread():
     log.debug('Starting monitoring thread...')
 
     while True:
-        time.sleep(MONITOR_INTERVAL)
+        time.sleep(cfg['time_interval'])
         log.debug('-------- Monitoring status of the BitShares client --------')
         node.clear_rpc_cache()
 
