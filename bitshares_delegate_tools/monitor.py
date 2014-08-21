@@ -29,7 +29,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
-MONITOR_INTERVAL = 1 # in seconds
+MONITOR_INTERVAL = 5 # in seconds
 STATS_RANGE = 10 * 60 # time range in seconds for plots
 
 stats = deque(maxlen=int(STATS_RANGE/MONITOR_INTERVAL))
