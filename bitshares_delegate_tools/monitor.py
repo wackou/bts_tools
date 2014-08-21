@@ -21,39 +21,18 @@
 from collections import deque
 from datetime import datetime
 from .core import config, StatsFrame
-from .cmdline import send_notification
-from .rpcutils import nodes, main_node
-import os.path
+from .notification import send_notification
+from .rpcutils import nodes
+from .process import bts_process
 import time
-import psutil
 import logging
 
 log = logging.getLogger(__name__)
-
 
 MONITOR_INTERVAL = 1 # in seconds
 STATS_RANGE = 10 * 60 # time range in seconds for plots
 
 stats = deque(maxlen=int(STATS_RANGE/MONITOR_INTERVAL))
-
-
-def find_bts_binary():
-    log.debug('find bts binary')
-    # find bitshares process
-    p = next(filter(lambda p: 'bitshares_client' in p.name(),
-                    psutil.process_iter()))
-
-    log.debug('found bts binary')
-    return p
-
-
-def binary_description():
-    """Returns a human readable version description of the binary, either tag
-    version of git revision"""
-    name = os.path.realpath(find_bts_binary().cmdline()[0])
-    if '_v' in name: # weak check for detecting tags...
-        return name[name.index('_v')+1:]
-    return name.split('bitshares_client_')[1]
 
 
 def monitoring_thread():
@@ -79,20 +58,7 @@ def monitoring_thread():
         node.clear_rpc_cache()
 
         try:
-            if node.is_online():
-                if last_state == 'offline':
-                    last_state_consecutive = 0
-                last_state = 'online'
-                last_state_consecutive += 1
-
-                # wait for 3 "confirmations" that we are online, to avoid
-                # reacting too much on temporary connection errors
-                if last_state_consecutive == 3:
-                    if last_stable_state and last_stable_state != last_state:
-                        send_notification('Delegate just came online!')
-                    last_stable_state = last_state
-
-            else:
+            if not node.is_online():
                 log.debug('Offline')
                 if last_state == 'online':
                     last_state_consecutive = 0
@@ -110,9 +76,21 @@ def monitoring_thread():
                 continue
 
             log.debug('Online')
-            info = node.get_info()
+            if last_state == 'offline':
+                last_state_consecutive = 0
+            last_state = 'online'
+            last_state_consecutive += 1
+
+            # wait for 3 "confirmations" that we are online, to avoid
+            # reacting too much on temporary connection errors
+            if last_state_consecutive == 3:
+                if last_stable_state and last_stable_state != last_state:
+                    send_notification('Delegate just came online!')
+                last_stable_state = last_state
+
 
             # check for minimum number of connections for delegate to produce
+            info = node.get_info()
             if info['network_num_connections'] <= 5:
                 if connection_status == 'connected':
                     send_notification('Fewer than 5 network connections...', alert=True)
@@ -133,7 +111,7 @@ def monitoring_thread():
             if node.host != 'localhost':
                 continue
 
-            p = find_bts_binary()
+            p = bts_process() # p should not be None otherwise we would be offline
             s = StatsFrame(cpu=p.cpu_percent(),
                            mem=p.memory_info().rss,
                            connections=info['network_num_connections'],

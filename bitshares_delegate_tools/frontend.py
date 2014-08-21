@@ -18,7 +18,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from functools import wraps
 from flask import render_template, Flask
 from bitshares_delegate_tools import views
 import bitshares_delegate_tools
@@ -61,7 +60,8 @@ def create_app(settings_override=None):
     # make bitshares_delegate_tools module available in all the templates
     app.jinja_env.globals.update(core=bitshares_delegate_tools.core,
                                  rpc=bitshares_delegate_tools.rpcutils,
-                                 monitor=bitshares_delegate_tools.monitor)
+                                 monitor=bitshares_delegate_tools.monitor,
+                                 process=bitshares_delegate_tools.process)
 
     if bitshares_delegate_tools.core.config['monitoring']['active']:
         t = threading.Thread(target=bitshares_delegate_tools.monitor.monitoring_thread)

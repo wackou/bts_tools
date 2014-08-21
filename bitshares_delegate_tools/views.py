@@ -61,7 +61,8 @@ def catch_error(f):
     def wrapper(*args, **kwargs):
         try:
             return f(*args, **kwargs)
-        except requests.exceptions.ConnectionError:
+        except (ConnectionError,
+                requests.exceptions.ConnectionError):
             core.is_online = False
             return offline()
         except core.UnauthorizedError:

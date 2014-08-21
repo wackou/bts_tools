@@ -27,10 +27,10 @@
 
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="#">
-                    <div class="btn btn-xs btn-info">{{ core.config['env']['active'] }}: {{ monitor.binary_description() }}</div>
+                    <div class="btn btn-xs btn-info">{{ core.config['env']['active'] }}: {{ process.binary_description() }}</div>
                 </a></li>
 
-                <li><a href="#"><b>Delegate name: </b> {{ core.delegate_name()}}</a></li>
+                <li><a href="#"><b>Delegate name: </b> {{ core.delegate_name() }}</a></li>
                 {% if rpc.main_node.is_online() %}
                     <li><a href="#">
                         <b>Blocks:</b>

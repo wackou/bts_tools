@@ -19,6 +19,7 @@
 #
 
 from .core import UnauthorizedError, RPCError, run, config, delegate_name
+from .process import bts_binary_running
 from collections import defaultdict
 import requests
 import itertools
@@ -37,6 +38,12 @@ def clear_rpc_cache():
 
 def rpc_call(host, port, user, password,
              funcname, *args):
+    if host == 'localhost' or host == '127.0.0.1':
+        # if host == 'localhost', we want to avoid connecting to it and blocking
+        # because it is in a stopped state (for example, in gdb after having crashed)
+        if not bts_binary_running():
+            raise ConnectionError('Connection aborted: BTS binary does not seem to be running')
+
     url = "http://%s:%d/rpc" % (host, port)
     headers = {'content-type': 'application/json'}
 
@@ -106,6 +113,8 @@ class BTSProxy(object):
                     # re-raise original exception
                     # FIXME: this should be done properly without exec, could
                     #        potentially be a security issue
+                    log.debug('Received error in RPC result: %s(%s)'
+                              % (result['type'], result['error']))
                     exec('raise %s("%s")' % (result['type'], result['error']))
 
                 return result
@@ -155,6 +164,7 @@ class BTSProxy(object):
             return 'online'
 
         except (requests.exceptions.ConnectionError, # http connection refused
+                ConnectionError, # bts binary is not running, no connection attempted
                 RuntimeError): # host is down, ssh doesn't work
             return 'offline'
 
