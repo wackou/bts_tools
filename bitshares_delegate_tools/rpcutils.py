@@ -183,8 +183,10 @@ class BTSProxy(object):
             streak = itertools.takewhile(lambda x: (x['block_produced'] == slots[0]['block_produced']), slots)
             return slots[0]['block_produced'], len(list(streak))
 
-        except:
+        except Exception as e:
             # can fail with RPCError when delegate has not been registered yet
+            log.warning('get_streak() failed with: %s(%s)' % (type(e), e))
+            log.exception(e)
             return False, -1
 
 
