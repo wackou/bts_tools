@@ -61,7 +61,7 @@ def catch_error(f):
     def wrapper(*args, **kwargs):
         try:
             return f(*args, **kwargs)
-        except (ConnectionError,
+        except (core.RPCError,
                 requests.exceptions.ConnectionError):
             core.is_online = False
             return offline()

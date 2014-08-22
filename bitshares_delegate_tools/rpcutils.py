@@ -42,7 +42,7 @@ def rpc_call(host, port, user, password,
         # if host == 'localhost', we want to avoid connecting to it and blocking
         # because it is in a stopped state (for example, in gdb after having crashed)
         if not bts_binary_running():
-            raise ConnectionError('Connection aborted: BTS binary does not seem to be running')
+            raise RPCError('Connection aborted: BTS binary does not seem to be running')
 
     url = "http://%s:%d/rpc" % (host, port)
     headers = {'content-type': 'application/json'}
@@ -164,7 +164,7 @@ class BTSProxy(object):
             return 'online'
 
         except (requests.exceptions.ConnectionError, # http connection refused
-                ConnectionError, # bts binary is not running, no connection attempted
+                RPCError, # bts binary is not running, no connection attempted
                 RuntimeError): # host is down, ssh doesn't work
             return 'offline'
 
