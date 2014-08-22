@@ -21,6 +21,7 @@
 from .core import UnauthorizedError, RPCError, run, config, delegate_name
 from .process import bts_binary_running
 from collections import defaultdict
+import bitshares_delegate_tools.core # needed to be able to exec('raise bts.core.Exception')
 import requests
 import itertools
 import json
@@ -115,7 +116,10 @@ class BTSProxy(object):
                     #        potentially be a security issue
                     log.debug('Received error in RPC result: %s(%s)'
                               % (result['type'], result['error']))
-                    exec('raise %s("%s")' % (result['type'], result['error']))
+
+                    raise_exc = 'raise %s("%s")' % (result['type'], result['error'])
+                    log.debug('EXEC: %s' % raise_exc)
+                    exec(raise_exc)
 
                 return result
             self._rpc_call = remote_call
