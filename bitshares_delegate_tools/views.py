@@ -23,8 +23,8 @@ from functools import wraps
 from collections import defaultdict
 from os.path import dirname
 from datetime import datetime
-import bitshares_delegate_tools.rpcutils as rpc
-from bitshares_delegate_tools import core, monitor
+from . import rpcutils as rpc
+from . import core, monitor, slogging
 import bitshares_delegate_tools
 import requests.exceptions
 import logging
@@ -200,3 +200,38 @@ def view_delegates():
                            headers=headers,
                            data=data,
                            order='[[ 2, "desc" ]]')
+
+@bp.route('/logs')
+@clear_rpc_cache
+@catch_error
+def view_logs():
+    records = list(slogging.log_records)
+
+    headers = ['Timestamp', 'Level', 'Logger', 'Message']
+
+    data = [(r.asctime,
+             r.levelname,
+             '%s:%s %s' % (r.name, r.lineno, r.funcName),
+             r.msg)
+            for r in records]
+
+    attrs = defaultdict(list)
+    for i, d in enumerate(data):
+        color = None
+        if d[1] == 'INFO':
+            color = 'green'
+        elif d[1] == 'DEBUG':
+            color = 'blue'
+        elif d[1] == 'WARNING':
+            color = 'orange'
+        elif d[1] == 'ERROR':
+            color = 'red'
+
+        if color:
+            attrs[color].extend([(i, 1), (i, 2)])
+
+    return render_template('tableview.html',
+                           headers=headers,
+                           data=data,
+                           attrs=attrs,
+                           order='[[ 0, "desc" ]]')

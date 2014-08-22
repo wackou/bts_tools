@@ -19,7 +19,7 @@
 #
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-
+from collections import deque
 import logging
 import sys
 import os
@@ -30,6 +30,7 @@ BLUE_FONT = "\x1B[0;34m"
 RED_FONT = "\x1B[0;31m"
 RESET_FONT = "\x1B[0m"
 
+log_records = deque(maxlen=1000)
 
 def setupLogging(colored=True, with_time=False, with_thread=False, filename=None, with_lineno=False):  # pragma: no cover
     """Set up a nice colored logger as the main application logger."""
@@ -87,3 +88,9 @@ def setupLogging(colored=True, with_time=False, with_thread=False, filename=None
             ch.setFormatter(SimpleFormatter(with_time, with_thread))
 
     logging.getLogger().addHandler(ch)
+
+    class LogsCopy(logging.Handler):
+        def emit(self, record):
+            log_records.append(record)
+
+    logging.getLogger().addHandler(LogsCopy())

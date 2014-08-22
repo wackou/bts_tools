@@ -24,23 +24,25 @@
         {% for fields in data %}
             {% set field = loop %}
             <tr>
-            {% for f in fields %}
-                {% if attrs and (field.index-1, loop.index-1) in attrs.get('green', []) %}
+            {%- for f in fields -%}
+                {% if attrs and (field.index-1, loop.index-1) in attrs.get('green', []) -%}
                 <td style="background-color: limegreen">
                 {% elif attrs and (field.index-1, loop.index-1) in attrs.get('red', []) %}
                 <td style="background-color: red;">
                 {% elif attrs and (field.index-1, loop.index-1) in attrs.get('orange', []) %}
                 <td style="background-color: orange;">
+                {% elif attrs and (field.index-1, loop.index-1) in attrs.get('blue', []) %}
+                <td style="background-color: lightskyblue;">
                 {% else %}
                 <td>
-                {% endif %}
-                    {% if attrs and (field.index-1, loop.index-1) in attrs.get('bold', []) %}
+                {%- endif -%}
+                    {%- if attrs and (field.index-1, loop.index-1) in attrs.get('bold', []) -%}
                         <b>{{ f }}</b>
-                    {% else %}
+                    {%- else -%}
                         {{ f }}
-                    {% endif %}
+                    {%- endif -%}
                 </td>
-            {% endfor %}
+            {%- endfor %}
             </tr>
         {% endfor %}
         </tbody>

@@ -48,6 +48,7 @@ def monitoring_thread():
     last_stable_state = None
     connection_status = None
     last_producing = True
+    missed_count = 0
 
     log.debug('Starting monitoring thread...')
 
@@ -68,6 +69,7 @@ def monitoring_thread():
                 # reacting too much on temporary connection errors
                 if last_state_consecutive == 3:
                     if last_stable_state and last_stable_state != last_state:
+                        log.warning('Delegate just went offline...')
                         send_notification('Delegate just went offline...', alert=True)
                     last_stable_state = last_state
 
@@ -84,6 +86,7 @@ def monitoring_thread():
             # reacting too much on temporary connection errors
             if last_state_consecutive == 3:
                 if last_stable_state and last_stable_state != last_state:
+                    log.info('Delegate just came online!')
                     send_notification('Delegate just came online!')
                 last_stable_state = last_state
 
@@ -92,17 +95,31 @@ def monitoring_thread():
             info = node.get_info()
             if info['network_num_connections'] <= 5:
                 if connection_status == 'connected':
+                    log.warning('Fewer than 5 network connections...')
                     send_notification('Fewer than 5 network connections...', alert=True)
                     connection_status = 'starved'
             else:
                 if connection_status == 'starved':
+                    log.info('Got more than 5 connections now')
                     send_notification('Got more than 5 connections now')
                     connection_status = 'connected'
 
             # monitor for missed blocks
             producing, n = node.get_streak()
-            if last_producing and not producing:
-                send_notification('Missed a block!', alert=True)
+            if last_producing:
+                if not producing:
+                    missed_count += 1
+                    if missed_count == 3:
+                        # wait for 3 confirmations before finding a miss, to
+                        # avoid reacting too quick on glitches
+                        log.warning('Missed a block!')
+                        send_notification('Missed a block!', alert=True)
+                    else:
+                        # we still consider we're producing
+                        producing = True
+                else:
+                    missed_count = 0
+
             last_producing = producing
 
 

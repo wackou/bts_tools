@@ -14,6 +14,7 @@
                 <li {% if request.path == '/status' %}class="active"{% endif %}><a href="/status">Status</a></li>
                 <li {% if request.path == '/info' %}class="active"{% endif %}><a href="/info">Info</a></li>
                 <li {% if request.path == '/delegates' %}class="active"{% endif %}><a href="/delegates">Delegates</a></li>
+                <li {% if request.path == '/logs' %}class="active"{% endif %}><a href="/logs">Logs</a></li>
 
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">RPC Host: {{ rpc.main_node.host }} <span class="caret"></span></a>
@@ -27,7 +28,11 @@
 
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="#">
+                {%- if rpc.main_node.is_online() -%}
                     <div class="btn btn-xs btn-info">{{ core.config['env']['active'] }}: {{ process.binary_description() }}</div>
+                {%- else -%}
+                    <div class="btn btn-xs btn-danger">offline</div>
+                {%- endif -%}
                 </a></li>
 
                 <li><a href="#"><b>Delegate name: </b> {{ core.delegate_name() }}</a></li>
