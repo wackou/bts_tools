@@ -36,7 +36,7 @@
             "smtp_server": "",
             "smtp_user": "",
             "smtp_password": "",
-            "identity": "BTS Monitor",
+            "identity": "BTS Monitor <bts_monitor@example.com>",
             "recipient": ""
         },
         "apns": {
