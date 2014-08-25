@@ -105,9 +105,8 @@ class BTSProxy(object):
                 try:
                     result = json.loads(result)
                 except:
-                    print('-'*40 + ' Error while parsing JSON: ' + '-'*40)
-                    print(result)
-                    print('-'*108)
+                    log.error('Error while parsing JSON:')
+                    log.error(result)
                     raise
 
                 if 'error' in result:

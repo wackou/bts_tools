@@ -39,15 +39,21 @@
                 {% if rpc.main_node.is_online() %}
                     <li><a href="#">
                         <b>Blocks:</b>
-                        {% set producing, n = rpc.main_node.get_streak() %}
-                        {% if n >= 0 %}
-                            {% if producing %}
-                                <div class="btn btn-xs btn-success">Last {{ n }} produced</div>
+                        {% if rpc.main_node.get_info()['blockchain_head_block_age'] < 60 %}
+                            {% set producing, n = rpc.main_node.get_streak() %}
+                            {% if n >= 0 %}
+                                {% if producing %}
+                                    <div class="btn btn-xs btn-success">Last {{ n }} produced</div>
+                                {% else %}
+                                    <div class="btn btn-xs btn-danger">Last {{ n }} missed </div>
+                                {% endif %}
                             {% else %}
-                                <div class="btn btn-xs btn-danger">Last {{ n }} missed </div>
+                            {# also: if blockchain not uptodate, print NOT SYNCED #}
+                                <div class="btn btn-xs btn-danger">NO DATA / ERROR</div>
                             {% endif %}
                         {% else %}
-                            <div class="btn btn-xs btn-danger">NO DATA / ERROR</div>
+                            {# if blockchain not up-to-date, information is not reliable #}
+                            <div class="btn btn-xs btn-warning">NOT SYNCED</div>
                         {% endif %}
                     </a></li>
                 {% endif %}

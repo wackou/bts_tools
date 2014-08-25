@@ -31,10 +31,25 @@ log = logging.getLogger(__name__)
 
 cfg = config['monitoring']
 
-stats = deque(maxlen=int(cfg['time_span'] / cfg['time_interval']))
+# make sure we don't have huge plots that take forever to render
+maxlen = 2000
+
+time_span = cfg['time_span']
+growing_time_interval = cfg['time_interval']
+desired_maxlen = int(time_span / growing_time_interval)
+stable_time_interval = growing_time_interval
+
+if desired_maxlen > maxlen:
+    stable_time_interval *= (desired_maxlen / maxlen)
+
+time_interval = growing_time_interval
+
+stats = deque(maxlen=min(desired_maxlen, maxlen))
 
 
 def monitoring_thread():
+    global time_interval
+
     # find node object to be monitored
     for n in nodes:
         if n.host == config['monitoring']['host']:
@@ -53,7 +68,11 @@ def monitoring_thread():
     log.debug('Starting monitoring thread...')
 
     while True:
-        time.sleep(cfg['time_interval'])
+        if time_interval != stable_time_interval and len(stats) == stats.maxlen:
+            log.debug('Switching stats plot to new time interval: %s instead of %s during initial fill up' %
+                      (stable_time_interval, growing_time_interval))
+            time_interval = stable_time_interval
+        time.sleep(time_interval)
         log.debug('-------- Monitoring status of the BitShares client --------')
         node.clear_rpc_cache()
 
@@ -105,22 +124,23 @@ def monitoring_thread():
                     connection_status = 'connected'
 
             # monitor for missed blocks
-            producing, n = node.get_streak()
-            if last_producing:
-                if not producing:
-                    missed_count += 1
-                    if missed_count == 3:
-                        # wait for 3 confirmations before finding a miss, to
-                        # avoid reacting too quick on glitches
-                        log.warning('Missed a block!')
-                        send_notification('Missed a block!', alert=True)
+            if info['blockchain_head_block_age'] < 60:  # only monitor if synced
+                producing, n = node.get_streak()
+                if last_producing:
+                    if not producing:
+                        missed_count += 1
+                        if missed_count == 3:
+                            # wait for 3 confirmations before finding a miss, to
+                            # avoid reacting too quick on glitches
+                            log.warning('Missed a block!')
+                            send_notification('Missed a block!', alert=True)
+                        else:
+                            # we still consider we're producing
+                            producing = True
                     else:
-                        # we still consider we're producing
-                        producing = True
-                else:
-                    missed_count = 0
+                        missed_count = 0
 
-            last_producing = producing
+                last_producing = producing
 
 
             # only monitor cpu and network if we are monitoring localhost
