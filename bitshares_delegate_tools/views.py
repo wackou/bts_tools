@@ -49,7 +49,6 @@ def offline():
 
 
 def unauthorized():
-    config_path = dirname(bitshares_delegate_tools.__file__)
     return render_template('error.html',
                            msg=('Unauthorized. Make sure you have correctly set '
                                 'the rpc user and password in the %s file'

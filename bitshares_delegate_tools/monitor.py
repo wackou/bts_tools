@@ -65,7 +65,7 @@ def monitoring_thread():
     last_producing = True
     missed_count = 0
 
-    log.debug('Starting monitoring thread...')
+    log.info('Starting monitoring thread')
 
     while True:
         if time_interval != stable_time_interval and len(stats) == stats.maxlen:

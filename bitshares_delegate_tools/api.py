@@ -18,57 +18,30 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from flask import render_template, Flask
-from bitshares_delegate_tools import views
+from flask import Flask
+from bitshares_delegate_tools import views_public
 import bitshares_delegate_tools
 import bitshares_delegate_tools.monitor
-import threading
 import logging
 
 log = logging.getLogger(__name__)
 
 
 
-# Jinja filter for dates
-def format_datetime(value, fmt='full'):
-    if fmt == 'full':
-        result = value.strftime('%Y-%m-%d %H:%M:%S')
-        tzinfo = value.strftime('%Z')
-        if tzinfo:
-            result = result + ' ' + tzinfo
-        return result
-    return value.strftime(fmt)
-
-
 def create_app(settings_override=None):
-    """Returns the BitShares Delegate Tools Server dashboard application instance"""
+    """Returns the BitShares Delegate Tools Server api application instance"""
 
-    print('creating Flask app bitshares_delegate_tools')
+    print('creating Flask app bitshares_delegate_tools:api')
     app = Flask('bitshares_delegate_tools', instance_relative_config=True)
 
     app.config.from_object(settings_override)
 
-    app.register_blueprint(views.bp)
-
-    # Register custom error handlers
-    app.errorhandler(404)(lambda e: (render_template('errors/404.html'), 404))
-    #app.errorhandler(500)(lambda e: (render_template('errors/500.html'), 500))
-
-    # custom filter for showing dates
-    app.jinja_env.filters['datetime'] = format_datetime
+    app.register_blueprint(views_public.bp)
 
     # make bitshares_delegate_tools module available in all the templates
     app.jinja_env.globals.update(core=bitshares_delegate_tools.core,
                                  rpc=bitshares_delegate_tools.rpcutils,
-                                 monitor=bitshares_delegate_tools.monitor,
-                                 process=bitshares_delegate_tools.process)
-
-    c = bitshares_delegate_tools.core.config
-    if (c['monitoring']['email']['active'] or
-        c['monitoring']['apns']['active']):
-        t = threading.Thread(target=bitshares_delegate_tools.monitor.monitoring_thread)
-        t.daemon = True
-        t.start()
+                                 monitor=bitshares_delegate_tools.monitor)
 
     return app
 
