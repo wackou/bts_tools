@@ -32,7 +32,7 @@ log = logging.getLogger(__name__)
 cfg = config['monitoring']
 
 # make sure we don't have huge plots that take forever to render
-maxlen = 2000
+maxlen = 4000
 
 time_span = cfg['time_span']
 growing_time_interval = cfg['time_interval']

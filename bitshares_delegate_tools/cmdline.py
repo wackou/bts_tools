@@ -101,13 +101,17 @@ def install_last_built_bin():
 def main():
     # parse commandline args
     DESC="""following commands are available:
-     - clean_homedir : clean home directory. WARNING: this will delete your wallet!
-     - clean         : clean build directory
-     - build [hash]  : update and build bts client
-     - run [hash]    : run latest compiled bts client, or the one with the given hash
-     - list          : list installed bitshares client binaries
+  - clean_homedir : clean home directory. WARNING: this will delete your wallet!
+  - clean         : clean build directory
+  - build [hash]  : update and build bts client
+  - run [hash]    : run latest compiled bts client, or the one with the given hash or tag
+  - list          : list installed bitshares client binaries
+
+Example:
+  $ bts build 0.4.7
+  $ bts run
     """
-    EPILOG="""You should also look into config.json to tune it to your liking."""
+    EPILOG="""You should also look into ~/.bts_tools/config.json to tune it to your liking."""
     parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
                                      formatter_class=RawTextHelpFormatter)
     parser.add_argument('command', choices=['clean_homedir', 'clean', 'build', 'run', 'list'],
