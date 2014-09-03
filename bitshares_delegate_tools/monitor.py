@@ -24,6 +24,7 @@ from .core import config, StatsFrame
 from .notification import send_notification
 from .rpcutils import nodes
 from .process import bts_process
+import math
 import time
 import logging
 
@@ -35,14 +36,14 @@ cfg = config['monitoring']
 maxlen = 4000
 
 time_span = cfg['time_span']
-growing_time_interval = cfg['time_interval']
-desired_maxlen = int(time_span / growing_time_interval)
-stable_time_interval = growing_time_interval
+time_interval = cfg['time_interval']
+desired_maxlen = int(time_span / time_interval)
 
 if desired_maxlen > maxlen:
     stable_time_interval *= (desired_maxlen / maxlen)
+else:
+    stable_time_interval = time_interval
 
-time_interval = growing_time_interval
 
 stats = deque(maxlen=min(desired_maxlen, maxlen))
 
@@ -66,12 +67,10 @@ def monitoring_thread():
     missed_count = 0
 
     log.info('Starting monitoring thread')
+    loop_index = 0
 
     while True:
-        if time_interval != stable_time_interval and len(stats) == stats.maxlen:
-            log.debug('Switching stats plot to new time interval: %s instead of %s during initial fill up' %
-                      (stable_time_interval, growing_time_interval))
-            time_interval = stable_time_interval
+        loop_index += 1
         time.sleep(time_interval)
         log.debug('-------- Monitoring status of the BitShares client --------')
         node.clear_rpc_cache()
@@ -153,9 +152,17 @@ def monitoring_thread():
                            connections=info['network_num_connections'],
                            timestamp=datetime.utcnow())
 
-            log.debug('appending to stats: %s' % hex(id(stats)))
-            stats.append(s)
-            log.debug('stats len: %d' % len(stats))
+            # if our stats queue is full, only append now and then to reach approximately
+            # the desired timespan while keeping the same number of items
+            if time_interval != stable_time_interval and len(stats) == stats.maxlen:
+                # note: we could have used round() instead of ceil() here but ceil()
+                #       gives us the guarantee that the time span will be at least
+                #       the one asked for, not less due to rounding effects
+                ratio = math.ceil(stable_time_interval / time_interval)
+                if loop_index % ratio == 0:
+                    stats.append(s)
+            else:
+                stats.append(s)
 
         except Exception as e:
             log.error('An exception occurred in the monitoring thread:')
