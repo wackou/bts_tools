@@ -29,7 +29,7 @@ HISTORY = """Unreleased as of yet"""
 VERSION = '0.1.dev1'
 
 
-install_requires = ['Flask', 'requests', 'psutil', 'apns-client']
+install_requires = ['Flask', 'requests', 'psutil', 'arrow', 'apns-client']
 
 setup_requires = []
 

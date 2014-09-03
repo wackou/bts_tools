@@ -18,15 +18,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from flask import Blueprint, render_template, request, redirect, send_from_directory, jsonify
+from flask import Blueprint, send_from_directory, jsonify
 from functools import wraps
-from collections import defaultdict
-from os.path import dirname
-from datetime import datetime
 import bitshares_delegate_tools.rpcutils as rpc
 from bitshares_delegate_tools import core
 import bitshares_delegate_tools
 import requests.exceptions
+import itertools
+import arrow
 import logging
 
 log = logging.getLogger(__name__)
@@ -148,3 +147,68 @@ def api_delegates():
                            '%.2f%%' % (d['delegate_info']['votes_for'] * 100 / total_shares)]
                            for d in delegates])
 
+@bp.route('/delegate_info/<delegate_name>')
+@crossdomain(origin='*')
+@clear_rpc_cache
+@catch_error
+def delegate_info(delegate_name):
+    delegates = rpc.main_node.blockchain_list_delegates(0, 400)
+    for i, d in enumerate(delegates):
+        if d['name'] == delegate_name:
+            delegate = d
+            rank = i
+            break
+    else:
+        raise ValueError('Unknown delegate: %s' % delegate_name)
+
+    total_shares = rpc.main_node.get_info()['blockchain_share_supply']
+    votes_for = '%.2f%%' % (d['delegate_info']['votes_for'] * 100 / total_shares)
+
+    slots = rpc.main_node.blockchain_get_delegate_slot_records(delegate_name)[::-1]
+    if slots:
+        producing = slots[0]['block_produced']
+        streak = list(itertools.takewhile(lambda x: (x['block_produced'] == producing), slots))
+        last_produced = len(streak)
+        did_not_miss_since = streak[-1]['start_time']
+
+        now = arrow.utcnow()
+        one_day_ago = now.replace(days=-1)
+        one_week_ago = now.replace(weeks=-1)
+        one_month_ago = now.replace(months=-1)
+
+        def ratio(slots):
+            produced, total = 0, 0
+            for s in slots:
+                if s['block_produced']:
+                    produced += 1
+                total += 1
+            return float(produced) / total
+
+        last_day = list(filter(lambda x: arrow.get(x['start_time'], 'YYYYMMDDTHHmmss') > one_day_ago, slots))
+        last_week = list(filter(lambda x: arrow.get(x['start_time'], 'YYYYMMDDTHHmmss') > one_week_ago, slots))
+        last_month = list(filter(lambda x: arrow.get(x['start_time'], 'YYYYMMDDTHHmmss') > one_month_ago, slots))
+        ratio_last_day = '%.2f%%' % (ratio(last_day) * 100)
+        ratio_last_week = '%.2f%%' % (ratio(last_week) * 100)
+        ratio_last_month = '%.2f%%' % (ratio(last_month) * 100)
+
+    else:
+        producing = True
+        last_produced = 0
+        did_not_miss_since = 'N/A'
+        ratio_last_day = 'N/A'
+        ratio_last_week = 'N/A'
+        ratio_last_month = 'N/A'
+
+
+    result = { 'votes_for': votes_for,
+               'rank': rank,
+               'producing': producing,
+               'last_produced': last_produced,
+               'ratio_last_day': ratio_last_day,
+               'ratio_last_week': ratio_last_week,
+               'ratio_last_month': ratio_last_month,
+               'not_missed_since': did_not_miss_since,
+               #'accumulated pay': 0
+               }
+
+    return jsonify(result=result)
