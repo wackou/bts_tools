@@ -40,7 +40,7 @@ time_interval = cfg['time_interval']
 desired_maxlen = int(time_span / time_interval)
 
 if desired_maxlen > maxlen:
-    stable_time_interval *= (desired_maxlen / maxlen)
+    stable_time_interval = time_interval * (desired_maxlen / maxlen)
 else:
     stable_time_interval = time_interval
 
