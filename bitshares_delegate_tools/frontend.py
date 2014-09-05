@@ -28,16 +28,8 @@ import logging
 log = logging.getLogger(__name__)
 
 
-
-# Jinja filter for dates
-def format_datetime(value, fmt='full'):
-    if fmt == 'full':
-        result = value.strftime('%Y-%m-%d %H:%M:%S')
-        tzinfo = value.strftime('%Z')
-        if tzinfo:
-            result = result + ' ' + tzinfo
-        return result
-    return value.strftime(fmt)
+def format_datetime(d):
+    return '%s-%s-%s %s:%s:%s' % (d[0:4], d[4:6], d[6:8], d[9:11], d[11:13], d[13:15])
 
 
 def create_app(settings_override=None):
@@ -52,7 +44,6 @@ def create_app(settings_override=None):
 
     # Register custom error handlers
     app.errorhandler(404)(lambda e: (render_template('errors/404.html'), 404))
-    #app.errorhandler(500)(lambda e: (render_template('errors/500.html'), 500))
 
     # custom filter for showing dates
     app.jinja_env.filters['datetime'] = format_datetime

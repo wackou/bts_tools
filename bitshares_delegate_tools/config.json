@@ -32,6 +32,7 @@
         "plots_time_span": 86400,
         "check_feeds_time_interval": 60,
         "publish_feeds_time_interval": 43200,
+        "median_feed_time_span": 3600,
 
         "email": {
             "active": false,

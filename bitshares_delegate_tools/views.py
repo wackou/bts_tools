@@ -21,7 +21,6 @@
 from flask import Blueprint, render_template, request, redirect, send_from_directory
 from functools import wraps
 from collections import defaultdict
-from os.path import dirname
 from datetime import datetime
 from . import rpcutils as rpc
 from . import core, monitor, slogging
@@ -144,9 +143,9 @@ def view_info():
             else:
                 attrs['red'].append((i, 1))
 
-        if prop in ('wallet_open',
+        if prop in {'wallet_open',
                     'wallet_unlocked',
-                    'wallet_block_production_enabled'):
+                    'wallet_block_production_enabled'}:
             green_if_true(value)
 
         elif prop == 'network_num_connections':
@@ -159,9 +158,36 @@ def view_info():
             if value and value < 60:
                 attrs['orange'].append((i, 1))
 
+        elif prop in {'blockchain_head_block_timestamp',
+                      'blockchain_next_round_timestamp',
+                      'ntp_time',
+                      'wallet_last_scanned_block_timestamp',
+                      'wallet_next_block_production_timestamp',
+                      'wallet_unlocked_until_timestamp'}:
+            if value is not None:
+                attrs['datetime'].append((i, 1))
+
     info_items, attrs = split_columns(info_items, attrs)
 
-    return render_template('tableview.html', title='BTS Client - Info', data=info_items, attrs=attrs)
+    published_feeds = rpc.main_node.blockchain_get_feeds_from_delegate('wackou-delegate')
+    last_update = max(f['last_update'] for f in published_feeds)
+    pfeeds = { f['asset_symbol']: f['price'] for f in published_feeds }
+    feeds = dict(monitor.feeds)
+    mfeeds = {cur: monitor.median(cur) for cur in feeds}
+
+    # format to string here instead of in template, more flexibility in python
+    def format_feeds(feeds):
+        feeds['USD'] = (('%.4f' % feeds['USD']) if 'USD' in feeds else 'N/A').rjust(8)
+        feeds['BTC'] = (('%.4g' % feeds['BTC']) if 'BTC' in feeds else 'N/A').rjust(11)
+        feeds['CNY'] = (('%.4f' % feeds['CNY']) if 'CNY' in feeds else 'N/A').rjust(8)
+
+    format_feeds(feeds)
+    format_feeds(mfeeds)
+    format_feeds(pfeeds)
+
+    return render_template('info.html', title='BTS Client - Info',
+                           data=info_items, attrs=attrs, feeds=feeds,
+                           pfeeds=pfeeds, mfeeds=mfeeds, last_update=last_update)
 
 
 @bp.route('/rpchost/<host>')
