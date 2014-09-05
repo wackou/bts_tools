@@ -20,10 +20,12 @@
 
 from collections import deque
 from datetime import datetime
-from .core import config, StatsFrame
+from .core import config, StatsFrame, delegate_name
 from .notification import send_notification
 from .rpcutils import nodes
 from .process import bts_process
+import threading
+import requests
 import math
 import time
 import logging
@@ -33,10 +35,10 @@ log = logging.getLogger(__name__)
 cfg = config['monitoring']
 
 # make sure we don't have huge plots that take forever to render
-maxlen = 4000
+maxlen = 2000
 
-time_span = cfg['time_span']
-time_interval = cfg['time_interval']
+time_span = cfg['plots_time_span']
+time_interval = cfg['monitor_time_interval']
 desired_maxlen = int(time_span / time_interval)
 
 if desired_maxlen > maxlen:
@@ -47,17 +49,55 @@ else:
 
 stats = deque(maxlen=min(desired_maxlen, maxlen))
 
+nfeed_checked = 0
+
+def check_feeds(rpc):
+    global nfeed_checked
+
+    CHECK_FEED_INTERVAL = cfg['check_feeds_time_interval']
+    PUBLISH_FEED_INTERVAL = cfg['publish_feeds_time_interval']
+
+    def get_from_bter(cur):
+        r = requests.get('http://data.bter.com/api/1/ticker/btsx_%s' % cur.lower()).json()
+        return float(r['last'])
+
+    try:
+        usd = get_from_bter('usd')
+        btc = get_from_bter('btc')
+        cny = get_from_bter('cny')
+        log.debug('Got feeds: %f USD, %g BTC, %f CNY' % (usd, btc, cny))
+        nfeed_checked += 1
+
+        if nfeed_checked % int(PUBLISH_FEED_INTERVAL/CHECK_FEED_INTERVAL) == 0:
+            log.info('Publishing feeds: %f USD, %f CNY, %g BTC' % (usd, cny, btc))
+            rpc.wallet_publish_price_feed(delegate_name(), usd, 'USD')
+            rpc.wallet_publish_price_feed(delegate_name(), btc, 'BTC')
+            rpc.wallet_publish_price_feed(delegate_name(), cny, 'CNY')
+
+    except Exception as e:
+        log.error('While checking feeds:')
+        log.exception(e)
+
+    threading.Timer(CHECK_FEED_INTERVAL, check_feeds, args=[rpc]).start()
+
 
 def monitoring_thread():
     global time_interval
 
     # find node object to be monitored
     for n in nodes:
-        if n.host == config['monitoring']['host']:
+        if n.host == cfg['host']:
             node = n
             break
     else:
-        raise ValueError('"%s" is not a valid host name. Available: %s' % (config['monitor_host'], ', '.join(n.host for n in nodes)))
+        raise ValueError('"%s" is not a valid host name. Available: %s' %
+                         (config['monitor_host'], ', '.join(n.host for n in nodes)))
+
+    # launch feed monitoring and publishing thread
+    check_feeds(node)
+
+    log.info('Starting monitoring thread')
+    loop_index = 0
 
     last_state = None
     last_state_consecutive = 0
@@ -65,9 +105,6 @@ def monitoring_thread():
     connection_status = None
     last_producing = True
     missed_count = 0
-
-    log.info('Starting monitoring thread')
-    loop_index = 0
 
     while True:
         loop_index += 1

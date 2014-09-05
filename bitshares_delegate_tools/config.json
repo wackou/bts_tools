@@ -28,8 +28,10 @@
 
     "monitoring": {
         "host": "localhost",
-        "time_interval": 5,
-        "time_span": 86400,
+        "monitor_time_interval": 5,
+        "plots_time_span": 86400,
+        "check_feeds_time_interval": 60,
+        "publish_feeds_time_interval": 43200,
 
         "email": {
             "active": false,
