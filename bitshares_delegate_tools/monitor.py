@@ -68,7 +68,9 @@ def check_feeds(rpc):
 
     def get_from_bter(cur):
         r = requests.get('http://data.bter.com/api/1/ticker/btsx_%s' % cur.lower()).json()
-        result = float(r['last'])
+        # BTSX/USD trade history seems to have disappeared and last == 0...
+        #result = float(r['last'])
+        result = (float(r['sell']) + float(r['buy'])) / 2
         feeds[cur] = result
         price_history[cur].append(result)
         return result
