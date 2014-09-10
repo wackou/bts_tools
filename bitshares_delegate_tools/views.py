@@ -23,7 +23,7 @@ from functools import wraps
 from collections import defaultdict
 from datetime import datetime
 from . import rpcutils as rpc
-from . import core, monitor, slogging
+from . import core, monitor, slogging, feeds
 import bitshares_delegate_tools
 import requests.exceptions
 import logging
@@ -172,8 +172,8 @@ def view_info():
     published_feeds = rpc.main_node.blockchain_get_feeds_from_delegate('wackou-delegate')
     last_update = max(f['last_update'] for f in published_feeds)
     pfeeds = { f['asset_symbol']: f['price'] for f in published_feeds }
-    feeds = dict(monitor.feeds)
-    mfeeds = {cur: monitor.median(cur) for cur in feeds}
+    lfeeds = dict(feeds.feeds)
+    mfeeds = {cur: feeds.median(cur) for cur in lfeeds}
 
     # format to string here instead of in template, more flexibility in python
     def format_feeds(feeds):
@@ -181,12 +181,12 @@ def view_info():
         feeds['BTC'] = (('%.4g' % feeds['BTC']) if 'BTC' in feeds else 'N/A').rjust(11)
         feeds['CNY'] = (('%.4f' % feeds['CNY']) if 'CNY' in feeds else 'N/A').rjust(8)
 
-    format_feeds(feeds)
+    format_feeds(lfeeds)
     format_feeds(mfeeds)
     format_feeds(pfeeds)
 
     return render_template('info.html', title='BTS Client - Info',
-                           data=info_items, attrs=attrs, feeds=feeds,
+                           data=info_items, attrs=attrs, feeds=lfeeds,
                            pfeeds=pfeeds, mfeeds=mfeeds, last_update=last_update)
 
 
@@ -257,6 +257,6 @@ def view_logs():
 
     return render_template('tableview.html',
                            headers=headers,
-                           data=data,
+                           data=reversed(data),
                            attrs=attrs,
-                           order='[[ 0, "desc" ]]')
+                           order='[]')

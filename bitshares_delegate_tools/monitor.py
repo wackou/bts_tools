@@ -24,8 +24,7 @@ from .core import config, StatsFrame, delegate_name
 from .notification import send_notification
 from .rpcutils import nodes
 from .process import bts_process
-import threading
-import requests
+from .feeds import check_feeds
 import math
 import time
 import logging
@@ -48,53 +47,6 @@ else:
 
 
 stats = deque(maxlen=min(desired_maxlen, maxlen))
-
-CHECK_FEED_INTERVAL = cfg['check_feeds_time_interval']
-PUBLISH_FEED_INTERVAL = cfg['publish_feeds_time_interval']
-
-feeds = {}
-nfeed_checked = 0
-
-# note: this only works when having 1 source for the price of a given asset,
-#       need to multiply by the number of sources otherwise
-history_len = int(cfg['median_feed_time_span'] / CHECK_FEED_INTERVAL)
-price_history = {cur: deque(maxlen=history_len) for cur in {'USD', 'BTC', 'CNY'}}
-
-def median(cur):
-    return sorted(price_history[cur])[len(price_history[cur])//2]
-
-def check_feeds(rpc):
-    global nfeed_checked
-
-    def get_from_bter(cur):
-        r = requests.get('http://data.bter.com/api/1/ticker/btsx_%s' % cur.lower()).json()
-        # BTSX/USD trade history seems to have disappeared and last == 0...
-        #result = float(r['last'])
-        result = (float(r['sell']) + float(r['buy'])) / 2
-        feeds[cur] = result
-        price_history[cur].append(result)
-        return result
-
-    try:
-        usd = get_from_bter('USD')
-        btc = get_from_bter('BTC')
-        cny = get_from_bter('CNY')
-        log.debug('Got feeds: %f USD, %g BTC, %f CNY' % (usd, btc, cny))
-        nfeed_checked += 1
-
-        if nfeed_checked % int(PUBLISH_FEED_INTERVAL/CHECK_FEED_INTERVAL) == 0:
-            # publish median value of the price, not latest one
-            usd, btc, cny = median('USD'), median('BTC'), median('CNY')
-            log.info('Publishing feeds: %f USD, %g BTC, %f CNY' % (usd, btc, cny))
-            rpc.wallet_publish_price_feed(delegate_name(), usd, 'USD')
-            rpc.wallet_publish_price_feed(delegate_name(), btc, 'BTC')
-            rpc.wallet_publish_price_feed(delegate_name(), cny, 'CNY')
-
-    except Exception as e:
-        log.error('While checking feeds:')
-        log.exception(e)
-
-    threading.Timer(CHECK_FEED_INTERVAL, check_feeds, args=[rpc]).start()
 
 
 def monitoring_thread():
