@@ -238,7 +238,7 @@ def view_logs():
              r.levelname,
              '%s:%s %s' % (r.name, r.lineno, r.funcName),
              r.msg)
-            for r in records]
+            for r in reversed(records)]
 
     attrs = defaultdict(list)
     for i, d in enumerate(data):
@@ -257,6 +257,6 @@ def view_logs():
 
     return render_template('tableview.html',
                            headers=headers,
-                           data=reversed(data),
+                           data=data,
                            attrs=attrs,
                            order='[]')
