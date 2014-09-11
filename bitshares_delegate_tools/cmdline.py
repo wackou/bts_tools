@@ -45,18 +45,44 @@ def clone():
         os.chdir(BITSHARES_BUILD_DIR)
         run('git submodule init')
 
+def update():
+    run('git checkout %s && git pull && git submodule update' % BITSHARES_GIT_BRANCH)
 
-update = lambda: run('git checkout %s && git pull && git submodule update' % BITSHARES_GIT_BRANCH)
-clean_config = lambda: run('rm -f CMakeCache.txt')
+def clean_config():
+    run('rm -f CMakeCache.txt')
 
+CONFIGURE_OPTS = []
 if platform == 'darwin':
-    # assumes openssl installed from brew
-    path = '/usr/local/opt/openssl/lib/pkgconfig'
-    configure = lambda: run('PKG_CONFIG_PATH=%s:$PKG_CONFIG_PATH cmake .' % path)
-else:
-    configure = lambda: run('cmake .')
+    # assumes openssl and qt5 installed from brew
+    CONFIGURE_OPTS = ['PATH=%s:$PATH' % '/usr/local/opt/qt5/bin',
+                      'PKG_CONFIG_PATH=%s:$PKG_CONFIG_PATH' % '/usr/local/opt/openssl/lib/pkgconfig']
 
-build = lambda: run(['make']+config.get('make_args', []))
+def configure():
+    run('%s cmake .' % ' '.join(CONFIGURE_OPTS))
+
+def configure_gui():
+    run('%s cmake -DINCLUDE_QT_WALLET=ON .' % ' '.join(CONFIGURE_OPTS))
+
+def build():
+    run(['make']+config.get('make_args', []))
+
+def build_gui():
+    """
+    Build GUI client
+
+    git submodule init
+    git submodule update
+    cd bitsharesx
+    cmake -DINCLUDE_QT_WALLET=ON .
+    rm -r programs/qt_wallet/htdocs     # in the case you are updating an existing build
+    cd programs/web_wallet
+    sudo npm install -g lineman
+    npm install
+    cd -
+    make buildweb
+    make BitSharesX
+    """
+    pass
 
 
 def install_last_built_bin():
@@ -68,7 +94,10 @@ def install_last_built_bin():
     r = run('git describe --tags %s' % commit, io=True)
     if r.status == 0:
         # we are on a tag, use it for naming binary
-        bin_filename = 'bitshares_client_%s_v%s' % (date, r.stdout.strip())
+        tag = r.stdout.strip()
+        if tag.startswith('v'):
+            tag = tag[1:]
+        bin_filename = 'bitshares_client_%s_v%s' % (date, tag)
     else:
         bin_filename = 'bitshares_client_%s_%s_%s' % (date, branch, commit[:8])
 
@@ -95,7 +124,6 @@ def install_last_built_bin():
     except:
         pass
     os.symlink(c, last_installed)
-
 
 
 def main():
