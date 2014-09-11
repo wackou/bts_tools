@@ -45,11 +45,14 @@ def clone():
         os.chdir(BITSHARES_BUILD_DIR)
         run('git submodule init')
 
+
 def update():
     run('git checkout %s && git pull && git submodule update' % BITSHARES_GIT_BRANCH)
 
+
 def clean_config():
     run('rm -f CMakeCache.txt')
+
 
 CONFIGURE_OPTS = []
 if platform == 'darwin':
@@ -60,29 +63,20 @@ if platform == 'darwin':
 def configure():
     run('%s cmake .' % ' '.join(CONFIGURE_OPTS))
 
+
 def configure_gui():
     run('%s cmake -DINCLUDE_QT_WALLET=ON .' % ' '.join(CONFIGURE_OPTS))
+
 
 def build():
     run(['make']+config.get('make_args', []))
 
-def build_gui():
-    """
-    Build GUI client
 
-    git submodule init
-    git submodule update
-    cd bitsharesx
-    cmake -DINCLUDE_QT_WALLET=ON .
-    rm -r programs/qt_wallet/htdocs     # in the case you are updating an existing build
-    cd programs/web_wallet
-    sudo npm install -g lineman
-    npm install
-    cd -
-    make buildweb
-    make BitSharesX
-    """
-    pass
+def build_gui():
+    run('rm -fr programs/qt_wallet/htdocs')
+    run('cd programs/web_wallet; npm install')
+    run('make buildweb')
+    run('make BitSharesX')
 
 
 def install_last_built_bin():
@@ -129,20 +123,25 @@ def install_last_built_bin():
 def main():
     # parse commandline args
     DESC="""following commands are available:
-  - clean_homedir : clean home directory. WARNING: this will delete your wallet!
-  - clean         : clean build directory
-  - build [hash]  : update and build bts client
-  - run [hash]    : run latest compiled bts client, or the one with the given hash or tag
-  - list          : list installed bitshares client binaries
+  - clean_homedir    : clean home directory. WARNING: this will delete your wallet!
+  - clean            : clean build directory
+  - build [hash]     : update and build bts client
+  - build_gui [hash] : update and build bts gui client
+  - run [hash]       : run latest compiled bts client, or the one with the given hash or tag
+  - run_gui          : run latest compiled bts gui client
+  - list             : list installed bitshares client binaries
 
 Example:
   $ bts build 0.4.7
   $ bts run
+
+  $ bts build_gui 0.4.14
+  $ bts run_gui
     """
     EPILOG="""You should also look into ~/.bts_tools/config.json to tune it to your liking."""
     parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
                                      formatter_class=RawTextHelpFormatter)
-    parser.add_argument('command', choices=['clean_homedir', 'clean', 'build', 'run', 'list'],
+    parser.add_argument('command', choices=['clean_homedir', 'clean', 'build', 'build_gui', 'run', 'run_gui', 'list'],
                         help='the command to run')
     parser.add_argument('-r', '--norpc', action='store_true',
                         help='run binary with RPC server deactivated')
@@ -151,7 +150,7 @@ Example:
     args = parser.parse_args()
 
 
-    if args.command == 'build':
+    if args.command in {'build', 'build_gui'}:
         clone()
 
         os.chdir(BITSHARES_BUILD_DIR)
@@ -159,10 +158,13 @@ Example:
         if args.hash:
             run('git checkout %s && git submodule update' % args.hash)
         clean_config()
-        configure()
-        build()
-
-        install_last_built_bin()
+        if args.command == 'build':
+            configure()
+            build()
+            install_last_built_bin()
+        elif args.command == 'build_gui':
+            configure_gui()
+            build_gui()
 
     elif args.command == 'run':
         if args.hash:
@@ -184,6 +186,9 @@ Example:
             run(' '.join(['gdb', '-ex', 'run', '--args', bin_name] + run_args))
         else:
             run([bin_name] + run_args)
+
+    elif args.command == 'run_gui':
+        run('open %s' % join(BITSHARES_BUILD_DIR, 'programs/qt_wallet/bin/BitSharesX.app'))
 
     elif args.command == 'clean':
         run('rm -fr "%s"' % BITSHARES_BUILD_DIR)

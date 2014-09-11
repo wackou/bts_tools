@@ -13,22 +13,28 @@ Command-line client
 just run the ``bts`` script with the command you want to execute:
 
     $ bts -h
-    usage: bts [-h] [-r] {clean_homedir,clean,build,run,list} [hash]
+    usage: bts [-h] [-r]
+               {clean_homedir,clean,build,build_gui,run,run_gui,list} [hash]
     
     following commands are available:
-      - clean_homedir : clean home directory. WARNING: this will delete your wallet!
-      - clean         : clean build directory
-      - build [hash]  : update and build bts client
-      - run [hash]    : run latest compiled bts client, or the one with the given hash or tag
-      - list          : list installed bitshares client binaries
+      - clean_homedir    : clean home directory. WARNING: this will delete your wallet!
+      - clean            : clean build directory
+      - build [hash]     : update and build bts client
+      - build_gui [hash] : update and build bts gui client
+      - run [hash]       : run latest compiled bts client, or the one with the given hash or tag
+      - run_gui          : run latest compiled bts gui client
+      - list             : list installed bitshares client binaries
     
     Example:
       $ bts build 0.4.7
       $ bts run
     
+      $ bts build_gui 0.4.14
+      $ bts run_gui
+    
     
     positional arguments:
-      {clean_homedir,clean,build,run,list}
+      {clean_homedir,clean,build,build_gui,run,run_gui,list}
                             the command to run
       hash                  the hash of the desired commit
     
@@ -37,6 +43,7 @@ just run the ``bts`` script with the command you want to execute:
       -r, --norpc           run binary with RPC server deactivated
     
     You should also look into ~/.bts_tools/config.json to tune it to your liking.
+
 
 Monitoring web app
 ==================

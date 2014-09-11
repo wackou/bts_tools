@@ -6,7 +6,8 @@
         "bitshares_delegate_tools.core": "INFO",
         "bitshares_delegate_tools.rpcutils": "INFO",
         "bitshares_delegate_tools.monitor": "INFO",
-        "bitshares_delegate_tools.notification": "INFO"
+        "bitshares_delegate_tools.notification": "INFO",
+        "bitshares_delegate_tools.feeds": "INFO"
     },
 
     "run_args": [],
