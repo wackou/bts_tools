@@ -31,7 +31,7 @@
         "host": "localhost",
         "monitor_time_interval": 5,
         "plots_time_span": 86400,
-        "check_feeds_time_interval": 60,
+        "check_feeds_time_interval": 300,
         "publish_feeds_time_interval": 43200,
         "median_feed_time_span": 3600,
 
