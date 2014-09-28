@@ -38,31 +38,64 @@ history_len = int(cfg['median_feed_time_span'] / CHECK_FEED_INTERVAL)
 price_history = {cur: deque(maxlen=history_len) for cur in {'USD', 'BTC', 'CNY'}}
 
 
-def get_from_bter(cur):
-    r = requests.get('http://data.bter.com/api/1/ticker/btsx_%s' % cur.lower()).json()
-    # BTSX/USD trade history seems to have disappeared and last == 0...
-    return float(r['last']) or ((float(r['sell']) + float(r['buy'])) / 2)
+def get_from_yahoo(cur, base):
+    r = requests.get('http://download.finance.yahoo.com/d/quotes.csv',
+                     params={'s': '%s%s=X' % (cur.upper(), base.upper()),
+                             'f': 'l1', 'e': 'csv'})
+    return float(r.text.strip())
 
 
-def get_from_btc38(cur):
+def get_from_bter(cur, base):
+    r = requests.get('http://data.bter.com/api/1/ticker/%s_%s' % (cur.lower(), base.lower())).json()
+    price = float(r['last']) or ((float(r['sell']) + float(r['buy'])) / 2)
+    volume = float(r['vol_%s' % cur.lower()])
+    return price, volume
+
+
+def get_from_btc38(cur, base):
     headers = {'content-type': 'application/json',
                'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
     r = requests.get('http://api.btc38.com/v1/ticker.php',
-                     params={'c':'btsx', 'mk_type':cur.lower()},
+                     params={'c': cur.lower(), 'mk_type': base.lower()},
                      headers=headers).json()
-    return float(r['ticker']['last'])
+    price = float(r['ticker']['last']) # TODO: (bid + ask) / 2 ?
+    volume = float(r['ticker']['last']) * float(r['ticker']['vol'])
+    return price, volume
 
 
-def get_feed_price(cur):
-    if cur in {'CNY', 'BTC'}:
-        price = (get_from_bter(cur) + get_from_btc38(cur)) / 2
-    elif cur == 'USD':
-        price = get_from_bter(cur)
-    else:
-        raise ValueError('Unsupported currency: %s' % cur)
-    feeds[cur] = price
-    price_history[cur].append(price)
-    return price
+def weighted_mean(l):
+    """return the weighted mean of a list of [(value, weight)]"""
+    return sum(v[0]*v[1] for v in l) / sum(v[1] for v in l)
+
+
+def adjust(v, r):
+    return v[0]*r, v[1]*r
+
+
+def get_feed_prices():
+    # first get rate conversion between USD/CNY from yahoo and CNY/BTC from
+    # bter and btc38 (use CNY and not USD as the market is bigger)
+    cny_usd = get_from_yahoo('CNY', 'USD')
+
+    btc_cny = weighted_mean([get_from_btc38('BTC', 'CNY'),
+                             get_from_bter('BTC', 'CNY')])
+    cny_btc = 1 / btc_cny
+
+    # then get the weighted price in btc for the most important markets
+    btc_price = weighted_mean([get_from_btc38('BTSX', 'BTC'),
+                               get_from_bter('BTSX', 'BTC'),
+                               adjust(get_from_btc38('BTSX', 'CNY'), cny_btc),
+                               adjust(get_from_bter('BTSX', 'CNY'), cny_btc)])
+
+    cny_price = btc_price * btc_cny
+    usd_price = cny_price * cny_usd
+
+    feeds['USD'] = usd_price
+    feeds['BTC'] = btc_price
+    feeds['CNY'] = cny_price
+
+    for cur, price in feeds.items():
+        price_history[cur].append(price)
 
 
 def median(cur):
@@ -71,21 +104,21 @@ def median(cur):
 
 def check_feeds(rpc):
     global nfeed_checked
+    feed_period = int(PUBLISH_FEED_INTERVAL / CHECK_FEED_INTERVAL)
 
     try:
-        usd = get_feed_price('USD')
-        btc = get_feed_price('BTC')
-        cny = get_feed_price('CNY')
-        log.debug('Got feeds: %f USD, %g BTC, %f CNY' % (usd, btc, cny))
+        get_feed_prices()
         nfeed_checked += 1
 
-        if nfeed_checked % int(PUBLISH_FEED_INTERVAL/CHECK_FEED_INTERVAL) == 0:
+        log.debug('Got feeds: %f USD, %g BTC, %f CNY   [%d/%d]' %
+                  (feeds['USD'], feeds['BTC'], feeds['CNY'],
+                   nfeed_checked, feed_period))
+
+        if nfeed_checked % feed_period == 0:
             # publish median value of the price, not latest one
             usd, btc, cny = median('USD'), median('BTC'), median('CNY')
             log.info('Publishing feeds: %f USD, %g BTC, %f CNY' % (usd, btc, cny))
-            rpc.wallet_publish_price_feed(delegate_name(), usd, 'USD')
-            rpc.wallet_publish_price_feed(delegate_name(), btc, 'BTC')
-            rpc.wallet_publish_price_feed(delegate_name(), cny, 'CNY')
+            rpc.wallet_publish_feeds(delegate_name(), [['USD', usd], ['BTC', btc], ['CNY', cny]])
 
     except Exception as e:
         log.error('While checking feeds:')

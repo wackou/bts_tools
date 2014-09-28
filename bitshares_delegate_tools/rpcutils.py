@@ -29,6 +29,8 @@ import logging
 
 log = logging.getLogger(__name__)
 
+NON_CACHEABLE_METHODS = {'wallet_publish_price_feed',
+                         'wallet_publish_feeds'}
 
 _rpc_cache = defaultdict(dict)
 
@@ -131,7 +133,7 @@ class BTSProxy(object):
     def rpc_call(self, funcname, *args, cached=True):
         log.debug(('RPC call @ %s: %s(%s)' % (self.host, funcname, ', '.join(repr(arg) for arg in args))
                   + (' (cached = False)' if not cached else '')))
-        if cached:
+        if cached and funcname not in NON_CACHEABLE_METHODS:
             if (funcname, args) in _rpc_cache[self.host]:
                 result = _rpc_cache[self.host][(funcname, args)]
                 if isinstance(result, Exception):
@@ -145,12 +147,14 @@ class BTSProxy(object):
             result = self._rpc_call(funcname, *args)
         except Exception as e:
             # also cache when exceptions are raised
-            _rpc_cache[self.host][(funcname, args)] = e
-            log.debug('  added exception %s in cache' % e.__class__)
+            if funcname not in NON_CACHEABLE_METHODS:
+                _rpc_cache[self.host][(funcname, args)] = e
+                log.debug('  added exception %s in cache' % e.__class__)
             raise
 
-        _rpc_cache[self.host][(funcname, args)] = result
-        log.debug('  added result in cache')
+        if funcname not in NON_CACHEABLE_METHODS:
+            _rpc_cache[self.host][(funcname, args)] = result
+            log.debug('  added result in cache')
 
         return result
 
