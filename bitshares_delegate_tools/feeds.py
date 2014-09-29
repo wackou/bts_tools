@@ -40,6 +40,7 @@ price_history = {cur: deque(maxlen=history_len) for cur in {'USD', 'BTC', 'CNY'}
 
 def get_from_yahoo(cur, base):
     r = requests.get('http://download.finance.yahoo.com/d/quotes.csv',
+                     timeout=60,
                      params={'s': '%s%s=X' % (cur.upper(), base.upper()),
                              'f': 'l1', 'e': 'csv'})
     return float(r.text.strip())
@@ -47,7 +48,8 @@ def get_from_yahoo(cur, base):
 
 def get_from_bter(cur, base):
     log.debug('Getting from bter: %s %s' % (cur, base))
-    r = requests.get('http://data.bter.com/api/1/ticker/%s_%s' % (cur.lower(), base.lower())).json()
+    r = requests.get('http://data.bter.com/api/1/ticker/%s_%s' % (cur.lower(), base.lower()),
+                     timeout=60).json()
     price = float(r['last']) or ((float(r['sell']) + float(r['buy'])) / 2)
     volume = float(r['vol_%s' % cur.lower()])
     return price, volume
@@ -58,6 +60,7 @@ def get_from_btc38(cur, base):
     headers = {'content-type': 'application/json',
                'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
     r = requests.get('http://api.btc38.com/v1/ticker.php',
+                     timeout=60,
                      params={'c': cur.lower(), 'mk_type': base.lower()},
                      headers=headers).json()
     price = float(r['ticker']['last']) # TODO: (bid + ask) / 2 ?
@@ -124,7 +127,6 @@ def check_feeds(rpc):
             rpc.wallet_publish_feeds(delegate_name(), [['USD', usd], ['BTC', btc], ['CNY', cny]])
 
     except Exception as e:
-        log.error('While checking feeds:')
         log.exception(e)
 
     log.debug('Starting feed time with interval: %d' % CHECK_FEED_INTERVAL)
