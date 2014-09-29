@@ -46,6 +46,7 @@ def get_from_yahoo(cur, base):
 
 
 def get_from_bter(cur, base):
+    log.debug('Getting from bter: %s %s' % (cur, base))
     r = requests.get('http://data.bter.com/api/1/ticker/%s_%s' % (cur.lower(), base.lower())).json()
     price = float(r['last']) or ((float(r['sell']) + float(r['buy'])) / 2)
     volume = float(r['vol_%s' % cur.lower()])
@@ -53,6 +54,7 @@ def get_from_bter(cur, base):
 
 
 def get_from_btc38(cur, base):
+    log.debug('Getting from btc38: %s %s' % (cur, base))
     headers = {'content-type': 'application/json',
                'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
     r = requests.get('http://api.btc38.com/v1/ticker.php',
