@@ -107,6 +107,7 @@ def check_feeds(rpc):
     feed_period = int(PUBLISH_FEED_INTERVAL / CHECK_FEED_INTERVAL)
 
     try:
+        log.debug('Getting feed prices...')
         get_feed_prices()
         nfeed_checked += 1
 
@@ -124,4 +125,5 @@ def check_feeds(rpc):
         log.error('While checking feeds:')
         log.exception(e)
 
+    log.debug('Starting feed time with interval: %d' % CHECK_FEED_INTERVAL)
     threading.Timer(CHECK_FEED_INTERVAL, check_feeds, args=[rpc]).start()
