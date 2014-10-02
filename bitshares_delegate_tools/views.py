@@ -180,6 +180,7 @@ def view_info():
         feeds['USD'] = (('%.4f' % feeds['USD']) if 'USD' in feeds else 'N/A').rjust(8)
         feeds['BTC'] = (('%.4g' % feeds['BTC']) if 'BTC' in feeds else 'N/A').rjust(11)
         feeds['CNY'] = (('%.4f' % feeds['CNY']) if 'CNY' in feeds else 'N/A').rjust(8)
+        feeds['GLD'] = (('%.4g' % feeds['GLD']) if 'GLD' in feeds else 'N/A').rjust(11)
 
     format_feeds(lfeeds)
     format_feeds(mfeeds)

@@ -4,9 +4,9 @@
 {% block content %}
 
 <pre>
-<b>Price feeds:</b>  published: {{pfeeds['USD']}} <b>USD</b> {{pfeeds['BTC']}} <b>BTC</b> {{pfeeds['CNY']}} <b>CNY</b>       <b>Last update:</b> {{last_update | datetime}}
-       last hour median: {{mfeeds['USD']}} <b>USD</b> {{mfeeds['BTC']}} <b>BTC</b> {{mfeeds['CNY']}} <b>CNY</b>
-                 latest: {{feeds['USD']}} <b>USD</b> {{feeds['BTC']}} <b>BTC</b> {{feeds['CNY']}} <b>CNY</b>
+<b>Price feeds:</b>  published: {{pfeeds['USD']}} <b>USD</b> {{pfeeds['BTC']}} <b>BTC</b> {{pfeeds['CNY']}} <b>CNY</b> {{pfeeds['GLD']}} <b>GLD</b>       <b>Last update:</b> {{last_update | datetime}}
+       last hour median: {{mfeeds['USD']}} <b>USD</b> {{mfeeds['BTC']}} <b>BTC</b> {{mfeeds['CNY']}} <b>CNY</b> {{mfeeds['GLD']}} <b>GLD</b>
+                 latest: {{feeds['USD']}} <b>USD</b> {{feeds['BTC']}} <b>BTC</b> {{feeds['CNY']}} <b>CNY</b> {{feeds['GLD']}} <b>GLD</b>
 </pre>
 
 {{ super() }}

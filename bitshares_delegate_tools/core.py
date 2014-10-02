@@ -35,11 +35,9 @@ if platform.startswith('linux'):
 
 BTS_TOOLS_HOMEDIR = '~/.bts_tools'
 BTS_TOOLS_HOMEDIR = expanduser(BTS_TOOLS_HOMEDIR)
-
-log.info('HOME env var: %s' % os.environ.get('HOME'))
-log.info('homedir detected as: %s' % BTS_TOOLS_HOMEDIR)
-
 BTS_TOOLS_CONFIG_FILE = join(BTS_TOOLS_HOMEDIR, 'config.json')
+
+log.info('Using home dir for BTS tools: %s' % BTS_TOOLS_HOMEDIR)
 
 def load_config():
     if not exists(BTS_TOOLS_CONFIG_FILE):

@@ -35,15 +35,20 @@ feeds = {}
 nfeed_checked = 0
 
 history_len = int(cfg['median_feed_time_span'] / CHECK_FEED_INTERVAL)
-price_history = {cur: deque(maxlen=history_len) for cur in {'USD', 'BTC', 'CNY'}}
+price_history = {cur: deque(maxlen=history_len) for cur in {'USD', 'BTC', 'CNY', 'GLD'}}
 
 
-def get_from_yahoo(cur, base):
+def get_from_yahoo(asset_list, base):
+    asset_list = [asset.upper() for asset in asset_list]
+    base = base.upper()
+    query_string = ','.join('%s%s=X' % (asset, base) for asset in asset_list)
     r = requests.get('http://download.finance.yahoo.com/d/quotes.csv',
                      timeout=60,
-                     params={'s': '%s%s=X' % (cur.upper(), base.upper()),
-                             'f': 'l1', 'e': 'csv'})
-    return float(r.text.strip())
+                     params={'s': query_string, 'f': 'l1', 'e': 'csv'})
+
+    asset_prices = map(float, r.text.split())
+    return dict(zip(asset_list, asset_prices))
+
 
 
 def get_from_bter(cur, base):
@@ -80,7 +85,9 @@ def adjust(v, r):
 def get_feed_prices():
     # first get rate conversion between USD/CNY from yahoo and CNY/BTC from
     # bter and btc38 (use CNY and not USD as the market is bigger)
-    cny_usd = get_from_yahoo('CNY', 'USD')
+    yahoo_prices = get_from_yahoo(['CNY', 'XAU'], 'USD')
+    cny_usd = yahoo_prices['CNY']
+    gld_usd = yahoo_prices['XAU']
 
     btc_cny = weighted_mean([get_from_btc38('BTC', 'CNY'),
                              get_from_bter('BTC', 'CNY')])
@@ -94,10 +101,12 @@ def get_feed_prices():
 
     cny_price = btc_price * btc_cny
     usd_price = cny_price * cny_usd
+    gld_price = usd_price / gld_usd
 
     feeds['USD'] = usd_price
     feeds['BTC'] = btc_price
     feeds['CNY'] = cny_price
+    feeds['GLD'] = gld_price
 
     for cur, price in feeds.items():
         price_history[cur].append(price)
@@ -108,6 +117,7 @@ def median(cur):
 
 
 def check_feeds(rpc):
+    # TODO: update according to: https://bitsharestalk.org/index.php?topic=9348.0;all
     global nfeed_checked
     feed_period = int(PUBLISH_FEED_INTERVAL / CHECK_FEED_INTERVAL)
 
@@ -115,15 +125,15 @@ def check_feeds(rpc):
         get_feed_prices()
         nfeed_checked += 1
 
-        log.debug('Got feeds: %f USD, %g BTC, %f CNY   [%d/%d]' %
-                  (feeds['USD'], feeds['BTC'], feeds['CNY'],
+        log.debug('Got feeds: %f USD, %g BTC, %f CNY, %g GLD   [%d/%d]' %
+                  (feeds['USD'], feeds['BTC'], feeds['CNY'], feeds['GLD'],
                    nfeed_checked, feed_period))
 
         if nfeed_checked % feed_period == 0:
             # publish median value of the price, not latest one
-            usd, btc, cny = median('USD'), median('BTC'), median('CNY')
-            log.info('Publishing feeds: %f USD, %g BTC, %f CNY' % (usd, btc, cny))
-            rpc.wallet_publish_feeds(delegate_name(), [['USD', usd], ['BTC', btc], ['CNY', cny]])
+            usd, btc, cny, gld = median('USD'), median('BTC'), median('CNY'), median('GLD')
+            log.info('Publishing feeds: %f USD, %g BTC, %f CNY, %g GLD' % (usd, btc, cny, gld))
+            rpc.wallet_publish_feeds(delegate_name(), [['USD', usd], ['BTC', btc], ['CNY', cny], ['GLD', gld]])
 
     except Exception as e:
         log.exception(e)
