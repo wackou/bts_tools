@@ -5,7 +5,10 @@ there are 2 tools currently provided:
  - command line util allowing to quickly build and run the bitshares client
  - web app allowing to monitor a running instance of the client
    and send an email or push notification on failure
-
+   
+If you like these tools, please vote for [my delegate](btsx:wackou.digitalgaia/approve) to
+support further development, and feel free to visit my page for other delegate
+proposals at [digitalgaia.io](http://digitalgaia.io). Thanks!
 
 Command-line client
 ===================
