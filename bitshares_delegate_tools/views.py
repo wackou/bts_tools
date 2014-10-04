@@ -177,10 +177,12 @@ def view_info():
 
     # format to string here instead of in template, more flexibility in python
     def format_feeds(feeds):
-        feeds['USD'] = (('%.4f' % feeds['USD']) if 'USD' in feeds else 'N/A').rjust(8)
-        feeds['BTC'] = (('%.4g' % feeds['BTC']) if 'BTC' in feeds else 'N/A').rjust(11)
-        feeds['CNY'] = (('%.4f' % feeds['CNY']) if 'CNY' in feeds else 'N/A').rjust(8)
-        feeds['GLD'] = (('%.4g' % feeds['GLD']) if 'GLD' in feeds else 'N/A').rjust(11)
+        # format_specs: {list of currencies: (format_str, field_size)}
+        format_specs = {('USD', 'CNY', 'EUR'): ('%.4f', 7),
+                        ('BTC', 'GLD'): ('%.4g', 10)}
+        for assets, (format_str, field_size) in format_specs.items():
+            for asset in assets:
+                feeds[asset] = ((format_str % feeds[asset]) if asset in feeds else 'N/A').rjust(field_size)
 
     format_feeds(lfeeds)
     format_feeds(mfeeds)
