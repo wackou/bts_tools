@@ -124,7 +124,7 @@ _DELEGATE_NAME = config['delegate']
 
 try:
     import uwsgi
-    _DELEGATE_NAME = str(uwsgi.opt['delegate-name'])
+    _DELEGATE_NAME = uwsgi.opt['delegate-name'].decode('utf-8')
     log.info('Using delegate name "%s" from uwsgi config file' % _DELEGATE_NAME)
 
 except:
