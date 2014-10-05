@@ -120,7 +120,17 @@ class RPCError(Exception):
 #### util functions we want to be able to access easily, such as in templates
 
 
+_DELEGATE_NAME = config['delegate']
+
+try:
+    import uwsgi
+    _DELEGATE_NAME = uwsgi.opt['delegate-name']
+    log.info('Using delegate name "%s" from uwsgi config file' % _DELEGATE_NAME)
+
+except:
+    log.info('Using delegate name "%s" from config.json file' % _DELEGATE_NAME)
+
 def delegate_name():
     # TODO: should parse my accounts to know the actual delegate name
-    return config['delegate']
+    return _DELEGATE_NAME
 
