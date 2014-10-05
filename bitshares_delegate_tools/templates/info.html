@@ -4,7 +4,8 @@
 {% block content %}
 
 <pre>
-<b>Price feeds:</b>  published: {{pfeeds['USD']}} <b>USD</b> {{pfeeds['BTC']}} <b>BTC</b> {{pfeeds['CNY']}} <b>CNY</b> {{pfeeds['GLD']}} <b>GLD</b> {{pfeeds['EUR']}} <b>EUR</b>      <b>Last update:</b> {{last_update | datetime}}
+<b>Price feeds:</b>  published: {{pfeeds['USD']}} <b>USD</b> {{pfeeds['BTC']}} <b>BTC</b> {{pfeeds['CNY']}} <b>CNY</b> {{pfeeds['GLD']}} <b>GLD</b> {{pfeeds['EUR']}} <b>EUR</b>      <b>Last update:</b> {% if last_update %}{{last_update | datetime}}{% else %}N/A{% endif %}
+
        last hour median: {{mfeeds['USD']}} <b>USD</b> {{mfeeds['BTC']}} <b>BTC</b> {{mfeeds['CNY']}} <b>CNY</b> {{mfeeds['GLD']}} <b>GLD</b> {{mfeeds['EUR']}} <b>EUR</b>
                  latest: {{feeds['USD']}} <b>USD</b> {{feeds['BTC']}} <b>BTC</b> {{feeds['CNY']}} <b>CNY</b> {{feeds['GLD']}} <b>GLD</b> {{feeds['EUR']}} <b>EUR</b>
 </pre>
