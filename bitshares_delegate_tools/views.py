@@ -170,7 +170,7 @@ def view_info():
     info_items, attrs = split_columns(info_items, attrs)
 
     published_feeds = rpc.main_node.blockchain_get_feeds_from_delegate(core.delegate_name())
-    last_update = max(f['last_update'] for f in published_feeds) if published_feeds else 'N/A'
+    last_update = max(f['last_update'] for f in published_feeds) if published_feeds else None
     pfeeds = { f['asset_symbol']: f['price'] for f in published_feeds }
     lfeeds = dict(feeds.feeds)
     mfeeds = {cur: feeds.median(cur) for cur in lfeeds}
