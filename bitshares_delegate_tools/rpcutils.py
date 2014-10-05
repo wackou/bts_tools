@@ -181,6 +181,11 @@ class BTSProxy(object):
     def is_online(self, cached=True):
         return self.status(cached=cached) == 'online'
 
+    def is_active(self, delegate):
+        active_delegates = [d['name'] for d in self.blockchain_list_delegates(0, 101)]
+        return delegate in active_delegates
+
+
     def get_streak(self, cached=True):
         try:
             slots = self.blockchain_get_delegate_slot_records(delegate_name(),

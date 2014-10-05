@@ -29,6 +29,8 @@
             </ul>
 
             <ul class="nav navbar-nav navbar-right">
+                <li><a href="#"><b>Delegate name: </b> {{ core.delegate_name() }}</a></li>
+
                 <li><a href="#">
                 {%- if rpc.main_node.is_online() -%}
                     <div class="btn btn-xs btn-info">{{ core.config['env']['active'] }}: {{ process.binary_description() }}</div>
@@ -37,7 +39,10 @@
                 {%- endif -%}
                 </a></li>
 
-                <li><a href="#"><b>Delegate name: </b> {{ core.delegate_name() }}</a></li>
+                {% if rpc.main_node.is_online() and not rpc.main_node.is_active(core.delegate_name()) %}
+                    <li><a href="#"><div class="btn btn-xs btn-warning">STANDBY</div></a></li>
+
+                {% else %}
                 {% if rpc.main_node.is_online() %}
                     <li><a href="#">
                         <b>Blocks:</b>
@@ -58,6 +63,7 @@
                             <div class="btn btn-xs btn-warning">NOT SYNCED</div>
                         {% endif %}
                     </a></li>
+                {% endif %}
                 {% endif %}
             </ul>
 
