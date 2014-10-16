@@ -29,15 +29,14 @@ HISTORY = """Unreleased as of yet"""
 VERSION = '0.1.dev1'
 
 
-install_requires = ['Flask', 'requests', 'psutil', 'arrow', 'apns-client']
+install_requires = ['Flask', 'requests', 'psutil', 'arrow', 'pyyaml', 'apns-client']
 
 setup_requires = []
 
 entry_points = {
     'console_scripts': [
         'bts = bitshares_delegate_tools.cmdline:main',
-        'bts-rpc = bitshares_delegate_tools.cmdline:main_rpc_call',
-        'bts-notify = bitshares_delegate_tools.cmdline:main_bts_notify'
+        'bts-rpc = bitshares_delegate_tools.cmdline:main_rpc_call'
     ],
 }
 

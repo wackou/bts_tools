@@ -24,7 +24,7 @@ from subprocess import Popen, PIPE
 import sys
 import os
 import shutil
-import json
+import yaml
 import logging
 
 log = logging.getLogger(__name__)
@@ -35,30 +35,32 @@ if platform.startswith('linux'):
 
 BTS_TOOLS_HOMEDIR = '~/.bts_tools'
 BTS_TOOLS_HOMEDIR = expanduser(BTS_TOOLS_HOMEDIR)
-BTS_TOOLS_CONFIG_FILE = join(BTS_TOOLS_HOMEDIR, 'config.json')
+BTS_TOOLS_CONFIG_FILE = join(BTS_TOOLS_HOMEDIR, 'config.yaml')
 
 log.info('Using home dir for BTS tools: %s' % BTS_TOOLS_HOMEDIR)
 
 def load_config():
     if not exists(BTS_TOOLS_CONFIG_FILE):
+        log.info('Copying default config file to %s' % BTS_TOOLS_CONFIG_FILE)
         try:
             os.makedirs(BTS_TOOLS_HOMEDIR)
         except OSError:
             pass
-        shutil.copyfile(join(dirname(__file__), 'config.json'),
+        shutil.copyfile(join(dirname(__file__), 'config.yaml'),
                         BTS_TOOLS_CONFIG_FILE)
 
     try:
+        log.info('Loading config file: %s' % BTS_TOOLS_CONFIG_FILE)
         config_contents = open(BTS_TOOLS_CONFIG_FILE).read()
     except:
         log.error('Could not read config file: %s' % BTS_TOOLS_CONFIG_FILE)
         raise
 
     try:
-        config = json.loads(config_contents)
+        config = yaml.load(config_contents)
     except:
         log.error('-'*100)
-        log.error('Config file contents is not a valid JSON object:')
+        log.error('Config file contents is not a valid YAML object:')
         log.error(config_contents)
         log.error('-'*100)
         raise
@@ -115,22 +117,3 @@ class UnauthorizedError(Exception):
 
 class RPCError(Exception):
     pass
-
-
-#### util functions we want to be able to access easily, such as in templates
-
-
-_DELEGATE_NAME = config['delegate']
-
-try:
-    import uwsgi
-    _DELEGATE_NAME = uwsgi.opt['delegate-name'].decode('utf-8')
-    log.info('Using delegate name "%s" from uwsgi config file' % _DELEGATE_NAME)
-
-except:
-    log.info('Using delegate name "%s" from config.json file' % _DELEGATE_NAME)
-
-def delegate_name():
-    # TODO: should parse my accounts to know the actual delegate name
-    return _DELEGATE_NAME
-

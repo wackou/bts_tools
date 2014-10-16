@@ -5,10 +5,21 @@
 {################################ HTML CONTENT ################################}
 {% block content %}
 
-<p style="margin-left: 80px;">Monitoring host: <b>{{ core.config['monitoring']['host'] }}</b></p>
+{% set proc = rpc.main_node.process() %}
+<p>Monitoring <b>{{ rpc.main_node.rpc_host }}:{{ rpc.main_node.rpc_port }}</b>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+    {% if proc %}
+        PID: <b>{{ proc.pid }}</b>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Client invocation: <b>{{ proc.cmdline() }}</b>
+    {% else %}
+        <b>offline</b>
+    {% endif %}
+</p>
+
 <div id="cpu_plot" style="width: 100%; height: 200px;"></div>
 <div id="connections_plot" style="width: 96%; margin: 0; left: 32px; height: 200px;"></div>
-
 {% endblock %}
 
 

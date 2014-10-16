@@ -21,8 +21,7 @@
 from os.path import join, dirname, exists, islink
 from argparse import RawTextHelpFormatter
 from .core import config, env, platform, run
-from .notification import send_notification
-from . import rpc
+from .rpcutils import rpc_call
 import argparse
 import os
 import sys
@@ -73,6 +72,7 @@ def build():
 
 
 def build_gui():
+    # FIXME: need to make sure that we run once: npm install -g lineman
     run('rm -fr programs/qt_wallet/htdocs')
     run('cd programs/web_wallet; npm install')
     run('make buildweb')
@@ -138,7 +138,7 @@ Example:
   $ bts build_gui 0.4.14
   $ bts run_gui
     """
-    EPILOG="""You should also look into ~/.bts_tools/config.json to tune it to your liking."""
+    EPILOG="""You should also look into ~/.bts_tools/config.yaml to tune it to your liking."""
     parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
                                      formatter_class=RawTextHelpFormatter)
     parser.add_argument('command', choices=['clean_homedir', 'clean', 'build', 'build_gui', 'run', 'run_gui', 'list'],
@@ -210,33 +210,29 @@ Example:
 def main_rpc_call():
     # parse commandline args
     DESC="""Run the given command using JSON-RPC."""
-    EPILOG="""You should look into config.json to configure the rpc user and password."""
+    EPILOG="""You should look into config.yaml to configure the rpc user and password."""
     parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
                                      formatter_class=RawTextHelpFormatter)
+    parser.add_argument('rpc_port',
+                        help='the rpc port')
+    parser.add_argument('rpc_user',
+                        help='the rpc user')
+    parser.add_argument('rpc_password',
+                        help='the rpc password')
     parser.add_argument('method',
-                        help='the command to run')
+                        help='the method to call')
     parser.add_argument('args',
-                        help='the hash of the desired commit', nargs='*')
+                        help='the args to pass to the rpc method call', nargs='*')
     args = parser.parse_args()
 
     logging.getLogger('bitshares_delegate_tools').setLevel(logging.WARNING)
 
     try:
-        result = getattr(rpc, args.method)(*args.args)
+        return rpc_call('localhost', args.rpc_port, args.rpc_user,
+                        args.rpc_password, args.method, *args.args)
     except Exception as e:
         result = { 'error': str(e), 'type': '%s.%s' % (e.__class__.__module__,
                                                        e.__class__.__name__) }
 
     print(json.dumps(result))
 
-
-def main_bts_notify():
-    # parse commandline args
-    DESC="""Send the given message using push notifications."""
-    parser = argparse.ArgumentParser(description=DESC,
-                                     formatter_class=RawTextHelpFormatter)
-    parser.add_argument('msg',
-                        help='the message to send')
-    args = parser.parse_args()
-
-    send_notification(args.msg)

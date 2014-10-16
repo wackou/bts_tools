@@ -45,7 +45,7 @@ just run the ``bts`` script with the command you want to execute:
       -h, --help            show this help message and exit
       -r, --norpc           run binary with RPC server deactivated
     
-    You should also look into ~/.bts_tools/config.json to tune it to your liking.
+    You should also look into ~/.bts_tools/config.yaml to tune it to your liking.
 
 
 Monitoring web app
@@ -53,8 +53,9 @@ Monitoring web app
 
 TODO: write better instructions for setup/running
 
-You should edit the bitshares_delegate_tools/config.json file and then run:
+You should edit the bitshares_delegate_tools/config.yaml file and then run:
 
+    $ python setup.py develop
     $ python -m bitshares_delegate_tools.wsgi
      
 
@@ -74,7 +75,7 @@ Things to know (best practices and "issues") READ IT !!!
 ========================================================
 
 - to properly build the bitshares client in MacOSX:
-  + you can (and should) build the binary with only homebrew libraries.
+  + you can (and should) build the binary with only homebrew libraries (boost, etc.).
     Previous versions had trouble compiling and could require you to hand-compile
     some dependencies, but newer homebrew libs should compile properly
   + ```readline``` needs to be installed by brew and you need to run

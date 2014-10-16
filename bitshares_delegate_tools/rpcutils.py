@@ -18,9 +18,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from .core import UnauthorizedError, RPCError, run, config, delegate_name
-from .process import bts_binary_running
+from .core import UnauthorizedError, RPCError, run, config
+from .process import bts_binary_running, bts_process
 from collections import defaultdict
+from os.path import join, expanduser
 import bitshares_delegate_tools.core # needed to be able to exec('raise bts.core.Exception')
 import requests
 import itertools
@@ -41,12 +42,6 @@ def clear_rpc_cache():
 
 def rpc_call(host, port, user, password,
              funcname, *args):
-    if host == 'localhost' or host == '127.0.0.1':
-        # if host == 'localhost', we want to avoid connecting to it and blocking
-        # because it is in a stopped state (for example, in gdb after having crashed)
-        if not bts_binary_running():
-            raise RPCError('Connection aborted: BTS binary does not seem to be running')
-
     url = "http://%s:%d/rpc" % (host, port)
     headers = {'content-type': 'application/json'}
 
@@ -79,29 +74,52 @@ def rpc_call(host, port, user, password,
 
 
 class BTSProxy(object):
-    def __init__(self, host, port, user, password, venv_path=None):
-        self.host = host
-        self.port = port
-        self.user = user
-        self.password = password
+    def __init__(self, type, name, data_dir=None, monitoring=None, rpc_port=None,
+                 rpc_user=None, rpc_password=None, rpc_host=None, venv_path=None):
+        # FIXME: this is where we should add the node type as found in config.yaml
+        self.type = type
+        self.name = name
+        self.monitoring = ([] if monitoring is None else
+                           [monitoring] if not isinstance(monitoring, list)
+                           else monitoring)
+        if data_dir:
+            log.info('Loading config for %s from %s' % (self.name, data_dir))
+            rpc=json.load(open(expanduser(join(data_dir, 'config.json'))))['rpc']
+            cfg_port = int(rpc['httpd_endpoint'].split(':')[1])
+        else:
+            rpc = {}
+            cfg_port = None
+        self.rpc_port = rpc_port or cfg_port or 0
+        self.rpc_user = rpc_user or rpc.get('rpc_user') or ''
+        self.rpc_password = rpc_password or rpc.get('rpc_password') or ''
+        self.rpc_host = rpc_host or 'localhost'
+        self.rpc_cache_key = (self.rpc_host, self.rpc_port)
         self.venv_path = venv_path
 
-        if self.host == 'localhost':
+        if self.rpc_host == 'localhost':
             # direct json-rpc call
             def local_call(funcname, *args):
-                result = rpc_call(self.host, self.port,
-                                  self.user, self.password,
+                # we want to avoid connecting to the client and block because
+                # it is in a stopped state (eg: in gdb after having crashed)
+                if not bts_binary_running(self):
+                    raise RPCError('Connection aborted: BTS binary does not seem to be running')
+
+                result = rpc_call('localhost', self.rpc_port,
+                                  self.rpc_user, self.rpc_password,
                                   funcname, *args)
                 return result
             self._rpc_call = local_call
 
         else:
             # do it over ssh using bts-rpc
+            # FIXME: make sure the password doesn't come out in an ssh log or bash history
             def remote_call(funcname, *args):
-                cmd = 'ssh %s "' % self.host
+                cmd = 'ssh %s "' % self.rpc_host
                 if self.venv_path:
                     cmd += 'source %s/bin/activate; ' % self.venv_path
-                cmd += 'bts-rpc %s %s"' % (funcname, ' '.join(str(arg) for arg in args))
+                #cmd += 'bts-rpc %s %s"' % (funcname, '"%s"' % '" "'.join(str(arg) for arg in args))
+                cmd += 'bts-rpc %d %s %s %s %s"' % (self.rpc_port, self.rpc_user, self.rpc_password,
+                                                    funcname, ' '.join(str(arg) for arg in args))
 
                 result = run(cmd, io=True).stdout
                 try:
@@ -131,11 +149,11 @@ class BTSProxy(object):
         return call
 
     def rpc_call(self, funcname, *args, cached=True):
-        log.debug(('RPC call @ %s: %s(%s)' % (self.host, funcname, ', '.join(repr(arg) for arg in args))
+        log.debug(('RPC call @ %s: %s(%s)' % (self.rpc_host, funcname, ', '.join(repr(arg) for arg in args))
                   + (' (cached = False)' if not cached else '')))
         if cached and funcname not in NON_CACHEABLE_METHODS:
-            if (funcname, args) in _rpc_cache[self.host]:
-                result = _rpc_cache[self.host][(funcname, args)]
+            if (funcname, args) in _rpc_cache[self.rpc_cache_key]:
+                result = _rpc_cache[self.rpc_cache_key][(funcname, args)]
                 if isinstance(result, Exception):
                     log.debug('  using cached exception %s' % result.__class__)
                     raise result
@@ -148,20 +166,20 @@ class BTSProxy(object):
         except Exception as e:
             # also cache when exceptions are raised
             if funcname not in NON_CACHEABLE_METHODS:
-                _rpc_cache[self.host][(funcname, args)] = e
+                _rpc_cache[self.rpc_cache_key][(funcname, args)] = e
                 log.debug('  added exception %s in cache' % e.__class__)
             raise
 
         if funcname not in NON_CACHEABLE_METHODS:
-            _rpc_cache[self.host][(funcname, args)] = result
+            _rpc_cache[self.rpc_cache_key][(funcname, args)] = result
             log.debug('  added result in cache')
 
         return result
 
     def clear_rpc_cache(self):
         try:
-            log.debug('Clearing RPC cache for host: %s' % self.host)
-            del _rpc_cache[self.host]
+            log.debug('Clearing RPC cache for host: %s' % self.rpc_host)
+            del _rpc_cache[self.rpc_cache_key]
         except KeyError:
             pass
 
@@ -181,14 +199,21 @@ class BTSProxy(object):
     def is_online(self, cached=True):
         return self.status(cached=cached) == 'online'
 
+    def process(self):
+        return bts_process(self)
+
     def is_active(self, delegate):
         active_delegates = [d['name'] for d in self.blockchain_list_delegates(0, 101)]
         return delegate in active_delegates
 
 
     def get_streak(self, cached=True):
+        if self.type != 'delegate':
+            # only makes sense to call get_streak on delegate nodes
+            return False, 1
+
         try:
-            slots = self.blockchain_get_delegate_slot_records(delegate_name(),
+            slots = self.blockchain_get_delegate_slot_records(self.name,
                                                               cached=cached)[::-1]
             if not slots:
                 return True, 0
@@ -203,12 +228,14 @@ class BTSProxy(object):
 
 
 
-nodes = [ BTSProxy(host=node['host'],
-                   port=node.get('rpc_port'),
-                   user=node.get('rpc_user'),
-                   password=node.get('rpc_password'),
-                   venv_path=node.get('venv_path'))
-          for node in config['nodes'] ]
+nodes = [BTSProxy(**node) for node in config['nodes']]
+
+def client_instances():
+    """return a list of triples (hostname, [node names], node_instance)"""
+    global nodes
+    for (host, port), gnodes in itertools.groupby(nodes, lambda n: (n.rpc_host, n.rpc_port)):
+        gnodes = list(gnodes)
+        yield ('%s:%d' % (host, port), [n.name for n in gnodes], gnodes[0])
 
 main_node = nodes[0]
 

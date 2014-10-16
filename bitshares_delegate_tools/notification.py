@@ -57,7 +57,7 @@ def send_notification_email(msg, alert=False):
     log.debug('Sending notification by email: %s' % msg)
     c = config['monitoring']['email']
     send_email(c['recipient'], 'BTS notification', msg)
-    log.info('Done sending email notification: %s' % msg)
+    log.info('Sent email notification: %s' % msg)
 
 
 def send_notification_apns(msg, alert=False):
@@ -111,12 +111,14 @@ def send_notification_apns(msg, alert=False):
             retry_message = res.retry()
             log.error('Did retry: %s' % retry_message)
 
-    log.info('Done sending APNS notification: %s' % msg)
+    log.info('Sent APNS notification: %s' % msg)
 
 
-def send_notification(msg, alert=False):
-    c = config['monitoring']
-    if c['email']['active']:
-        send_notification_email(msg, alert)
-    if c['apns']['active']:
-        send_notification_apns(msg, alert)
+def send_notification(nodes, node_msg, alert=False):
+    """msg is sent to each node separately"""
+    for node in nodes:
+        msg = '%s: %s' % (node.name, node_msg)
+        if 'email' in node.monitoring:
+            send_notification_email(msg, alert)
+        if 'apns' in node.monitoring:
+            send_notification_apns(msg, alert)

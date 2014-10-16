@@ -1,5 +1,5 @@
 include *.rst
 include *.md
-include bitshares_delegate_tools/config.json
+include bitshares_delegate_tools/config.yaml
 recursive-include bitshares_delegate_tools/static *
 recursive-include bitshares_delegate_tools/templates *

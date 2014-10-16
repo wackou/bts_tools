@@ -23,7 +23,7 @@ from functools import wraps
 from collections import defaultdict
 from datetime import datetime
 from . import rpcutils as rpc
-from . import core, monitor, slogging, feeds
+from . import core, monitor, slogging
 import bitshares_delegate_tools
 import requests.exceptions
 import logging
@@ -169,39 +169,48 @@ def view_info():
 
     info_items, attrs = split_columns(info_items, attrs)
 
-    published_feeds = rpc.main_node.blockchain_get_feeds_from_delegate(core.delegate_name())
-    last_update = max(f['last_update'] for f in published_feeds) if published_feeds else None
-    pfeeds = { f['asset_symbol']: f['price'] for f in published_feeds }
-    lfeeds = dict(feeds.feeds)
-    mfeeds = {cur: feeds.median(cur) for cur in lfeeds}
+    if rpc.main_node.type == 'delegate':
+        from . import feeds
+        published_feeds = rpc.main_node.blockchain_get_feeds_from_delegate(rpc.main_node.name)
+        last_update = max(f['last_update'] for f in published_feeds) if published_feeds else None
+        pfeeds = { f['asset_symbol']: f['price'] for f in published_feeds }
+        lfeeds = dict(feeds.feeds)
+        mfeeds = {cur: feeds.median(cur) for cur in lfeeds}
 
-    # format to string here instead of in template, more flexibility in python
-    def format_feeds(feeds):
-        # format_specs: {list of currencies: (format_str, field_size)}
-        format_specs = {('USD', 'CNY', 'EUR'): ('%.4f', 7),
-                        ('BTC', 'GLD'): ('%.4g', 10)}
-        for assets, (format_str, field_size) in format_specs.items():
-            for asset in assets:
-                feeds[asset] = ((format_str % feeds[asset]) if asset in feeds else 'N/A').rjust(field_size)
+        # format to string here instead of in template, more flexibility in python
+        def format_feeds(feeds):
+            # format_specs: {list of currencies: (format_str, field_size)}
+            format_specs = {('USD', 'CNY', 'EUR'): ('%.4f', 7),
+                            ('BTC', 'GLD'): ('%.4g', 10)}
+            for assets, (format_str, field_size) in format_specs.items():
+                for asset in assets:
+                    feeds[asset] = ((format_str % feeds[asset]) if asset in feeds else 'N/A').rjust(field_size)
 
-    format_feeds(lfeeds)
-    format_feeds(mfeeds)
-    format_feeds(pfeeds)
+        format_feeds(lfeeds)
+        format_feeds(mfeeds)
+        format_feeds(pfeeds)
+
+        feeds = dict(feeds=lfeeds, pfeeds=pfeeds,
+                     mfeeds=mfeeds, last_update=last_update)
+
+    else:
+        feeds = {}
 
     return render_template('info.html', title='BTS Client - Info',
-                           data=info_items, attrs=attrs, feeds=lfeeds,
-                           pfeeds=pfeeds, mfeeds=mfeeds, last_update=last_update)
+                           data=info_items, attrs=attrs, **feeds)
 
 
 @bp.route('/rpchost/<host>')
 @catch_error
 def set_rpchost(host):
     for node in rpc.nodes:
-        if node.host == host:
+        if node.name == host:
+            log.debug('Setting main rpc node to %s' % host)
             rpc.main_node = node
             break
     else:
         # invalid host name
+        log.debug('Invalid node name: %s' % host)
         pass
 
     return redirect('/info')

@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from .core import config, delegate_name
+from .core import config
 from collections import deque
 import threading
 import requests
@@ -26,15 +26,10 @@ import logging
 
 log = logging.getLogger(__name__)
 
-cfg = config['monitoring']
-
-CHECK_FEED_INTERVAL = cfg['check_feeds_time_interval']
-PUBLISH_FEED_INTERVAL = cfg['publish_feeds_time_interval']
-
 feeds = {}
 nfeed_checked = 0
-
-history_len = int(cfg['median_feed_time_span'] / CHECK_FEED_INTERVAL)
+cfg = config['monitoring']['feeds']
+history_len = int(cfg['median_time_span'] / cfg['check_time_interval'])
 price_history = {cur: deque(maxlen=history_len) for cur in {'USD', 'BTC', 'CNY', 'GLD', 'EUR'}}
 
 
@@ -118,10 +113,10 @@ def median(cur):
     return sorted(price_history[cur])[len(price_history[cur])//2]
 
 
-def check_feeds(rpc):
+def check_feeds(nodes):
     # TODO: update according to: https://bitsharestalk.org/index.php?topic=9348.0;all
     global nfeed_checked
-    feed_period = int(PUBLISH_FEED_INTERVAL / CHECK_FEED_INTERVAL)
+    feed_period = int(cfg['publish_time_interval'] / cfg['check_time_interval'])
 
     try:
         get_feed_prices()
@@ -131,13 +126,19 @@ def check_feeds(rpc):
                   (feeds['USD'], feeds['BTC'], feeds['CNY'], feeds['GLD'], feeds['EUR'],
                    nfeed_checked, feed_period))
 
-        if nfeed_checked % feed_period == 0:
-            # publish median value of the price, not latest one
-            usd, btc, cny, gld, eur = median('USD'), median('BTC'), median('CNY'), median('GLD'), median('EUR')
-            log.info('Publishing feeds: %f USD, %g BTC, %f CNY, %g GLD, %f EUR' % (usd, btc, cny, gld, eur))
-            rpc.wallet_publish_feeds(delegate_name(), [['USD', usd], ['BTC', btc], ['CNY', cny], ['GLD', gld], ['EUR', eur]])
+        # only publish feeds if we're running a delegate node
+        # we also require rpc_host == 'localhost', we don't want to publish on remote
+        # nodes (while checking them, for instance)
+
+        for node in nodes:
+            if node.type == 'delegate' and node.rpc_host == 'localhost':
+                if nfeed_checked % feed_period == 0:
+                    # publish median value of the price, not latest one
+                    usd, btc, cny, gld, eur = median('USD'), median('BTC'), median('CNY'), median('GLD'), median('EUR')
+                    log.info('Node %s publishing feeds: %f USD, %g BTC, %f CNY, %g GLD, %f EUR' % (node.name, usd, btc, cny, gld, eur))
+                    node.wallet_publish_feeds(node.name, [['USD', usd], ['BTC', btc], ['CNY', cny], ['GLD', gld], ['EUR', eur]])
 
     except Exception as e:
         log.exception(e)
 
-    threading.Timer(CHECK_FEED_INTERVAL, check_feeds, args=[rpc]).start()
+    threading.Timer(cfg['check_time_interval'], check_feeds, args=(nodes,)).start()

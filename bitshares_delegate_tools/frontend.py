@@ -20,6 +20,8 @@
 
 from flask import render_template, Flask
 from bitshares_delegate_tools import views
+from bitshares_delegate_tools import rpcutils as rpc
+from itertools import groupby
 import bitshares_delegate_tools
 import bitshares_delegate_tools.monitor
 import threading
@@ -54,10 +56,12 @@ def create_app(settings_override=None):
                                  monitor=bitshares_delegate_tools.monitor,
                                  process=bitshares_delegate_tools.process)
 
-    c = bitshares_delegate_tools.core.config
-    if (c['monitoring']['email']['active'] or
-        c['monitoring']['apns']['active']):
-        t = threading.Thread(target=bitshares_delegate_tools.monitor.monitoring_thread)
+    for (host, port), nodes in groupby(rpc.nodes, lambda n: (n.rpc_host, n.rpc_port)):
+        # launch only 1 monitoring thread for each running instance of the client
+        # (so that we have multiple delegate accounts in the same wallet share one monitoring thread)
+        nodes = list(nodes)
+
+        t = threading.Thread(target=bitshares_delegate_tools.monitor.monitoring_thread, args=nodes)
         t.daemon = True
         t.start()
 
