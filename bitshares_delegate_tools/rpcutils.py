@@ -82,7 +82,6 @@ class BTSProxy(object):
         self.monitoring = ([] if monitoring is None else
                            [monitoring] if not isinstance(monitoring, list)
                            else monitoring)
-        try:
         if data_dir:
             try:
                 log.info('Loading config for %s from %s' % (self.name, data_dir))
