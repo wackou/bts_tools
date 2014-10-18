@@ -68,7 +68,8 @@ def configure_gui():
 
 
 def build():
-    run(['make']+config.get('make_args', []))
+    make_list = ['make']+config['cmdline'].get('make_args', [])
+    run(make_list)
 
 
 def build_gui():
@@ -177,7 +178,7 @@ Example:
             # run last built version
             bin_name = join(BITSHARES_BIN_DIR, 'bitshares_client')
 
-        run_args = config.get('run_args', [])
+        run_args = config['cmdline'].get('run_args', [])
         if not args.norpc:
             run_args = ['--server'] + run_args
 

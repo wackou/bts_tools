@@ -82,10 +82,16 @@ class BTSProxy(object):
         self.monitoring = ([] if monitoring is None else
                            [monitoring] if not isinstance(monitoring, list)
                            else monitoring)
+        try:
         if data_dir:
-            log.info('Loading config for %s from %s' % (self.name, data_dir))
-            rpc=json.load(open(expanduser(join(data_dir, 'config.json'))))['rpc']
-            cfg_port = int(rpc['httpd_endpoint'].split(':')[1])
+            try:
+                log.info('Loading config for %s from %s' % (self.name, data_dir))
+                rpc=json.load(open(expanduser(join(data_dir, 'config.json'))))['rpc']
+                cfg_port = int(rpc['httpd_endpoint'].split(':')[1])
+            except Exception:
+                log.warning('Cannot read bts config from %s' % data_dir)
+                rpc = {}
+                cfg_port = None
         else:
             rpc = {}
             cfg_port = None

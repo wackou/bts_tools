@@ -88,7 +88,10 @@ StatsFrame = namedtuple('StatsFrame', 'cpu, mem, connections, timestamp')
 
 def _run(cmd, io=False):
     if isinstance(cmd, list):
-        cmd = cmd[0] + ' "' + '" "'.join(cmd[1:]) + '"'
+        if len(cmd) > 1: # if we have args, quote them properly
+            cmd = cmd[0] + ' "' + '" "'.join(cmd[1:]) + '"'
+        else:
+            cmd = cmd[0]
     log.debug('SHELL: running command: %s' % cmd)
     if io:
         p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)

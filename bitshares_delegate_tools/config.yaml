@@ -121,6 +121,22 @@ env:
             BITSHARES_BUILD_DIR: ~/.BitSharesX_build
             BITSHARES_BIN_DIR: ~/.BitSharesX_bin
 
+    keyid:
+        git_repo: https://github.com/keyid/keyid.git
+        git_branch: master
+
+        linux:
+            BITSHARES_HOME_DIR: ~/.KeyID
+            BITSHARES_BUILD_DIR: ~/.KeyID_build
+            BITSHARES_BIN_DIR: ~/.KeyID_bin
+
+        darwin:
+            BITSHARES_HOME_DIR: ~/Library/Application Support/KeyID
+            BITSHARES_BUILD_DIR: ~/.KeyID_build
+            BITSHARES_BIN_DIR: ~/.KeyID_bin
+
+
+
 
 
 
