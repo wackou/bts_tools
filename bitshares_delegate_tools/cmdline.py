@@ -182,9 +182,13 @@ Example:
         if not args.norpc:
             run_args = ['--server'] + run_args
 
-        # on linux, run with "gdb -ex run ./bts_client"
-        if platform == 'linux':
-            run(' '.join(['gdb', '-ex', 'run', '--args', bin_name] + run_args))
+        if config['cmdline_debug'] == True:
+            if platform == 'linux':
+                run(' '.join(['gdb', '-ex', 'run', '--args', bin_name] + run_args))
+            else:
+                log.warning('Running with cmdline_debug=true is not implemented on your platform')
+                run([bin_name] + run_args)
+
         else:
             run([bin_name] + run_args)
 

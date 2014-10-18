@@ -68,6 +68,7 @@ def load_config():
     return config
 
 config = load_config()
+log.info('Using environment: %s' % config['env']['active'])
 env = config['env'][config['env']['active']]
 
 if platform not in env:

@@ -1,5 +1,9 @@
 ---
-debug: false
+# if true, will try to run the bts client inside a debugger
+cmdline_debug: false
+
+# activate the debug flag on the wsgi app
+wsgi_debug: false
 
 # the logging levels for the different submodules
 # can be any of DEBUG, INFO, WARNING, ERROR
@@ -45,6 +49,7 @@ cmdline:
 #         monitoring: [feeds,email]
 #         # you can specify the bts data dir of the running client
 #         # and it will fetch rpc connections params automatically
+#         # this works for both seed nodes and delegate nodes
 #         data_dir: ~/.BitSharesX
 #
 #     -

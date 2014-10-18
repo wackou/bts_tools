@@ -25,7 +25,7 @@ from bitshares_delegate_tools.core import config
 import logging
 log = logging.getLogger(__name__)
 
-DEBUG = config['debug']
+DEBUG = config['wsgi_debug']
 
 api_app = api.create_app()
 api_app.debug = DEBUG
