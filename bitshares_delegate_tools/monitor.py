@@ -45,8 +45,7 @@ else:
     stable_time_interval = time_interval
 
 
-stats = deque(maxlen=min(desired_maxlen, maxlen))
-
+stats_frames = {}
 
 def monitoring_thread(*nodes):
     global time_interval
@@ -58,6 +57,8 @@ def monitoring_thread(*nodes):
 
     log.info('Starting thread monitoring on %s:%d for nodes %s' %
              (client_node.rpc_host, client_node.rpc_port, ', '.join([n.name for n in nodes])))
+
+    stats = stats_frames[client_node.rpc_cache_key] = deque(maxlen=min(desired_maxlen, maxlen))
 
     # launch feed monitoring and publishing thread
     if 'feeds' in monitoring:

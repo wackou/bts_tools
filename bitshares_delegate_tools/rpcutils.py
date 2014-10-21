@@ -240,8 +240,8 @@ class BTSProxy(object):
 
         except Exception as e:
             # can fail with RPCError when delegate has not been registered yet
-            log.warning('get_streak() failed with: %s(%s)' % (type(e), e))
-            log.exception(e)
+            log.warning('%s: get_streak() failed with: %s(%s)' % (self.name, type(e), e))
+            #log.exception(e)
             return False, -1
 
 

@@ -38,7 +38,7 @@
 
                         <ul class="dropdown-menu" role="menu">
                             {% for node in rpc.nodes %}
-                            <li><a href="/rpchost/{{ node.name }}">{{ node.name }}</a></li>
+                            <li><a href="/rpchost/{{ node.name }}{{ request.path }}">{{ node.name }}</a></li>
                             {% endfor %}
                         </ul>
                     </li>
@@ -46,19 +46,6 @@
                     <li><a href="#">{{ node_desc(rpc.main_node) }}</a></li>
                 {% endif %}
 
-                    <!--
-                <li><a href="#">
-                    {%- if rpc.main_node.type == 'delegate' -%}
-                        <b>Delegate name: </b>
-                    {%- elif rpc.main_node.type == 'seed' -%}
-                        <b>Seed node: </b>
-                    {%- else -%}
-                        <b>Node: </b>
-                    {%- endif -%}
-
-                    {{ rpc.main_node.name }}
-                </a></li>
-                    -->
 
                 {%- if rpc.main_node.is_online() -%}
                     {% set is_synced = (rpc.main_node.get_info()['blockchain_head_block_age'] < 30) %}

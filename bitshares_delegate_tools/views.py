@@ -105,7 +105,7 @@ def view_status():
     if rpc.main_node.status() == 'unauthorized':
         return unauthorized()
 
-    stats = list(monitor.stats)
+    stats = list(monitor.stats_frames[rpc.main_node.rpc_cache_key])
 
     points = [ [int((stat.timestamp - datetime(1970,1,1)).total_seconds() * 1000),
                 stat.cpu,
@@ -208,9 +208,9 @@ def view_info():
                            data=info_items, attrs=attrs, **feeds)
 
 
-@bp.route('/rpchost/<host>')
+@bp.route('/rpchost/<host>/<url>')
 @catch_error
-def set_rpchost(host):
+def set_rpchost(host, url):
     for node in rpc.nodes:
         if node.name == host:
             log.debug('Setting main rpc node to %s' % host)
@@ -221,7 +221,7 @@ def set_rpchost(host):
         log.debug('Invalid node name: %s' % host)
         pass
 
-    return redirect('/info')
+    return redirect(url)
 
 
 @bp.route('/delegates')
