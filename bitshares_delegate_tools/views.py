@@ -53,6 +53,9 @@ def unauthorized():
                                 'the rpc user and password in the %s file'
                                 % core.BTS_TOOLS_CONFIG_FILE))
 
+def server_error():
+    return render_template('error.html',
+                           msg=('An unknown server error occurred... Please check your log files.'))
 
 def catch_error(f):
     @wraps(f)
@@ -65,6 +68,10 @@ def catch_error(f):
             return offline()
         except core.UnauthorizedError:
             return unauthorized()
+        except Exception as e:
+            log.error('While processing %s()' % f.__name__)
+            log.exception(e)
+            return server_error()
     return wrapper
 
 
@@ -146,7 +153,8 @@ def view_info():
         if prop in {'wallet_open',
                     'wallet_unlocked',
                     'wallet_block_production_enabled'}:
-            green_if_true(value)
+            if rpc.main_node.type == 'delegate':
+                green_if_true(value)
 
         elif prop == 'network_num_connections':
             green_if_true(value >= 5)

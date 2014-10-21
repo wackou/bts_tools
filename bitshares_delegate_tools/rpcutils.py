@@ -18,11 +18,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from .core import UnauthorizedError, RPCError, run, config
+from .core import UnauthorizedError, RPCError, run, config, get_data_dir
 from .process import bts_binary_running, bts_process
 from collections import defaultdict
 from os.path import join, expanduser
 import bitshares_delegate_tools.core # needed to be able to exec('raise bts.core.Exception')
+import builtins                      # needed to be able to reraise builtin exceptions
 import requests
 import itertools
 import json
@@ -74,21 +75,22 @@ def rpc_call(host, port, user, password,
 
 
 class BTSProxy(object):
-    def __init__(self, type, name, data_dir=None, monitoring=None, rpc_port=None,
+    def __init__(self, type, name, client=None, monitoring=None, rpc_port=None,
                  rpc_user=None, rpc_password=None, rpc_host=None, venv_path=None):
-        # FIXME: this is where we should add the node type as found in config.yaml
         self.type = type
         self.name = name
         self.monitoring = ([] if monitoring is None else
                            [monitoring] if not isinstance(monitoring, list)
                            else monitoring)
-        if data_dir:
+        if client:
+            data_dir = get_data_dir(client)
+
             try:
-                log.info('Loading config for %s from %s' % (self.name, data_dir))
+                log.info('Loading RPC config for %s from %s' % (self.name, data_dir))
                 rpc=json.load(open(expanduser(join(data_dir, 'config.json'))))['rpc']
                 cfg_port = int(rpc['httpd_endpoint'].split(':')[1])
             except Exception:
-                log.warning('Cannot read bts config from %s' % data_dir)
+                log.warning('Cannot read RPC config from %s' % data_dir)
                 rpc = {}
                 cfg_port = None
         else:
@@ -201,11 +203,22 @@ class BTSProxy(object):
         except UnauthorizedError:
             return 'unauthorized'
 
+        except Exception as e:
+            return 'error'
+
     def is_online(self, cached=True):
         return self.status(cached=cached) == 'online'
 
     def process(self):
         return bts_process(self)
+
+    def bts_type(self):
+        blockchain_name = self.about()['blockchain_name']
+        if blockchain_name == 'BitShares X':
+            return 'btsx'
+        elif blockchain_name == 'KeyID':
+            return 'dns'
+        return 'unknown'
 
     def is_active(self, delegate):
         active_delegates = [d['name'] for d in self.blockchain_list_delegates(0, 101)]
@@ -235,11 +248,18 @@ class BTSProxy(object):
 
 nodes = [BTSProxy(**node) for node in config['nodes']]
 
+
+def unique_node_clients():
+    global nodes
+    sort_func = lambda n: n.rpc_cache_key
+    for (host, port), gnodes in itertools.groupby(sorted(nodes, key=sort_func), sort_func):
+        yield (host, port), list(gnodes)
+
+
 def client_instances():
     """return a list of triples (hostname, [node names], node_instance)"""
     global nodes
-    for (host, port), gnodes in itertools.groupby(nodes, lambda n: (n.rpc_host, n.rpc_port)):
-        gnodes = list(gnodes)
+    for (host, port), gnodes in unique_node_clients():
         yield ('%s:%d' % (host, port), [n.name for n in gnodes], gnodes[0])
 
 main_node = nodes[0]

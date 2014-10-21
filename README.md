@@ -17,29 +17,34 @@ just run the ``bts`` script with the command you want to execute:
 
     $ bts -h
     usage: bts [-h] [-r]
-               {clean_homedir,clean,build,build_gui,run,run_gui,list} [hash]
+               {clean_homedir,clean,build,build_gui,run,run_gui,list}
+               [environment] [hash]
     
     following commands are available:
       - clean_homedir    : clean home directory. WARNING: this will delete your wallet!
       - clean            : clean build directory
-      - build [hash]     : update and build bts client
-      - build_gui [hash] : update and build bts gui client
-      - run [hash]       : run latest compiled bts client, or the one with the given hash or tag
+      - build            : update and build bts client
+      - build_gui        : update and build bts gui client
+      - run              : run latest compiled bts client, or the one with the given hash or tag
       - run_gui          : run latest compiled bts gui client
       - list             : list installed bitshares client binaries
     
     Example:
-      $ bts build 0.4.7
+      $ bts build   # build the latest btsx client by default
       $ bts run
     
-      $ bts build_gui 0.4.14
+      $ bts build dns v0.0.4  # build a specific version
+      $ bts run seed-dns      # run environments are defined in the config.yaml file
+    
+      $ bts build_gui
       $ bts run_gui
     
     
     positional arguments:
       {clean_homedir,clean,build,build_gui,run,run_gui,list}
                             the command to run
-      hash                  the hash of the desired commit
+      environment           the build/run environment (btsx, dns, ...)
+      hash                  the hash or tag of the desired commit
     
     optional arguments:
       -h, --help            show this help message and exit

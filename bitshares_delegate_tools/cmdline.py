@@ -18,9 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from os.path import join, dirname, exists, islink
+from os.path import join, dirname, exists, islink, expanduser
 from argparse import RawTextHelpFormatter
-from .core import config, env, platform, run
+from .core import config, platform, run, get_data_dir
 from .rpcutils import rpc_call
 import argparse
 import os
@@ -31,22 +31,66 @@ import logging
 
 log = logging.getLogger(__name__)
 
-BITSHARES_GIT_REPO   = env['git_repo']
-BITSHARES_GIT_BRANCH = env['git_branch']
-BITSHARES_BUILD_DIR  = env[platform]['BITSHARES_BUILD_DIR']
-BITSHARES_HOME_DIR   = env[platform]['BITSHARES_HOME_DIR']
-BITSHARES_BIN_DIR    = env[platform]['BITSHARES_BIN_DIR']
+BTS_GIT_REPO   = None
+BTS_GIT_BRANCH = None
+BTS_BUILD_DIR  = None
+BTS_HOME_DIR   = None
+BTS_BIN_DIR    = None
+
+BUILD_ENV = None
+RUN_ENV   = None
+
+
+def select_build_environment(env=None):
+    env = env or 'btsx'
+    log.info("Using build environment '%s' on platform: '%s'" % (env, platform))
+
+    if platform not in ['linux', 'darwin']:
+        raise OSError('OS not supported yet, please submit a patch :)')
+
+    try:
+        env = config['build_environments'][env]
+    except KeyError:
+        log.error('Unknown build environment: %s' % env)
+        sys.exit(1)
+
+    global BTS_GIT_REPO, BTS_GIT_BRANCH, BTS_BUILD_DIR, BTS_BIN_DIR, BUILD_ENV
+    BTS_GIT_REPO   = env['git_repo']
+    BTS_GIT_BRANCH = env['git_branch']
+    BTS_BUILD_DIR  = expanduser(env['build_dir'])
+    BTS_BIN_DIR    = expanduser(env['bin_dir'])
+
+    BUILD_ENV = env
+    return env
+
+
+def select_run_environment(env_name=None):
+    env_name = env_name or 'default'
+    log.info("Running '%s' client" % env_name)
+    try:
+        env = config['run_environments'][env_name]
+    except KeyError:
+        log.error('Unknown run environment: %s' % env_name)
+        sys.exit(1)
+
+    select_build_environment(env['type'])
+
+    global BTS_HOME_DIR, RUN_ENV
+    BTS_HOME_DIR = get_data_dir(env_name)
+    RUN_ENV = env
+
+    return env
 
 
 def clone():
-    if not exists(BITSHARES_BUILD_DIR):
-        run('git clone %s "%s"' % (BITSHARES_GIT_REPO, BITSHARES_BUILD_DIR))
-        os.chdir(BITSHARES_BUILD_DIR)
+    if not exists(BTS_BUILD_DIR):
+        run('git clone %s "%s"' % (BTS_GIT_REPO, BTS_BUILD_DIR))
+        os.chdir(BTS_BUILD_DIR)
         run('git submodule init')
 
 
 def update():
-    run('git checkout %s && git pull && git submodule update' % BITSHARES_GIT_BRANCH)
+    run('git checkout %s && git pull && git submodule update' % BTS_GIT_BRANCH)
 
 
 def clean_config():
@@ -68,8 +112,8 @@ def configure_gui():
 
 
 def build():
-    make_list = ['make']+config['cmdline'].get('make_args', [])
-    run(make_list)
+    make_list = ['make'] + BUILD_ENV.get('make_args', [])
+    run(make_list, verbose=True)
 
 
 def build_gui():
@@ -92,9 +136,9 @@ def install_last_built_bin():
         tag = r.stdout.strip()
         if tag.startswith('v'):
             tag = tag[1:]
-        bin_filename = 'bitshares_client_%s_v%s' % (date, tag)
+        bin_filename = 'bts_client_%s_v%s' % (date, tag)
     else:
-        bin_filename = 'bitshares_client_%s_%s_%s' % (date, branch, commit[:8])
+        bin_filename = 'bts_client_%s_%s_%s' % (date, branch, commit[:8])
 
     def install(src, dst):
         print('Installing %s' % dst)
@@ -102,18 +146,18 @@ def install_last_built_bin():
             result = join(dirname(src), os.readlink(src))
             print('Following symlink %s -> %s' % (src, result))
             src = result
-        dst = join(BITSHARES_BIN_DIR, dst)
+        dst = join(BTS_BIN_DIR, dst)
         shutil.copy(src, dst)
         return dst
 
-    if not exists(BITSHARES_BIN_DIR):
-        os.makedirs(BITSHARES_BIN_DIR)
+    if not exists(BTS_BIN_DIR):
+        os.makedirs(BTS_BIN_DIR)
 
-    client = join(BITSHARES_BUILD_DIR, 'programs', 'client', 'bitshares_client')
+    client = join(BTS_BUILD_DIR, 'programs', 'client', 'bitshares_client')
 
     c = install(client, bin_filename)
 
-    last_installed = join(BITSHARES_BIN_DIR, 'bitshares_client')
+    last_installed = join(BTS_BIN_DIR, 'bts_client')
     try:
         os.unlink(last_installed)
     except:
@@ -126,17 +170,20 @@ def main():
     DESC="""following commands are available:
   - clean_homedir    : clean home directory. WARNING: this will delete your wallet!
   - clean            : clean build directory
-  - build [hash]     : update and build bts client
-  - build_gui [hash] : update and build bts gui client
-  - run [hash]       : run latest compiled bts client, or the one with the given hash or tag
+  - build            : update and build bts client
+  - build_gui        : update and build bts gui client
+  - run              : run latest compiled bts client, or the one with the given hash or tag
   - run_gui          : run latest compiled bts gui client
   - list             : list installed bitshares client binaries
 
 Example:
-  $ bts build 0.4.7
+  $ bts build   # build the latest btsx client by default
   $ bts run
 
-  $ bts build_gui 0.4.14
+  $ bts build dns v0.0.4  # build a specific version
+  $ bts run seed-dns      # run environments are defined in the config.yaml file
+
+  $ bts build_gui
   $ bts run_gui
     """
     EPILOG="""You should also look into ~/.bts_tools/config.yaml to tune it to your liking."""
@@ -146,15 +193,19 @@ Example:
                         help='the command to run')
     parser.add_argument('-r', '--norpc', action='store_true',
                         help='run binary with RPC server deactivated')
-    parser.add_argument('hash',
-                        help='the hash of the desired commit', nargs='?')
+    parser.add_argument('environment', nargs='?',
+                        help='the build/run environment (btsx, dns, ...)')
+    parser.add_argument('hash', nargs='?',
+                        help='the hash or tag of the desired commit')
     args = parser.parse_args()
 
 
     if args.command in {'build', 'build_gui'}:
+        select_build_environment(args.environment)
+
         clone()
 
-        os.chdir(BITSHARES_BUILD_DIR)
+        os.chdir(BTS_BUILD_DIR)
         update()
         if args.hash:
             run('git checkout %s && git submodule update' % args.hash)
@@ -168,48 +219,60 @@ Example:
             build_gui()
 
     elif args.command == 'run':
+        run_env = select_run_environment(args.environment)
+
         if args.hash:
             # if git rev specified, runs specific version
             print('Running specific instance of the bts client: %s' % args.hash)
-            bin_name = run('ls %s' % join(BITSHARES_BIN_DIR,
-                                          'bitshares_client_*%s*' % args.hash[:8]),
+            bin_name = run('ls %s' % join(BTS_BIN_DIR,
+                                          'bts_client_*%s*' % args.hash[:8]),
                            io=True).stdout.strip()
         else:
             # run last built version
-            bin_name = join(BITSHARES_BIN_DIR, 'bitshares_client')
+            bin_name = join(BTS_BIN_DIR, 'bts_client')
 
-        run_args = config['cmdline'].get('run_args', [])
+        run_args = run_env.get('run_args', [])
+
+        data_dir = run_env.get('data_dir')
+        if data_dir:
+            run_args = ['--data-dir', expanduser(data_dir)] + run_args
+
         if not args.norpc:
             run_args = ['--server'] + run_args
 
-        if config['cmdline_debug'] == True:
+        if run_env.get('debug', False):
             if platform == 'linux':
-                run(' '.join(['gdb', '-ex', 'run', '--args', bin_name] + run_args))
+                cmd = ' '.join(['gdb', '-ex', 'run', '--args', bin_name] + run_args)
             else:
-                log.warning('Running with cmdline_debug=true is not implemented on your platform')
-                run([bin_name] + run_args)
+                log.warning('Running with debug=true is not implemented on your platform (%s)' % platform)
+                cmd = [bin_name] + run_args
 
         else:
-            run([bin_name] + run_args)
+            cmd = [bin_name] + run_args
+
+        run(cmd, verbose=True)
 
     elif args.command == 'run_gui':
-        run('open %s' % join(BITSHARES_BUILD_DIR, 'programs/qt_wallet/bin/BitSharesX.app'))
+        run('open %s' % join(BTS_BUILD_DIR, 'programs/qt_wallet/bin/BitSharesX.app'))
 
     elif args.command == 'clean':
-        run('rm -fr "%s"' % BITSHARES_BUILD_DIR)
+        select_build_environment(args.environment)
+        run('rm -fr "%s"' % BTS_BUILD_DIR)
 
     elif args.command == 'clean_homedir':
-        cmd = 'rm -fr "%s"' % BITSHARES_HOME_DIR
-        if config['env']['active'] == 'production':
-            print('WARNING: you are about to delete your wallet on the real BTSX chain.')
+        select_run_environment(args.environment)
+        cmd = 'rm -fr "%s"' % BTS_HOME_DIR
+        if args.environment != 'development':
+            print('WARNING: you are about to delete your wallet on the real chain.')
             print('         you may lose some real money if you do this!...')
             print('If you really want to do it, you\'ll have to manually run the command:')
             print(cmd)
             sys.exit(1)
-        run(cmd)
+        run(cmd, verbose=True)
 
     elif args.command == 'list':
-        run('ls -ltr "%s"' % BITSHARES_BIN_DIR)
+        select_build_environment(args.environment)
+        run('ls -ltr "%s"' % BTS_BIN_DIR)
 
 
 def main_rpc_call():

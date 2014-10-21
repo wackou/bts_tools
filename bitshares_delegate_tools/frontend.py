@@ -56,11 +56,8 @@ def create_app(settings_override=None):
                                  monitor=bitshares_delegate_tools.monitor,
                                  process=bitshares_delegate_tools.process)
 
-    for (host, port), nodes in groupby(rpc.nodes, lambda n: (n.rpc_host, n.rpc_port)):
+    for (host, port), nodes in rpc.unique_node_clients():
         # launch only 1 monitoring thread for each running instance of the client
-        # (so that we have multiple delegate accounts in the same wallet share one monitoring thread)
-        nodes = list(nodes)
-
         t = threading.Thread(target=bitshares_delegate_tools.monitor.monitoring_thread, args=nodes)
         t.daemon = True
         t.start()

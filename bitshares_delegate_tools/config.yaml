@@ -1,9 +1,13 @@
 ---
-# if true, will try to run the bts client inside a debugger
-cmdline_debug: false
-
-# activate the debug flag on the wsgi app
-wsgi_debug: false
+# Config file containing the build, run and monitor environments and
+# other configuration variables
+#
+# This file should contain sensible default values in as many places as
+# possible, but you will have to at least specify your own values in the
+# following categories:
+#  - run_environments [for the cmdline tool]
+#  - nodes            [for the monitoring webapp]
+#
 
 # the logging levels for the different submodules
 # can be any of DEBUG, INFO, WARNING, ERROR
@@ -15,9 +19,72 @@ logging:
     bitshares_delegate_tools.notification: INFO
     bitshares_delegate_tools.feeds: INFO
 
-cmdline:
-    make_args: ['-j4']
-    run_args: []
+
+# list of configurations for building the bitshares client
+#
+# build envs define the following vars:
+#  - git_repo: self-explanatory
+#  - git_branch: self-explanatory
+#  - make_args: additional build flags to be passed to 'make'
+#  - build_dir: the directory where the client shall be built
+#  - bin_dir: the directory where the client will be installed after being successfully built
+#
+# by default, if you don't specify a build env on the cmdline, the tools will
+# use the 'btsx' environment
+#
+build_environments:
+    development:
+        git_repo: https://github.com/BitShares/bitshares_toolkit.git
+        git_branch: develop
+        make_args: ['-j4']
+        build_dir: ~/.BitSharesXTS_build
+        bin_dir: ~/.BitSharesXTS_bin
+
+    btsx:
+        git_repo: https://github.com/dacsunlimited/bitsharesx.git
+        git_branch: master
+        make_args: ['-j4']
+        build_dir: ~/.BitSharesX_build
+        bin_dir: ~/.BitSharesX_bin
+
+    dns:
+        git_repo: https://github.com/keyid/keyid.git
+        git_branch: master
+        make_args: ['-j4']
+        build_dir: ~/.KeyID_build
+        bin_dir: ~/.KeyID_bin
+
+
+# list of clients that can be run
+#
+# clients define the following vars:
+#  - type: the type of build you want to run. Needs to be a valid build env (ie: btsx, dns, ...)
+#  - debug: set to true to run client in gdb (only available in linux for now)
+#  - data_dir: [optional] the data dir (blockchain, wallet, etc.) of the bts client.
+#                         If not specified, uses the standard location of the client
+#  - run_args: [optional] any additional flags you want to pass to the cmdline invocation of the client
+#
+# by default, if you don't specify a client on the cmdline, the tools will
+# run the client for BTSX using the standard data dir location, ie:
+#
+# run_environments:
+#     default:
+#         type: btsx
+#         debug: false
+#
+run_environments:
+    seed-btsx:
+        type: btsx
+        debug: false
+        run_args: []
+
+    seed-dns:
+        type: dns
+        data_dir: ~/.KeyID_data/seed-dns
+
+
+# activate the debug flag on the wsgi app
+wsgi_debug: false
 
 # in the 'nodes' variable you should specify the list of instances of the bitshares client
 # you intend to run on this computer.
@@ -47,16 +114,10 @@ cmdline:
 #         type: delegate         # delegate node type: run a single delegate account
 #         name: delegate1  # the name of the delegate. This needs to be an existing account
 #         monitoring: [feeds,email]
-#         # you can specify the bts data dir of the running client
+#         # you can specify the bts run environment of the client
 #         # and it will fetch rpc connections params automatically
-#         # this works for both seed nodes and delegate nodes
-#         data_dir: ~/.BitSharesX
-#
-#     -
-#         type: delegate
-#         name: delegate2
-#         monitoring: [feeds,email]
-#         data_dir: ~/.BitSharesX
+#         # NOTE: this needs to be a valid run environment!
+#         client: seed-btsx
 #     -
 #         type: delegate    # remote delegate node type: access to a remote node's delegate info. You need to have ssh access to this node for this to work
 #         name: delegate3  # the name for this remote node. This is just for you, it serves no other purpose
@@ -68,10 +129,15 @@ cmdline:
 #
 nodes:
     -
-        type: seed    # seed node type: no accounts, high number of connections
-        name: seed01  # the name for this seed node. This is just for you, it serves no other purpose
-        data_dir: ~/Library/Application Support/BitShares X
+        type: seed         # seed node type: no accounts, high number of connections
+        name: seed01-btsx  # the name for this seed node. This is just for you, it serves no other purpose
+        client: seed-btsx  # this needs to be a valid run_env
+    -
+        type: seed         # seed node type: no accounts, high number of connections
+        name: seed01-dns   # the name for this seed node. This is just for you, it serves no other purpose
+        client: seed-dns   # this needs to be a valid run_env
         monitoring: [email]
+
 
 monitoring:
     monitor_time_interval: 5
@@ -91,57 +157,5 @@ monitoring:
 
     apns:
         cert: bts_apns.pem
-        tokens: []
-
-
-
-env:
-    active: production
-
-    development:
-        git_repo: https://github.com/BitShares/bitshares_toolkit.git
-        git_branch: develop
-
-        linux:
-            BITSHARES_HOME_DIR: ~/.BitSharesXTS
-            BITSHARES_BUILD_DIR: ~/.BitSharesXTS_build
-            BITSHARES_BIN_DIR: ~/.BitSharesXTS_bin
-
-        darwin:
-            BITSHARES_HOME_DIR: ~/Library/Application Support/BitShares XTS
-            BITSHARES_BUILD_DIR: ~/.BitSharesXTS_build
-            BITSHARES_BIN_DIR: ~/.BitSharesXTS_bin
-
-    production:
-        git_repo: https://github.com/dacsunlimited/bitsharesx.git
-        git_branch: master
-
-        linux:
-            BITSHARES_HOME_DIR: ~/.BitSharesX
-            BITSHARES_BUILD_DIR: ~/.BitSharesX_build
-            BITSHARES_BIN_DIR: ~/.BitSharesX_bin
-
-        darwin:
-            BITSHARES_HOME_DIR: ~/Library/Application Support/BitShares X
-            BITSHARES_BUILD_DIR: ~/.BitSharesX_build
-            BITSHARES_BIN_DIR: ~/.BitSharesX_bin
-
-    keyid:
-        git_repo: https://github.com/keyid/keyid.git
-        git_branch: master
-
-        linux:
-            BITSHARES_HOME_DIR: ~/.KeyID
-            BITSHARES_BUILD_DIR: ~/.KeyID_build
-            BITSHARES_BIN_DIR: ~/.KeyID_bin
-
-        darwin:
-            BITSHARES_HOME_DIR: ~/Library/Application Support/KeyID
-            BITSHARES_BUILD_DIR: ~/.KeyID_build
-            BITSHARES_BIN_DIR: ~/.KeyID_bin
-
-
-
-
 
 

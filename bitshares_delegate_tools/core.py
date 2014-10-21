@@ -65,35 +65,50 @@ def load_config():
         log.error('-'*100)
         raise
 
+    # add default values for some config properties
+    if 'default' not in config['run_environments']:
+        config['run_environments']['default'] = {'type': 'btsx', 'debug': False}
+
     return config
 
 config = load_config()
-log.info('Using environment: %s' % config['env']['active'])
-env = config['env'][config['env']['active']]
-
-if platform not in env:
-    raise OSError('OS not supported yet, please submit a patch :)')
-
-# expand '~' in path names to the user's home dir
-for attr, path in env[platform].items():
-    env[platform][attr] = expanduser(path)
 
 # setup logging levels from config file
 for name, level in config.get('logging', {}).items():
     logging.getLogger(name).setLevel(getattr(logging, level))
 
 
+DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',
+                                    'darwin': '~/Library/Application Support/BitShares XTS'},
+                    'btsx':        {'linux': '~/.BitSharesX',
+                                    'darwin': '~/Library/Application Support/BitShares X'},
+                    'dns':         {'linux': '~/.KeyID',
+                                    'darwin': '~/Library/Application Support/KeyID'}}
+
+
+def get_data_dir(env):
+    try:
+        env = config['run_environments'][env]
+    except KeyError:
+        log.error('Unknown run environment: %s' % env)
+        sys.exit(1)
+
+    return expanduser(env.get('data_dir') or DEFAULT_HOMEDIRS[env['type']][platform])
+
+
 IOStream = namedtuple('IOStream', 'status, stdout, stderr')
 StatsFrame = namedtuple('StatsFrame', 'cpu, mem, connections, timestamp')
 
 
-def _run(cmd, io=False):
+def _run(cmd, io=False, verbose=False):
     if isinstance(cmd, list):
         if len(cmd) > 1: # if we have args, quote them properly
             cmd = cmd[0] + ' "' + '" "'.join(cmd[1:]) + '"'
         else:
             cmd = cmd[0]
-    log.debug('SHELL: running command: %s' % cmd)
+
+    (log.info if verbose else log.debug)('SHELL: running command: %s' % cmd)
+
     if io:
         p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
@@ -108,8 +123,8 @@ def _run(cmd, io=False):
         return IOStream(p.returncode, None, None)
 
 
-def run(cmd, io=False):
-    r = _run(cmd, io)
+def run(cmd, io=False, verbose=False):
+    r = _run(cmd, io, verbose)
     if r.status != 0:
         raise RuntimeError('Failed running: %s' % cmd)
     return r

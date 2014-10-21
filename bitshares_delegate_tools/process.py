@@ -30,7 +30,7 @@ def bts_process(node):
     #log.debug('find bts binary')
     # find bitshares process
     procs = [p for p in psutil.process_iter()
-             if 'bitshares_client' in p.name()]
+             if 'bts_client' in p.name()]
 
     if node is None: # just return the first one if available
         if procs:
@@ -69,5 +69,5 @@ def binary_description(node):
     name = os.path.realpath(p.cmdline()[0])
     if '_v' in name: # weak check for detecting tags...
         return name[name.index('_v')+1:]
-    return name.split('bitshares_client_')[1]
+    return name.split('bts_client_')[1]
 

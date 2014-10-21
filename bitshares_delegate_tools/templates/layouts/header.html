@@ -63,7 +63,7 @@
                 {%- if rpc.main_node.is_online() -%}
                     {% set is_synced = (rpc.main_node.get_info()['blockchain_head_block_age'] < 30) %}
 
-                    <li><a href="#"><div class="btn btn-xs btn-info">{{ core.config['env']['active'] }}: {{ process.binary_description(rpc.main_node) }}</div>
+                    <li><a href="#"><div class="btn btn-xs btn-info">{{ rpc.main_node.bts_type() }}: {{ process.binary_description(rpc.main_node) }}</div>
                     {%- if not is_synced -%}
                         {# if blockchain not up-to-date, information is not reliable #}
                         <div class="btn btn-xs btn-warning">NOT SYNCED</div>
