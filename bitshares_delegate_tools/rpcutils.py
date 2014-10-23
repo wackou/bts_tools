@@ -75,6 +75,8 @@ def rpc_call(host, port, user, password,
     return r['result']
 
 
+ALL_SLOTS = {}
+
 class BTSProxy(object):
     def __init__(self, type, name, client=None, monitoring=None, rpc_port=None,
                  rpc_user=None, rpc_password=None, rpc_host=None, venv_path=None):
@@ -232,15 +234,27 @@ class BTSProxy(object):
             return False, 1
 
         try:
+            global ALL_SLOTS
             # get about the last 1000 blocks from us
             # this could possibly be optimized by first getting, say, 50 blocks, and if
             # they are all the same, then we could get a much bigger chunk
-            slots = self.blockchain_get_delegate_slot_records(self.name, -100000, 1000,
-                                                              cached=cached)[::-1]
+            if self.name not in ALL_SLOTS:
+                # first time, get all slots from the delegate and store them
+                ALL_SLOTS[self.name] = self.blockchain_get_delegate_slot_records(self.name, 1, 100000,
+                                                                                 cached=cached)
+                log.debug('Got all %d slots for delegate %s' % (len(ALL_SLOTS[self.name]), self.name))
+            else:
+                # next time, only get last 10 slots and update our local copy
+                log.debug('Getting last 10 slots for delegate %s' % self.name)
+                for slot in self.blockchain_get_delegate_slot_records(self.name):
+                    if slot not in ALL_SLOTS[self.name][-10:]:
+                        ALL_SLOTS[self.name].append(slot)
+
+            slots = ALL_SLOTS[self.name]
             if not slots:
                 return True, 0
-            streak = itertools.takewhile(lambda x: (type(x['block_id']) is type(slots[0]['block_id'])), slots)
-            return slots[0]['block_id'] is not None, len(list(streak))
+            streak = itertools.takewhile(lambda x: (type(x['block_id']) is type(slots[-1]['block_id'])), reversed(slots))
+            return slots[-1]['block_id'] is not None, len(list(streak))
 
         except Exception as e:
             # can fail with RPCError when delegate has not been registered yet
