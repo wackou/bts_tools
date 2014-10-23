@@ -299,8 +299,8 @@ def main_rpc_call():
     init(loglevels={'bitshares_delegate_tools': 'WARNING'})
 
     try:
-        return rpc_call('localhost', int(args.rpc_port), args.rpc_user,
-                        args.rpc_password, args.method, *args.args)
+        result = rpc_call('localhost', int(args.rpc_port), args.rpc_user,
+                          args.rpc_password, args.method, *args.args)
     except Exception as e:
         log.exception(e)
         result = { 'error': str(e), 'type': '%s.%s' % (e.__class__.__module__,
