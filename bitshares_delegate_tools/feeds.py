@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from .core import config
+from . import core
 from collections import deque
 import threading
 import requests
@@ -28,9 +28,16 @@ log = logging.getLogger(__name__)
 
 feeds = {}
 nfeed_checked = 0
-cfg = config['monitoring']['feeds']
-history_len = int(cfg['median_time_span'] / cfg['check_time_interval'])
-price_history = {cur: deque(maxlen=history_len) for cur in {'USD', 'BTC', 'CNY', 'GLD', 'EUR'}}
+cfg = None
+history_len = None
+price_history = None
+
+
+def load_feeds():
+    global cfg, history_len, price_history
+    cfg = core.config['monitoring']['feeds']
+    history_len = int(cfg['median_time_span'] / cfg['check_time_interval'])
+    price_history = {cur: deque(maxlen=history_len) for cur in {'USD', 'BTC', 'CNY', 'GLD', 'EUR'}}
 
 
 def get_from_yahoo(asset_list, base):
@@ -43,7 +50,6 @@ def get_from_yahoo(asset_list, base):
 
     asset_prices = map(float, r.text.split())
     return dict(zip(asset_list, asset_prices))
-
 
 
 def get_from_bter(cur, base):

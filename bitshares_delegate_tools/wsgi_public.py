@@ -20,12 +20,12 @@
 
 from werkzeug.serving import run_simple
 from werkzeug.wsgi import DispatcherMiddleware
-from bitshares_delegate_tools import api
-from bitshares_delegate_tools.core import config
+from bitshares_delegate_tools import core, api, init
 import logging
 log = logging.getLogger(__name__)
 
-DEBUG = config['wsgi_debug']
+init()
+DEBUG = core.config['wsgi_debug']
 
 api_app = api.create_app()
 api_app.debug = DEBUG

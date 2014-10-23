@@ -20,7 +20,8 @@
 
 from os.path import join, dirname, exists, islink, expanduser
 from argparse import RawTextHelpFormatter
-from .core import config, platform, run, get_data_dir
+from .core import platform, run, get_data_dir
+from . import core, init
 from .rpcutils import rpc_call
 import argparse
 import os
@@ -49,7 +50,7 @@ def select_build_environment(env=None):
         raise OSError('OS not supported yet, please submit a patch :)')
 
     try:
-        env = config['build_environments'][env]
+        env = core.config['build_environments'][env]
     except KeyError:
         log.error('Unknown build environment: %s' % env)
         sys.exit(1)
@@ -68,7 +69,7 @@ def select_run_environment(env_name=None):
     env_name = env_name or 'default'
     log.info("Running '%s' client" % env_name)
     try:
-        env = config['run_environments'][env_name]
+        env = core.config['run_environments'][env_name]
     except KeyError:
         log.error('Unknown run environment: %s' % env_name)
         sys.exit(1)
@@ -199,6 +200,7 @@ Example:
                         help='the hash or tag of the desired commit')
     args = parser.parse_args()
 
+    init()
 
     if args.command in {'build', 'build_gui'}:
         select_build_environment(args.environment)
@@ -279,6 +281,7 @@ def main_rpc_call():
     # parse commandline args
     DESC="""Run the given command using JSON-RPC."""
     EPILOG="""You should look into config.yaml to configure the rpc user and password."""
+
     parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
                                      formatter_class=RawTextHelpFormatter)
     parser.add_argument('rpc_port',
@@ -293,12 +296,13 @@ def main_rpc_call():
                         help='the args to pass to the rpc method call', nargs='*')
     args = parser.parse_args()
 
-    logging.getLogger('bitshares_delegate_tools').setLevel(logging.WARNING)
+    init(loglevels={'bitshares_delegate_tools': 'WARNING'})
 
     try:
-        return rpc_call('localhost', args.rpc_port, args.rpc_user,
+        return rpc_call('localhost', int(args.rpc_port), args.rpc_user,
                         args.rpc_password, args.method, *args.args)
     except Exception as e:
+        log.exception(e)
         result = { 'error': str(e), 'type': '%s.%s' % (e.__class__.__module__,
                                                        e.__class__.__name__) }
 

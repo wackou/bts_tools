@@ -18,8 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from .core import UnauthorizedError, RPCError, run, config, get_data_dir
+from .core import UnauthorizedError, RPCError, run, get_data_dir
 from .process import bts_binary_running, bts_process
+from . import core
 from collections import defaultdict
 from os.path import join, expanduser
 import bitshares_delegate_tools.core # needed to be able to exec('raise bts.core.Exception')
@@ -174,7 +175,7 @@ class BTSProxy(object):
             # also cache when exceptions are raised
             if funcname not in NON_CACHEABLE_METHODS:
                 _rpc_cache[self.rpc_cache_key][(funcname, args)] = e
-                log.debug('  added exception %s in cache' % e.__class__)
+                log.debug('  added exception %s in cache: %s' % (e.__class__, str(e)))
             raise
 
         if funcname not in NON_CACHEABLE_METHODS:
@@ -246,7 +247,15 @@ class BTSProxy(object):
 
 
 
-nodes = [BTSProxy(**node) for node in config['nodes']]
+
+nodes = []
+main_node = None
+
+
+def load_nodes():
+    global nodes, main_node
+    nodes = [BTSProxy(**node) for node in core.config['nodes']]
+    main_node = nodes[0]
 
 
 def unique_node_clients():
@@ -262,5 +271,4 @@ def client_instances():
     for (host, port), gnodes in unique_node_clients():
         yield ('%s:%d' % (host, port), [n.name for n in gnodes], gnodes[0])
 
-main_node = nodes[0]
 

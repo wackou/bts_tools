@@ -37,9 +37,11 @@ BTS_TOOLS_HOMEDIR = '~/.bts_tools'
 BTS_TOOLS_HOMEDIR = expanduser(BTS_TOOLS_HOMEDIR)
 BTS_TOOLS_CONFIG_FILE = join(BTS_TOOLS_HOMEDIR, 'config.yaml')
 
-log.info('Using home dir for BTS tools: %s' % BTS_TOOLS_HOMEDIR)
+config = None
 
-def load_config():
+def load_config(loglevels=None):
+    log.info('Using home dir for BTS tools: %s' % BTS_TOOLS_HOMEDIR)
+    global config
     if not exists(BTS_TOOLS_CONFIG_FILE):
         log.info('Copying default config file to %s' % BTS_TOOLS_CONFIG_FILE)
         try:
@@ -69,13 +71,12 @@ def load_config():
     if 'default' not in config['run_environments']:
         config['run_environments']['default'] = {'type': 'btsx', 'debug': False}
 
+    # setup given logging levels, otherwise from config file
+    loglevels = loglevels or config.get('logging', {})
+    for name, level in loglevels.items():
+        logging.getLogger(name).setLevel(getattr(logging, level))
+
     return config
-
-config = load_config()
-
-# setup logging levels from config file
-for name, level in config.get('logging', {}).items():
-    logging.getLogger(name).setLevel(getattr(logging, level))
 
 
 DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',

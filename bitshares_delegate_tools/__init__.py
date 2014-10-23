@@ -27,3 +27,14 @@ setupLogging(with_time=True, with_lineno=True)
 logging.getLogger('bitshares_delegate_tools').setLevel(logging.INFO)
 
 from .rpcutils import main_node as rpc
+
+def init(loglevels=None):
+    from .core import load_config
+    from .rpcutils import load_nodes
+    from .feeds import load_feeds
+    from .monitor import load_monitoring
+
+    load_config(loglevels)
+    load_nodes()
+    load_feeds()
+    load_monitoring()

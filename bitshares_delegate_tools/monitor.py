@@ -21,33 +21,41 @@
 from collections import deque
 from datetime import datetime
 from itertools import chain
-from .core import config, StatsFrame
+from .core import StatsFrame
 from .notification import send_notification
 from .feeds import check_feeds
+from . import core
 import math
 import time
 import logging
 
 log = logging.getLogger(__name__)
 
-cfg = config['monitoring']
-
+stats_frames = {}
 # make sure we don't have huge plots that take forever to render
 maxlen = 2000
 
-time_span = cfg['plots_time_span']
-time_interval = cfg['monitor_time_interval']
-desired_maxlen = int(time_span / time_interval)
-
-if desired_maxlen > maxlen:
-    stable_time_interval = time_interval * (desired_maxlen / maxlen)
-else:
-    stable_time_interval = time_interval
+cfg = None
+time_span = None
+time_interval = None
+desired_maxlen = None
 
 
-stats_frames = {}
+def load_monitoring():
+    global cfg, time_span, time_interval, desired_maxlen, stable_time_interval
+    cfg = core.config['monitoring']
+    time_span = cfg['plots_time_span']
+    time_interval = cfg['monitor_time_interval']
+    desired_maxlen = int(time_span / time_interval)
+
+    if desired_maxlen > maxlen:
+        stable_time_interval = time_interval * (desired_maxlen / maxlen)
+    else:
+        stable_time_interval = time_interval
+
 
 def monitoring_thread(*nodes):
+    # FIXME: problem with feeds checking
     global time_interval
 
     client_node = nodes[0]

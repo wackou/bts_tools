@@ -19,7 +19,7 @@
 #
 
 from os.path import join, exists
-from .core import config, BTS_TOOLS_HOMEDIR
+from . import core
 import smtplib
 import random
 import apnsclient
@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 def send_email(to, subject, body, bcc=None, replyto=None):
     """Return True if the email could be sent, raise an exception
     otherwise."""
-    c = config['monitoring']['email']
+    c = core.config['monitoring']['email']
 
     fromaddr = replyto or c['identity']
     #toaddrs = [ to, fromaddr ]
@@ -55,7 +55,7 @@ def send_email(to, subject, body, bcc=None, replyto=None):
 
 def send_notification_email(msg, alert=False):
     log.debug('Sending notification by email: %s' % msg)
-    c = config['monitoring']['email']
+    c = core.config['monitoring']['email']
     send_email(c['recipient'], 'BTS notification', msg)
     log.info('Sent email notification: %s' % msg)
 
@@ -65,23 +65,23 @@ def send_notification_apns(msg, alert=False):
     otherwise it's just a normal info message."""
     log.debug('Sending notification via APNS: %s' % msg)
 
-    if not config['monitoring']['apns']['tokens']:
+    if not core.config['monitoring']['apns']['tokens']:
         log.warning('Cannot send notification: no device tokens configured')
         return
 
-    certfile = join(BTS_TOOLS_HOMEDIR, config['monitoring']['apns']['cert'])
+    certfile = join(core.BTS_TOOLS_HOMEDIR, core.config['monitoring']['apns']['cert'])
     if not exists(certfile):
         log.error('Missing certificate file for APNs service: %s' % certfile)
         return
 
     conn = apnsclient.Session().new_connection('push_sandbox', cert_file=certfile)
     if alert:
-        message = apnsclient.Message(config['monitoring']['apns']['tokens'],
+        message = apnsclient.Message(core.config['monitoring']['apns']['tokens'],
                                      alert=msg,
                                      sound='base_under_attack_%s.caf' % random.choice(['terran', 'zerg', 'protoss']),
                                      badge=1)
     else:
-        message = apnsclient.Message(config['monitoring']['apns']['tokens'],
+        message = apnsclient.Message(core.config['monitoring']['apns']['tokens'],
                                      alert=msg,
                                      badge=1)
 
