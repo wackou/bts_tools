@@ -162,11 +162,11 @@ def monitoring_thread(*nodes):
 
 
             # only monitor cpu and network if we are monitoring localhost
-            if node.rpc_host != 'localhost':
+            if client_node.rpc_host != 'localhost':
                 s = StatsFrame(cpu=0, mem=0, connections=0, timestamp=datetime.utcnow())
 
             else:
-                p = node.process() # p should not be None otherwise we know we are offline
+                p = client_node.process() # p should not be None otherwise we know we are offline
                 s = StatsFrame(cpu=p.cpu_percent(),
                                mem=p.memory_info().rss,
                                connections=info['network_num_connections'],

@@ -232,12 +232,15 @@ class BTSProxy(object):
             return False, 1
 
         try:
-            slots = self.blockchain_get_delegate_slot_records(self.name,
+            # get about the last 1000 blocks from us
+            # this could possibly be optimized by first getting, say, 50 blocks, and if
+            # they are all the same, then we could get a much bigger chunk
+            slots = self.blockchain_get_delegate_slot_records(self.name, -100000, 1000,
                                                               cached=cached)[::-1]
             if not slots:
                 return True, 0
-            streak = itertools.takewhile(lambda x: (x['block_produced'] == slots[0]['block_produced']), slots)
-            return slots[0]['block_produced'], len(list(streak))
+            streak = itertools.takewhile(lambda x: (type(x['block_id']) is type(slots[0]['block_id'])), slots)
+            return slots[0]['block_id'] is not None, len(list(streak))
 
         except Exception as e:
             # can fail with RPCError when delegate has not been registered yet
