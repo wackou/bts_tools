@@ -55,7 +55,6 @@ def load_monitoring():
 
 
 def monitoring_thread(*nodes):
-    # FIXME: problem with feeds checking
     global time_interval
 
     client_node = nodes[0]

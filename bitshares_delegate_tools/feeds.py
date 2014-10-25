@@ -132,17 +132,23 @@ def check_feeds(nodes):
                   (feeds['USD'], feeds['BTC'], feeds['CNY'], feeds['GLD'], feeds['EUR'],
                    nfeed_checked, feed_period))
 
-        # only publish feeds if we're running a delegate node
-        # we also require rpc_host == 'localhost', we don't want to publish on remote
-        # nodes (while checking them, for instance)
 
         for node in nodes:
-            if node.type == 'delegate' and node.rpc_host == 'localhost':
-                if nfeed_checked % feed_period == 0:
-                    # publish median value of the price, not latest one
-                    usd, btc, cny, gld, eur = median('USD'), median('BTC'), median('CNY'), median('GLD'), median('EUR')
-                    log.info('Node %s publishing feeds: %f USD, %g BTC, %f CNY, %g GLD, %f EUR' % (node.name, usd, btc, cny, gld, eur))
-                    node.wallet_publish_feeds(node.name, [['USD', usd], ['BTC', btc], ['CNY', cny], ['GLD', gld], ['EUR', eur]])
+            # if an exception occurs during publishing feeds for a delegate (eg: standby delegate),
+            # then we should still go on for the other nodes (and not let exceptions propagate)
+            try:
+                # only publish feeds if we're running a delegate node
+                # we also require rpc_host == 'localhost', we don't want to publish on remote
+                # nodes (while checking on them, for instance)
+                # TODO: do we really want to ignore rpc_host != 'localhost', or should we just do what is asked?
+                if node.type == 'delegate' and node.rpc_host == 'localhost' and 'feeds' in monitoring:
+                    if nfeed_checked % feed_period == 0:
+                        # publish median value of the price, not latest one
+                        usd, btc, cny, gld, eur = median('USD'), median('BTC'), median('CNY'), median('GLD'), median('EUR')
+                        log.info('Node %s publishing feeds: %f USD, %g BTC, %f CNY, %g GLD, %f EUR' % (node.name, usd, btc, cny, gld, eur))
+                        node.wallet_publish_feeds(node.name, [['USD', usd], ['BTC', btc], ['CNY', cny], ['GLD', gld], ['EUR', eur]])
+            except Exception as e:
+                log.exception(e)
 
     except Exception as e:
         log.exception(e)
