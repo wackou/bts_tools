@@ -155,7 +155,10 @@ monitoring:
         identity: "BTS Monitor <bts_monitor@example.com>"
         recipient: me@example.com
 
+    boxcar:
+        tokens: []
+
     apns:
         cert: bts_apns.pem
-
+        tokens: []
 

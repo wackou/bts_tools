@@ -22,6 +22,7 @@ from os.path import join, exists
 from . import core
 import smtplib
 import random
+import requests
 import apnsclient
 import logging
 
@@ -60,6 +61,18 @@ def send_notification_email(msg, alert=False):
     log.info('Sent email notification: %s' % msg)
 
 
+def send_notification_boxcar(msg, alert=False):
+    log.debug('Sending notification trough boxcar: %s' % msg)
+    tokens = core.config['monitoring']['boxcar']['tokens']
+    for token in tokens:
+        requests.post('https://new.boxcar.io/api/notifications',
+                      data={'user_credentials': token,
+                            'notification[sound]': 'score' if alert else 'no-sound',
+                            'notification[title]': msg,
+                            'notification[source_name]': 'BTS Tools'})
+    log.info('Sent boxcar notification: %s' % msg)
+
+
 def send_notification_apns(msg, alert=False):
     """Sends an APNS notification. 'alert' means something wrong is happening,
     otherwise it's just a normal info message."""
@@ -75,16 +88,16 @@ def send_notification_apns(msg, alert=False):
         return
 
     conn = apnsclient.Session().new_connection('push_sandbox', cert_file=certfile)
+    tokens = core.config['monitoring']['apns']['tokens']
     if alert:
-        message = apnsclient.Message(core.config['monitoring']['apns']['tokens'],
+        message = apnsclient.Message(tokens,
                                      alert=msg,
                                      sound='base_under_attack_%s.caf' % random.choice(['terran', 'zerg', 'protoss']),
                                      badge=1)
     else:
-        message = apnsclient.Message(core.config['monitoring']['apns']['tokens'],
+        message = apnsclient.Message(tokens,
                                      alert=msg,
                                      badge=1)
-
 
     # Send the message.
     srv = apnsclient.APNs(conn)
@@ -122,3 +135,5 @@ def send_notification(nodes, node_msg, alert=False):
             send_notification_email(msg, alert)
         if 'apns' in node.monitoring:
             send_notification_apns(msg, alert)
+        if 'boxcar' in node.monitoring:
+            send_notification_boxcar(msg, alert)
