@@ -141,7 +141,7 @@ def check_feeds(nodes):
                 # we also require rpc_host == 'localhost', we don't want to publish on remote
                 # nodes (while checking on them, for instance)
                 # TODO: do we really want to ignore rpc_host != 'localhost', or should we just do what is asked?
-                if node.type == 'delegate' and node.rpc_host == 'localhost' and 'feeds' in monitoring:
+                if node.type == 'delegate' and node.rpc_host == 'localhost' and 'feeds' in node.monitoring:
                     if nfeed_checked % feed_period == 0:
                         # publish median value of the price, not latest one
                         usd, btc, cny, gld, eur = median('USD'), median('BTC'), median('CNY'), median('GLD'), median('EUR')
