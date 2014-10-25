@@ -62,7 +62,7 @@ def send_notification_email(msg, alert=False):
 
 
 def send_notification_boxcar(msg, alert=False):
-    log.debug('Sending notification trough boxcar: %s' % msg)
+    log.debug('Sending notification trough Boxcar: %s' % msg)
     tokens = core.config['monitoring']['boxcar']['tokens']
     for token in tokens:
         requests.post('https://new.boxcar.io/api/notifications',
@@ -70,7 +70,7 @@ def send_notification_boxcar(msg, alert=False):
                             'notification[sound]': 'score' if alert else 'no-sound',
                             'notification[title]': msg,
                             'notification[source_name]': 'BTS Tools'})
-    log.info('Sent boxcar notification: %s' % msg)
+    log.info('Sent Boxcar notification: %s' % msg)
 
 
 def send_notification_apns(msg, alert=False):
@@ -132,8 +132,20 @@ def send_notification(nodes, node_msg, alert=False):
     for node in nodes:
         msg = '%s: %s' % (node.name, node_msg)
         if 'email' in node.monitoring:
-            send_notification_email(msg, alert)
+            try:
+                send_notification_email(msg, alert)
+            except Exception as e:
+                log.warning('Failed sending notification to %s: %s' % (node.name, node_msg))
+                log.exception(e)
         if 'apns' in node.monitoring:
-            send_notification_apns(msg, alert)
+            try:
+                send_notification_apns(msg, alert)
+            except Exception as e:
+                log.warning('Failed sending notification to %s: %s' % (node.name, node_msg))
+                log.exception(e)
         if 'boxcar' in node.monitoring:
-            send_notification_boxcar(msg, alert)
+            try:
+                send_notification_boxcar(msg, alert)
+            except Exception as e:
+                log.warning('Failed sending notification to %s: %s' % (node.name, node_msg))
+                log.exception(e)
