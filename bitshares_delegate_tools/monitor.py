@@ -20,7 +20,7 @@
 
 from collections import deque
 from datetime import datetime
-from itertools import chain
+from itertools import chain, islice
 from .core import StatsFrame
 from .notification import send_notification
 from .feeds import check_feeds
@@ -54,6 +54,36 @@ def load_monitoring():
         stable_time_interval = time_interval
 
 
+class StableStateMonitor(object):
+    """Monitor a sequence of states, and is able to compute a "stable" state value when N
+    consecutive same states have happened.
+    For example, we only want to decide the client is offline after 3 consecutive 'offline' states
+    to absorb transient errors and avoid reacting too fast on wrong alerts.
+    """
+    def __init__(self, n):
+        self.n = n
+        self.states = deque(maxlen=n+1)
+
+    def push(self, state):
+        self.states.append(state)
+
+    def stable_state(self):
+        size = len(self.states)
+        if size < self.n:
+            return None
+        if all(state == self.states[-1] for state in islice(self.states, size-self.n, size-1)):
+            return self.states[-1]
+        return None
+
+    def just_changed(self):
+        size = len(self.states)
+        if size < (self.n + 1):
+            return False
+        if self.stable_state() is None:
+            return False
+        return self.states[-1] != self.states[-(self.n + 1)]
+
+
 def monitoring_thread(*nodes):
     global time_interval
 
@@ -61,9 +91,10 @@ def monitoring_thread(*nodes):
 
     # all different types of monitoring that should be considered by this thread
     monitoring = set(chain(*(node.monitoring for node in nodes)))
+    node_names = [n.name for n in nodes]
 
     log.info('Starting thread monitoring on %s:%d for nodes %s' %
-             (client_node.rpc_host, client_node.rpc_port, ', '.join([n.name for n in nodes])))
+             (client_node.rpc_host, client_node.rpc_port, ', '.join(node_names)))
 
     stats = stats_frames[client_node.rpc_cache_key] = deque(maxlen=min(desired_maxlen, maxlen))
 
@@ -71,14 +102,11 @@ def monitoring_thread(*nodes):
     if 'feeds' in monitoring:
         check_feeds(nodes)
 
-    loop_index = 0
+    online_state = StableStateMonitor(3)
+    connection_state = StableStateMonitor(3)
+    producing_state = StableStateMonitor(3)
 
-    last_state = None
-    last_state_consecutive = 0
-    last_stable_state = None
-    connection_status = None
-    last_producing = True
-    missed_count = 0
+    loop_index = 0
 
     while True:
         loop_index += 1
@@ -89,87 +117,58 @@ def monitoring_thread(*nodes):
         try:
             if not client_node.is_online():
                 log.debug('Offline')
-                if last_state == 'online':
-                    last_state_consecutive = 0
-                last_state = 'offline'
-                last_state_consecutive += 1
+                online_state.push('offline')
 
-                if 'email' in monitoring or 'apns' in monitoring:
-                    # wait for 3 "confirmations" that we are offline, to avoid
-                    # reacting too much on temporary connection errors
-                    if last_state_consecutive == 3:
-                        if last_stable_state and last_stable_state != last_state:
-                            msg = 'nodes %s just went offline...' % [n.name for n in nodes]
-                            log.warning(msg)
-                            send_notification(nodes, 'node just went offline', alert=True)
-                        last_stable_state = last_state
+                if online_state.just_changed():
+                    log.warning('Nodes %s just went offline...' % node_names)
+                    send_notification(nodes, 'node just went offline...', alert=True)
 
                 stats.append(StatsFrame(cpu=0, mem=0, connections=0, timestamp=datetime.utcnow()))
                 continue
 
             log.debug('Online')
-            if last_state == 'offline':
-                last_state_consecutive = 0
-            last_state = 'online'
-            last_state_consecutive += 1
+            online_state.push('online')
+
+            if online_state.just_changed():
+                log.info('Nodes %s just came online!' % node_names)
+                send_notification(nodes, 'node just came online!')
 
             info = client_node.get_info()
 
-            if 'email' in monitoring or 'apns' in monitoring:
-                # wait for 3 "confirmations" that we are online, to avoid
-                # reacting too much on temporary connection errors
-                if last_state_consecutive == 3:
-                    if last_stable_state and last_stable_state != last_state:
-                        msg = 'Nodes %s just came online!' % [n.name for n in nodes]
-                        log.info(msg)
-                        send_notification(nodes, 'node just came online!')
-                    last_stable_state = last_state
+            # check for minimum number of connections for delegate to produce
+            if info['network_num_connections'] <= 5:
+                connection_state.push('starved')
+                if connection_state.just_changed():
+                    log.warning('Nodes %s: fewer than 5 network connections...' % node_names)
+                    send_notification(nodes, 'fewer than 5 network connections...', alert=True)
+            else:
+                connection_state.push('connected')
+                if connection_state.just_changed():
+                    log.info('Nodes %s: got more than 5 connections now' % node_names)
+                    send_notification(nodes, 'got more than 5 connections now')
 
-                # check for minimum number of connections for delegate to produce
-                # TODO: we should try to avoid notifying about being connected just right after
-                #       starting the client
-                if info['network_num_connections'] <= 5:
-                    if connection_status and connection_status != 'starved':
-                        log.warning('Fewer than 5 network connections...')
-                        send_notification(nodes, 'fewer than 5 network connections...', alert=True)
-                    connection_status = 'starved'
-                else:
-                    if connection_status and connection_status != 'connected':
-                        log.info('Got more than 5 connections now')
-                        send_notification(nodes, 'Got more than 5 connections now')
-                    connection_status = 'connected'
-
-                # monitor for missed blocks, only for delegate nodes
-                for node in nodes:
-                    if node.type == 'delegate' and info['blockchain_head_block_age'] < 60:  # only monitor if synced
-                        producing, n = node.get_streak()
-                        if last_producing:
-                            if not producing:
-                                missed_count += 1
-                                if missed_count == 3:
-                                    # wait for 3 confirmations before finding a miss, to
-                                    # avoid reacting too quick on glitches
-                                    log.warning('Delegate %s missed a block!' % node.name)
-                                    send_notification([node], 'missed a block!', alert=True)
-                                else:
-                                    # we still consider we're producing
-                                    producing = True
-                            else:
-                                missed_count = 0
-
-                        last_producing = producing
-
+            # monitor for missed blocks, only for delegate nodes
+            for node in nodes:
+                if node.type == 'delegate' and info['blockchain_head_block_age'] < 60:  # only monitor if synced
+                    producing, n = node.get_streak()
+                    producing_state.push(producing)
+                    if not producing and producing_state.just_changed():
+                        log.warning('Delegate %s missed a block!' % node.name)
+                        send_notification([node], 'missed a block!', alert=True)
 
             # only monitor cpu and network if we are monitoring localhost
-            if client_node.rpc_host != 'localhost':
-                s = StatsFrame(cpu=0, mem=0, connections=0, timestamp=datetime.utcnow())
+            if client_node.rpc_host == 'localhost':
+                p = client_node.process()
+                if p is not None:
+                    s = StatsFrame(cpu=p.cpu_percent(),
+                                   mem=p.memory_info().rss,
+                                   connections=info['network_num_connections'],
+                                   timestamp=datetime.utcnow())
+                else:
+                    s = StatsFrame(cpu=0, mem=0, connections=0, timestamp=datetime.utcnow())
 
             else:
-                p = client_node.process() # p should not be None otherwise we know we are offline
-                s = StatsFrame(cpu=p.cpu_percent(),
-                               mem=p.memory_info().rss,
-                               connections=info['network_num_connections'],
-                               timestamp=datetime.utcnow())
+                s = StatsFrame(cpu=0, mem=0, connections=0, timestamp=datetime.utcnow())
 
             # if our stats queue is full, only append now and then to reach approximately
             # the desired timespan while keeping the same number of items
