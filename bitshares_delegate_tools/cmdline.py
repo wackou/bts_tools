@@ -176,6 +176,7 @@ def main():
   - run              : run latest compiled bts client, or the one with the given hash or tag
   - run_gui          : run latest compiled bts gui client
   - list             : list installed bitshares client binaries
+  - monitor          : run the monitoring web app
 
 Example:
   $ bts build   # build the latest btsx client by default
@@ -190,7 +191,8 @@ Example:
     EPILOG="""You should also look into ~/.bts_tools/config.yaml to tune it to your liking."""
     parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
                                      formatter_class=RawTextHelpFormatter)
-    parser.add_argument('command', choices=['clean_homedir', 'clean', 'build', 'build_gui', 'run', 'run_gui', 'list'],
+    parser.add_argument('command', choices=['clean_homedir', 'clean', 'build', 'build_gui',
+                                            'run', 'run_gui', 'list', 'monitor'],
                         help='the command to run')
     parser.add_argument('-r', '--norpc', action='store_true',
                         help='run binary with RPC server deactivated')
@@ -275,6 +277,9 @@ Example:
     elif args.command == 'list':
         select_build_environment(args.environment)
         run('ls -ltr "%s"' % BTS_BIN_DIR)
+
+    elif args.command == 'monitor':
+        run('python -m bitshares_delegate_tools.wsgi')
 
 
 def main_rpc_call():

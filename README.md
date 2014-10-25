@@ -17,7 +17,7 @@ just run the ``bts`` script with the command you want to execute:
 
     $ bts -h
     usage: bts [-h] [-r]
-               {clean_homedir,clean,build,build_gui,run,run_gui,list}
+               {clean_homedir,clean,build,build_gui,run,run_gui,list,monitor}
                [environment] [hash]
     
     following commands are available:
@@ -28,7 +28,8 @@ just run the ``bts`` script with the command you want to execute:
       - run              : run latest compiled bts client, or the one with the given hash or tag
       - run_gui          : run latest compiled bts gui client
       - list             : list installed bitshares client binaries
-    
+      - monitor          : run the monitoring web app
+          
     Example:
       $ bts build   # build the latest btsx client by default
       $ bts run
@@ -56,12 +57,16 @@ just run the ``bts`` script with the command you want to execute:
 Monitoring web app
 ==================
 
-TODO: write better instructions for setup/running
+To run the debug/development monitoring web app, just do the following:
 
-You should edit the bitshares_delegate_tools/config.yaml file and then run:
+    $ bts monitor
+    
+and it will launch on ``localhost:5000``.
 
-    $ python setup.py develop
-    $ python -m bitshares_delegate_tools.wsgi
+For production deployments, it is recommended to put it behind a WSGI server, in which case the
+entry point is ``bitshares_delegate_tools.wsgi:application``.
+
+Do not forget to edit the ``~/.bts_tools/config.yaml`` file to configure it to suit your needs.
      
 
 ### Screenshots ###
