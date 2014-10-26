@@ -22,7 +22,7 @@ from setuptools import setup, find_packages
 import os.path
 
 here = os.path.abspath(os.path.dirname(__file__))
-README = open(os.path.join(here, 'README.md')).read()
+README = open(os.path.join(here, 'README.rst')).read()
 #HISTORY = open(os.path.join(here, 'HISTORY.rst')).read()
 HISTORY = """Unreleased as of yet"""
 
@@ -50,9 +50,8 @@ args = dict(name='bitshares_delegate_tools',
             classifiers=['Development Status :: 2 - Pre-Alpha',
                          'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
                          'Operating System :: OS Independent',
-                         'Programming Language :: Python :: 2',
-                         'Programming Language :: Python :: 2.7',
                          'Programming Language :: Python :: 3',
+                         'Programming Language :: Python :: 3.3',
                          'Programming Language :: Python :: 3.4',
                          ],
             keywords='BitShares delegate tools',
