@@ -77,9 +77,21 @@ def rpc_call(host, port, user, password,
 
 ALL_SLOTS = {}
 
+class hashabledict(dict):
+  def __key(self):
+    return tuple(sorted(self.items()))
+
+  def __hash__(self):
+    return hash(self.__key())
+
+  def __eq__(self, other):
+    return self.__key() == other.__key()
+
+
 class BTSProxy(object):
     def __init__(self, type, name, client=None, monitoring=None, rpc_port=None,
-                 rpc_user=None, rpc_password=None, rpc_host=None, venv_path=None):
+                 rpc_user=None, rpc_password=None, rpc_host=None, venv_path=None,
+                 desired_number_of_connections=None, maximum_number_of_connections=None):
         self.type = type
         self.name = name
         self.monitoring = ([] if monitoring is None else
@@ -105,6 +117,8 @@ class BTSProxy(object):
         self.rpc_host = rpc_host or 'localhost'
         self.rpc_cache_key = (self.rpc_host, self.rpc_port)
         self.venv_path = venv_path
+        self.desired_number_of_connections = desired_number_of_connections
+        self.maximum_number_of_connections = maximum_number_of_connections
 
         if self.rpc_host == 'localhost':
             # direct json-rpc call
@@ -161,6 +175,8 @@ class BTSProxy(object):
     def rpc_call(self, funcname, *args, cached=True):
         log.debug(('RPC call @ %s: %s(%s)' % (self.rpc_host, funcname, ', '.join(repr(arg) for arg in args))
                   + (' (cached = False)' if not cached else '')))
+        args = (hashabledict(arg) if isinstance(arg, dict) else arg for arg in args)
+
         if cached and funcname not in NON_CACHEABLE_METHODS:
             if (funcname, args) in _rpc_cache[self.rpc_cache_key]:
                 result = _rpc_cache[self.rpc_cache_key][(funcname, args)]
@@ -207,6 +223,7 @@ class BTSProxy(object):
             return 'unauthorized'
 
         except Exception as e:
+            log.exception(e)
             return 'error'
 
     def is_online(self, cached=True):

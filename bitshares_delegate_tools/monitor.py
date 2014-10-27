@@ -105,6 +105,7 @@ def monitoring_thread(*nodes):
     online_state = StableStateMonitor(3)
     connection_state = StableStateMonitor(3)
     producing_state = StableStateMonitor(3)
+    last_n_notified = 0
 
     loop_index = 0
 
@@ -147,14 +148,30 @@ def monitoring_thread(*nodes):
                     log.info('Nodes %s: got more than 5 connections now' % node_names)
                     send_notification(nodes, 'got more than 5 connections now')
 
-            # monitor for missed blocks, only for delegate nodes
             for node in nodes:
+                # if seed node just came online, set its connection count to something high
+                if node.type == 'seed' and online_state.just_changed():
+                    desired = int(node.desired_number_of_connections or 200)
+                    maximum = int(node.maximum_number_of_connections or 400)
+                    log.info('Seed node just came online, setting connections to desired: %d, maximum: %d' %
+                             (desired, maximum))
+                    client_node.network_set_advanced_node_parameters({'desired_number_of_connections': desired,
+                                                                      'maximum_number_of_connections': maximum})
+
+                # monitor for missed blocks, only for delegate nodes
                 if node.type == 'delegate' and info['blockchain_head_block_age'] < 60:  # only monitor if synced
                     producing, n = node.get_streak()
                     producing_state.push(producing)
                     if not producing and producing_state.just_changed():
-                        log.warning('Delegate %s missed a block!' % node.name)
-                        send_notification([node], 'missed a block!', alert=True)
+                        log.warning('Delegate %s just missed a block!' % node.name)
+                        send_notification([node], 'just missed a block!', alert=True)
+                        last_n_notified = 1
+
+                    elif producing_state.stable_state() == False and n > last_n_notified:
+                        log.warning('Delegate %s missed another block! (%d missed total)' % (node.name, n))
+                        send_notification([node], 'missed another block! (%d missed total)' % n, alert=True)
+                        last_n_notified = n
+
 
             # only monitor cpu and network if we are monitoring localhost
             if client_node.rpc_host == 'localhost':

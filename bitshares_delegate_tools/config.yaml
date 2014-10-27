@@ -106,6 +106,8 @@ wsgi_debug: false
 #     -
 #         type: seed    # seed node type: no open wallet, high number of connections
 #         name: seed01  # the name for this seed node. This is just for you, it serves no other purpose
+#         desired_number_of_connections: 200
+#         maximum_number_of_connections: 400
 #         rpc_port: 5678
 #         rpc_user: username
 #         rpc_password: secret-password
