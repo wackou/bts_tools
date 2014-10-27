@@ -26,10 +26,10 @@ README = open(os.path.join(here, 'README.rst')).read()
 #HISTORY = open(os.path.join(here, 'HISTORY.rst')).read()
 HISTORY = """Unreleased as of yet"""
 
-VERSION = '0.1.dev1'
+VERSION = '0.1b1'
 
 
-install_requires = ['Flask', 'requests', 'psutil', 'arrow', 'pyyaml', 'apns-client']
+install_requires = ['Flask', 'requests', 'psutil', 'arrow', 'pyyaml']
 
 setup_requires = []
 
