@@ -78,9 +78,9 @@ run_environments:
         debug: false
         run_args: []
 
-    seed-dns:
-        type: dns
-        data_dir: ~/.KeyID_data/seed-dns
+    delegate:
+        type: btsx
+        debug: true
 
 
 # activate the debug flag on the wsgi app
@@ -88,18 +88,21 @@ wsgi_debug: false
 
 # in the 'nodes' variable you should specify the list of instances of the bitshares client
 # you intend to run on this computer.
-# Nodes can be of 3 types:
+# Nodes can be of 2 types:
 #  - seed nodes
 #  - delegate nodes
-#  - remote delegate nodes
 #
 # The choice of node type will tune a bit the interface and enable/disable
 # functionality, such as feed publishing for delegates but not for seed nodes
 #
+# Delegate nodes can either be on localhost, or on a different host. In that case, you
+# need ssh access to the remote host where you also have the bitshares_delegate_tools
+# installed in a virtualenv.
+#
 # For each node you can specify which type of monitoring you want:
 #  - feeds: checks price feeds, and optionally publish them if the node is a delegate
 #  - email: send an email notification when client crashes or loses network connections
-#  - apns: send an iOS push notification when client crashes or loses network connections
+#  - boxcar: send an iOS push notification to the Boxcar app when client crashes or loses network connections
 #
 # Examples configs:
 # nodes:
@@ -113,7 +116,7 @@ wsgi_debug: false
 #         rpc_password: secret-password
 #         monitoring: [email]
 #     -
-#         type: delegate         # delegate node type: run a single delegate account
+#         type: delegate   # delegate node type: run a single delegate account
 #         name: delegate1  # the name of the delegate. This needs to be an existing account
 #         monitoring: [feeds,email]
 #         # you can specify the bts run environment of the client
@@ -121,7 +124,12 @@ wsgi_debug: false
 #         # NOTE: this needs to be a valid run environment!
 #         client: seed-btsx
 #     -
-#         type: delegate    # remote delegate node type: access to a remote node's delegate info. You need to have ssh access to this node for this to work
+#         type: delegate
+#         name: delegate2
+#         monitoring: [feeds,email]
+#         data_dir: ~/.BitSharesX   # you can specify the data dir for a given client
+#     -
+#         type: delegate   # remote delegate node type: access to a remote node's delegate info. You need to have ssh access to this node for this to work
 #         name: delegate3  # the name for this remote node. This is just for you, it serves no other purpose
 #         venv_path: ~/.virtualenvs/bitshares_delegate_tools # virtualenv dir in which the bts tools are installed on the remote machine
 #         rpc_host: user@myhost  # hostname. Anything you can pass to "ssh" you can put here (eg: your aliases in ~/.ssh/config)
@@ -131,14 +139,11 @@ wsgi_debug: false
 #
 nodes:
     -
-        type: seed         # seed node type: no accounts, high number of connections
+        type: seed         # seed node type: no open wallet, high number of connections
         name: seed01-btsx  # the name for this seed node. This is just for you, it serves no other purpose
-        client: seed-btsx  # this needs to be a valid run_env
-    -
-        type: seed         # seed node type: no accounts, high number of connections
-        name: seed01-dns   # the name for this seed node. This is just for you, it serves no other purpose
-        client: seed-dns   # this needs to be a valid run_env
-        monitoring: [email]
+        client: seed-btsx  # fetch rpc info from given run environment. This needs to be a valid run_env
+        desired_number_of_connections: 200
+        maximum_number_of_connections: 400
 
 
 monitoring:
@@ -160,7 +165,4 @@ monitoring:
     boxcar:
         tokens: []
 
-    apns:
-        cert: bts_apns.pem
-        tokens: []
 

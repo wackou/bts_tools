@@ -23,7 +23,6 @@ from . import core
 import smtplib
 import random
 import requests
-import apnsclient
 import logging
 
 log = logging.getLogger(__name__)
@@ -77,6 +76,7 @@ def send_notification_apns(msg, alert=False):
     """Sends an APNS notification. 'alert' means something wrong is happening,
     otherwise it's just a normal info message."""
     log.debug('Sending notification via APNS: %s' % msg)
+    import apnsclient
 
     if not core.config['monitoring']['apns']['tokens']:
         log.warning('Cannot send notification: no device tokens configured')

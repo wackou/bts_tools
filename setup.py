@@ -23,10 +23,9 @@ import os.path
 
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.rst')).read()
-#HISTORY = open(os.path.join(here, 'HISTORY.rst')).read()
-HISTORY = """Unreleased as of yet"""
+HISTORY = open(os.path.join(here, 'HISTORY.rst')).read()
 
-VERSION = '0.1b1'
+VERSION = '0.1'
 
 
 install_requires = ['Flask', 'requests', 'psutil', 'arrow', 'pyyaml']
@@ -47,7 +46,7 @@ args = dict(name='bitshares_delegate_tools',
             long_description=README,
             # Get strings from
             # http://pypi.python.org/pypi?%3Aaction=list_classifiers
-            classifiers=['Development Status :: 2 - Pre-Alpha',
+            classifiers=['Development Status :: 3 - Alpha',
                          'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
                          'Operating System :: OS Independent',
                          'Programming Language :: Python :: 3',
