@@ -1,0 +1,16 @@
+{% extends "tableview.html" %}
+
+{% block content %}
+
+{% set network_params = rpc.main_node.network_get_advanced_node_parameters() %}
+{% set connections = rpc.main_node.get_info()['network_num_connections'] %}
+<p>
+    Connections:
+    current: <b>{{ connections }}</b> &mdash;
+    desired: <b>{{ network_params['desired_number_of_connections'] }}</b> &mdash;
+    maximum: <b>{{ network_params['maximum_number_of_connections'] }}</b>
+</p>
+
+{{ super() }}
+
+{% endblock %}

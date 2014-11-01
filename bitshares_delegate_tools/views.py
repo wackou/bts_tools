@@ -62,10 +62,17 @@ def catch_error(f):
     def wrapper(*args, **kwargs):
         try:
             return f(*args, **kwargs)
-        except (core.RPCError,
-                requests.exceptions.ConnectionError):
+        except requests.exceptions.ConnectionError:
             core.is_online = False
             return offline()
+        except core.RPCError as e:
+            if 'Connection aborted' in str(e):
+                core.is_online = False
+                return offline()
+            else:
+                log.error('While processing %s()' % f.__name__)
+                log.exception(e)
+                return server_error()
         except core.UnauthorizedError:
             return unauthorized()
         except Exception as e:
@@ -245,6 +252,64 @@ def view_delegates():
                            headers=headers,
                            data=data,
                            order='[[ 2, "desc" ]]')
+
+
+@bp.route('/peers')
+@clear_rpc_cache
+@catch_error
+def view_connected_peers():
+    peers = rpc.main_node.network_get_peer_info()
+
+    headers = ['Address', 'Connected since', 'Platform', 'BitShares git time', 'fc git time']
+
+    attrs = defaultdict(list)
+    for i, _ in enumerate(peers):
+        attrs['datetime'].append((i, 1))
+        attrs['datetime'].append((i, 3))
+        attrs['datetime'].append((i, 4))
+
+    data = [ (p['addr'],
+              p['conntime'],
+              p['platform'],
+              p['bitshares_git_revision_unix_timestamp'],
+              p['fc_git_revision_unix_timestamp'])
+             for p in peers ]
+
+    return render_template('network.html',
+                           headers=headers,
+                           data=data, attrs=attrs, order='[[ 1, "desc" ]]')
+
+
+@bp.route('/peers/potential')
+@clear_rpc_cache
+@catch_error
+def view_potential_peers():
+    peers = rpc.main_node.network_list_potential_peers()
+
+    headers = ['Address', 'Last connection time', 'Last connection status', 'Last seen',
+               'Successful connections', 'Failed connections']
+
+    attrs = defaultdict(list)
+    for i in range(len(peers)):
+        attrs['datetime'].append((i, 1))
+        attrs['datetime'].append((i, 3))
+
+    def fmt(conn_status):
+        lc = 'last_connection_'
+        return conn_status[len(lc):] if conn_status.startswith(lc) else conn_status
+
+    data = [ (p['endpoint'],
+              p['last_connection_attempt_time'],
+              fmt(p['last_connection_disposition']),
+              p['last_seen_time'],
+              p['number_of_successful_connection_attempts'],
+              p['number_of_failed_connection_attempts'])
+             for p in peers ]
+
+    return render_template('network.html',
+                           headers=headers,
+                           data=data, attrs=attrs, order='[[ 1, "desc" ]]')
+
 
 @bp.route('/logs')
 @clear_rpc_cache

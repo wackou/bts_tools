@@ -279,6 +279,7 @@ Example:
         run('ls -ltr "%s"' % BTS_BIN_DIR)
 
     elif args.command == 'monitor':
+        print('\nLaunching monitoring web app...')
         run('python -m bitshares_delegate_tools.wsgi')
 
 
