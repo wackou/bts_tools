@@ -18,6 +18,7 @@ logging:
     bitshares_delegate_tools.monitor: INFO
     bitshares_delegate_tools.notification: INFO
     bitshares_delegate_tools.feeds: INFO
+    bitshares_delegate_tools.profile: INFO
 
 
 # list of configurations for building the bitshares client
@@ -85,6 +86,9 @@ run_environments:
 
 # activate the debug flag on the wsgi app
 wsgi_debug: false
+
+# whether to profile how much time the views take to render
+profile: false
 
 # in the 'nodes' variable you should specify the list of instances of the bitshares client
 # you intend to run on this computer.

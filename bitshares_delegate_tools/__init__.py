@@ -38,3 +38,11 @@ def init(loglevels=None):
     load_nodes()
     load_feeds()
     load_monitoring()
+
+    from . import core
+    log = logging.getLogger('bitshares_delegate_tools.profile')
+    if core.config.get('profile', False):
+        log.info('Profiling RPC calls')
+    else:
+        log.info('Not profiling RPC calls')
+

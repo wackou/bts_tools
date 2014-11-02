@@ -21,10 +21,12 @@
 from os.path import join, dirname, expanduser, exists
 from collections import namedtuple
 from subprocess import Popen, PIPE
+from functools import wraps
 import sys
 import os
 import shutil
 import yaml
+import time
 import logging
 
 log = logging.getLogger(__name__)
@@ -137,3 +139,25 @@ class UnauthorizedError(Exception):
 
 class RPCError(Exception):
     pass
+
+
+def profile(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        plog = logging.getLogger('bitshares_delegate_tools.profile')
+
+        args_str = ', '.join(str(arg) for arg in args)
+        if kwargs:
+            args_str + ', ' + ', '.join('%s=%s' % (k, v) for k, v in kwargs.items())
+
+        try:
+            start_time = time.time()
+            result = f(*args, **kwargs)
+            stop_time = time.time()
+            plog.debug('Function %s(%s): returned in %0.3f ms' % (f.__name__, args_str, (stop_time-start_time)*1000))
+            return result
+        except Exception:
+            stop_time = time.time()
+            plog.debug('Function %s(%s): exception in %0.3f ms' % (f.__name__, args_str, (stop_time-start_time)*1000))
+            raise
+    return wrapper

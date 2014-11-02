@@ -167,6 +167,9 @@ class BTSProxy(object):
                 return result
             self._rpc_call = remote_call
 
+        if core.config.get('profile', False):
+            self._rpc_call = core.profile(self._rpc_call)
+
     def __getattr__(self, funcname):
         def call(*args, cached=True):
             return self.rpc_call(funcname, *args, cached=cached)
@@ -275,8 +278,8 @@ class BTSProxy(object):
 
         except Exception as e:
             # can fail with RPCError when delegate has not been registered yet
-            log.warning('%s: get_streak() failed with: %s(%s)' % (self.name, type(e), e))
-            #log.exception(e)
+            log.error('%s: get_streak() failed with: %s(%s)' % (self.name, type(e), e))
+            log.exception(e)
             return False, -1
 
 
