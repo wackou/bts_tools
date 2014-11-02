@@ -270,7 +270,7 @@ def view_connected_peers():
 
     data = [ (p['addr'],
               p['conntime'],
-              p['platform'],
+              p.get('platform'),
               p['bitshares_git_revision_unix_timestamp'],
               p['fc_git_revision_unix_timestamp'])
              for p in peers ]
@@ -285,6 +285,9 @@ def view_connected_peers():
 @catch_error
 def view_potential_peers():
     peers = rpc.main_node.network_list_potential_peers()
+
+    # TODO: find a better way to do this, see https://github.com/BitShares/bitshares/issues/908
+    peers = peers[:300]
 
     headers = ['Address', 'Last connection time', 'Last connection status', 'Last seen',
                'Successful connections', 'Failed connections']

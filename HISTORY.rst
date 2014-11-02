@@ -6,7 +6,13 @@
 History
 =======
 
-0.1 (2014-10-28)
+0.1.1 (2014-11-03)
 ------------------
+
+* added view for connected peers and potential peers
+
+
+0.1 (2014-10-28)
+----------------
 
 * first public release
