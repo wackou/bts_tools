@@ -58,6 +58,7 @@
 
 
                 {%- if rpc.main_node.is_online() -%}
+                    {# FIXME: when no blocks have been downloaded yet, block_age returns null #}
                     {% set is_synced = (rpc.main_node.get_info()['blockchain_head_block_age'] < 30) %}
 
                     <li><a href="#"><div class="btn btn-xs btn-info">{{ rpc.main_node.bts_type() }}: {{ process.binary_description(rpc.main_node) }}</div>

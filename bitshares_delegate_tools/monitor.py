@@ -151,6 +151,7 @@ def monitoring_thread(*nodes):
             for node in nodes:
                 # if seed node just came online, set its connection count to something high
                 if node.type == 'seed' and online_state.just_changed():
+                    # TODO: only if state just changed? if we crash and restart immediately, then we should do it also...
                     desired = int(node.desired_number_of_connections or 200)
                     maximum = int(node.maximum_number_of_connections or 400)
                     log.info('Seed node just came online, setting connections to desired: %d, maximum: %d' %

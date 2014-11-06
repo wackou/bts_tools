@@ -271,8 +271,8 @@ def view_connected_peers():
     data = [ (p['addr'],
               p['conntime'],
               p.get('platform'),
-              p['bitshares_git_revision_unix_timestamp'],
-              p['fc_git_revision_unix_timestamp'])
+              p.get('bitshares_git_revision_unix_timestamp', 'unknown'),
+              p.get('fc_git_revision_unix_timestamp', 'unknown')
              for p in peers ]
 
     return render_template('network.html',
