@@ -31,9 +31,10 @@ just run the ``bts`` script with the command you want to execute:
       - monitor          : run the monitoring web app
           
     Example:
-      $ bts build   # build the latest btsx client by default
+      $ bts build      # build the latest bts client by default
       $ bts run
-    
+      $ bts run debug  # run the client inside gdb
+
       $ bts build dns v0.0.4  # build a specific version
       $ bts run seed-dns      # run environments are defined in the config.yaml file
     
@@ -44,7 +45,7 @@ just run the ``bts`` script with the command you want to execute:
     positional arguments:
       {clean_homedir,clean,build,build_gui,run,run_gui,list}
                             the command to run
-      environment           the build/run environment (btsx, dns, ...)
+      environment           the build/run environment (bts, dns, ...)
       hash                  the hash or tag of the desired commit
     
     optional arguments:

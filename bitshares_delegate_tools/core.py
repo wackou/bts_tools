@@ -71,7 +71,7 @@ def load_config(loglevels=None):
 
     # add default values for some config properties
     if 'default' not in config['run_environments']:
-        config['run_environments']['default'] = {'type': 'btsx', 'debug': False}
+        config['run_environments']['default'] = {'type': 'bts', 'debug': False}
 
     # setup given logging levels, otherwise from config file
     loglevels = loglevels or config.get('logging', {})
@@ -80,11 +80,11 @@ def load_config(loglevels=None):
 
     return config
 
-
+###### FIXME: new values after BitShares rebranding? / remove DNS entry which is deprecated now
 DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',
                                     'darwin': '~/Library/Application Support/BitShares XTS'},
-                    'btsx':        {'linux': '~/.BitSharesX',
-                                    'darwin': '~/Library/Application Support/BitShares X'},
+                    'bts':         {'linux': '~/.BitShares',
+                                    'darwin': '~/Library/Application Support/BitShares'},
                     'dns':         {'linux': '~/.KeyID',
                                     'darwin': '~/Library/Application Support/KeyID'}}
 

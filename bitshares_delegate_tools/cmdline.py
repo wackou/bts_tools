@@ -43,7 +43,7 @@ RUN_ENV   = None
 
 
 def select_build_environment(env=None):
-    env = env or 'btsx'
+    env = env or 'bts'
     log.info("Using build environment '%s' on platform: '%s'" % (env, platform))
 
     if platform not in ['linux', 'darwin']:
@@ -122,7 +122,7 @@ def build_gui():
     run('rm -fr programs/qt_wallet/htdocs')
     run('cd programs/web_wallet; npm install')
     run('make buildweb')
-    run('make BitSharesX')
+    run('make BitShares')
 
 
 def install_last_built_bin():
@@ -179,8 +179,9 @@ def main():
   - monitor          : run the monitoring web app
 
 Example:
-  $ bts build   # build the latest btsx client by default
+  $ bts build      # build the latest bts client by default
   $ bts run
+  $ bts run debug  # run the client inside gdb
 
   $ bts build dns v0.0.4  # build a specific version
   $ bts run seed-dns      # run environments are defined in the config.yaml file
@@ -197,7 +198,7 @@ Example:
     parser.add_argument('-r', '--norpc', action='store_true',
                         help='run binary with RPC server deactivated')
     parser.add_argument('environment', nargs='?',
-                        help='the build/run environment (btsx, dns, ...)')
+                        help='the build/run environment (bts, dns, ...)')
     parser.add_argument('hash', nargs='?',
                         help='the hash or tag of the desired commit')
     args = parser.parse_args()

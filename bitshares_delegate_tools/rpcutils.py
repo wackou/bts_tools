@@ -237,7 +237,10 @@ class BTSProxy(object):
 
     def bts_type(self):
         blockchain_name = self.about()['blockchain_name']
-        if blockchain_name == 'BitShares X':
+        if blockchain_name == 'BitShares':
+            return 'bts'
+        # FIXME: those are deprecated and should be removed soon
+        elif blockchain_name == 'BitShares X':
             return 'btsx'
         elif blockchain_name == 'KeyID':
             return 'dns'
