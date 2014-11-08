@@ -72,61 +72,6 @@ def send_notification_boxcar(msg, alert=False):
     log.info('Sent Boxcar notification: %s' % msg)
 
 
-def send_notification_apns(msg, alert=False):
-    """Sends an APNS notification. 'alert' means something wrong is happening,
-    otherwise it's just a normal info message."""
-    log.debug('Sending notification via APNS: %s' % msg)
-    import apnsclient
-
-    if not core.config['monitoring']['apns']['tokens']:
-        log.warning('Cannot send notification: no device tokens configured')
-        return
-
-    certfile = join(core.BTS_TOOLS_HOMEDIR, core.config['monitoring']['apns']['cert'])
-    if not exists(certfile):
-        log.error('Missing certificate file for APNs service: %s' % certfile)
-        return
-
-    conn = apnsclient.Session().new_connection('push_sandbox', cert_file=certfile)
-    tokens = core.config['monitoring']['apns']['tokens']
-    if alert:
-        message = apnsclient.Message(tokens,
-                                     alert=msg,
-                                     sound='base_under_attack_%s.caf' % random.choice(['terran', 'zerg', 'protoss']),
-                                     badge=1)
-    else:
-        message = apnsclient.Message(tokens,
-                                     alert=msg,
-                                     badge=1)
-
-    # Send the message.
-    srv = apnsclient.APNs(conn)
-    try:
-        res = srv.send(message)
-    except:
-        log.error('Can\'t connect to APNs, looks like network is down')
-    else:
-        # Check failures. Check codes in APNs reference docs.
-        for token, reason in res.failed.items():
-            code, errmsg = reason
-            # according to APNs protocol the token reported here
-            # is garbage (invalid or empty), stop using and remove it.
-            log.error('Device failed: {0}, reason: {1}'.format(token, errmsg))
-
-        # Check failures not related to devices.
-        for code, errmsg in res.errors:
-            log.error('Error: {}'.format(errmsg))
-
-        # Check if there are tokens that can be retried
-        if res.needs_retry():
-            # repeat with retry_message or reschedule your task
-            log.error('Needs retry...')
-            retry_message = res.retry()
-            log.error('Did retry: %s' % retry_message)
-
-    log.info('Sent APNS notification: %s' % msg)
-
-
 def send_notification(nodes, node_msg, alert=False):
     """msg is sent to each node separately"""
     for node in nodes:
@@ -134,12 +79,6 @@ def send_notification(nodes, node_msg, alert=False):
         if 'email' in node.monitoring:
             try:
                 send_notification_email(msg, alert)
-            except Exception as e:
-                log.warning('Failed sending notification to %s: %s' % (node.name, node_msg))
-                log.exception(e)
-        if 'apns' in node.monitoring:
-            try:
-                send_notification_apns(msg, alert)
             except Exception as e:
                 log.warning('Failed sending notification to %s: %s' % (node.name, node_msg))
                 log.exception(e)
