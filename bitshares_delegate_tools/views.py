@@ -196,7 +196,7 @@ def view_info():
         def format_feeds(feeds):
             # format_specs: {list of currencies: (format_str, field_size)}
             format_specs = {('USD', 'CNY', 'EUR'): ('%.4f', 7),
-                            ('BTC', 'GLD'): ('%.4g', 10)}
+                            ('BTC', 'GOLD'): ('%.4g', 10)}
             for assets, (format_str, field_size) in format_specs.items():
                 for asset in assets:
                     feeds[asset] = ((format_str % feeds[asset]) if asset in feeds else 'N/A').rjust(field_size)
