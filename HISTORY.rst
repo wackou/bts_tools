@@ -6,6 +6,14 @@
 History
 =======
 
+
+0.1.2 (2014-11-09)
+------------------
+
+* updated for building following rebranding BitSharesX -> BitShares
+  (0.4.24 and above)
+
+
 0.1.1 (2014-11-03)
 ------------------
 
