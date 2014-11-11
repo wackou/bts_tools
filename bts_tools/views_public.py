@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# bitshares_delegate_tools - Tools to easily manage the bitshares client
+# bts_tools - Tools to easily manage the bitshares client
 # Copyright (c) 2014 Nicolas Wack <wackou@gmail.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -20,9 +20,9 @@
 
 from flask import Blueprint, send_from_directory, jsonify
 from functools import wraps
-import bitshares_delegate_tools.rpcutils as rpc
-from bitshares_delegate_tools import core
-import bitshares_delegate_tools
+import bts_tools.rpcutils as rpc
+from bts_tools import core
+import bts_tools
 import requests.exceptions
 import itertools
 import arrow
@@ -123,7 +123,7 @@ def crossdomain(origin=None, methods=None, headers=None,
 def clear_rpc_cache(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        bitshares_delegate_tools.rpcutils.clear_rpc_cache()
+        bts_tools.rpcutils.clear_rpc_cache()
         return f(*args, **kwargs)
     return wrapper
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# bitshares_delegate_tools - Tools to easily manage the bitshares client
+# bts_tools - Tools to easily manage the bitshares client
 # Copyright (c) 2014 Nicolas Wack <wackou@gmail.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -144,7 +144,7 @@ class RPCError(Exception):
 def profile(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        plog = logging.getLogger('bitshares_delegate_tools.profile')
+        plog = logging.getLogger('bts_tools.profile')
 
         args_str = ', '.join(str(arg) for arg in args)
         if kwargs:

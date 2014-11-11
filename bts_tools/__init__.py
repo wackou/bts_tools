@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# bitshares_delegate_tools - Tools to easily manage the bitshares client
+# bts_tools - Tools to easily manage the bitshares client
 # Copyright (c) 2014 Nicolas Wack <wackou@gmail.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -18,28 +18,31 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from werkzeug.serving import run_simple
-from werkzeug.wsgi import DispatcherMiddleware
-from bitshares_delegate_tools import core, api, init
 import logging
-log = logging.getLogger(__name__)
+from .slogging import setupLogging
 
-init()
-DEBUG = core.config['wsgi_debug']
+setupLogging(with_time=True, with_lineno=True)
 
-api_app = api.create_app()
-api_app.debug = DEBUG
+# default logging levels
+logging.getLogger('bts_tools').setLevel(logging.INFO)
 
-application = DispatcherMiddleware(api_app)
+from .rpcutils import main_node as rpc
 
-def main():
-    print('-'*100)
-    print('Registered frontend routes:')
-    print(api_app.url_map)
+def init(loglevels=None):
+    from .core import load_config
+    from .rpcutils import load_nodes
+    from .feeds import load_feeds
+    from .monitor import load_monitoring
 
-    run_simple('0.0.0.0', 5001, application,
-               use_reloader=DEBUG,
-               use_debugger=DEBUG)
+    load_config(loglevels)
+    load_nodes()
+    load_feeds()
+    load_monitoring()
 
-if __name__ == '__main__':
-    main()
+    from . import core
+    log = logging.getLogger('bts_tools.profile')
+    if core.config.get('profile', False):
+        log.info('Profiling RPC calls')
+    else:
+        log.info('Not profiling RPC calls')
+

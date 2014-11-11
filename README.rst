@@ -71,7 +71,7 @@ and it will launch on ``localhost:5000``.
 
 For production deployments, it is recommended to put it behind a WSGI
 server, in which case the entry point is
-``bitshares_delegate_tools.wsgi:application``.
+``bts_tools.wsgi:application``.
 
 Do not forget to edit the ``~/.bts_tools/config.yaml`` file to configure
 it to suit your needs.
@@ -81,14 +81,14 @@ Screenshots
 
 Monitoring the status of your running bts client binary
 
-.. figure:: https://github.com/wackou/bitshares_delegate_tools/raw/master/bts_tools_screenshot.png
+.. figure:: https://github.com/wackou/bts_tools/raw/master/bts_tools_screenshot.png
    :width: 800
    :alt: Status screenshot
 
 Monitoring multiple instances at the same time, to have an overview
 while running backup nodes and re-compiling your main node.
 
-.. figure:: https://github.com/wackou/bitshares_delegate_tools/raw/master/bts_tools_screenshot2.png
+.. figure:: https://github.com/wackou/bts_tools/raw/master/bts_tools_screenshot2.png
    :width: 800
    :alt: Info screenshot
 

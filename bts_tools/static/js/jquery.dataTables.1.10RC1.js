@@ -31,7 +31,7 @@
 
 	if ( typeof define === 'function' && define.amd ) {
 		// Define as an AMD module if possible
-		define( 'datatables', ['../../../../../.virtualenvs/bitshares_delegate_tools/lib/python2'], factory );
+		define( 'datatables', ['../../../../../.virtualenvs/bts_tools/lib/python3.4'], factory );
 	}
     else if ( typeof exports === 'object' ) {
         // Node/CommonJS

@@ -65,7 +65,7 @@ To run the debug/development monitoring web app, just do the following:
 and it will launch on ``localhost:5000``.
 
 For production deployments, it is recommended to put it behind a WSGI server, in which case the
-entry point is ``bitshares_delegate_tools.wsgi:application``.
+entry point is ``bts_tools.wsgi:application``.
 
 Do not forget to edit the ``~/.bts_tools/config.yaml`` file to configure it to suit your needs.
      

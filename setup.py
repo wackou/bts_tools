@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# bitshares_delegate_tools - Tools to easily manage the bitshares client
+# bts_tools - Tools to easily manage the bitshares client
 # Copyright (c) 2014 Nicolas Wack <wackou@gmail.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,13 +34,13 @@ setup_requires = []
 
 entry_points = {
     'console_scripts': [
-        'bts = bitshares_delegate_tools.cmdline:main',
-        'bts-rpc = bitshares_delegate_tools.cmdline:main_rpc_call'
+        'bts = bts_tools.cmdline:main',
+        'bts-rpc = bts_tools.cmdline:main_rpc_call'
     ],
 }
 
 
-args = dict(name='bitshares_delegate_tools',
+args = dict(name='bts_tools',
             version=VERSION,
             description='BitShares delegate tools',
             long_description=README,
@@ -56,7 +56,7 @@ args = dict(name='bitshares_delegate_tools',
             keywords='BitShares delegate tools',
             author='Nicolas Wack',
             author_email='wackou@gmail.com',
-            url='https://github.com/wackou/bitshares_delegate_tools',
+            url='https://github.com/wackou/bts_tools',
             packages=find_packages(),
             include_package_data=True,
             install_requires=install_requires,

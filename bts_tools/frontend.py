@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# bitshares_delegate_tools - Tools to easily manage the bitshares client
+# bts_tools - Tools to easily manage the bitshares client
 # Copyright (c) 2014 Nicolas Wack <wackou@gmail.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -19,11 +19,11 @@
 #
 
 from flask import render_template, Flask
-from bitshares_delegate_tools import views
-from bitshares_delegate_tools import rpcutils as rpc
+from bts_tools import views
+from bts_tools import rpcutils as rpc
 from itertools import groupby
-import bitshares_delegate_tools
-import bitshares_delegate_tools.monitor
+import bts_tools
+import bts_tools.monitor
 import threading
 import logging
 
@@ -31,14 +31,15 @@ log = logging.getLogger(__name__)
 
 
 def format_datetime(d):
+    # FIXME: if d is 'unknown', do not format like that
     return '%s-%s-%s %s:%s:%s' % (d[0:4], d[4:6], d[6:8], d[9:11], d[11:13], d[13:15])
 
 
 def create_app(settings_override=None):
     """Returns the BitShares Delegate Tools Server dashboard application instance"""
 
-    print('creating Flask app bitshares_delegate_tools')
-    app = Flask('bitshares_delegate_tools', instance_relative_config=True)
+    print('creating Flask app bts_tools')
+    app = Flask('bts_tools', instance_relative_config=True)
 
     app.config.from_object(settings_override)
 
@@ -50,15 +51,15 @@ def create_app(settings_override=None):
     # custom filter for showing dates
     app.jinja_env.filters['datetime'] = format_datetime
 
-    # make bitshares_delegate_tools module available in all the templates
-    app.jinja_env.globals.update(core=bitshares_delegate_tools.core,
-                                 rpc=bitshares_delegate_tools.rpcutils,
-                                 monitor=bitshares_delegate_tools.monitor,
-                                 process=bitshares_delegate_tools.process)
+    # make bts_tools module available in all the templates
+    app.jinja_env.globals.update(core=bts_tools.core,
+                                 rpc=bts_tools.rpcutils,
+                                 monitor=bts_tools.monitor,
+                                 process=bts_tools.process)
 
     for (host, port), nodes in rpc.unique_node_clients():
         # launch only 1 monitoring thread for each running instance of the client
-        t = threading.Thread(target=bitshares_delegate_tools.monitor.monitoring_thread, args=nodes)
+        t = threading.Thread(target=bts_tools.monitor.monitoring_thread, args=nodes)
         t.daemon = True
         t.start()
 

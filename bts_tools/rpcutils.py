@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# bitshares_delegate_tools - Tools to easily manage the bitshares client
+# bts_tools - Tools to easily manage the bitshares client
 # Copyright (c) 2014 Nicolas Wack <wackou@gmail.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -23,7 +23,7 @@ from .process import bts_binary_running, bts_process
 from . import core
 from collections import defaultdict
 from os.path import join, expanduser
-import bitshares_delegate_tools.core # needed to be able to exec('raise bts.core.Exception')
+import bts_tools.core # needed to be able to exec('raise bts.core.Exception')
 import builtins                      # needed to be able to reraise builtin exceptions
 import requests
 import itertools

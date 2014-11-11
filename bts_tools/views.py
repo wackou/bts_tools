@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# bitshares_delegate_tools - Tools to easily manage the bitshares client
+# bts_tools - Tools to easily manage the bitshares client
 # Copyright (c) 2014 Nicolas Wack <wackou@gmail.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -24,7 +24,7 @@ from collections import defaultdict
 from datetime import datetime
 from . import rpcutils as rpc
 from . import core, monitor, slogging
-import bitshares_delegate_tools
+import bts_tools
 import requests.exceptions
 import logging
 
@@ -90,7 +90,7 @@ def catch_error(f):
 def clear_rpc_cache(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        bitshares_delegate_tools.rpcutils.clear_rpc_cache()
+        bts_tools.rpcutils.clear_rpc_cache()
         return f(*args, **kwargs)
     return wrapper
 
@@ -145,6 +145,7 @@ def split_columns(items, attrs):
 @bp.route('/info')
 @clear_rpc_cache
 @catch_error
+@core.profile
 def view_info():
     attrs = defaultdict(list)
     info_items = sorted(rpc.main_node.get_info().items())

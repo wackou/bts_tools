@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# bitshares_delegate_tools - Tools to easily manage the bitshares client
+# bts_tools - Tools to easily manage the bitshares client
 # Copyright (c) 2014 Nicolas Wack <wackou@gmail.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -20,24 +20,24 @@
 
 from werkzeug.serving import run_simple
 from werkzeug.wsgi import DispatcherMiddleware
-from bitshares_delegate_tools import core, frontend, init
+from bts_tools import core, api, init
 import logging
 log = logging.getLogger(__name__)
 
 init()
 DEBUG = core.config['wsgi_debug']
 
-frontend_app = frontend.create_app()
-frontend_app.debug = DEBUG
+api_app = api.create_app()
+api_app.debug = DEBUG
 
-application = DispatcherMiddleware(frontend_app)
+application = DispatcherMiddleware(api_app)
 
 def main():
     print('-'*100)
     print('Registered frontend routes:')
-    print(frontend_app.url_map)
+    print(api_app.url_map)
 
-    run_simple('0.0.0.0', 5000, application,
+    run_simple('0.0.0.0', 5001, application,
                use_reloader=DEBUG,
                use_debugger=DEBUG)
 

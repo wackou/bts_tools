@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# bitshares_delegate_tools - Tools to easily manage the bitshares client
+# bts_tools - Tools to easily manage the bitshares client
 # Copyright (c) 2014 Nicolas Wack <wackou@gmail.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -281,7 +281,7 @@ Example:
 
     elif args.command == 'monitor':
         print('\nLaunching monitoring web app...')
-        run('python -m bitshares_delegate_tools.wsgi')
+        run('python -m bts_tools.wsgi')
 
 
 def main_rpc_call():
@@ -303,7 +303,7 @@ def main_rpc_call():
                         help='the args to pass to the rpc method call', nargs='*')
     args = parser.parse_args()
 
-    init(loglevels={'bitshares_delegate_tools': 'WARNING'})
+    init(loglevels={'bts_tools': 'WARNING'})
 
     try:
         result = rpc_call('localhost', int(args.rpc_port), args.rpc_user,
