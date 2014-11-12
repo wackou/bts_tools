@@ -31,7 +31,8 @@ log = logging.getLogger(__name__)
 
 
 def format_datetime(d):
-    # FIXME: if d is 'unknown', do not format like that
+    if d == 'unknown':
+        return d
     return '%s-%s-%s %s:%s:%s' % (d[0:4], d[4:6], d[6:8], d[9:11], d[11:13], d[13:15])
 
 
