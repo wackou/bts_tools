@@ -96,9 +96,9 @@ def get_feed_prices():
 
     # then get the weighted price in btc for the most important markets
     btc_price = weighted_mean([get_from_btc38('BTSX', 'BTC'),
-                               get_from_bter('BTSX', 'BTC'),
+                               get_from_bter('BTS', 'BTC'),
                                adjust(get_from_btc38('BTSX', 'CNY'), cny_btc),
-                               adjust(get_from_bter('BTSX', 'CNY'), cny_btc)])
+                               adjust(get_from_bter('BTS', 'CNY'), cny_btc)])
 
     cny_price = btc_price * btc_cny
     usd_price = cny_price * cny_usd
