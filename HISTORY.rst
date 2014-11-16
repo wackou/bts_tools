@@ -6,6 +6,12 @@
 History
 =======
 
+0.1.3 (2014-11-16)
+------------------
+
+* Renamed project from bitshares_delegate_tools to bts_tools
+* Some fixes, up-to-date as of release date (bts: 0.4.24)
+
 
 0.1.2 (2014-11-09)
 ------------------
