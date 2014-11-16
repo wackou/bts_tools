@@ -238,12 +238,13 @@ def set_rpchost(host, url):
 def view_delegates():
     response = rpc.main_node.blockchain_list_delegates(0, 300)
 
-    headers = ['Position', 'Delegate name', 'Votes for', 'Last block', 'Produced', 'Missed']
+    headers = ['Position', 'Delegate name', 'Votes for', 'Pay rate', 'Last block', 'Produced', 'Missed']
     total_shares = rpc.main_node.get_info()['blockchain_share_supply']
 
     data = [ (i+1,
               d['name'],
               '%.8f%%' % (d['delegate_info']['votes_for'] * 100 / total_shares),
+              '%s%%' % d['delegate_info']['pay_rate'],
               d['delegate_info']['last_block_num_produced'],
               d['delegate_info']['blocks_produced'],
               d['delegate_info']['blocks_missed'])
