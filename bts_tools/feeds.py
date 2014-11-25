@@ -68,7 +68,12 @@ def get_from_btc38(cur, base):
     r = requests.get('http://api.btc38.com/v1/ticker.php',
                      timeout=60,
                      params={'c': cur.lower(), 'mk_type': base.lower()},
-                     headers=headers).json()
+                     headers=headers)
+    try:
+        r = r.json()
+    except ValueError:
+        log.error('Could not decode response from btc38: %s' % r.text)
+        raise
     price = float(r['ticker']['last']) # TODO: (bid + ask) / 2 ?
     volume = float(r['ticker']['last']) * float(r['ticker']['vol'])
     return price, volume
@@ -95,9 +100,9 @@ def get_feed_prices():
     cny_btc = 1 / btc_cny
 
     # then get the weighted price in btc for the most important markets
-    btc_price = weighted_mean([get_from_btc38('BTSX', 'BTC'),
+    btc_price = weighted_mean([#get_from_btc38('BTS', 'BTC'),
                                get_from_bter('BTS', 'BTC'),
-                               adjust(get_from_btc38('BTSX', 'CNY'), cny_btc),
+                               #adjust(get_from_btc38('BTS', 'CNY'), cny_btc),
                                adjust(get_from_bter('BTS', 'CNY'), cny_btc)])
 
     cny_price = btc_price * btc_cny
