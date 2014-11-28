@@ -70,6 +70,8 @@ def get_from_btc38(cur, base):
                      params={'c': cur.lower(), 'mk_type': base.lower()},
                      headers=headers)
     try:
+        # see: http://stackoverflow.com/questions/24703060/issues-reading-json-from-txt-file
+        r.encoding = 'utf-8-sig'
         r = r.json()
     except ValueError:
         log.error('Could not decode response from btc38: %s' % r.text)
