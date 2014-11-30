@@ -37,6 +37,7 @@ BTS_GIT_BRANCH = None
 BTS_BUILD_DIR  = None
 BTS_HOME_DIR   = None
 BTS_BIN_DIR    = None
+BTS_BIN_NAME   = None
 
 BUILD_ENV = None
 RUN_ENV   = None
@@ -55,11 +56,12 @@ def select_build_environment(env=None):
         log.error('Unknown build environment: %s' % env)
         sys.exit(1)
 
-    global BTS_GIT_REPO, BTS_GIT_BRANCH, BTS_BUILD_DIR, BTS_BIN_DIR, BUILD_ENV
+    global BTS_GIT_REPO, BTS_GIT_BRANCH, BTS_BUILD_DIR, BTS_BIN_DIR, BUILD_ENV, BTS_BIN_NAME
     BTS_GIT_REPO   = env['git_repo']
     BTS_GIT_BRANCH = env['git_branch']
     BTS_BUILD_DIR  = expanduser(env['build_dir'])
     BTS_BIN_DIR    = expanduser(env['bin_dir'])
+    BTS_BIN_NAME   = env['bin_name']
 
     BUILD_ENV = env
     return env
@@ -154,7 +156,7 @@ def install_last_built_bin():
     if not exists(BTS_BIN_DIR):
         os.makedirs(BTS_BIN_DIR)
 
-    client = join(BTS_BUILD_DIR, 'programs', 'client', 'bitshares_client')
+    client = join(BTS_BUILD_DIR, 'programs', 'client', BTS_BIN_NAME)
 
     c = install(client, bin_filename)
 

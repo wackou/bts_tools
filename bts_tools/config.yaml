@@ -40,6 +40,7 @@ build_environments:
         make_args: ['-j2']
         build_dir: ~/.BitSharesDev_build
         bin_dir: ~/.BitSharesDev_bin
+        bin_name: bitshares_client
 
     bts:
         git_repo: https://github.com/BitShares/bitshares.git
@@ -47,6 +48,15 @@ build_environments:
         make_args: ['-j2']
         build_dir: ~/.BitShares_build
         bin_dir: ~/.BitShares_bin
+        bin_name: bitshares_client
+
+    sparkle:
+        git_repo: https://github.com/sparkle5/Sparkle.git
+        git_branch: sparkle
+        make_args: ['-j4']
+        build_dir: ~/.Sparkle_build
+        bin_dir: ~/.Sparkle_bin
+        bin_name: sparkle_client
 
 
 # list of clients that can be run
@@ -75,6 +85,9 @@ run_environments:
         type: bts
         debug: false
         run_args: ['--p2p-port', '1778']
+
+    sparkle:
+        type: sparkle
 
 
 # activate the debug flag on the wsgi app

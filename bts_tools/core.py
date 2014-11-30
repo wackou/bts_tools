@@ -86,7 +86,9 @@ DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',
                     'bts':         {'linux': '~/.BitShares',
                                     'darwin': '~/Library/Application Support/BitShares'},
                     'dns':         {'linux': '~/.KeyID',
-                                    'darwin': '~/Library/Application Support/KeyID'}}
+                                    'darwin': '~/Library/Application Support/KeyID'},
+                    'sparkle':     {'linux': '~/.Sparkle-Test65',
+                                    'darwin': '~/Library/Application Support/Sparkle-Test65'}}
 
 
 def get_data_dir(env):
