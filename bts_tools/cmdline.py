@@ -258,7 +258,8 @@ Example:
         run(cmd, verbose=True)
 
     elif args.command == 'run_gui':
-        run('open %s' % join(BTS_BUILD_DIR, 'programs/qt_wallet/bin/BitSharesX.app'))
+        select_build_environment(args.environment)
+        run('open %s' % join(BTS_BUILD_DIR, 'programs/qt_wallet/bin/BitShares.app'))
 
     elif args.command == 'clean':
         select_build_environment(args.environment)
