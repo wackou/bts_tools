@@ -85,10 +85,12 @@ DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',
                                     'darwin': '~/Library/Application Support/BitShares XTS'},
                     'bts':         {'linux': '~/.BitShares',
                                     'darwin': '~/Library/Application Support/BitShares'},
-                    'dns':         {'linux': '~/.KeyID',
-                                    'darwin': '~/Library/Application Support/KeyID'},
-                    'sparkle':     {'linux': '~/.Sparkle-Test65',
-                                    'darwin': '~/Library/Application Support/Sparkle-Test65'}}
+                    # FIXME: activate these once the apps have been officially launched
+                    #'sparkle':     {'linux': '~/.Sparkle-Test66',
+                    #                'darwin': '~/Library/Application Support/Sparkle-Test66'}
+                    #'pts':         {'linux': '~/.PTS',
+                    #                'darwin': '~/Library/Application Support/PTS'}
+                    }
 
 
 def get_data_dir(env):
@@ -98,7 +100,8 @@ def get_data_dir(env):
         log.error('Unknown run environment: %s' % env)
         sys.exit(1)
 
-    return expanduser(env.get('data_dir') or DEFAULT_HOMEDIRS[env['type']][platform])
+    data_dir = env.get('data_dir') or DEFAULT_HOMEDIRS.get(env['type'], {}).get(platform)
+    return expanduser(data_dir) if data_dir else None
 
 
 IOStream = namedtuple('IOStream', 'status, stdout, stderr')

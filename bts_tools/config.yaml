@@ -53,11 +53,18 @@ build_environments:
     sparkle:
         git_repo: https://github.com/sparkle5/Sparkle.git
         git_branch: sparkle
-        make_args: ['-j4']
+        make_args: ['-j2']
         build_dir: ~/.Sparkle_build
         bin_dir: ~/.Sparkle_bin
         bin_name: sparkle_client
 
+    pts:
+        git_repo: https://github.com/PTS-DPOS/PTS.git
+        git_branch: master
+        make_args: ['-j2']
+        build_dir: ~/.PTS_build
+        bin_dir: ~/.PTS_bin
+        bin_name: pts_client
 
 # list of clients that can be run
 #
@@ -89,6 +96,8 @@ run_environments:
     sparkle:
         type: sparkle
 
+    pts:
+        type: pts
 
 # activate the debug flag on the wsgi app
 wsgi_debug: false

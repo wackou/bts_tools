@@ -137,11 +137,9 @@ def install_last_built_bin():
     if r.status == 0:
         # we are on a tag, use it for naming binary
         tag = r.stdout.strip()
-        if tag.startswith('v'):
-            tag = tag[1:]
-        bin_filename = 'bts_client_%s_v%s' % (date, tag)
+        bin_filename = '%s_%s_%s' % (BTS_BIN_NAME, date, tag)
     else:
-        bin_filename = 'bts_client_%s_%s_%s' % (date, branch, commit[:8])
+        bin_filename = '%s_%s_%s_%s' % (BTS_BIN_NAME, date, branch, commit[:8])
 
     def install(src, dst):
         print('Installing %s' % dst)
@@ -160,7 +158,7 @@ def install_last_built_bin():
 
     c = install(client, bin_filename)
 
-    last_installed = join(BTS_BIN_DIR, 'bts_client')
+    last_installed = join(BTS_BIN_DIR, BTS_BIN_NAME)
     try:
         os.unlink(last_installed)
     except:
@@ -232,11 +230,11 @@ Example:
             # if git rev specified, runs specific version
             print('Running specific instance of the bts client: %s' % args.hash)
             bin_name = run('ls %s' % join(BTS_BIN_DIR,
-                                          'bts_client_*%s*' % args.hash[:8]),
+                                          '%s_*%s*' % (BTS_BIN_NAME, args.hash[:8])),
                            io=True).stdout.strip()
         else:
             # run last built version
-            bin_name = join(BTS_BIN_DIR, 'bts_client')
+            bin_name = join(BTS_BIN_DIR, BTS_BIN_NAME)
 
         run_args = run_env.get('run_args', [])
 
@@ -264,10 +262,16 @@ Example:
 
     elif args.command == 'clean':
         select_build_environment(args.environment)
-        run('rm -fr "%s"' % BTS_BUILD_DIR)
+        print('\nCleaning build directory...')
+        run('rm -fr "%s"' % BTS_BUILD_DIR, verbose=True)
 
     elif args.command == 'clean_homedir':
         select_run_environment(args.environment)
+        print('\nCleaning home directory...')
+        if not BTS_HOME_DIR:
+            print('ERROR: The home/data dir has not been specified in the build environment...')
+            print('       Please check your config.yaml file')
+            sys.exit(1)
         cmd = 'rm -fr "%s"' % BTS_HOME_DIR
         if args.environment != 'development':
             print('WARNING: you are about to delete your wallet on the real chain.')
@@ -279,6 +283,7 @@ Example:
 
     elif args.command == 'list':
         select_build_environment(args.environment)
+        print('\nListing built binaries for environment: %s' % args.environment)
         run('ls -ltr "%s"' % BTS_BIN_DIR)
 
     elif args.command == 'monitor':
