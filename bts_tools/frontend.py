@@ -33,6 +33,9 @@ log = logging.getLogger(__name__)
 def format_datetime(d):
     if d == 'unknown':
         return d
+    if '-' in d and ':' in d:
+        # already formatted, just make it slightly nicer
+        return d.replace('T', ' ')
     return '%s-%s-%s %s:%s:%s' % (d[0:4], d[4:6], d[6:8], d[9:11], d[11:13], d[13:15])
 
 
