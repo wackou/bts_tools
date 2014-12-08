@@ -68,7 +68,7 @@ def select_build_environment(env=None):
 
 
 def select_run_environment(env_name=None):
-    env_name = env_name or 'default'
+    env_name = env_name or 'bts'
     log.info("Running '%s' client" % env_name)
     try:
         env = core.config['run_environments'][env_name]
@@ -123,8 +123,8 @@ def build_gui():
     # FIXME: need to make sure that we run once: npm install -g lineman
     run('rm -fr programs/qt_wallet/htdocs')
     run('cd programs/web_wallet; npm install')
-    run('make buildweb')
-    run('make BitShares')
+    run('make buildweb') # TODO: is 'make forcebuildweb' needed?
+    run('make')
 
 
 def install_last_built_bin():

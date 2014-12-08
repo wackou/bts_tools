@@ -34,14 +34,6 @@ logging:
 # use the 'bts' environment
 #
 build_environments:
-    development:
-        git_repo: https://github.com/BitShares/bitshares.git
-        git_branch: develop
-        make_args: ['-j2']
-        build_dir: ~/.BitSharesDev_build
-        bin_dir: ~/.BitSharesDev_bin
-        bin_name: bitshares_client
-
     bts:
         git_repo: https://github.com/BitShares/bitshares.git
         git_branch: master
@@ -49,6 +41,30 @@ build_environments:
         build_dir: ~/.BitShares_build
         bin_dir: ~/.BitShares_bin
         bin_name: bitshares_client
+
+    bts-dev:
+        git_repo: https://github.com/BitShares/bitshares.git
+        git_branch: develop
+        make_args: ['-j2']
+        build_dir: ~/.BitSharesDev_build
+        bin_dir: ~/.BitSharesDev_bin
+        bin_name: bitshares_client
+
+    pts:
+        git_repo: https://github.com/PTS-DPOS/PTS.git
+        git_branch: master
+        make_args: ['-j2']
+        build_dir: ~/.PTS_build
+        bin_dir: ~/.PTS_bin
+        bin_name: pts_client
+
+    pts-dev:
+        git_repo: https://github.com/PTS-DPOS/PTS.git
+        git_branch: develop
+        make_args: ['-j2']
+        build_dir: ~/.PTSdev_build
+        bin_dir: ~/.PTSdev_bin
+        bin_name: pts_client
 
     sparkle:
         git_repo: https://github.com/sparkle5/Sparkle.git
@@ -58,13 +74,6 @@ build_environments:
         bin_dir: ~/.Sparkle_bin
         bin_name: sparkle_client
 
-    pts:
-        git_repo: https://github.com/PTS-DPOS/PTS.git
-        git_branch: master
-        make_args: ['-j2']
-        build_dir: ~/.PTS_build
-        bin_dir: ~/.PTS_bin
-        bin_name: pts_client
 
 # list of clients that can be run
 #
@@ -76,28 +85,36 @@ build_environments:
 #  - run_args: [optional] any additional flags you want to pass to the cmdline invocation of the client
 #
 # by default, if you don't specify a client on the cmdline, the tools will
-# run the client for BTS using the standard data dir location, ie:
+# run the client using the 'bts' run environment
+#
+# Example:
 #
 # run_environments:
-#     default:
+#     seed-bts:
 #         type: bts
 #         debug: false
+#         run_args: ['--p2p-port', '1778', '--clear-peer-database']
 #
 run_environments:
+    bts:
+        type: bts
+
     debug:
         type: bts
         debug: true
 
-    seed-bts:
-        type: bts
-        debug: false
-        run_args: ['--p2p-port', '1778']
+    bts-dev:
+        type: bts-dev
+
+    pts:
+        type: pts
+
+    pts-dev:
+        type: pts-dev
 
     sparkle:
         type: sparkle
 
-    pts:
-        type: pts
 
 # activate the debug flag on the wsgi app
 wsgi_debug: false
@@ -160,7 +177,6 @@ nodes:
     -
         type: seed
         name: seed-test
-        client: seed-bts
         desired_number_of_connections: 200
         maximum_number_of_connections: 400
 
