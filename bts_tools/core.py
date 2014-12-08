@@ -84,8 +84,8 @@ DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',
                     # FIXME: activate these once the apps have been officially launched
                     #'sparkle':     {'linux': '~/.Sparkle-Test66',
                     #                'darwin': '~/Library/Application Support/Sparkle-Test66'}
-                    #'pts':         {'linux': '~/.PTS',
-                    #                'darwin': '~/Library/Application Support/PTS'}
+                    'pts':         {'linux': '~/.PTS',
+                                    'darwin': '~/Library/Application Support/PTS'}
                     }
 
 
@@ -98,6 +98,22 @@ def get_data_dir(env):
 
     data_dir = env.get('data_dir') or DEFAULT_HOMEDIRS.get(env['type'], {}).get(platform)
     return expanduser(data_dir) if data_dir else None
+
+def get_bin_name(env='bts'):
+    try:
+        env = config['run_environments'][env]
+    except KeyError:
+        log.error('Unknown run environment: %s' % env)
+        sys.exit(1)
+
+    build_env = env['type']
+    try:
+        build_env = config['build_environments'][build_env]
+    except KeyError:
+        log.error('Unknown build environment: %s' % build_env)
+        sys.exit(1)
+
+    return build_env['bin_name']
 
 
 IOStream = namedtuple('IOStream', 'status, stdout, stderr')

@@ -27,19 +27,19 @@ log = logging.getLogger(__name__)
 # TODO: should move all these functions inside of BTSProxy
 
 def bts_process(node):
+    if node is None:
+        log.error('DEPRECATED: call to process.bts_process() without specifying a node...')
+        return None
+
     #log.debug('find bts binary')
     # find bitshares process
     procs = [p for p in psutil.process_iter()
-             if 'bts_client' in p.name()]
+             if node.bin_name in p.name()]
 
-    if node is None: # just return the first one if available
-        if procs:
-            return procs[0]
-    else:
-        # find the process corresponding to our node by looking at the http rpc port
-        for p in procs:
-            if node.rpc_port in [c.laddr[1] for c in p.connections()]:
-                return p
+    # find the process corresponding to our node by looking at the http rpc port
+    for p in procs:
+        if node.rpc_port in [c.laddr[1] for c in p.connections()]:
+            return p
 
     return None
 
@@ -60,14 +60,16 @@ def bts_binary_running(node):
 def binary_description(node):
     """Return a human readable version description of the running binary,
     either tag version of git revision.
-    Return an empty string if no running BTS client could be found.
     """
+    client_version = node.get_info()['client_version']
     p = bts_process(node)
     if p is None:
-        return ''
-    # FIXME: should get the tag version from node.get_info()
+        return client_version
+    # if client is running locally, extract info from filename, usually more precise
     name = os.path.realpath(p.cmdline()[0])
-    if '_v' in name: # weak check for detecting tags...
-        return name[name.index('_v')+1:]
-    return name.split('bts_client_')[1]
+    desc = name.split(node.bin_name + '_')[1]
+    if client_version in desc:
+        # we're on a tag, then just return the tag
+        return client_version
+    return desc
 

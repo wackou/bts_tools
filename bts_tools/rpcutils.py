@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from .core import UnauthorizedError, RPCError, run, get_data_dir
+from .core import UnauthorizedError, RPCError, run, get_data_dir, get_bin_name
 from .process import bts_binary_running, bts_process
 from . import core
 from collections import defaultdict
@@ -117,6 +117,7 @@ class BTSProxy(object):
         self.rpc_host = rpc_host or 'localhost'
         self.rpc_cache_key = (self.rpc_host, self.rpc_port)
         self.venv_path = venv_path
+        self.bin_name = get_bin_name(client)
         self.desired_number_of_connections = desired_number_of_connections
         self.maximum_number_of_connections = maximum_number_of_connections
 
@@ -239,11 +240,10 @@ class BTSProxy(object):
         blockchain_name = self.about()['blockchain_name']
         if blockchain_name == 'BitShares':
             return 'bts'
-        # FIXME: those are deprecated and should be removed soon
-        elif blockchain_name == 'BitShares X':
-            return 'btsx'
-        elif blockchain_name == 'KeyID':
-            return 'dns'
+        elif blockchain_name == 'PTS':
+            return 'pts'
+        elif blockchain_name == 'Sparkle':
+            return 'sparkle'
         return 'unknown'
 
     def is_active(self, delegate):
