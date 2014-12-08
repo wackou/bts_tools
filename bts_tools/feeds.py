@@ -102,10 +102,18 @@ def get_feed_prices():
     cny_btc = 1 / btc_cny
 
     # then get the weighted price in btc for the most important markets
-    btc_price = weighted_mean([#get_from_btc38('BTS', 'BTC'),
-                               get_from_bter('BTS', 'BTC'),
-                               #adjust(get_from_btc38('BTS', 'CNY'), cny_btc),
-                               adjust(get_from_bter('BTS', 'CNY'), cny_btc)])
+    feeds_btc = []
+    try:  # get feeds from BTER
+        feeds_btc.extend([get_from_bter('BTS', 'BTC'),
+                          adjust(get_from_bter('BTS', 'CNY'), cny_btc)])
+    except:
+        pass
+    try:  # get feeds from BTC38
+        feeds_btc.extend([get_from_btc38('BTS', 'BTC'),
+                          adjust(get_from_btc38('BTS', 'CNY'), cny_btc)])
+    except:
+        pass
+    btc_price = weighted_mean(feeds_btc)
 
     cny_price = btc_price * btc_cny
     usd_price = cny_price * cny_usd
