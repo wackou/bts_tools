@@ -117,7 +117,7 @@ class BTSProxy(object):
         self.rpc_host = rpc_host or 'localhost'
         self.rpc_cache_key = (self.rpc_host, self.rpc_port)
         self.venv_path = venv_path
-        self.bin_name = get_bin_name(client)
+        self.bin_name = get_bin_name(client or 'bts')
         self.desired_number_of_connections = desired_number_of_connections
         self.maximum_number_of_connections = maximum_number_of_connections
 

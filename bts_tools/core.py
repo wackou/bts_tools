@@ -99,7 +99,7 @@ def get_data_dir(env):
     data_dir = env.get('data_dir') or DEFAULT_HOMEDIRS.get(env['type'], {}).get(platform)
     return expanduser(data_dir) if data_dir else None
 
-def get_bin_name(env='bts'):
+def get_bin_name(env):
     try:
         env = config['run_environments'][env]
     except KeyError:
