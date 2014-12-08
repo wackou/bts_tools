@@ -171,8 +171,8 @@ monitoring:
 
     feeds:
         check_time_interval: 300
-        publish_time_interval: 3600
-        median_time_span: 3600
+        publish_time_interval: 2400
+        median_time_span: 1800
 
     email:
         smtp_server: smtp.example.com
