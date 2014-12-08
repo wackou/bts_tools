@@ -178,7 +178,7 @@ class BTSProxy(object):
     def rpc_call(self, funcname, *args, cached=True):
         log.debug(('RPC call @ %s: %s(%s)' % (self.rpc_host, funcname, ', '.join(repr(arg) for arg in args))
                   + (' (cached = False)' if not cached else '')))
-        args = (hashabledict(arg) if isinstance(arg, dict) else arg for arg in args)
+        args = tuple(hashabledict(arg) if isinstance(arg, dict) else arg for arg in args)
 
         if cached and funcname not in NON_CACHEABLE_METHODS:
             if (funcname, args) in _rpc_cache[self.rpc_cache_key]:
