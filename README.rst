@@ -8,7 +8,7 @@ There are 2 tools currently provided:
   an email or push notification on failure
 
 If you like these tools, please vote for `my
-delegate <http://digitalgaia.io/wackou.html>`__ to support further
+delegate <http://digitalgaia.io/btstools.html>`__ to support further
 development, and feel free to visit my page for other delegate proposals
 at `digitalgaia.io <http://digitalgaia.io>`__. Thanks!
 
