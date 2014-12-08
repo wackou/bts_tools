@@ -41,21 +41,26 @@ def static_from_root():
     return send_from_directory(bp.static_folder, request.path[1:])
 
 
+@core.profile
 def offline():
     return render_template('error.html',
                            msg='The BitShares client is currently offline. '
                                'Please run it and activate the HTTP RPC server.')
 
 
+@core.profile
 def unauthorized():
     return render_template('error.html',
                            msg=('Unauthorized. Make sure you have correctly set '
                                 'the rpc user and password in the %s file'
                                 % core.BTS_TOOLS_CONFIG_FILE))
 
+
+@core.profile
 def server_error():
     return render_template('error.html',
                            msg=('An unknown server error occurred... Please check your log files.'))
+
 
 def catch_error(f):
     @wraps(f)
@@ -103,6 +108,7 @@ def homepage():
 @bp.route('/status')
 @clear_rpc_cache
 @catch_error
+@core.profile
 def view_status():
     #log.debug('getting stats from: %s' % hex(id(monitor.stats)))
 
@@ -235,6 +241,7 @@ def set_rpchost(host, url):
 @bp.route('/delegates')
 @clear_rpc_cache
 @catch_error
+@core.profile
 def view_delegates():
     response = rpc.main_node.blockchain_list_delegates(0, 300)
 
@@ -259,6 +266,7 @@ def view_delegates():
 @bp.route('/peers')
 @clear_rpc_cache
 @catch_error
+@core.profile
 def view_connected_peers():
     peers = rpc.main_node.network_get_peer_info()
 
@@ -285,6 +293,7 @@ def view_connected_peers():
 @bp.route('/peers/potential')
 @clear_rpc_cache
 @catch_error
+@core.profile
 def view_potential_peers():
     peers = rpc.main_node.network_list_potential_peers()
 
@@ -319,6 +328,7 @@ def view_potential_peers():
 @bp.route('/logs')
 @clear_rpc_cache
 @catch_error
+@core.profile
 def view_logs():
     records = list(slogging.log_records)
 
