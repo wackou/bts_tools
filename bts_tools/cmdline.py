@@ -43,8 +43,7 @@ BUILD_ENV = None
 RUN_ENV   = None
 
 
-def select_build_environment(env=None):
-    env = env or 'bts'
+def select_build_environment(env):
     log.info("Using build environment '%s' on platform: '%s'" % (env, platform))
 
     if platform not in ['linux', 'darwin']:
@@ -67,8 +66,7 @@ def select_build_environment(env=None):
     return env
 
 
-def select_run_environment(env_name=None):
-    env_name = env_name or 'bts'
+def select_run_environment(env_name):
     log.info("Running '%s' client" % env_name)
     try:
         env = core.config['run_environments'][env_name]
@@ -204,6 +202,9 @@ Example:
     args = parser.parse_args()
 
     init()
+
+    if args.environment is None:
+        args.environment = 'bts'
 
     if args.command in {'build', 'build_gui'}:
         select_build_environment(args.environment)
