@@ -31,6 +31,9 @@ def bts_process(node):
         log.error('DEPRECATED: call to process.bts_process() without specifying a node...')
         return None
 
+    if node.rpc_host != 'localhost':
+        return None
+
     #log.debug('find bts binary')
     # find bitshares process
     procs = [p for p in psutil.process_iter()
@@ -66,8 +69,7 @@ def binary_description(node):
     if p is None:
         return client_version
     # if client is running locally, extract info from filename, usually more precise
-    name = os.path.realpath(p.cmdline()[0])
-    desc = name.split(node.bin_name + '_')[1]
+    desc = p.exe.split(node.bin_name + '_')[1]
     if client_version in desc:
         # we're on a tag, then just return the tag
         return client_version
