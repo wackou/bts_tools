@@ -164,7 +164,9 @@ def delegate_info(delegate_name):
     total_shares = rpc.main_node.get_info()['blockchain_share_supply']
     votes_for = '%.2f%%' % (d['delegate_info']['votes_for'] * 100 / total_shares)
 
-    slots = rpc.main_node.blockchain_get_delegate_slot_records(delegate_name)[::-1]
+    # there are ~2650 blocks/month/delegate, so no need to get more of them
+    # FIXME: this needs to be cached, same as in rpcutils...
+    slots = rpc.main_node.blockchain_get_delegate_slot_records(delegate_name, -300000, 30000)[::-1]
     if slots:
         producing = slots[0]['block_produced']
         streak = list(itertools.takewhile(lambda x: (x['block_produced'] == producing), slots))

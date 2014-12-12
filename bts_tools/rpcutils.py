@@ -263,13 +263,15 @@ class BTSProxy(object):
             # they are all the same, then we could get a much bigger chunk
             if self.name not in ALL_SLOTS:
                 # first time, get all slots from the delegate and cache them
-                ALL_SLOTS[self.name] = self.blockchain_get_delegate_slot_records(self.name, 1, 100000,
+                ALL_SLOTS[self.name] = self.blockchain_get_delegate_slot_records(self.name, 1, 1000000,
                                                                                  cached=cached)
                 log.debug('Got all %d slots for delegate %s' % (len(ALL_SLOTS[self.name]), self.name))
             else:
-                # next time, only get last 10 slots and update our local copy
-                log.debug('Getting last 10 slots for delegate %s' % self.name)
-                for slot in self.blockchain_get_delegate_slot_records(self.name):
+                # next time, only get last slots and update our local copy
+                # make sure we get enough slots to get them all up to our latest, even if there
+                # are a lot of missed blocks by other delegates
+                log.debug('Getting last slots for delegate %s' % self.name)
+                for slot in self.blockchain_get_delegate_slot_records(self.name, -500, 100):
                     if slot not in ALL_SLOTS[self.name][-10:]:
                         ALL_SLOTS[self.name].append(slot)
 
