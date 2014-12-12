@@ -69,7 +69,7 @@ def binary_description(node):
     if p is None:
         return client_version
     # if client is running locally, extract info from filename, usually more precise
-    desc = p.exe.split(node.bin_name + '_')[1]
+    desc = p.exe().split(node.bin_name + '_')[1]
     if client_version in desc:
         # we're on a tag, then just return the tag
         return client_version
