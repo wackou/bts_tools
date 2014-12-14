@@ -32,15 +32,24 @@ cfg = None
 history_len = None
 price_history = None
 
+"""BitAssets for which we check and publish feeds."""
+BIT_ASSETS = {'USD', 'CNY', 'BTC', 'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN',
+              'RUB', 'SEK', 'SGD', 'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD'}
+
+"""List of feeds that should be shown on the UI and in the logs. Note that we
+always check and publish all feeds, regardless of this variable."""
+VISIBLE_FEEDS = ['USD', 'BTC', 'CNY', 'GOLD', 'EUR']
+
 
 def load_feeds():
     global cfg, history_len, price_history
     cfg = core.config['monitoring']['feeds']
     history_len = int(cfg['median_time_span'] / cfg['check_time_interval'])
-    price_history = {cur: deque(maxlen=history_len) for cur in {'USD', 'BTC', 'CNY', 'GOLD', 'EUR'}}
+    price_history = {cur: deque(maxlen=history_len) for cur in BIT_ASSETS}
 
 
 def get_from_yahoo(asset_list, base):
+    log.debug('Getting feeds from yahoo: %s / %s' % (' '.join(asset_list), base))
     asset_list = [asset.upper() for asset in asset_list]
     base = base.upper()
     query_string = ','.join('%s%s=X' % (asset, base) for asset in asset_list)
@@ -53,7 +62,7 @@ def get_from_yahoo(asset_list, base):
 
 
 def get_from_bter(cur, base):
-    log.debug('Getting from bter: %s %s' % (cur, base))
+    log.debug('Getting feeds from bter: %s / %s' % (cur, base))
     r = requests.get('http://data.bter.com/api/1/ticker/%s_%s' % (cur.lower(), base.lower()),
                      timeout=60).json()
     price = float(r['last']) or ((float(r['sell']) + float(r['buy'])) / 2)
@@ -62,7 +71,7 @@ def get_from_bter(cur, base):
 
 
 def get_from_btc38(cur, base):
-    log.debug('Getting from btc38: %s %s' % (cur, base))
+    log.debug('Getting feeds from btc38: %s / %s' % (cur, base))
     headers = {'content-type': 'application/json',
                'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
     r = requests.get('http://api.btc38.com/v1/ticker.php',
@@ -90,12 +99,32 @@ def adjust(v, r):
     return v[0]*r, v[1]*r
 
 
+_YAHOO_BTS_MAP = {'GOLD': 'XAU', 'SILVER': 'XAG'}
+
+def yahoo_to_bts(c):
+    c = c.upper()
+    for b, y in _YAHOO_BTS_MAP.items():
+        if c == y:
+            return b
+    return c
+
+def bts_to_yahoo(c):
+    c = c.upper()
+    return _YAHOO_BTS_MAP.get(c, c)
+
+
 def get_feed_prices():
+    # doesn't include:
+    # - BTC as we don't get it from yahoo
+    # - USD as it is our base currency
+    yahoo_curs = [bts_to_yahoo(c) for c in BIT_ASSETS - {'BTC', 'USD'}]
+
+    # 1- get the BitShares price in BTC using the biggest markets: USD and CNY
+
     # first get rate conversion between USD/CNY from yahoo and CNY/BTC from
     # bter and btc38 (use CNY and not USD as the market is bigger)
-    yahoo_prices = get_from_yahoo(['CNY', 'XAU', 'EUR'], 'USD')
-    cny_usd = yahoo_prices['CNY']
-    gld_usd = yahoo_prices['XAU']
+    yahoo_prices = get_from_yahoo(yahoo_curs, 'USD')
+    cny_usd = yahoo_prices.pop('CNY')
 
     btc_cny = weighted_mean([get_from_btc38('BTC', 'CNY'),
                              get_from_bter('BTC', 'CNY')])
@@ -117,21 +146,31 @@ def get_feed_prices():
 
     cny_price = btc_price * btc_cny
     usd_price = cny_price * cny_usd
-    gld_price = usd_price / gld_usd
-    eur_price = usd_price / yahoo_prices['EUR']
 
     feeds['USD'] = usd_price
     feeds['BTC'] = btc_price
     feeds['CNY'] = cny_price
-    feeds['GOLD'] = gld_price
-    feeds['EUR'] = eur_price
 
+    # 2- now get the BitShares price in all other required currencies
+    for cur, yprice in yahoo_prices.items():
+        feeds[yahoo_to_bts(cur)] = usd_price / yprice
+
+    # 3- update price history for all feeds
     for cur, price in feeds.items():
         price_history[cur].append(price)
 
 
 def median(cur):
-    return sorted(price_history[cur])[len(price_history[cur])//2]
+    p = price_history[cur]
+    return sorted(p)[len(p)//2]
+
+
+def format_qualifier(c):
+    if c in {'BTC', 'GOLD', 'SILVER'}:
+        return '%g'
+    return '%f'
+
+FEEDS_FORMAT_STRING = ', '.join('%s %s' % (format_qualifier(c), c) for c in VISIBLE_FEEDS)
 
 
 def check_feeds(nodes):
@@ -143,10 +182,8 @@ def check_feeds(nodes):
         get_feed_prices()
         nfeed_checked += 1
 
-        log.debug('Got feeds: %f USD, %g BTC, %f CNY, %g GOLD, %f EUR  [%d/%d]' %
-                  (feeds['USD'], feeds['BTC'], feeds['CNY'], feeds['GOLD'], feeds['EUR'],
-                   nfeed_checked, feed_period))
-
+        feeds_msg = FEEDS_FORMAT_STRING % tuple(feeds[c] for c in VISIBLE_FEEDS)
+        log.debug('Got feeds: %s  [%d/%d]' % (feeds_msg, nfeed_checked, feed_period))
 
         for node in nodes:
             # if an exception occurs during publishing feeds for a delegate (eg: standby delegate),
@@ -159,9 +196,10 @@ def check_feeds(nodes):
                 if node.type == 'delegate' and node.rpc_host == 'localhost' and 'feeds' in node.monitoring:
                     if nfeed_checked % feed_period == 0:
                         # publish median value of the price, not latest one
-                        usd, btc, cny, gld, eur = median('USD'), median('BTC'), median('CNY'), median('GOLD'), median('EUR')
-                        log.info('Node %s publishing feeds: %f USD, %g BTC, %f CNY, %g GOLD, %f EUR' % (node.name, usd, btc, cny, gld, eur))
-                        node.wallet_publish_feeds(node.name, [['USD', usd], ['BTC', btc], ['CNY', cny], ['GOLD', gld], ['EUR', eur]])
+                        median_feeds = {c: median(c) for c in feeds}
+                        feeds_msg = FEEDS_FORMAT_STRING % tuple(median_feeds[c] for c in VISIBLE_FEEDS)
+                        log.info('Node %s publishing feeds: %s' % (node.name, feeds_msg))
+                        node.wallet_publish_feeds(node.name, list(median_feeds.items()))
             except Exception as e:
                 log.exception(e)
 

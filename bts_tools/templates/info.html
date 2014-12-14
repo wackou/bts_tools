@@ -5,9 +5,9 @@
 
 {% if rpc.main_node.type == 'delegate' and rpc.main_node.bts_type() == 'bts' %}
 <pre>
-<b>Price feeds:</b>  published: {{pfeeds['USD']}} <b>USD</b> {{pfeeds['BTC']}} <b>BTC</b> {{pfeeds['CNY']}} <b>CNY</b> {{pfeeds['GOLD']}} <b>GOLD</b> {{pfeeds['EUR']}} <b>EUR</b>      <b>Last update:</b> {% if last_update %}{{last_update | datetime}}{% else %}N/A{% endif %}
-       last hour median: {{mfeeds['USD']}} <b>USD</b> {{mfeeds['BTC']}} <b>BTC</b> {{mfeeds['CNY']}} <b>CNY</b> {{mfeeds['GOLD']}} <b>GOLD</b> {{mfeeds['EUR']}} <b>EUR</b>
-                 latest: {{feeds['USD']}} <b>USD</b> {{feeds['BTC']}} <b>BTC</b> {{feeds['CNY']}} <b>CNY</b> {{feeds['GOLD']}} <b>GOLD</b> {{feeds['EUR']}} <b>EUR</b>
+<b>Price feeds:</b>  published: {% for asset in assets %}{{pfeeds[asset]}} <b>{{asset}}</b> {% endfor %}     <b>Last update:</b> {% if last_update %}{{last_update | datetime}}{% else %}N/A{% endif %}
+       last hour median: {% for asset in assets %}{{mfeeds[asset]}} <b>{{asset}}</b> {% endfor %}
+                 latest: {% for asset in assets %}{{feeds[asset]}} <b>{{asset}}</b> {% endfor %}
 </pre>
 {% endif %}
 

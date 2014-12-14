@@ -200,19 +200,16 @@ def view_info():
         mfeeds = {cur: feeds.median(cur) for cur in lfeeds}
 
         # format to string here instead of in template, more flexibility in python
-        def format_feeds(feeds):
-            # format_specs: {list of currencies: (format_str, field_size)}
-            format_specs = {('USD', 'CNY', 'EUR'): ('%.4f', 7),
-                            ('BTC', 'GOLD'): ('%.4g', 10)}
-            for assets, (format_str, field_size) in format_specs.items():
-                for asset in assets:
-                    feeds[asset] = ((format_str % feeds[asset]) if asset in feeds else 'N/A').rjust(field_size)
+        def format_feeds(fds):
+            for asset in feeds.VISIBLE_FEEDS:
+                fmt, field_size = ('%.4g', 10) if asset in {'BTC', 'GOLD', 'SILVER'} else ('%.4f', 7)
+                fds[asset] = (fmt % fds[asset] if asset in fds else 'N/A').rjust(field_size)
 
         format_feeds(lfeeds)
         format_feeds(mfeeds)
         format_feeds(pfeeds)
 
-        feeds = dict(feeds=lfeeds, pfeeds=pfeeds,
+        feeds = dict(assets=feeds.VISIBLE_FEEDS, feeds=lfeeds, pfeeds=pfeeds,
                      mfeeds=mfeeds, last_update=last_update)
 
     else:
