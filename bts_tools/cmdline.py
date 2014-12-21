@@ -181,8 +181,8 @@ Example:
   $ bts run
   $ bts run debug  # run the client inside gdb
 
-  $ bts build dns v0.0.4  # build a specific version
-  $ bts run seed-dns      # run environments are defined in the config.yaml file
+  $ bts build pts v2.0.1  # build a specific version
+  $ bts run seed-test     # run environments are defined in the config.yaml file
 
   $ bts build_gui
   $ bts run_gui
@@ -196,7 +196,7 @@ Example:
     parser.add_argument('-r', '--norpc', action='store_true',
                         help='run binary with RPC server deactivated')
     parser.add_argument('environment', nargs='?',
-                        help='the build/run environment (bts, dns, ...)')
+                        help='the build/run environment (bts, pts, ...)')
     parser.add_argument('hash', nargs='?',
                         help='the hash or tag of the desired commit')
     args = parser.parse_args()

@@ -78,7 +78,7 @@ build_environments:
 # list of clients that can be run
 #
 # clients define the following vars:
-#  - type: the type of build you want to run. Needs to be a valid build env (ie: bts, dns, ...)
+#  - type: the type of build you want to run. Needs to be a valid build env (ie: bts, pts, ...)
 #  - debug: set to true to run client in gdb (only available in linux for now)
 #  - data_dir: [optional] the data dir (blockchain, wallet, etc.) of the bts client.
 #                         If not specified, uses the standard location of the client
