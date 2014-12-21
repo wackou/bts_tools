@@ -35,8 +35,8 @@ just run the ``bts`` script with the command you want to execute:
       $ bts run
       $ bts run debug  # run the client inside gdb
 
-      $ bts build dns v0.0.4  # build a specific version
-      $ bts run seed-dns      # run environments are defined in the config.yaml file
+      $ bts build pts v2.0.1  # build a specific version
+      $ bts run seed-test     # run environments are defined in the config.yaml file
     
       $ bts build_gui
       $ bts run_gui
@@ -45,7 +45,7 @@ just run the ``bts`` script with the command you want to execute:
     positional arguments:
       {clean_homedir,clean,build,build_gui,run,run_gui,list}
                             the command to run
-      environment           the build/run environment (bts, dns, ...)
+      environment           the build/run environment (bts, pts, ...)
       hash                  the hash or tag of the desired commit
     
     optional arguments:
@@ -76,10 +76,14 @@ Monitoring the status of your running bts client binary
 
 ![Status screenshot](bts_tools_screenshot.png)
 
-Monitoring multiple instances at the same time, to have an overview while
-running backup nodes and re-compiling your main node.
+You can host multiple delegates accounts in the same wallet, and check feed info
 
 ![Info screenshot](bts_tools_screenshot2.png)
+
+Monitoring multiple instances (ie: running on different hosts) at the same time,
+to have an overview while running backup nodes and re-compiling your main node.
+
+![Info screenshot](bts_tools_screenshot3.png)
 
 
 Things to know (best practices and "issues") READ IT !!!
