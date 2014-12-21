@@ -6,6 +6,15 @@
 History
 =======
 
+0.1.4 (2014-12-21)
+------------------
+
+* now publishes feeds for BitBTC, BitGold, BitSilver + all fiat BitAssets
+* full support for building and monitoring PTS-DPOS clients
+* preliminary support for building Sparkle clients
+* the usual bugfixes
+
+
 0.1.3 (2014-11-16)
 ------------------
 

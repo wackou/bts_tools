@@ -25,7 +25,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.rst')).read()
 HISTORY = open(os.path.join(here, 'HISTORY.rst')).read()
 
-VERSION = '0.1-dev'
+VERSION = '0.1.4'
 
 
 install_requires = ['Flask', 'requests', 'psutil', 'arrow', 'pyyaml']
