@@ -28,7 +28,7 @@ HISTORY = open(os.path.join(here, 'HISTORY.rst')).read()
 VERSION = '0.1-dev'
 
 
-install_requires = ['Flask', 'requests', 'psutil', 'arrow', 'pyyaml']
+install_requires = ['Flask', 'requests', 'psutil', 'arrow', 'pyyaml', 'dogpile.cache']
 
 setup_requires = []
 

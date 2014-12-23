@@ -23,8 +23,9 @@ from .process import bts_binary_running, bts_process
 from . import core
 from collections import defaultdict
 from os.path import join, expanduser
-import bts_tools.core # needed to be able to exec('raise bts.core.Exception')
-import builtins                      # needed to be able to reraise builtin exceptions
+from dogpile.cache import make_region
+import bts_tools.core  # needed to be able to exec('raise bts.core.Exception')
+import builtins        # needed to be able to reraise builtin exceptions
 import requests
 import itertools
 import json
@@ -171,6 +172,9 @@ class BTSProxy(object):
         if core.config.get('profile', False):
             self._rpc_call = core.profile(self._rpc_call)
 
+        # get a special "smart" cache for slots as it is a very expensive call
+        self._slot_cache = make_region().configure('dogpile.cache.memory')
+
     def __getattr__(self, funcname):
         def call(*args, cached=True):
             return self.rpc_call(funcname, *args, cached=cached)
@@ -250,6 +254,19 @@ class BTSProxy(object):
         active_delegates = [d['name'] for d in self.blockchain_list_delegates(0, 101)]
         return delegate in active_delegates
 
+    def get_last_slots(self):
+        """Return the last delegate slots, and cache this until at least the next block
+        production time of the wallet."""
+        def _get_slots():
+            # make sure we get enough slots to get them all up to our latest, even if there
+            # are a lot of missed blocks by other delegates
+            slots = self.blockchain_get_delegate_slot_records(self.name, -500, 100)
+            # non-producing wallets can afford to have a 1-min time resolution for this
+            next_production_time = self.get_info()['wallet_next_block_production_time'] or 60
+            # make it +5 to ensure we produce the block first, and then peg the CPU
+            self._slot_cache.expiration_time = next_production_time + 5
+            return slots
+        return self._slot_cache.get_or_create('slots', _get_slots)
 
     def get_streak(self, cached=True):
         if self.type != 'delegate':
@@ -268,10 +285,8 @@ class BTSProxy(object):
                 log.debug('Got all %d slots for delegate %s' % (len(ALL_SLOTS[self.name]), self.name))
             else:
                 # next time, only get last slots and update our local copy
-                # make sure we get enough slots to get them all up to our latest, even if there
-                # are a lot of missed blocks by other delegates
                 log.debug('Getting last slots for delegate %s' % self.name)
-                for slot in self.blockchain_get_delegate_slot_records(self.name, -500, 100):
+                for slot in self.get_last_slots():
                     if slot not in ALL_SLOTS[self.name][-10:]:
                         ALL_SLOTS[self.name].append(slot)
 
