@@ -21,6 +21,7 @@
 from collections import deque
 from datetime import datetime
 from itertools import chain, islice
+from dogpile.cache import make_region
 from .core import StatsFrame
 from .notification import send_notification
 from .feeds import check_feeds
@@ -40,6 +41,9 @@ time_span = None
 time_interval = None
 desired_maxlen = None
 
+# no expiration time, version stays constant as long as we run the same process
+# we still need to invalidate the cache when a client comes online
+published_version = make_region().configure('dogpile.cache.memory')
 
 def load_monitoring():
     global cfg, time_span, time_interval, desired_maxlen, stable_time_interval
@@ -133,6 +137,7 @@ def monitoring_thread(*nodes):
             if online_state.just_changed():
                 log.info('Nodes %s just came online!' % node_names)
                 send_notification(nodes, 'node just came online!')
+                published_version.invalidate()
 
             info = client_node.get_info()
 
@@ -173,6 +178,17 @@ def monitoring_thread(*nodes):
                         send_notification([node], 'missed another block! (%d missed total)' % n, alert=True)
                         last_n_notified = n
 
+                # publish node version if we're not up-to-date (eg: just upgraded)
+                if node.type == 'delegate' and info['wallet_unlocked']:
+                    def get_published_version():
+                        v = client_node.blockchain_get_account(node.name)
+                        return client_node.blockchain_get_account(node.name)['public_data']['version']
+                    version = info['client_version']
+                    pubver = published_version.get_or_create(node.name, get_published_version)
+                    if version != pubver:
+                        log.info('Publishing version %s for delegate %s (current: %s)' % (version, node.name, pubver))
+                        client_node.wallet_publish_version(node.name)
+                        published_version.set(node.name, version)
 
             # only monitor cpu and network if we are monitoring localhost
             if client_node.rpc_host == 'localhost':
