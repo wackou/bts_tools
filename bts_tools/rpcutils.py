@@ -26,6 +26,7 @@ from os.path import join, expanduser
 from dogpile.cache import make_region
 import bts_tools.core  # needed to be able to exec('raise bts.core.Exception')
 import builtins        # needed to be able to reraise builtin exceptions
+import importlib
 import requests
 import itertools
 import json
@@ -157,14 +158,15 @@ class BTSProxy(object):
 
                 if 'error' in result:
                     # re-raise original exception
-                    # FIXME: this should be done properly without exec, could
-                    #        potentially be a security issue
                     log.debug('Received error in RPC result: %s(%s)'
                               % (result['type'], result['error']))
+                    try:
+                        exc_module, exc_class = result['type'].rsplit('.', 1)
+                    except ValueError:
+                        exc_module, exc_class = 'builtins', result['type']
 
-                    raise_exc = 'raise %s("%s")' % (result['type'], result['error'])
-                    log.debug('EXEC: %s' % raise_exc)
-                    exec(raise_exc)
+                    exc_class = getattr(importlib.import_module(exc_module), exc_class)
+                    raise exc_class(result['error'])
 
                 return result
             self._rpc_call = remote_call
