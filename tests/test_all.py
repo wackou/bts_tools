@@ -50,5 +50,7 @@ def test_stable_state_monitor():
     s.push('offline')
     assert s.stable_state() == 'offline'
     assert s.just_changed() == True
+    assert s.just_changed() == True
     s.push('offline')
+    assert s.just_changed() == False
     assert s.just_changed() == False

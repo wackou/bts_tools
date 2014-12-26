@@ -67,25 +67,28 @@ class StableStateMonitor(object):
     def __init__(self, n):
         self.n = n
         self.states = deque(maxlen=n+1)
+        self.last_stable_state = None
 
     def push(self, state):
+        stable_state = self.stable_state()
+        if stable_state is not None:
+            self.last_stable_state = stable_state
         self.states.append(state)
 
     def stable_state(self):
         size = len(self.states)
         if size < self.n:
             return None
-        if all(state == self.states[-1] for state in islice(self.states, size-self.n, size-1)):
-            return self.states[-1]
+        last_state = self.states[-1]
+        if all(state == last_state for state in islice(self.states, size-self.n, size)):
+            return last_state
         return None
 
     def just_changed(self):
-        size = len(self.states)
-        if size < (self.n + 1):
+        stable_state = self.stable_state()
+        if stable_state is None or self.last_stable_state is None:
             return False
-        if self.stable_state() is None:
-            return False
-        return self.states[-1] != self.states[-(self.n + 1)]
+        return stable_state != self.last_stable_state
 
 
 def monitoring_thread(*nodes):
