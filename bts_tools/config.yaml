@@ -136,7 +136,8 @@ profile: false
 # installed in a virtualenv.
 #
 # For each node you can specify which type of monitoring you want:
-#  - feeds: checks price feeds, and optionally publish them if the node is a delegate
+#  - feeds: check price feeds, and optionally publish them if the node is a delegate
+#  - versions: check if version number matches published one, publishes it otherwise
 #  - email: send an email notification when client crashes or loses network connections
 #  - boxcar: send an iOS push notification to the Boxcar app when client crashes or loses network connections
 #
@@ -149,7 +150,7 @@ profile: false
 #         client: bts
 #         type: delegate   # delegate node type: run a single delegate account
 #         name: delegate1  # the name of the delegate. This needs to be an existing account
-#         monitoring: [feeds,email]
+#         monitoring: [version,feeds,email]
 #     -
 #         client: bts
 #         type: seed    # seed node type: no need for open wallet, high number of connections

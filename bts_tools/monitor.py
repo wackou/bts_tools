@@ -182,7 +182,7 @@ def monitoring_thread(*nodes):
                         last_n_notified = n
 
                 # publish node version if we're not up-to-date (eg: just upgraded)
-                if node.type == 'delegate' and info['wallet_unlocked']:
+                if 'version' in node.monitoring and node.type == 'delegate' and info['wallet_unlocked']:
                     def get_published_version():
                         v = client_node.blockchain_get_account(node.name)
                         return client_node.blockchain_get_account(node.name)['public_data']['version']
