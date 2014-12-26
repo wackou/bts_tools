@@ -164,29 +164,29 @@ def install_last_built_bin():
     os.symlink(c, last_installed)
 
 
-def main():
+def main(flavor='bts'):
     # parse commandline args
     DESC="""following commands are available:
   - clean_homedir    : clean home directory. WARNING: this will delete your wallet!
   - clean            : clean build directory
-  - build            : update and build bts client
-  - build_gui        : update and build bts gui client
-  - run              : run latest compiled bts client, or the one with the given hash or tag
-  - run_gui          : run latest compiled bts gui client
-  - list             : list installed bitshares client binaries
+  - build            : update and build %(bin)s client
+  - build_gui        : update and build %(bin)s gui client
+  - run              : run latest compiled %(bin)s client, or the one with the given hash or tag
+  - run_gui          : run latest compiled %(bin)s gui client
+  - list             : list installed %(bin)s client binaries
   - monitor          : run the monitoring web app
 
 Example:
-  $ bts build      # build the latest bts client by default
-  $ bts run
-  $ bts run debug  # run the client inside gdb
+  $ %(bin)s build      # build the latest %(bin)s client by default
+  $ %(bin)s run
+  $ %(bin)s run debug  # run the client inside gdb
 
-  $ bts build pts v2.0.1  # build a specific version
-  $ bts run seed-test     # run environments are defined in the config.yaml file
+  $ %(bin)s build pts v2.0.1  # build a specific version
+  $ %(bin)s run seed-test     # run environments are defined in the config.yaml file
 
-  $ bts build_gui
-  $ bts run_gui
-    """
+  $ %(bin)s build_gui
+  $ %(bin)s run_gui
+    """ % {'bin': flavor}
     EPILOG="""You should also look into ~/.bts_tools/config.yaml to tune it to your liking."""
     parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
                                      formatter_class=RawTextHelpFormatter)
@@ -204,7 +204,9 @@ Example:
     init()
 
     if args.environment is None:
-        args.environment = 'bts'
+        args.environment = flavor
+    elif args.environment == 'dev':
+        args.environment = '%s-dev' % flavor
 
     if args.command in {'build', 'build_gui'}:
         select_build_environment(args.environment)
@@ -229,7 +231,7 @@ Example:
 
         if args.hash:
             # if git rev specified, runs specific version
-            print('Running specific instance of the bts client: %s' % args.hash)
+            print('Running specific instance of the %s client: %s' % (flavor, args.hash))
             bin_name = run('ls %s' % join(BTS_BIN_DIR,
                                           '%s_*%s*' % (BTS_BIN_NAME, args.hash[:8])),
                            io=True).stdout.strip()
@@ -291,6 +293,14 @@ Example:
     elif args.command == 'monitor':
         print('\nLaunching monitoring web app...')
         run('python -m bts_tools.wsgi')
+
+
+def main_bts():
+    return main(flavor='bts')
+
+
+def main_pts():
+    return main(flavor='pts')
 
 
 def main_rpc_call():
