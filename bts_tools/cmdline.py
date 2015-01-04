@@ -262,7 +262,8 @@ Example:
 
     elif args.command == 'run_gui':
         select_build_environment(args.environment)
-        run('open %s' % join(BTS_BUILD_DIR, 'programs/qt_wallet/bin/BitShares.app'))
+        # FIXME: only works on OSX
+        run('open %s' % join(BTS_BUILD_DIR, 'programs/qt_wallet/bin/*.app'))
 
     elif args.command == 'clean':
         select_build_environment(args.environment)
