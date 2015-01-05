@@ -44,5 +44,5 @@ def init(loglevels=None):
     if core.config.get('profile', False):
         log.info('Profiling RPC calls')
     else:
-        log.info('Not profiling RPC calls')
+        log.debug('Not profiling RPC calls')
 

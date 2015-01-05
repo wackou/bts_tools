@@ -22,12 +22,13 @@ from os.path import join, dirname, exists, islink, expanduser
 from argparse import RawTextHelpFormatter
 from .core import platform, run, get_data_dir
 from . import core, init
-from .rpcutils import rpc_call
+from .rpcutils import rpc_call, BTSProxy
 import argparse
 import os
 import sys
 import shutil
 import json
+import yaml
 import logging
 
 log = logging.getLogger(__name__)
@@ -175,8 +176,9 @@ def main(flavor='bts'):
   - run_gui          : run latest compiled %(bin)s gui client
   - list             : list installed %(bin)s client binaries
   - monitor          : run the monitoring web app
+  - publish_slate    : publish the slate as described in the given file
 
-Example:
+Examples:
   $ %(bin)s build      # build the latest %(bin)s client by default
   $ %(bin)s run
   $ %(bin)s run debug  # run the client inside gdb
@@ -186,12 +188,15 @@ Example:
 
   $ %(bin)s build_gui
   $ %(bin)s run_gui
+
+  $ %(bin)s publish_slate                      # will show a sample slate
+  $ %(bin)s publish_slate /path/to/slate.yaml  # publish the given slate
     """ % {'bin': flavor}
     EPILOG="""You should also look into ~/.bts_tools/config.yaml to tune it to your liking."""
     parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
                                      formatter_class=RawTextHelpFormatter)
     parser.add_argument('command', choices=['clean_homedir', 'clean', 'build', 'build_gui',
-                                            'run', 'run_gui', 'list', 'monitor'],
+                                            'run', 'run_gui', 'list', 'monitor', 'publish_slate'],
                         help='the command to run')
     parser.add_argument('-r', '--norpc', action='store_true',
                         help='run binary with RPC server deactivated')
@@ -203,6 +208,8 @@ Example:
 
     init()
 
+    # TODO: check that if args.environment is not a valid env, we might want to
+    #       use it as second argument and use 'bts' as default env
     if args.environment is None:
         args.environment = flavor
     elif args.environment == 'dev':
@@ -294,6 +301,53 @@ Example:
     elif args.command == 'monitor':
         print('\nLaunching monitoring web app...')
         run('python -m bts_tools.wsgi')
+
+    elif args.command == 'publish_slate':
+        slate_file = args.hash # TODO: args.hash would probably benefit from being renamed
+        print()
+        if not slate_file:
+            log.error('You need to specify a slate file as argument')
+            log.info('It should be a YAML file with the following format')
+            slate_example = """
+delegate: publishing_delegate_name
+paying: paying_account  # optional, defaults to publishing delegate
+slate:
+ - delegate_1
+ - delegate_2
+ - ...
+ - delegate_N
+"""
+            print(slate_example)
+            sys.exit(1)
+
+        logging.getLogger('bts_tools').setLevel(logging.INFO)
+        log.info('Reading slate from file: %s' % slate_file)
+        with open(slate_file, 'r') as f:
+            slate_config = yaml.load(f)
+        delegate = slate_config['delegate']
+        payee = slate_config.get('payee', delegate)
+        slate = slate_config['slate']
+
+        client = BTSProxy(type='delegate', name=delegate, client=args.environment)
+
+        log.info('Clearing all previously approved delegates')
+        for d in client.wallet_list_accounts():
+            log.debug('Unapproving delegate: %s' % d['name'])
+            client.wallet_account_set_approval(d['name'], 0)
+
+        for d in slate:
+            log.info('Approving delegate: %s' % d)
+            try:
+                client.wallet_account_set_approval(d, 1)
+            except Exception as e:
+                log.error(str(e).split('\n')[0])
+
+        log.info('Publishing slate...')
+        try:
+            client.wallet_publish_slate(delegate, payee)
+            log.info('Slate successfully published!')
+        except Exception as e:
+            log.error(e)
 
 
 def main_bts():

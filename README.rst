@@ -21,7 +21,7 @@ just run the ``bts`` script with the command you want to execute:
 
     $ bts -h
     usage: bts [-h] [-r]
-               {clean_homedir,clean,build,build_gui,run,run_gui,list,monitor}
+               {clean_homedir,clean,build,build_gui,run,run_gui,list,monitor,publish_slate}
                [environment] [hash]
 
     following commands are available:
@@ -31,10 +31,11 @@ just run the ``bts`` script with the command you want to execute:
       - build_gui        : update and build bts gui client
       - run              : run latest compiled bts client, or the one with the given hash or tag
       - run_gui          : run latest compiled bts gui client
-      - list             : list installed bitshares client binaries
+      - list             : list installed bts client binaries
       - monitor          : run the monitoring web app
+      - publish_slate    : publish the slate as described in the given file
 
-    Example:
+    Examples:
       $ bts build      # build the latest bts client by default
       $ bts run
       $ bts run debug  # run the client inside gdb
@@ -45,9 +46,12 @@ just run the ``bts`` script with the command you want to execute:
       $ bts build_gui
       $ bts run_gui
 
+      $ bts publish_slate                      # will show a sample slate
+      $ bts publish_slate /path/to/slate.yaml  # publish the given slate
+
 
     positional arguments:
-      {clean_homedir,clean,build,build_gui,run,run_gui,list}
+      {clean_homedir,clean,build,build_gui,run,run_gui,list,monitor,publish_slate}
                             the command to run
       environment           the build/run environment (bts, pts, ...)
       hash                  the hash or tag of the desired commit
