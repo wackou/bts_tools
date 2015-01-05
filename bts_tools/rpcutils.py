@@ -265,8 +265,8 @@ class BTSProxy(object):
             slots = self.blockchain_get_delegate_slot_records(self.name, -500, 100)
             # non-producing wallets can afford to have a 1-min time resolution for this
             next_production_time = self.get_info()['wallet_next_block_production_time'] or 60
-            # make it +5 to ensure we produce the block first, and then peg the CPU
-            self._slot_cache.expiration_time = next_production_time + 5
+            # make it +1 to ensure we produce the block first, and then peg the CPU
+            self._slot_cache.expiration_time = next_production_time + 1
             return slots
         return self._slot_cache.get_or_create('slots', _get_slots)
 
