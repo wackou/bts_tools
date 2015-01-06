@@ -137,7 +137,7 @@ profile: false
 #
 # For each node you can specify which type of monitoring you want:
 #  - feeds: check price feeds, and optionally publish them if the node is a delegate
-#  - versions: check if version number matches published one, publishes it otherwise
+#  - version: check if version number matches published one, publishes it otherwise
 #  - email: send an email notification when client crashes or loses network connections
 #  - boxcar: send an iOS push notification to the Boxcar app when client crashes or loses network connections
 #
