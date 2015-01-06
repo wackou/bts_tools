@@ -32,12 +32,13 @@ just run the ``bts`` script with the command you want to execute:
       - publish_slate    : publish the slate as described in the given file
     
     Examples:
-      $ bts build      # build the latest bts client by default
+      $ bts build          # build the latest bts client by default
+      $ bts build v0.4.27  # build specific version
       $ bts run
       $ bts run debug  # run the client inside gdb
     
-      $ bts build pts v2.0.1  # build a specific version
-      $ bts run seed-test     # run environments are defined in the config.yaml file
+      $ bts build pts-dev v2.0.1  # build a specific client/version
+      $ bts run seed-test         # run environments are defined in the config.yaml file
     
       $ bts build_gui
       $ bts run_gui

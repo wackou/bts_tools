@@ -84,6 +84,11 @@ def select_run_environment(env_name):
     return env
 
 
+def is_valid_environment(env):
+    return (env in core.config['build_environments'] or
+            env in core.config['run_environments'])
+
+
 def clone():
     if not exists(BTS_BUILD_DIR):
         run('git clone %s "%s"' % (BTS_GIT_REPO, BTS_BUILD_DIR))
@@ -179,12 +184,13 @@ def main(flavor='bts'):
   - publish_slate    : publish the slate as described in the given file
 
 Examples:
-  $ %(bin)s build      # build the latest %(bin)s client by default
+  $ %(bin)s build          # build the latest %(bin)s client by default
+  $ %(bin)s build v0.4.27  # build specific version
   $ %(bin)s run
   $ %(bin)s run debug  # run the client inside gdb
 
-  $ %(bin)s build pts v2.0.1  # build a specific version
-  $ %(bin)s run seed-test     # run environments are defined in the config.yaml file
+  $ %(bin)s build pts-dev v2.0.1  # build a specific client/version
+  $ %(bin)s run seed-test         # run environments are defined in the config.yaml file
 
   $ %(bin)s build_gui
   $ %(bin)s run_gui
@@ -208,12 +214,16 @@ Examples:
 
     init()
 
-    # TODO: check that if args.environment is not a valid env, we might want to
-    #       use it as second argument and use 'bts' as default env
     if args.environment is None:
         args.environment = flavor
     elif args.environment == 'dev':
         args.environment = '%s-dev' % flavor
+
+    # if given env is not valid, we want to use it as second argument, using
+    # the default environment as working env
+    if not is_valid_environment(args.environment):
+        args.hash = args.environment
+        args.environment = flavor
 
     if args.command in {'build', 'build_gui'}:
         select_build_environment(args.environment)
