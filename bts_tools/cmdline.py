@@ -140,7 +140,7 @@ def install_last_built_bin():
     r = run('git describe --tags %s' % commit, io=True)
     if r.status == 0:
         # we are on a tag, use it for naming binary
-        tag = r.stdout.strip()
+        tag = r.stdout.strip().replace('/', '_')
         bin_filename = '%s_%s_%s' % (BTS_BIN_NAME, date, tag)
     else:
         bin_filename = '%s_%s_%s_%s' % (BTS_BIN_NAME, date, branch, commit[:8])
