@@ -50,6 +50,14 @@ build_environments:
         bin_dir: ~/.BitSharesDev_bin
         bin_name: bitshares_client
 
+    dvs:
+        git_repo: https://github.com/BitShares/DevShares.git
+        git_branch: master
+        make_args: ['-j2']
+        build_dir: ~/.DevShares_build
+        bin_dir: ~/.DevShares_bin
+        bin_name: devshares_client
+
     pts:
         git_repo: https://github.com/PTS-DPOS/PTS.git
         git_branch: master
