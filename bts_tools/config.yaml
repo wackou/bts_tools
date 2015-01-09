@@ -114,6 +114,9 @@ run_environments:
     bts-dev:
         type: bts-dev
 
+    dvs:
+        type: dvs
+
     pts:
         type: pts
 
