@@ -228,6 +228,13 @@ Examples:
     if args.command in {'build', 'build_gui'}:
         select_build_environment(args.environment)
 
+        # if we are on devshares, tags are prepended with dvs/, check if user
+        # forgot to specify it
+        if args.environment == 'dvs' and args.hash:
+            tags = run('cd %s; git tag -l' % BTS_BUILD_DIR, io=True).stdout.strip().split('\n')
+            if 'dvs/' + args.hash in tags:
+                args.hash = 'dvs/' + args.hash
+
         clone()
 
         os.chdir(BTS_BUILD_DIR)
@@ -362,6 +369,10 @@ slate:
 
 def main_bts():
     return main(flavor='bts')
+
+
+def main_dvs():
+    return main(flavor='dvs')
 
 
 def main_pts():

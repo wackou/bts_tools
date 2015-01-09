@@ -35,6 +35,7 @@ setup_requires = []
 entry_points = {
     'console_scripts': [
         'bts = bts_tools.cmdline:main_bts',
+        'dvs = bts_tools.cmdline:main_dvs',
         'pts = bts_tools.cmdline:main_pts',
         'bts-rpc = bts_tools.cmdline:main_rpc_call'
     ],
