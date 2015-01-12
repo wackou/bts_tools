@@ -176,6 +176,12 @@ def view_info():
         elif prop == 'blockchain_head_block_age':
             green_if_true(value < 60)
 
+        elif prop == 'blockchain_average_delegate_participation':
+            if value < 90:
+                attrs['orange'].append((i, 1))
+            elif value < 80:
+                attrs['red'].append((i, 1))
+
         elif prop == 'wallet_next_block_production_time':
             if value and value < 60:
                 attrs['orange'].append((i, 1))
