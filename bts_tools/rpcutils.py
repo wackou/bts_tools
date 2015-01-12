@@ -277,9 +277,6 @@ class BTSProxy(object):
 
         try:
             global ALL_SLOTS
-            # get about the last 1000 blocks from us
-            # this could possibly be optimized by first getting, say, 50 blocks, and if
-            # they are all the same, then we could get a much bigger chunk
             if self.name not in ALL_SLOTS:
                 # first time, get all slots from the delegate and cache them
                 ALL_SLOTS[self.name] = self.blockchain_get_delegate_slot_records(self.name, 1, 1000000,
