@@ -246,6 +246,8 @@ class BTSProxy(object):
         blockchain_name = self.about()['blockchain_name']
         if blockchain_name == 'BitShares':
             return 'bts'
+        elif blockchain_name == 'DevShares':
+            return 'dvs'
         elif blockchain_name == 'PTS':
             return 'pts'
         elif blockchain_name == 'Sparkle':
