@@ -1,0 +1,66 @@
+delegate: btstools.digitalgaia
+slate:
+    # core developers, all at 100% payrate
+    - dev0.nikolai                 # Toast (Nikolai Mushegian)
+    - stan.delegate.xeldal         # Stan (Stan Larimer)
+    - bm.payroll.riverhead         # Bytemaster (Daniel Larimer)
+    - jcalfee1-developer-team.helper.liondani  # James Calfee
+    - dev0.theoretical             # Theoretical (formerly: drltc)
+    - dev-trial.misc.nikolai       # Toast budget for new dev trials
+    - valzav.payroll.testz         # Valentine (Valzav)
+    - delegate-dev1.btsnow         # Dan Notestein
+    - delegate-dev2.btsnow         # Eric Frias
+    - delegate-dev3.btsnow         # Gregorsz
+    - delegate-dev4.btsnow         # Gandalf-The-Grey
+    - dev.nathanhourt.com          # Nathan Hourt
+    - developer.vikram             # Vikram Rajkumar
+
+    # 3rd-party developers (forum id specified when different from delegate)
+    - del0.cass                    # 100%  https://bitsharestalk.org/index.php?topic=11753
+    - dev.bitsharesblocks          # 100%  https://bitsharestalk.org/index.php?topic=11272 (id: svk)
+    - btstools.digitalgaia         # 30%   https://bitsharestalk.org/index.php?topic=12534 (id: wackou)
+    - backbone.riverhead           # 10%   https://bitsharestalk.org/index.php?topic=10861
+    - dev-metaexchange.monsterer   # 100%  https://bitsharestalk.org/index.php?topic=12317
+    - dev.sidhujag                 # 100%  https://bitsharestalk.org/index.php?topic=12027
+    - elmato                       # 100%  https://bitsharestalk.org/index.php?topic=12494
+    - blackwavelabs                # 100%  https://bitsharestalk.org/index.php?topic=12907
+
+    # marketing initiatives
+    - marketing.methodx            # 100%  https://bitsharestalk.org/index.php?topic=11663
+    - argentina-marketing.matt608  # 100%  https://bitsharestalk.org/index.php?topic=11847
+    - media.bitscape               # 100%  https://bitsharestalk.org/index.php?topic=12833
+    - delegate.rgcrypto            # 100%  http://rgcrypto.wordpress.com/2015/01/05/announcement/
+
+    # active "standard" delegates  (3% payrate)
+    - delegate.xeroc
+    - delegate.liondani     # seed node: 185.25.22.21:1776  |  chain server: 185.25.22.21:1375
+    - mr.agsexplorer        # id: boombastic  |  seed node: 180.153.142.120:1777
+    - delegate.baozi        # id: alt         |  seed node: 106.185.26.162:1776
+    - immortal.bitdelegate  # id: emski       |  seed node: seed.bitdelegate.org:42577
+    - www.minebitshares-com # id: nethyb      |  seed node: euseednode.minebitshares.com, auseednode.minebitshares.com
+    - dele-puppy            # id: puppies     |  seed node: 95.85.33.16:8764
+    - cny.bts500            # id: heyD
+    - btsx.chinesecommunity # id: ripplexiaoshan
+    - delegate.cgafeng
+    - testz
+    - delegate.xeldal
+    - delegate.coolspeed
+    - maqifrnswa
+    - spartako
+    - emski.bitdelegate
+    - dpos.crazybit
+    - delegate.webber
+    - calabiyau
+    - kokojie
+    - bdnoble
+    - bitcoiners
+    - delegate1.john-galt
+    - delegate-clayop
+
+    # standby newcomers producing feeds and up-to-date (payrate 3%)
+    # (getting these voted in is good for decentralization)
+    - delegate.robrigo
+    - moon.warlock       # id: davidpbrown
+    - delegate-1.lafona  # 1% payrate
+    - delegate-mdj       # 2% payrate (id: mdj)
+    - delegate.ihashfury # seed node: 188.226.195.137:60696

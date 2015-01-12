@@ -235,6 +235,8 @@ Examples:
             if 'dvs/' + args.hash in tags:
                 args.hash = 'dvs/' + args.hash
 
+        # TODO: time compilation, display it
+
         clone()
 
         os.chdir(BTS_BUILD_DIR)
@@ -335,6 +337,8 @@ slate:
  - delegate_N
 """
             print(slate_example)
+            default_slate = join(dirname(__file__), 'slate.yaml')
+            log.info('You can find a default slate at: %s' % default_slate)
             sys.exit(1)
 
         logging.getLogger('bts_tools').setLevel(logging.INFO)
