@@ -21,6 +21,9 @@ logging:
     bts_tools.profile: INFO
 
 
+# flags to be passed to make; shared among all build environments
+make_args: ['-j2']
+
 # list of configurations for building the bitshares client
 #
 # build envs define the following vars:
@@ -37,7 +40,6 @@ build_environments:
     bts:
         git_repo: https://github.com/BitShares/bitshares.git
         git_branch: master
-        make_args: ['-j2']
         build_dir: ~/.BitShares_build
         bin_dir: ~/.BitShares_bin
         bin_name: bitshares_client
@@ -45,7 +47,6 @@ build_environments:
     bts-dev:
         git_repo: https://github.com/BitShares/bitshares.git
         git_branch: develop
-        make_args: ['-j2']
         build_dir: ~/.BitSharesDev_build
         bin_dir: ~/.BitSharesDev_bin
         bin_name: bitshares_client
@@ -53,7 +54,6 @@ build_environments:
     dvs:
         git_repo: https://github.com/BitShares/DevShares.git
         git_branch: master
-        make_args: ['-j2']
         build_dir: ~/.DevShares_build
         bin_dir: ~/.DevShares_bin
         bin_name: devshares_client
@@ -61,7 +61,6 @@ build_environments:
     pts:
         git_repo: https://github.com/PTS-DPOS/PTS.git
         git_branch: master
-        make_args: ['-j2']
         build_dir: ~/.PTS_build
         bin_dir: ~/.PTS_bin
         bin_name: pts_client
@@ -69,7 +68,6 @@ build_environments:
     pts-dev:
         git_repo: https://github.com/PTS-DPOS/PTS.git
         git_branch: develop
-        make_args: ['-j2']
         build_dir: ~/.PTSdev_build
         bin_dir: ~/.PTSdev_bin
         bin_name: pts_client
@@ -77,7 +75,6 @@ build_environments:
     sparkle:
         git_repo: https://github.com/sparkle5/Sparkle.git
         git_branch: sparkle
-        make_args: ['-j2']
         build_dir: ~/.Sparkle_build
         bin_dir: ~/.Sparkle_bin
         bin_name: sparkle_client

@@ -119,7 +119,7 @@ def configure_gui():
 
 
 def build():
-    make_list = ['make'] + BUILD_ENV.get('make_args', [])
+    make_list = ['make'] + core.config.get('make_args', []) + BUILD_ENV.get('make_args', [])
     run(make_list, verbose=True)
 
 
