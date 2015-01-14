@@ -24,12 +24,15 @@ slate:
     - dev.sidhujag                 # 100%  https://bitsharestalk.org/index.php?topic=12027
     - elmato                       # 100%  https://bitsharestalk.org/index.php?topic=12494
     - blackwavelabs                # 100%  https://bitsharestalk.org/index.php?topic=12907
+    - d1.yunbi                     # 100%  https://bitsharestalk.org/index.php?topic=13233
+    - d2.yunbi                     # 100%  https://bitsharestalk.org/index.php?topic=13233
 
     # marketing initiatives
     - marketing.methodx            # 100%  https://bitsharestalk.org/index.php?topic=11663
     - argentina-marketing.matt608  # 100%  https://bitsharestalk.org/index.php?topic=11847
     - media.bitscape               # 100%  https://bitsharestalk.org/index.php?topic=12833
     - delegate.rgcrypto            # 100%  http://rgcrypto.wordpress.com/2015/01/05/announcement/
+    - market.cn.group101           # 100%  https://bitsharestalk.org/index.php?topic=13226
 
     # active "standard" delegates  (3% payrate)
     - delegate.xeroc
@@ -63,4 +66,5 @@ slate:
     - moon.warlock       # id: davidpbrown
     - delegate-1.lafona  # 1% payrate
     - delegate-mdj       # 2% payrate (id: mdj)
-    - delegate.ihashfury # seed node: 188.226.195.137:60696
+    - delegate.ihashfury # seed node: 188.226.195.137:60696  |  chain server: 188.226.195.137:61696
+    - triox-delegate     # id: triox
