@@ -74,6 +74,7 @@ client (still as root)::
 
     # apt-get install build-essential git cmake  libssl-dev libdb5.3++-dev libncurses5-dev libreadline-dev python3-dev libffi-dev virtualenvwrapper libboost-dev libboost-thread1.55-dev libboost-date-time1.55-dev libboost-system1.55-dev libboost-filesystem1.55-dev libboost-program-options1.55-dev libboost-signals1.55-dev libboost-serialization1.55-dev libboost-chrono1.55-dev libboost-context1.55-dev libboost-locale1.55-dev libboost-coroutine1.55-dev libboost-iostreams1.55-dev libboost-test1.55-dev
 
+**FIXME:** add section about NTP
 
 
 Mac OSX
@@ -150,8 +151,8 @@ which should show the online help for the tools. You should definitely get
 accustomed to the list of commands that are provided.
 
 
-Build the BitShares client
-==========================
+Build and run the BitShares client
+==================================
 
 Assuming your ``bts_tools`` virtualenv is active (if not, please run
 ``workon bts_tools`` in your shell), just type the following::
@@ -180,8 +181,70 @@ password for the RPC connection. Next time you will only need to::
 
 to launch the client.
 
-**TODO** explain how to run the client in a tmux session
+At this point, you want to create a wallet, an account and register it as delegate.
+Please look at the `BitShares wiki <http://wiki.bitshares.org/index.php/Delegate/How-To>`_
+on how to do this.
 
+Pro Tip: running the client in tmux
+-----------------------------------
+
+Running the client inside your shell after having logged in to your VPS is what
+you want to do in order to be able to run it 24/7. However, you want the client
+to still keep running even after logging out. The solution to this problem is to
+use what is called a terminal multiplexer, such as `screen`_ or `tmux`_. Don't
+worry about the complicated name, what a terminal multiplexer allows you to do is to
+run a shell to which you can "attach" and "detach" at will, and which will keep
+running in the background. When you re-attach to it, you will see your screen as
+if you had never disconnected.
+
+Here we will use ``tmux``, but the process with ``screen`` is extremely similar
+(although a few keyboard shortcuts change).
+
+The first thing to do is to launch ``tmux`` itself, simply by running the following
+in your shell::
+
+    $ tmux
+
+You should now see the same shell prompt, but a status bar should have appeared
+at the bottom of your screen, meaning you are now running "inside" tmux.
+
+.. hint:: The keyboard shortcuts are somewhat arcane, but this is the bare minimum you have to remember:
+
+   when outside of tmux:
+
+   - ``tmux`` : create a new tmux session
+   - ``tmux attach`` : re-attach to a running session
+
+   when inside of tmux:
+
+   - ``ctrl+b d`` : detach the session - do this before disconnecting from your server
+   - ``ctrl+b [`` : enter "scrolling mode" - you can scroll back the screen (normal arrowsand sliders from
+     your terminal application don't work with tmux...) Use ``q`` to quit this mode
+
+
+So let's try attaching/detaching our tmux session now:
+as you just ran 'tmux', you are now inside it
+type ``ctrl-b d``, and you should now be back to your shell before launching it
+
+::
+
+   $ tmux attach  # this re-attaches to our session
+   $ bts run      # we run the bitshares client inside tmux
+
+type ``ctrl-b d``, you are now outside of tmux, and doesn't see anything from the bts client
+
+::
+
+   $ tmux attach  # this re-attaches your session, and you should see the bts client still in action
+
+
+To get more accustomed to tmux, it is recommended to find tutorials on the web,
+`this one`_ for instance seems to do a good job of showing the power of tmux while
+not being too scary...
+
+.. _tmux: http://tmux.sourceforge.net/
+.. _screen: http://www.gnu.org/software/screen/
+.. _this one: https://danielmiessler.com/study/tmux/
 
 
 Run the monitoring webapp
@@ -189,16 +252,70 @@ Run the monitoring webapp
 
 This is the good part :)
 
-- monitoring online/offline, connections, etc
+Now that you know how to build and run the delegate client, let's
+look into setting up the monitoring of the client. Say you want to monitor the
+delegate called ``mydelegate``. The possible events that we can monitor and
+the actions that we can take also are the following:
 
-  - configuring notifications
-
+- monitor when the client comes online / goes offline (crash), and send
+  notifications when that happens (email or iOS)
+- monitor when the client loses network connection
+- monitor when the client misses a block
 - publishing feeds
-- watching version number
+- ensuring that version number is the same as the one published on the
+  blockchain, and if not, publish a new version
+
+These can be set independently for each delegate that you monitor, and need
+to be specified in the ``nodes`` attribute of the ``config.yaml`` file.
+
+Each node specifies the type of client that it runs (BitShares, PTS, ...) In
+our case here, this will be ``"bts"``.
+
+The type of the node will be ``"delegate"`` (could be ``"seed"`` too, but we're
+setting up a delegate here).
+
+The name here will be set to ``"mydelegate"``, and we want to put the following
+in the ``"monitoring"`` variable: ``[version, feeds, email]``. As online status,
+network connections and missed blocks are always monitored for a delegate node,
+you only need to specify whether you want to receive the notifications by email
+or boxcar, in this case here we want ``email``. You will also need to configure
+the email section later in the ``config.yaml`` in order to be able to receive
+them.
+
+This gives the following::
+
+    nodes:
+        -
+            client: bts
+            type: delegate
+            name: mydelegate
+            monitoring: [version, feeds, email]
+
+Once you have properly edited the ``~/.bts_tools/config.yaml`` file, it is just
+a matter of running::
+
+    $ bts monitor
+
+and you can now go to `http://localhost:5000/ <http://localhost:5000/>`_ in
+order to see it.
+
+**TODO:** install it inside uwsgi + nginx
+
+
+Format of the config.yaml file
+==============================
+
+- build environments
+- run environments
+- nodes list
 
 
 Other notes
 ===========
+
+**TODO:** publish slate
+
+
 
 setup a seed node with a supervisord agent to restart the seed node when it crashes
 
