@@ -21,7 +21,7 @@
 from .core import UnauthorizedError, RPCError, run, get_data_dir, get_bin_name
 from .process import bts_binary_running, bts_process
 from . import core
-from collections import defaultdict
+from collections import defaultdict, deque
 from os.path import join, expanduser
 from dogpile.cache import make_region
 import bts_tools.core  # needed to be able to exec('raise bts.core.Exception')
@@ -261,13 +261,19 @@ class BTSProxy(object):
     def get_last_slots(self):
         """Return the last delegate slots, and cache this until at least the next block
         production time of the wallet."""
+        new_api = self.bts_type() in {'bts', 'dvs'} and self.get_info()['client_version'] >= '0.6'
+
         def _get_slots():
             # make sure we get enough slots to get them all up to our latest, even if there
             # are a lot of missed blocks by other delegates
-            slots = self.blockchain_get_delegate_slot_records(self.name, -500, 100)
+            if new_api:
+                slots = self.blockchain_get_delegate_slot_records(self.name, 5)
+            else:
+                slots = self.blockchain_get_delegate_slot_records(self.name, -500, 100)
             # non-producing wallets can afford to have a 1-min time resolution for this
             next_production_time = self.get_info()['wallet_next_block_production_time'] or 60
             # make it +1 to ensure we produce the block first, and then peg the CPU
+            # Note: with bts>=0.6, this shouldn't be such a time consuming operation anymore
             self._slot_cache.expiration_time = next_production_time + 1
             return slots
         return self._slot_cache.get_or_create('slots', _get_slots)
@@ -277,25 +283,46 @@ class BTSProxy(object):
             # only makes sense to call get_streak on delegate nodes
             return False, 1
 
+        # TODO: remove this once all clients (PTS included) use the new api
+        new_api = self.bts_type() in {'bts', 'dvs'} and self.get_info()['client_version'] >= '0.6'
+
         try:
             global ALL_SLOTS
-            if self.name not in ALL_SLOTS:
+            key = (self.bts_type(), self.name)
+            if key not in ALL_SLOTS:
                 # first time, get all slots from the delegate and cache them
-                ALL_SLOTS[self.name] = self.blockchain_get_delegate_slot_records(self.name, 1, 1000000,
-                                                                                 cached=cached)
-                log.debug('Got all %d slots for delegate %s' % (len(ALL_SLOTS[self.name]), self.name))
+                if new_api:
+                    slots = self.blockchain_get_delegate_slot_records(self.name, 10000, cached=cached)
+                    # workaround for https://github.com/BitShares/bitshares/issues/1289
+                    delegate_id = slots[0]['index']['delegate_id'] if slots else None
+                    ALL_SLOTS[key] = deque(s for s in slots if s['index']['delegate_id'] == delegate_id)
+                else:
+                    slots = self.blockchain_get_delegate_slot_records(self.name, 1, 1000000, cached=cached)
+                    ALL_SLOTS[key] = slots
+                log.debug('Got all %d slots for delegate %s' % (len(ALL_SLOTS[key]), self.name))
             else:
                 # next time, only get last slots and update our local copy
                 log.debug('Getting last slots for delegate %s' % self.name)
-                for slot in self.get_last_slots():
-                    if slot not in ALL_SLOTS[self.name][-10:]:
-                        ALL_SLOTS[self.name].append(slot)
+                if new_api:
+                    for slot in reversed(self.get_last_slots()):
+                        if slot not in itertools.islice(ALL_SLOTS[key], 0, 10):
+                            ALL_SLOTS[key].appendleft(slot)
+                else:
+                    for slot in self.get_last_slots():
+                        if slot not in ALL_SLOTS[key][-10:]:
+                            ALL_SLOTS[key].append(slot)
 
-            slots = ALL_SLOTS[self.name]
+            slots = ALL_SLOTS[key]
             if not slots:
                 return True, 0
-            streak = itertools.takewhile(lambda x: (type(x['block_id']) is type(slots[-1]['block_id'])), reversed(slots))
-            return slots[-1]['block_id'] is not None, len(list(streak))
+            if new_api:
+                latest = slots[0]
+                rslots = slots
+            else:
+                latest = slots[-1]
+                rslots = reversed(slots)
+            streak = itertools.takewhile(lambda x: (type(x['block_id']) is type(latest['block_id'])), rslots)
+            return latest['block_id'] is not None, len(list(streak))
 
         except Exception as e:
             # can fail with RPCError when delegate has not been registered yet
