@@ -73,18 +73,14 @@ def send_notification_boxcar(msg, alert=False):
 
 
 def send_notification(nodes, node_msg, alert=False):
-    """msg is sent to each node separately"""
-    for node in nodes:
-        msg = '%s: %s' % (node.name, node_msg)
-        if 'email' in node.monitoring:
+    for ntype, notify in [('email', send_notification_email),
+                          ('boxcar', send_notification_boxcar)]:
+        notify_nodes = [node for node in nodes if ntype in node.monitoring]
+        if notify_nodes:
+            node_names = ', '.join(notify_nodes)
+            msg = '%s - %s: %s' % (nodes[0].bts_type(), node_names, node_msg)
             try:
-                send_notification_email(msg, alert)
+                notify(msg, alert)
             except Exception as e:
-                log.warning('Failed sending notification to %s: %s' % (node.name, node_msg))
-                log.exception(e)
-        if 'boxcar' in node.monitoring:
-            try:
-                send_notification_boxcar(msg, alert)
-            except Exception as e:
-                log.warning('Failed sending notification to %s: %s' % (node.name, node_msg))
+                log.warning('Failed sending %s notification to %s: %s' % (ntype, node_names, node_msg))
                 log.exception(e)
