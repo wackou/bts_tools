@@ -80,6 +80,9 @@ build_environments:
         bin_name: sparkle_client
 
 
+# flags to be passed when running the client; shared among all run environments
+run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
+
 # list of clients that can be run
 #
 # clients define the following vars:

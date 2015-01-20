@@ -265,7 +265,7 @@ Examples:
             # run last built version
             bin_name = join(BTS_BIN_DIR, BTS_BIN_NAME)
 
-        run_args = run_env.get('run_args', [])
+        run_args = core.config.get('run_args', []) + run_env.get('run_args', [])
 
         data_dir = run_env.get('data_dir')
         if data_dir:
