@@ -2,7 +2,7 @@ BitShares delegate tools
 ------------------------
 
 there are 2 tools currently provided:
- - command line util allowing to quickly build and run the bitshares client
+ - command line util allowing to quickly build and run the BitShares client
  - web app allowing to monitor a running instance of the client
    and send an email or push notification on failure
    

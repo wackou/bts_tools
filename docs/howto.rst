@@ -34,37 +34,3 @@ Note that there are some choices of software that are quite opinionated in this
 guide, however this should not be considered as the ony way to do things, but
 rather just a way that the author thinks makes sense and found convenient for
 himself.
-
-
-Format of the config.yaml file
-==============================
-
-- build environments
-- run environments
-- nodes list
-
-
-Other notes
-===========
-
-**TODO:** publish slate
-
-
-
-setup a seed node with a supervisord agent to restart the seed node when it crashes
-
-apt-get install supervisor
-
-vi /etc/supervisor/conf.d/seednode.conf
-
-::
-
-    [program:seednode]
-    user=admin
-    command=/home/user/.BitShares_bin/bitshares_client --data-dir XX --p2p-port XX  --daemon --rpcuser XX --rpcpassword XX --rpcport 0 --httpport 5678 --max-connections 400
-    autorestart=true
-
-
-
-
-.. _homebrew: http://brew.sh/

@@ -82,3 +82,5 @@ need xcode-5.1 on 10.9 (?)
     $ sudo xcode-select -s /Applications/Xcode-5.1.1.app/Contents/Developer
 
 
+.. _homebrew: http://brew.sh/
+
