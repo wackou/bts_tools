@@ -36,7 +36,7 @@ You can host multiple delegates accounts in the same wallet, and check feed info
 |
 
 Monitoring multiple instances (ie: running on different hosts) at the same time,
-to have an overview while running backup nodes and re-compiling your main node.:
+to have an overview while running backup nodes and re-compiling your main node:
 
 .. image:: ../bts_tools_screenshot3.png
    :alt: Info screenshot

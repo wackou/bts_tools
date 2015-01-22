@@ -30,8 +30,8 @@ password for the RPC connection. Next time you will only need to::
 to launch the client.
 
 At this point, you want to create a wallet, an account and register it as delegate.
-Please look at the `BitShares wiki <http://wiki.bitshares.org/index.php/Delegate/How-To>`_
-on how to do this.
+Please refer to the `BitShares wiki <http://wiki.bitshares.org/index.php/Delegate/How-To>`_
+for instructions.
 
 Pro Tip: running the client in tmux
 -----------------------------------
