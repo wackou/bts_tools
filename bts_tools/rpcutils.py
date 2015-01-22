@@ -178,6 +178,8 @@ class BTSProxy(object):
         self._slot_cache = make_region().configure('dogpile.cache.memory')
 
     def __getattr__(self, funcname):
+        if funcname.startswith('_'):
+            raise AttributeError
         def call(*args, cached=True):
             return self.rpc_call(funcname, *args, cached=cached)
         return call
@@ -243,16 +245,21 @@ class BTSProxy(object):
         return bts_process(self)
 
     def bts_type(self):
-        blockchain_name = self.about()['blockchain_name']
-        if blockchain_name == 'BitShares':
-            return 'bts'
-        elif blockchain_name == 'DevShares':
-            return 'dvs'
-        elif blockchain_name == 'PTS':
-            return 'pts'
-        elif blockchain_name == 'Sparkle':
-            return 'sparkle'
-        return 'unknown'
+        try:
+            return self._bts_type
+        except AttributeError:
+            blockchain_name = self.about()['blockchain_name']
+            if blockchain_name == 'BitShares':
+                self._bts_type = 'bts'
+            elif blockchain_name == 'DevShares':
+                self._bts_type = 'dvs'
+            elif blockchain_name == 'PTS':
+                self._bts_type = 'pts'
+            elif blockchain_name == 'Sparkle':
+                self._bts_type = 'sparkle'
+            else:
+                return 'unknown'
+        return self._bts_type
 
     def is_active(self, delegate):
         active_delegates = [d['name'] for d in self.blockchain_list_delegates(0, 101)]
