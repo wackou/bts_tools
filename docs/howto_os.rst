@@ -12,9 +12,10 @@ to the ones in the final release).
 It should be very similar on Ubuntu, however some packages might have slightly
 different names. Adapting it for Ubuntu is left as an exercise to the reader.
 
-Note about the text editor: the author likes ``vi``, but ``nano`` is easier to
-handle without previous experience, so no details will be provided when needing
-to edit text files, it will just be mentioned that you need to do it.
+Note about the text editor: there are countless wars about which editor is the
+best, but ultimately it is up to you to pick the one you like best, so no details
+will be provided when needing to edit text files, it will just be mentioned that
+you need to do it.
 
 Install base up-to-date OS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

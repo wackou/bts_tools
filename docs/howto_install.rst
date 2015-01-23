@@ -1,6 +1,6 @@
 
-Install the bts_tools
-=====================
+Install the bts_tools package
+=============================
 
 The first step in your quest for being a delegate is to install the ``bts_tools`` python package,
 and you want to do this in a ``virtualenv``. A ``virtualenv`` in python is

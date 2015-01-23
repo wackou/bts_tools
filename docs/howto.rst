@@ -18,10 +18,15 @@ seamless experience.
 (For the curious, that means using virtualenvs, tmux, etc... If you have no
 idea what these are, don't worry, we'll get to it)
 
-These are the following steps that this guide will cover:
+Once everything it setup properly, building the latest version of the client,
+running it, and launching the monitoring webapp that publishes feeds and sends
+you notifications is just a matter of::
 
+    $ bts build
+    $ bts run
+    $ bts monitor
 
-
+In details, these are the following steps that this guide will cover:
 
 .. toctree::
    howto_os
