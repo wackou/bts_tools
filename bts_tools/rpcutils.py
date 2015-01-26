@@ -285,13 +285,16 @@ class BTSProxy(object):
             return slots
         return self._slot_cache.get_or_create('slots', _get_slots)
 
+    def api_version(self):
+        return re.search(r'[\d.]+', self.get_info()['client_version']).group()
+
     def get_streak(self, cached=True):
         if self.type != 'delegate':
             # only makes sense to call get_streak on delegate nodes
             return False, 1
 
         # TODO: remove this once all clients (PTS included) use the new api
-        new_api = self.bts_type() in {'bts', 'dvs'} and self.get_info()['client_version'] >= '0.6'
+        new_api = self.bts_type() in {'bts', 'dvs'} and self.api_version() >= '0.6'
 
         try:
             global ALL_SLOTS

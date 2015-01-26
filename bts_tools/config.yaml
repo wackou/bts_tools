@@ -81,7 +81,8 @@ build_environments:
 
 
 # flags to be passed when running the client; shared among all run environments
-run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
+# TODO: only activate '--statistics-enabled' after 0.6 has been released
+run_args: ['--min-delegate-connection-count=0'] #, '--statistics-enabled']
 
 # list of clients that can be run
 #

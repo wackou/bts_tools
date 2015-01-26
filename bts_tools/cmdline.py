@@ -228,12 +228,14 @@ Examples:
     if args.command in {'build', 'build_gui'}:
         select_build_environment(args.environment)
 
-        # if we are on devshares, tags are prepended with dvs/, check if user
-        # forgot to specify it
-        if args.environment == 'dvs' and args.hash:
+        # if we are on bitshares (devshares), tags are now prepended with bts/ (dvs/),
+        # check if user forgot to specify it
+        if args.environment in {'bts', 'dvs'} and args.hash:
             tags = run('cd %s; git tag -l' % BTS_BUILD_DIR, io=True).stdout.strip().split('\n')
-            if 'dvs/' + args.hash in tags:
+            if args.environment == 'dvs' and 'dvs/' + args.hash in tags:
                 args.hash = 'dvs/' + args.hash
+            if args.environment == 'bts' and 'bts/' + args.hash in tags:
+                args.hash = 'bts/' + args.hash
 
         # TODO: time compilation, display it
 
