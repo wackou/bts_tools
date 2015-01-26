@@ -39,6 +39,7 @@ slate:
     # other / special purpose delegates
     - fuzzy.beyondbitcoin          # 100%  https://bitsharestalk.org/index.php?topic=13485
     - fund.bitsharesbreakout       # 100%  https://bitsharestalk.org/index.php?topic=13500
+    - paid-delegate-cutoff.misc.nikolai # 0%  https://bitsharestalk.org/index.php?topic=13732
 
     # active "standard" delegates  (3% payrate)
     - delegate.xeroc
