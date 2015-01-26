@@ -6,6 +6,17 @@
 History
 =======
 
+0.1.6 (2015-01-26)
+------------------
+
+* started writing reference doc and tutorial
+* full support for DevShares
+* fixed issue with new naming of tags (bts/X.X.X and dvs/X.X.X)
+* include slate for btstools.digitalgaia as an example slate
+* send notifications grouped by clients (for multiple delegates in same wallet)
+* fixed tools for new API in 0.6.0 (blockchain_get_delegate_slot_records)
+
+
 0.1.5 (2015-01-06)
 ------------------
 
