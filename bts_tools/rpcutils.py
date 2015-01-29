@@ -30,6 +30,7 @@ import importlib
 import requests
 import itertools
 import json
+import re
 import logging
 
 log = logging.getLogger(__name__)

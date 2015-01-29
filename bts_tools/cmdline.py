@@ -317,7 +317,7 @@ Examples:
     elif args.command == 'list':
         select_build_environment(args.environment)
         print('\nListing built binaries for environment: %s' % args.environment)
-        run('ls -ltr "%s"' % BTS_BIN_DIR)
+        run('ls -ltr "%s"/*_client*' % BTS_BIN_DIR)
 
     elif args.command == 'monitor':
         print('\nLaunching monitoring web app...')
