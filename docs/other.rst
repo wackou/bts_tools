@@ -2,10 +2,6 @@
 Other notes / TODO
 ==================
 
-**TODO:** publish slate
-
-
-
 setup a seed node with a supervisord agent to restart the seed node when it crashes
 
 apt-get install supervisor

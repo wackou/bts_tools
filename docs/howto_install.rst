@@ -27,7 +27,7 @@ Note that after creating it, it is already active, so no need to call
 
 Let's install the tools now::
 
-    $ pip install bts_tools
+    $ pip3 install bts_tools
 
 That's it, you should now be setup for building the client! To see all that the tools
 provide, try running::
