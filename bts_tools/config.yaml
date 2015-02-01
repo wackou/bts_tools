@@ -43,6 +43,7 @@ build_environments:
         build_dir: ~/.BitShares_build
         bin_dir: ~/.BitShares_bin
         bin_name: bitshares_client
+        gui_bin_name: BitShares
 
     bts-dev:
         git_repo: https://github.com/BitShares/bitshares.git
@@ -50,6 +51,7 @@ build_environments:
         build_dir: ~/.BitSharesDev_build
         bin_dir: ~/.BitSharesDev_bin
         bin_name: bitshares_client
+        gui_bin_name: BitShares
 
     dvs:
         git_repo: https://github.com/BitShares/DevShares.git
@@ -57,6 +59,7 @@ build_environments:
         build_dir: ~/.DevShares_build
         bin_dir: ~/.DevShares_bin
         bin_name: devshares_client
+        gui_bin_name: DevShares
 
     pts:
         git_repo: https://github.com/PTS-DPOS/PTS.git
@@ -64,6 +67,7 @@ build_environments:
         build_dir: ~/.PTS_build
         bin_dir: ~/.PTS_bin
         bin_name: pts_client
+        gui_bin_name: PTS
 
     pts-dev:
         git_repo: https://github.com/PTS-DPOS/PTS.git
@@ -71,6 +75,7 @@ build_environments:
         build_dir: ~/.PTSdev_build
         bin_dir: ~/.PTSdev_bin
         bin_name: pts_client
+        gui_bin_name: PTS
 
     sparkle:
         git_repo: https://github.com/sparkle5/Sparkle.git

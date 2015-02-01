@@ -33,12 +33,13 @@ import logging
 
 log = logging.getLogger(__name__)
 
-BTS_GIT_REPO   = None
-BTS_GIT_BRANCH = None
-BTS_BUILD_DIR  = None
-BTS_HOME_DIR   = None
-BTS_BIN_DIR    = None
-BTS_BIN_NAME   = None
+BTS_GIT_REPO     = None
+BTS_GIT_BRANCH   = None
+BTS_BUILD_DIR    = None
+BTS_HOME_DIR     = None
+BTS_BIN_DIR      = None
+BTS_BIN_NAME     = None
+BTS_GUI_BIN_NAME = None
 
 BUILD_ENV = None
 RUN_ENV   = None
@@ -56,12 +57,13 @@ def select_build_environment(env):
         log.error('Unknown build environment: %s' % env)
         sys.exit(1)
 
-    global BTS_GIT_REPO, BTS_GIT_BRANCH, BTS_BUILD_DIR, BTS_BIN_DIR, BUILD_ENV, BTS_BIN_NAME
-    BTS_GIT_REPO   = env['git_repo']
-    BTS_GIT_BRANCH = env['git_branch']
-    BTS_BUILD_DIR  = expanduser(env['build_dir'])
-    BTS_BIN_DIR    = expanduser(env['bin_dir'])
-    BTS_BIN_NAME   = env['bin_name']
+    global BTS_GIT_REPO, BTS_GIT_BRANCH, BTS_BUILD_DIR, BTS_BIN_DIR, BUILD_ENV, BTS_BIN_NAME, BTS_GUI_BIN_NAME
+    BTS_GIT_REPO     = env['git_repo']
+    BTS_GIT_BRANCH   = env['git_branch']
+    BTS_BUILD_DIR    = expanduser(env['build_dir'])
+    BTS_BIN_DIR      = expanduser(env['bin_dir'])
+    BTS_BIN_NAME     = env['bin_name']
+    BTS_GUI_BIN_NAME = env.get('gui_bin_name')
 
     BUILD_ENV = env
     return env
@@ -290,8 +292,10 @@ Examples:
 
     elif args.command == 'run_gui':
         select_build_environment(args.environment)
-        # FIXME: only works on OSX
-        run('open %s' % join(BTS_BUILD_DIR, 'programs/qt_wallet/bin/*.app'))
+        if platform == 'darwin':
+            run('open %s' % join(BTS_BUILD_DIR, 'programs/qt_wallet/bin/%s.app' % BTS_GUI_BIN_NAME))
+        elif platform == 'linux':
+            run(join(BTS_BUILD_DIR, 'programs/qt_wallet/bin/%s' % BTS_GUI_BIN_NAME))
 
     elif args.command == 'clean':
         select_build_environment(args.environment)
