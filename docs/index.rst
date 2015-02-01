@@ -19,14 +19,19 @@ delegate proposals at `digitalgaia.io <http://digitalgaia.io>`_. Thanks!
 
 To get started, just type the following in a shell::
 
-    $ pip install bts_tools
+    $ pip3 install bts_tools
 
-and follow through the documentation. If you want a hands-on approach to
-setting up a delegate from scratch, please head to the following section: :doc:`howto`
+and follow through the documentation. Jump to the :doc:`install` section for more
+details about installation or if you run into any problems.
 
-Contents:
+If you want a hands-on approach to setting up a delegate from scratch, please
+head to the following section: :doc:`howto`
+
+Documentation contents
+----------------------
 
 .. toctree::
+   install
    cmdline
    monitor
    variants

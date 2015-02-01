@@ -28,14 +28,17 @@ doing the following:
 Edit the file ``/etc/apt/sources.list`` and add those lines (or replace
 what's there with them)::
 
-    deb http://mirrors.gandi.net/debian jessie main contrib non-free
-    deb http://mirrors.gandi.net/debian-security jessie/updates main contrib non-free
+
+    deb http://ftp.debian.org/debian jessie main contrib non-free
+    deb http://security.debian.org/ jessie/updates main contrib non-free
+
 
 Then run the following in your shell (as root, no sudo by default on debian)::
 
     # apt-get update && apt-get dist-upgrade
 
 At this point, you might want to reboot to get on the new kernel.
+
 
 Install required dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
