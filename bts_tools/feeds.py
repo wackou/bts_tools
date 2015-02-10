@@ -195,6 +195,9 @@ def check_feeds(nodes):
                 # TODO: do we really want to ignore rpc_host != 'localhost', or should we just do what is asked?
                 if node.type == 'delegate' and node.rpc_host == 'localhost' and 'feeds' in node.monitoring:
                     if nfeed_checked % feed_period == 0:
+                        if not node.get_info()['wallet_unlocked']:
+                            log.warning('Cannot publish feeds for delegate %s: wallet is locked' % node.name)
+                            continue
                         # publish median value of the price, not latest one
                         median_feeds = {c: median(c) for c in feeds}
                         feeds_msg = FEEDS_FORMAT_STRING % tuple(median_feeds[c] for c in VISIBLE_FEEDS)
