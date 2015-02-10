@@ -357,6 +357,11 @@ slate:
 
         client = BTSProxy(type='delegate', name=delegate, client=args.environment)
 
+        if not client.get_info()['wallet_unlocked']:
+            log.error('Cannot publish slate: wallet locked...')
+            log.error('Please unlock your wallet first and try again')
+            sys.exit(1)
+
         log.info('Clearing all previously approved delegates')
         for d in client.wallet_list_accounts():
             log.debug('Unapproving delegate: %s' % d['name'])
