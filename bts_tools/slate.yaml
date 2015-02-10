@@ -23,11 +23,11 @@ slate:
     - dev-metaexchange.monsterer   # 100%  https://bitsharestalk.org/index.php?topic=12317
     - dev.sidhujag                 # 100%  https://bitsharestalk.org/index.php?topic=12027
     - elmato                       # 100%  https://bitsharestalk.org/index.php?topic=12494
-    - blackwavelabs                # 100%  https://bitsharestalk.org/index.php?topic=12907
     - d1.yunbi                     # 100%  https://bitsharestalk.org/index.php?topic=13233
     - d2.yunbi                     # 100%  https://bitsharestalk.org/index.php?topic=13233
     - tradebts.gulu                # 100%  https://bitsharestalk.org/index.php?topic=13457
     - dacx.baozou                  # 100%  https://bitsharestalk.org/index.php?topic=13428
+    - dev-pc.bitcube               # 100%  https://bitsharestalk.org/index.php?topic=13995 (id: pc, cube)
 
     # marketing initiatives
     - marketing.methodx            # 100%  https://bitsharestalk.org/index.php?topic=11663
@@ -35,11 +35,12 @@ slate:
     - media.bitscape               # 100%  https://bitsharestalk.org/index.php?topic=12833
     - delegate.rgcrypto            # 100%  http://rgcrypto.wordpress.com/2015/01/05/announcement/
     - market.cn.group101           # 100%  https://bitsharestalk.org/index.php?topic=13226
+    - delegate.verbaltech          # 100%  https://bitsharestalk.org/index.php?topic=13837
+    - www.bts-hk                   # 100%  https://bitsharestalk.org/index.php?topic=13724
 
     # other / special purpose delegates
     - fuzzy.beyondbitcoin          # 100%  https://bitsharestalk.org/index.php?topic=13485
     - fund.bitsharesbreakout       # 100%  https://bitsharestalk.org/index.php?topic=13500
-    - paid-delegate-cutoff.misc.nikolai # 0%  https://bitsharestalk.org/index.php?topic=13732
 
     # active "standard" delegates  (3% payrate)
     - delegate.xeroc
