@@ -21,16 +21,22 @@ To get started, just type the following in a shell::
 
     $ pip3 install bts_tools
 
-and follow through the documentation. Jump to the :doc:`install` section for more
-details about installation or if you run into any problems.
+If you're not familiar with installing python packages or if you run into
+problems during installation, please visit the :doc:`install` section for
+more details.
 
-If you want a hands-on approach to setting up a delegate from scratch, please
-head to the following section: :doc:`howto`
+With the tools installed, you can refer to each section of the documentation
+for more information about how a certain aspect of the tools work.
+
+Otherwise, if you prefer a more hands-on approach to setting up a delegate from
+scratch, please head to the following section: :doc:`howto`
 
 Documentation contents
 ----------------------
 
 .. toctree::
+   :maxdepth: 2
+
    install
    cmdline
    monitor
@@ -38,6 +44,7 @@ Documentation contents
    howto
    config_format
    other
+   virtualenv
 
 
 

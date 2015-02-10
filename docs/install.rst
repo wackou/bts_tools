@@ -2,26 +2,50 @@
 Installing the tools
 ====================
 
-The tools need python3 to run, and usually it is just matter of::
-
-    $ pip3 install bts_tools
-
 
 Installing dependencies for the tools
 -------------------------------------
 
-However, there are some specificities depending on which OS you want to
-install them.
+You will need some dependencies installed first before you can install the
+tools proper.
 
-- on some Debian-derived OSes (Ubuntu, Mint, etc.), the ``pyyaml`` module
-  requires ``libyaml`` to be installed as well as the development headers for
-  it and python3. These can be installed with::
+Linux
+~~~~~
 
-      # apt-get install libyaml-dev python3-dev
+On Debian-derived OSes (Ubuntu, Mint, etc.), install with::
 
-- on OSX, it is also recommended to install the ``libyaml`` package::
+      # apt-get install build-essential libyaml-dev python3-dev python3-pip
+
+Mac OSX
+~~~~~~~
+
+On OSX, you can install the dependencies like that::
 
       $ brew install libyaml
+
+
+Installing the tools
+--------------------
+
+If the dependencies for the tools are properly installed, you should be able
+to install the bts_tools package with the following command::
+
+    $ pip3 install bts_tools
+
+.. note:: You might need to run this as root on linux systems
+
+
+.. note:: In general, when dealing with python packages, it is good practice to learn how
+   to work with virtualenvs, as they make installing python packages more
+   self-contained and avoid potential conflicts with python packages installed by
+   the system. They do require to invest some time learning about them first, so
+   only do it if you feel like you can dedicate that time to it. It is very
+   recommended to do so, though, as it can potentially save you a few headaches in
+   the future.
+
+   Please refer to the :doc:`virtualenv` section for more details.
+
+
 
 
 Installing dependencies for building the BitShares command-line client

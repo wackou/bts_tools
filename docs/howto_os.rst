@@ -46,7 +46,8 @@ Install required dependencies
 Next step is to install the required dependencies to compile the BitShares
 client (still as root)::
 
-    # apt-get install build-essential git cmake  libssl-dev libdb5.3++-dev libncurses5-dev libreadline-dev python3-dev libffi-dev virtualenvwrapper libboost-dev libboost-thread1.55-dev libboost-date-time1.55-dev libboost-system1.55-dev libboost-filesystem1.55-dev libboost-program-options1.55-dev libboost-signals1.55-dev libboost-serialization1.55-dev libboost-chrono1.55-dev libboost-context1.55-dev libboost-locale1.55-dev libboost-coroutine1.55-dev libboost-iostreams1.55-dev libboost-test1.55-dev
+    # apt-get install build-essential git cmake libssl-dev libdb5.3++-dev libncurses5-dev libreadline-dev \
+                      python3-dev libffi-dev virtualenvwrapper libboost-all-dev
 
 **FIXME:** add section about NTP
 
