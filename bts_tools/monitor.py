@@ -185,7 +185,11 @@ def monitoring_thread(*nodes):
                 if 'version' in node.monitoring and node.type == 'delegate' and info['wallet_unlocked']:
                     def get_published_version():
                         v = client_node.blockchain_get_account(node.name)
-                        return client_node.blockchain_get_account(node.name)['public_data']['version']
+                        try:
+                            return v['public_data']['version']
+                        except KeyError:
+                            log.info('Client version not published yet for delegate %s' % node.name)
+                            return 'none'
                     version = info['client_version']
                     pubver = published_version.get_or_create(node.name, get_published_version)
                     if version != pubver:
