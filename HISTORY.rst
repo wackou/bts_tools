@@ -6,6 +6,13 @@
 History
 =======
 
+0.1.8 (2015-02-11)
+------------------
+
+* fixed minor quirks and annoyances
+* enhanced documentation and tutorial
+
+
 0.1.7 (2015-02-05)
 ------------------
 
