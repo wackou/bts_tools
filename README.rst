@@ -8,9 +8,15 @@ There are 2 tools currently provided:
   an email or push notification on failure
 
 If you like these tools, please vote for `my
-delegate <http://digitalgaia.io/btstools.html>`__ to support further
+delegate <http://digitalgaia.io/btstools.html>`_ to support further
 development, and feel free to visit my page for other delegate proposals
-at `digitalgaia.io <http://digitalgaia.io>`__. Thanks!
+at `digitalgaia.io <http://digitalgaia.io>`_. Thanks!
+
+Documentation
+=============
+
+The main documentation for the tools, as well as a tutorial, can be found
+on `ReadTheDocs <http://bts-tools.readthedocs.org/>`_.
 
 Command-line client
 ===================
@@ -102,28 +108,3 @@ to have an overview while running backup nodes and re-compiling your main node.
 .. figure:: https://github.com/wackou/bts_tools/raw/master/bts_tools_screenshot3.png
    :width: 800
    :alt: Info screenshot
-
-Things to know (best practices and "issues") READ IT !!!
-========================================================
-
-- to properly build the bitshares client in MacOSX:
-
-  + you can (and should) build the binary with only homebrew libraries
-    (boost, etc.). Previous versions had trouble compiling and could
-    require you to hand-compile some dependencies, but newer homebrew
-    libs should compile properly
-  + ``readline`` needs to be installed by brew and you need to run
-    ``brew link --force readline`` to take precedence over the outdated
-    version of the system
-
-- when running the web client in uWSGI, make sure to:
-
-  + set ``enable-threads = true``, otherwise you won't get the monitoring
-    thread properly launched
-  + set ``lazy-apps = true``, otherwise the stats object will not get
-    properly shared between the master process and the workers, and you
-    won't get any monitoring data
-  + set ``workers = 1``, otherwise you will get multiple instances of the
-    worker thread active at the same time
-
-
