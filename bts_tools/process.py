@@ -72,7 +72,7 @@ def binary_description(node):
     try:
         desc = p.exe().split(node.bin_name + '_')[1]
     except IndexError:
-        log.warning('Could not identify description from filename: %s' % p.exe())
+        log.debug('Could not identify description from filename: %s' % p.exe())
         return client_version
     if client_version in desc:
         # we're on a tag, then just return the tag
