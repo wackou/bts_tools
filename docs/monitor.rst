@@ -20,6 +20,9 @@ To run the debug/development monitoring web app, just do the following:
 
 and it will launch on ``localhost:5000``.
 
+
+.. _production server:
+
 Setting up on a production server
 ---------------------------------
 

@@ -54,6 +54,14 @@ a matter of running::
 and you can now go to `http://localhost:5000/ <http://localhost:5000/>`_ in
 order to see it.
 
-**TODO:** install it inside uwsgi + nginx
+
+Install the tools behind Nginx + uWSGI
+--------------------------------------
+
+Although outside of the scope of this tutorial, if you want to set up your
+delegate properly and have the web interface accessible from the outside, it
+is recommended to put it behind an Nginx server. Please refer here for an
+example: :ref:`production server`  (skip the part about the virtualenv if
+it doesn't apply to you)
 
 .. _boxcar: https://boxcar.io

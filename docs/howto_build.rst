@@ -2,8 +2,7 @@
 Build and run the BitShares client
 ==================================
 
-Assuming your ``bts_tools`` virtualenv is active (if not, please run
-``workon bts_tools`` in your shell), just type the following::
+To build the BitShares client, just type the following::
 
     $ bts build
 

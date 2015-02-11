@@ -21,33 +21,37 @@ Install base up-to-date OS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Installing the base OS will depend on your VPS provider, so check their
-documentation for that. As Debian Jessie is not released yet, install
-Debian Wheezy instead (Debian stable, or 7.0), and upgrade to Jessie by
-doing the following:
+documentation for that. The tutorial will use Debian Jessie as base distro, so
+you should install it directly whenever possible (or a release candidate
+version of it)
 
-Edit the file ``/etc/apt/sources.list`` and add those lines (or replace
-what's there with them)::
+.. note:: As Debian Jessie has not been officially released yet, your VPS
+   provider might not offer it as an install option, so install Debian Wheezy
+   instead (Debian stable, or 7.0), and upgrade to Jessie by doing the following:
+
+   Edit the file ``/etc/apt/sources.list`` and add those lines (or replace
+   what's there with them)::
 
 
-    deb http://ftp.debian.org/debian jessie main contrib non-free
-    deb http://security.debian.org/ jessie/updates main contrib non-free
+       deb http://ftp.debian.org/debian jessie main contrib non-free
+       deb http://security.debian.org/ jessie/updates main contrib non-free
 
 
-Then run the following in your shell (as root, no sudo by default on debian)::
+   Then run the following in your shell (as root, no sudo by default on debian)::
 
-    # apt-get update && apt-get dist-upgrade
+       # apt-get update && apt-get dist-upgrade
 
-At this point, you might want to reboot to get on the new kernel.
+   At this point, you might want to reboot to get on the new kernel.
 
 
 Install required dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Next step is to install the required dependencies to compile the BitShares
-client (still as root)::
+Next step is to install the dependencies necessary for installing the tools and
+for compiling the BitShares client (still as root)::
 
     # apt-get install build-essential git cmake libssl-dev libdb5.3++-dev libncurses5-dev libreadline-dev \
-                      python3-dev libffi-dev virtualenvwrapper libboost-all-dev
+                      python3-dev python3-pip libffi-dev libboost-all-dev
 
 **FIXME:** add section about NTP
 
@@ -61,7 +65,7 @@ dependencies yourself.
 
 ::
 
-    brew install cmake boost berkeley-db readline
+    brew install git cmake boost berkeley-db readline openssl
     brew link --force readline
 
 If you already had an "old" version of boost installed, please upgrade to a
@@ -76,6 +80,7 @@ properly installed dependencies, etc.)
 ::
 
     $ brew upgrade cmake
+
 
 Choosing the correct version of XCode
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
