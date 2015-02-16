@@ -126,8 +126,16 @@ def get_feed_prices():
     yahoo_prices = get_from_yahoo(yahoo_curs, 'USD')
     cny_usd = yahoo_prices.pop('CNY')
 
-    btc_cny = weighted_mean([get_from_btc38('BTC', 'CNY'),
-                             get_from_bter('BTC', 'CNY')])
+    feeds_btc_cny = []
+    try:
+        feeds_btc_cny.append(get_from_btc38('BTC', 'CNY'))
+    except:
+        pass
+    try:
+        feeds_btc_cny.append(get_from_bter('BTC', 'CNY'))
+    except:
+        pass
+    btc_cny = weighted_mean(feeds_btc_cny)
     cny_btc = 1 / btc_cny
 
     # then get the weighted price in btc for the most important markets
