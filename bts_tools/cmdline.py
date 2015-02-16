@@ -325,7 +325,7 @@ Examples:
 
     elif args.command == 'monitor':
         print('\nLaunching monitoring web app...')
-        run('python -m bts_tools.wsgi')
+        run('python3 -m bts_tools.wsgi')
 
     elif args.command == 'publish_slate':
         slate_file = args.hash # TODO: args.hash would probably benefit from being renamed
