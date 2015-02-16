@@ -75,11 +75,11 @@ override OSX's native version, as it is antiquated.
 
 ::
 
-    $ brew install cmake boost berkeley-db readline
+    $ brew install git cmake boost berkeley-db readline openssl
     $ brew link --force readline
 
 
-If you already had an "old" version of boost installed (<1.55.0_2), please upgrade to a
+If you already had an "old" version of boost installed (< 1.55.0_2), please upgrade to a
 newer one::
 
     $ brew upgrade boost

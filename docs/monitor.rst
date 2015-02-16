@@ -62,6 +62,20 @@ Edit the following configuration files:
     module = bts_tools.wsgi
     callable: application
 
+.. note:: The important, non-obvious, fields to set in the uwsgi config file are the following:
+
+   - set ``enable-threads = true``, otherwise you won't get the monitoring
+     thread properly launched
+   - set ``lazy-apps = true``, otherwise the stats object will not get
+     properly shared between the master process and the workers, and you
+     won't get any monitoring data
+   - set ``workers = 1``, otherwise you will get multiple instances of the
+     worker thread active at the same time
+
+   The ``virtualenv`` field also needs to be setup if you installed the tools
+   inside one, otherwise you can leave it out.
+
+
 ``/etc/nginx/sites-available/default`` (need symlink to ``/etc/nginx/sites-enabled/default``)
 ::
 

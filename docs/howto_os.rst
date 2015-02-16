@@ -53,7 +53,7 @@ for compiling the BitShares client (still as root)::
     # apt-get install build-essential git cmake libssl-dev libdb5.3++-dev libncurses5-dev libreadline-dev \
                       python3-dev python3-pip libyaml-dev libboost-all-dev ntp
 
-Note that we also install the ``ntp`` client here, this needed to keep your
+Note that we also install the ``ntp`` client here, this is needed to keep your
 server's time correctly adjusted, which is a requirement for a delegate wanting
 to sign blocks (given that the time slot for a block is 10 seconds, you need
 to be pretty much spot on when it's your turn to sign a block)
@@ -67,7 +67,7 @@ dependencies yourself.
 
 ::
 
-    brew install git cmake boost berkeley-db readline openssl
+    brew install git cmake boost berkeley-db readline openssl libyaml
     brew link --force readline
 
 If you already had an "old" version of boost installed, please upgrade to a
