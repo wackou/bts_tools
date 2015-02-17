@@ -28,7 +28,7 @@ Example
 -------
 
 If you want to create a new virtualenv with python3 being used as interpreter
-of choice, you would run the following:
+of choice, you would run the following::
 
     $ mkvirtualenv -p `which python3` bts_tools
 
@@ -36,7 +36,7 @@ Note that after creating it, the virtualenv is already active, so you don't
 need to call ``workon bts_tools`` right after creating it. You will have to
 do it next time you reboot or open a shell, though.
 
-If you then run the following:
+If you then run the following::
 
     $ pip install bts_tools
 
