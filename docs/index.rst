@@ -43,7 +43,6 @@ Documentation contents
    variants
    howto
    config_format
-   other
    virtualenv
 
 
