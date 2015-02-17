@@ -21,9 +21,11 @@ Install base up-to-date OS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Installing the base OS will depend on your VPS provider, so check their
-documentation for that. The tutorial will use Debian Jessie as base distro, so
-you should install it directly whenever possible (or a release candidate
-version of it)
+documentation for that. The tutorial will use Debian Jessie as base distro,
+so you should install it directly whenever possible (or a release candidate
+version of it). You can download the most recent release of the Debian
+Jessie installer `here <https://www.debian.org/devel/debian-installer/>`_,
+preferably the netinst version.
 
 .. note:: As Debian Jessie has not been officially released yet, your VPS
    provider might not offer it as an install option, so install Debian Wheezy
@@ -47,8 +49,8 @@ version of it)
 Install required dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Next step is to install the dependencies necessary for installing the tools and
-for compiling the BitShares client (still as root)::
+The first step is to install the dependencies necessary for installing the
+tools and for compiling the BitShares client (still as root)::
 
     # apt-get install build-essential git cmake libssl-dev libdb5.3++-dev libncurses5-dev libreadline-dev \
                       python3-dev python3-pip libyaml-dev libboost-all-dev ntp
