@@ -62,8 +62,8 @@ Linux
 
 On Debian-derived systems, install them with::
 
-    # apt-get install build-essential git cmake libssl-dev libdb5.3++-dev libncurses5-dev
-      libreadline-dev libffi-dev libboost-all-dev
+    # apt-get install build-essential git cmake libssl-dev libdb5.3++-dev libncurses5-dev \
+                      libreadline-dev libffi-dev libboost-all-dev
 
 Mac OSX
 ~~~~~~~
