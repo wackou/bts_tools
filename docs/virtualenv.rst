@@ -2,34 +2,48 @@
 Appendix: dealing with virtualenvs
 ==================================
 
-TODO: write properly
+When dealing with python packages, it is possible to install them as root and
+make them available for the entire system. This is not always recommended as it
+can sometimes cause conflicts with the packages installed by your OS.
 
-It is very recommended to install inside a virtualenv. See :doc:`install` for more
-Actually, that's the whole point of the virtualenvs, is that you don't need to install anything as root, so you don't mess up your system. Everything is contained in your project, which you should run as a normal user anyway. The only thing really needed to install as root with apt-get are: python3, virtualenvwrapper, and maybe python3-pip. All the rest, creation of the virtualenv and pip installing stuff inside should be run as a normal user. I will also add this to the doc.
+In the python world a solution to deal with that problem has emerged and allows
+to create sandboxes in which to install python packages, so that they do not
+interfere with those of the system. These sandboxes are called `virtualenvs`_,
+short for "virtual environments".
 
+Although very powerful, the usage of the bare virtualenv functionality can
+sometimes be cumbersome, so it is very recommended to use another project
+instead that gives you an easier API to work with: `virtualenvwrapper`_
 
+The main commands that virtualenvwrapper provides are the following:
 
---------- old notes from the tutorial
-
-The first step in your quest for being a delegate is to install the ``bts_tools`` python package,
-and you want to do this in a ``virtualenv``. A ``virtualenv`` in python is
-like a sandbox where you can install python packages without interfering at all
-with your system, which makes it very safe and convenient, as you never break
-your system and you can make new virtualenvs and dispose them at will.
-
-However nice the virtualenvs, their usage is a bit cumbersome, so that is why
-we previously installed the ``virtualenvwrapper`` package too, that provides
-easy to use functions for dealing with virtualenvs. In particular:
-
-- ``mkvirtualenv`` creates a new virtualenv (``rmvirtualenv`` deletes one)
+- ``mkvirtualenv`` creates a new virtualenv (``rmvirtualenv`` deletes it)
 - ``workon`` allows to "activate" a virtualenv, meaning all packages that you
-  install after that will be installed in this virtualenv, and all packages installed
-  inside this virtualenv will take precedence over those of the system
-  (basically, they will be active)
+  install after that will be installed inside this virtualenv, and they will
+  take precedence over those of the system (basically, they will be active).
+  (use ``deactivate`` to stop using it)
 
-So let's get started by creating our virtualenv, and make sure they use python 3::
+
+Example
+-------
+
+If you want to create a new virtualenv with python3 being used as interpreter
+of choice, you would run the following:
 
     $ mkvirtualenv -p `which python3` bts_tools
 
-Note that after creating it, it is already active, so no need to call
-``workon bts_tools`` now. You will have to do it next time you reboot or open a shell, though.
+Note that after creating it, the virtualenv is already active, so you don't
+need to call ``workon bts_tools`` right after creating it. You will have to
+do it next time you reboot or open a shell, though.
+
+If you then run the following:
+
+    $ pip install bts_tools
+
+it will install the tools inside the virtualenv, and won't interfere with
+your system.
+
+
+.. _virtualenvs: https://virtualenv.pypa.io/
+.. _virtualenvwrapper: https://virtualenvwrapper.readthedocs.org/
+
