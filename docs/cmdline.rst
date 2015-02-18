@@ -9,7 +9,7 @@ just run the ``bts`` script with the command you want to execute:
     $ bts -h
     usage: bts [-h] [-r]
                {clean_homedir,clean,build,build_gui,run,run_gui,list,monitor,publish_slate}
-               [environment] [hash]
+               [environment] [args [args ...]]
 
     following commands are available:
       - clean_homedir    : clean home directory. WARNING: this will delete your wallet!
@@ -42,7 +42,7 @@ just run the ``bts`` script with the command you want to execute:
       {clean_homedir,clean,build,build_gui,run,run_gui,list,monitor,publish_slate}
                             the command to run
       environment           the build/run environment (bts, pts, ...)
-      hash                  the hash or tag of the desired commit
+      args                  additional arguments to be passed to the given command
 
     optional arguments:
       -h, --help            show this help message and exit

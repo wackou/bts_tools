@@ -210,8 +210,8 @@ Examples:
                         help='run binary with RPC server deactivated')
     parser.add_argument('environment', nargs='?',
                         help='the build/run environment (bts, pts, ...)')
-    parser.add_argument('hash', nargs='?',
-                        help='the hash or tag of the desired commit')
+    parser.add_argument('args', nargs='*',
+                        help='additional arguments to be passed to the given command')
     args = parser.parse_args()
 
     init()
@@ -224,20 +224,22 @@ Examples:
     # if given env is not valid, we want to use it as second argument, using
     # the default environment as working env
     if not is_valid_environment(args.environment):
-        args.hash = args.environment
+        args.args = [args.environment] + args.args
         args.environment = flavor
 
     if args.command in {'build', 'build_gui'}:
         select_build_environment(args.environment)
 
+        tag = args.args[0] if args.args else None
+
         # if we are on bitshares (devshares), tags are now prepended with bts/ (dvs/),
         # check if user forgot to specify it
-        if args.environment in {'bts', 'dvs'} and args.hash:
+        if args.environment in {'bts', 'dvs'} and tag:
             tags = run('cd %s; git tag -l' % BTS_BUILD_DIR, io=True).stdout.strip().split('\n')
-            if args.environment == 'dvs' and 'dvs/' + args.hash in tags:
-                args.hash = 'dvs/' + args.hash
-            if args.environment == 'bts' and 'bts/' + args.hash in tags:
-                args.hash = 'bts/' + args.hash
+            if args.environment == 'dvs' and 'dvs/' + tag in tags:
+                args.args[0] = 'dvs/' + tag
+            if args.environment == 'bts' and 'bts/' + tag in tags:
+                args.args[0] = 'bts/' + tag
 
         # TODO: time compilation, display it
 
@@ -245,8 +247,8 @@ Examples:
 
         os.chdir(BTS_BUILD_DIR)
         update()
-        if args.hash:
-            run('git checkout %s && git submodule update' % args.hash)
+        if tag:
+            run('git checkout %s && git submodule update' % tag)
         clean_config()
         if args.command == 'build':
             configure()
@@ -258,18 +260,21 @@ Examples:
 
     elif args.command == 'run':
         run_env = select_run_environment(args.environment)
+        run_args = core.config.get('run_args', []) + run_env.get('run_args', [])
+        tag = args.args[0] if args.args else None
 
-        if args.hash:
+        # FIXME: only use tag if it actually corresponds to one
+        if False: #tag:
             # if git rev specified, runs specific version
-            print('Running specific instance of the %s client: %s' % (flavor, args.hash))
+            print('Running specific instance of the %s client: %s' % (flavor, tag))
             bin_name = run('ls %s' % join(BTS_BIN_DIR,
-                                          '%s_*%s*' % (BTS_BIN_NAME, args.hash[:8])),
+                                          '%s_*%s*' % (BTS_BIN_NAME, tag[:8])),
                            io=True).stdout.strip()
+            run_args += args.args[1:]
         else:
             # run last built version
             bin_name = join(BTS_BIN_DIR, BTS_BIN_NAME)
-
-        run_args = core.config.get('run_args', []) + run_env.get('run_args', [])
+            run_args += args.args
 
         data_dir = run_env.get('data_dir')
         if data_dir:
@@ -328,7 +333,7 @@ Examples:
         run('python3 -m bts_tools.wsgi')
 
     elif args.command == 'publish_slate':
-        slate_file = args.hash # TODO: args.hash would probably benefit from being renamed
+        slate_file = args.args[0] if args.args else None
         print()
         if not slate_file:
             log.error('You need to specify a slate file as argument')
