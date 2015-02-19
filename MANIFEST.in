@@ -1,5 +1,6 @@
 include *.rst
 include *.md
+include bts_tools/version.txt
 include bts_tools/config.yaml
 include bts_tools/slate.yaml
 recursive-include bts_tools/static *

@@ -19,7 +19,8 @@
 #
 
 from setuptools import setup, find_packages
-import os.path
+import os, os.path
+import subprocess
 
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.rst')).read()
@@ -66,4 +67,24 @@ args = dict(name='bts_tools',
             entry_points=entry_points,
             )
 
+# if we are creating a source tarball, include the version in a text file
+version_file = os.path.join(here, 'bts_tools', 'version.txt')
+create_version_file = not os.path.exists(version_file)
+
+if create_version_file:
+    print('Creating version file with version = %s' % VERSION)
+    with open(version_file, 'w') as f:
+        try:
+            p = subprocess.Popen('git describe --tags', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = p.communicate()
+            f.write(str(stdout, encoding='utf-8'))
+        except:
+            f.write(VERSION)
+
 setup(**args)
+
+if create_version_file:
+    try:
+        os.remove(version_file)
+    except OSError:
+        pass

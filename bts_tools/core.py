@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from os.path import join, dirname, expanduser, exists
+from os.path import join, dirname, expanduser, exists, abspath
 from collections import namedtuple
 from subprocess import Popen, PIPE
 from functools import wraps
@@ -35,6 +35,7 @@ platform = sys.platform
 if platform.startswith('linux'):
     platform = 'linux'
 
+HERE = abspath(dirname(__file__))
 BTS_TOOLS_HOMEDIR = '~/.bts_tools'
 BTS_TOOLS_HOMEDIR = expanduser(BTS_TOOLS_HOMEDIR)
 BTS_TOOLS_CONFIG_FILE = join(BTS_TOOLS_HOMEDIR, 'config.yaml')
@@ -150,6 +151,19 @@ def run(cmd, io=False, verbose=False):
     if r.status != 0:
         raise RuntimeError('Failed running: %s' % cmd)
     return r
+
+
+def get_version():
+    version_file = join(HERE, 'version.txt')
+    if exists(version_file):
+        with open(version_file) as f:
+            return f.read().strip()
+    try:
+        return run('git describe --tags', io=True).stdout.strip()
+    except Exception:
+        return 'unknown'
+
+VERSION = get_version()
 
 
 class UnauthorizedError(Exception):

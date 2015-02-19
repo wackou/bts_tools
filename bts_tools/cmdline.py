@@ -175,6 +175,7 @@ def install_last_built_bin():
 def main(flavor='bts'):
     # parse commandline args
     DESC="""following commands are available:
+  - version          : show version of the tools
   - clean_homedir    : clean home directory. WARNING: this will delete your wallet!
   - clean            : clean build directory
   - build            : update and build %(bin)s client
@@ -203,7 +204,7 @@ Examples:
     EPILOG="""You should also look into ~/.bts_tools/config.yaml to tune it to your liking."""
     parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
                                      formatter_class=RawTextHelpFormatter)
-    parser.add_argument('command', choices=['clean_homedir', 'clean', 'build', 'build_gui',
+    parser.add_argument('command', choices=['version', 'clean_homedir', 'clean', 'build', 'build_gui',
                                             'run', 'run_gui', 'list', 'monitor', 'publish_slate'],
                         help='the command to run')
     parser.add_argument('-r', '--norpc', action='store_true',
@@ -213,6 +214,10 @@ Examples:
     parser.add_argument('args', nargs='*',
                         help='additional arguments to be passed to the given command')
     args = parser.parse_args()
+
+    if args.command == 'version':
+        log.info('Version: %s', core.VERSION)
+        return
 
     init()
 

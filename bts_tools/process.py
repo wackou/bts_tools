@@ -62,7 +62,7 @@ def bts_binary_running(node):
 
 def binary_description(node):
     """Return a human readable version description of the running binary,
-    either tag version of git revision.
+    either tag version or git revision.
     """
     client_version = node.api_version()
     p = bts_process(node)
