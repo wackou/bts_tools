@@ -187,7 +187,7 @@ def monitoring_thread(*nodes):
                         v = client_node.blockchain_get_account(node.name)
                         try:
                             return v['public_data']['version']
-                        except KeyError:
+                        except (KeyError, TypeError):
                             log.info('Client version not published yet for delegate %s' % node.name)
                             return 'none'
                     version = info['client_version']
