@@ -65,7 +65,7 @@ at the bottom of your screen, meaning you are now running "inside" tmux.
    when inside of tmux:
 
    - ``ctrl+b d`` : detach the session - do this before disconnecting from your server
-   - ``ctrl+b [`` : enter "scrolling mode" - you can scroll back the screen (normal arrowsand sliders from
+   - ``ctrl+b [`` : enter "scrolling mode" - you can scroll back the screen (normal arrows and sliders from
      your terminal application don't work with tmux...) Use ``q`` to quit this mode
 
 
