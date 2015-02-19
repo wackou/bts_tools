@@ -6,6 +6,15 @@
 History
 =======
 
+0.1.9 (2015-02-19)
+------------------
+
+* allow to pass additional args to "bts run", eg: "bts run --rebuild-index"
+* fixed feeds due to bter being down
+* completed (for now) documentation and tutorial
+* tools display their version in footer of web pages, or using "bts version"
+
+
 0.1.8 (2015-02-11)
 ------------------
 
