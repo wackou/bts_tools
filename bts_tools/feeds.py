@@ -135,6 +135,8 @@ def get_feed_prices():
         feeds_btc_cny.append(get_from_bter('BTC', 'CNY'))
     except:
         pass
+    if not feeds_btc_cny:
+        return
     btc_cny = weighted_mean(feeds_btc_cny)
     cny_btc = 1 / btc_cny
 
@@ -150,6 +152,8 @@ def get_feed_prices():
                           adjust(get_from_btc38('BTS', 'CNY'), cny_btc)])
     except:
         pass
+    if not feeds_btc:
+        return
     btc_price = weighted_mean(feeds_btc)
 
     cny_price = btc_price * btc_cny
