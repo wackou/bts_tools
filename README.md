@@ -25,10 +25,11 @@ just run the ``bts`` script with the command you want to execute:
 
     $ bts -h
     usage: bts [-h] [-r]
-               {clean_homedir,clean,build,build_gui,run,run_gui,list,monitor,publish_slate}
+               {version,clean_homedir,clean,build,build_gui,run,run_gui,list,monitor,publish_slate}
                [environment] [args [args ...]]
     
     following commands are available:
+      - version          : show version of the tools
       - clean_homedir    : clean home directory. WARNING: this will delete your wallet!
       - clean            : clean build directory
       - build            : update and build bts client
@@ -56,7 +57,7 @@ just run the ``bts`` script with the command you want to execute:
     
     
     positional arguments:
-      {clean_homedir,clean,build,build_gui,run,run_gui,list,monitor,publish_slate}
+      {version,clean_homedir,clean,build,build_gui,run,run_gui,list,monitor,publish_slate}
                             the command to run
       environment           the build/run environment (bts, pts, ...)
       args                  additional arguments to be passed to the given command
