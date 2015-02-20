@@ -136,7 +136,7 @@ def get_feed_prices():
     except:
         pass
     if not feeds_btc_cny:
-        return
+        raise core.NoFeedData('Could not get any BTC/CNY feeds')
     btc_cny = weighted_mean(feeds_btc_cny)
     cny_btc = 1 / btc_cny
 
@@ -153,7 +153,7 @@ def get_feed_prices():
     except:
         pass
     if not feeds_btc:
-        return
+        raise core.NoFeedData('Could not get any BTS/BTC feeds')
     btc_price = weighted_mean(feeds_btc)
 
     cny_price = btc_price * btc_cny
@@ -217,6 +217,9 @@ def check_feeds(nodes):
                         node.wallet_publish_feeds(node.name, list(median_feeds.items()))
             except Exception as e:
                 log.exception(e)
+
+    except core.NoFeedData as e:
+        log.warning(e)
 
     except Exception as e:
         log.exception(e)

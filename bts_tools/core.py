@@ -174,6 +174,10 @@ class RPCError(Exception):
     pass
 
 
+class NoFeedData(Exception):
+    pass
+
+
 def profile(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
