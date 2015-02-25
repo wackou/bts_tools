@@ -36,7 +36,8 @@ import logging
 log = logging.getLogger(__name__)
 
 NON_CACHEABLE_METHODS = {'wallet_publish_price_feed',
-                         'wallet_publish_feeds'}
+                         'wallet_publish_feeds',
+                         'wallet_publish_version'}
 
 _rpc_cache = defaultdict(dict)
 

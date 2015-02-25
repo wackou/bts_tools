@@ -18,14 +18,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from collections import deque
+from collections import deque, defaultdict
 from datetime import datetime
 from itertools import chain, islice
-from dogpile.cache import make_region
 from .core import StatsFrame
 from .notification import send_notification
 from .feeds import check_feeds
-from . import core
+from . import core, monitoring
 import math
 import time
 import logging
@@ -41,9 +40,6 @@ time_span = None
 time_interval = None
 desired_maxlen = None
 
-# no expiration time, version stays constant as long as we run the same process
-# we still need to invalidate the cache when a client comes online
-published_version = make_region().configure('dogpile.cache.memory')
 
 def load_monitoring():
     global cfg, time_span, time_interval, desired_maxlen, stable_time_interval
@@ -97,7 +93,7 @@ def monitoring_thread(*nodes):
     client_node = nodes[0]
 
     # all different types of monitoring that should be considered by this thread
-    monitoring = set(chain(*(node.monitoring for node in nodes)))
+    all_monitoring = set(chain(*(node.monitoring for node in nodes)))
     node_names = [n.name for n in nodes]
 
     log.info('Starting thread monitoring on %s:%d for nodes %s' %
@@ -106,13 +102,15 @@ def monitoring_thread(*nodes):
     stats = stats_frames[client_node.rpc_cache_key] = deque(maxlen=min(desired_maxlen, maxlen))
 
     # launch feed monitoring and publishing thread
-    if 'feeds' in monitoring:
+    if 'feeds' in all_monitoring:
         check_feeds(nodes)
 
     online_state = StableStateMonitor(3)
     connection_state = StableStateMonitor(3)
-    producing_state = StableStateMonitor(3)
-    last_n_notified = 0
+
+    # need to have one for each node name (hence the defaultdict)
+    producing_state = defaultdict(lambda: StableStateMonitor(3))
+    last_n_notified = defaultdict(int)
 
     loop_index = 0
 
@@ -140,62 +138,32 @@ def monitoring_thread(*nodes):
             if online_state.just_changed():
                 log.info('Nodes %s just came online!' % node_names)
                 send_notification(nodes, 'node just came online!')
-                published_version.invalidate()
 
             info = client_node.get_info()
 
+            if client_node.type == 'seed':
+                monitoring.seed.monitor(client_node, online_state)
+
             # check for minimum number of connections for delegate to produce
-            if info['network_num_connections'] <= 5:
+            MIN_CONNECTIONS = 5
+            if info['network_num_connections'] <= MIN_CONNECTIONS:
                 connection_state.push('starved')
                 if connection_state.just_changed():
-                    log.warning('Nodes %s: fewer than 5 network connections...' % node_names)
-                    send_notification(nodes, 'fewer than 5 network connections...', alert=True)
+                    log.warning('Nodes %s: fewer than %d network connections...' % (node_names, MIN_CONNECTIONS))
+                    send_notification(nodes, 'fewer than %d network connections...' % MIN_CONNECTIONS, alert=True)
             else:
                 connection_state.push('connected')
                 if connection_state.just_changed():
-                    log.info('Nodes %s: got more than 5 connections now' % node_names)
-                    send_notification(nodes, 'got more than 5 connections now')
+                    log.info('Nodes %s: got more than %d connections now' % (node_names, MIN_CONNECTIONS))
+                    send_notification(nodes, 'got more than %d connections now' % MIN_CONNECTIONS)
 
+            # monitor each node
             for node in nodes:
-                # if seed node just came online, set its connection count to something high
-                if node.type == 'seed' and online_state.just_changed():
-                    # TODO: only if state just changed? if we crash and restart immediately, then we should do it also...
-                    desired = int(node.desired_number_of_connections or 200)
-                    maximum = int(node.maximum_number_of_connections or 400)
-                    log.info('Seed node just came online, setting connections to desired: %d, maximum: %d' %
-                             (desired, maximum))
-                    client_node.network_set_advanced_node_parameters({'desired_number_of_connections': desired,
-                                                                      'maximum_number_of_connections': maximum})
+                if node.type == 'delegate':
+                    monitoring.missed.monitor(node, info, producing_state[node.name], last_n_notified)
 
-                # monitor for missed blocks, only for delegate nodes
-                if node.type == 'delegate' and info['blockchain_head_block_age'] < 60:  # only monitor if synced
-                    producing, n = node.get_streak()
-                    producing_state.push(producing)
-                    if not producing and producing_state.just_changed():
-                        log.warning('Delegate %s just missed a block!' % node.name)
-                        send_notification([node], 'just missed a block!', alert=True)
-                        last_n_notified = 1
-
-                    elif producing_state.stable_state() == False and n > last_n_notified:
-                        log.warning('Delegate %s missed another block! (%d missed total)' % (node.name, n))
-                        send_notification([node], 'missed another block! (%d missed total)' % n, alert=True)
-                        last_n_notified = n
-
-                # publish node version if we're not up-to-date (eg: just upgraded)
-                if 'version' in node.monitoring and node.type == 'delegate' and info['wallet_unlocked']:
-                    def get_published_version():
-                        v = client_node.blockchain_get_account(node.name)
-                        try:
-                            return v['public_data']['version']
-                        except (KeyError, TypeError):
-                            log.info('Client version not published yet for delegate %s' % node.name)
-                            return 'none'
-                    version = info['client_version']
-                    pubver = published_version.get_or_create(node.name, get_published_version)
-                    if version != pubver:
-                        log.info('Publishing version %s for delegate %s (current: %s)' % (version, node.name, pubver))
-                        client_node.wallet_publish_version(node.name)
-                        published_version.set(node.name, version)
+                if 'version' in node.monitoring and node.type == 'delegate':
+                    monitoring.version.monitor(node, info, online_state)
 
             # only monitor cpu and network if we are monitoring localhost
             if client_node.rpc_host == 'localhost':
