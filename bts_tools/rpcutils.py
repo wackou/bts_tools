@@ -250,7 +250,10 @@ class BTSProxy(object):
         try:
             return self._bts_type
         except AttributeError:
-            blockchain_name = self.about()['blockchain_name']
+            try:
+                blockchain_name = self.about()['blockchain_name']
+            except Exception:
+                return ''
             if blockchain_name == 'BitShares':
                 self._bts_type = 'bts'
             elif blockchain_name == 'DevShares':
