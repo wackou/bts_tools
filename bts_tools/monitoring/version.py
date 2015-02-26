@@ -19,6 +19,7 @@
 #
 
 from dogpile.cache import make_region
+from collections import defaultdict
 import logging
 
 log = logging.getLogger(__name__)
@@ -26,10 +27,18 @@ log = logging.getLogger(__name__)
 # no expiration time, version stays constant as long as we run the same process
 # we still need to invalidate the cache when a client comes online, we might
 # have upgraded
-published_version = make_region().configure('dogpile.cache.memory')
+def make_published_version_region():
+    r = make_region()
+    r.configure('dogpile.cache.memory')
+    return r
+
+published_version_region = defaultdict(make_published_version_region)
 
 
 def monitor(node, info, online_state):
+    # published_version needs to be client specific
+    published_version = published_version_region[node.rpc_cache_key]
+
     if online_state.just_changed():
         published_version.invalidate()
 
