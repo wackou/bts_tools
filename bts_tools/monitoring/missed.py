@@ -31,6 +31,9 @@ def monitor(node, info, producing_state, last_n_notified):
     #       if blocks_produced < last_blocks_produced:
     #           # missed block somehow
     #       last_blocks_produced = blocks_produced
+    if node.type != 'delegate':
+        return
+
     if info['blockchain_head_block_age'] < 60:  # only monitor if synced
         producing, n = node.get_streak()
         producing_state.push(producing)

@@ -36,6 +36,9 @@ published_version_region = defaultdict(make_published_version_region)
 
 
 def monitor(node, info, online_state):
+    if 'version' not in node.monitoring or node.type != 'delegate':
+        return
+
     # published_version needs to be client specific
     published_version = published_version_region[node.rpc_cache_key]
 

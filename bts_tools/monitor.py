@@ -159,11 +159,9 @@ def monitoring_thread(*nodes):
 
             # monitor each node
             for node in nodes:
-                if node.type == 'delegate':
-                    monitoring.missed.monitor(node, info, producing_state[node.name], last_n_notified)
-
-                if 'version' in node.monitoring and node.type == 'delegate':
-                    monitoring.version.monitor(node, info, online_state)
+                monitoring.missed.monitor(node, info, producing_state[node.name], last_n_notified)
+                monitoring.version.monitor(node, info, online_state)
+                monitoring.payroll.monitor(node)
 
             # only monitor cpu and network if we are monitoring localhost
             if client_node.rpc_host == 'localhost':
