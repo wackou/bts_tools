@@ -43,9 +43,15 @@ def static_from_root():
 
 @core.profile
 def offline():
+    try:
+        client_name = rpc.main_node.build_env()['gui_bin_name']
+    except:
+        client_name = 'BitShares'
+
     return render_template('error.html',
-                           msg='The BitShares client is currently offline. '
-                               'Please run it and activate the HTTP RPC server.')
+                           msg='The %s client is currently offline. '
+                               'Please run it and activate the HTTP RPC server.'
+                               % client_name)
 
 
 @core.profile
@@ -225,11 +231,11 @@ def view_info():
                            data=info_items, attrs=attrs, **feeds)
 
 
-@bp.route('/rpchost/<host>/<url>')
+@bp.route('/rpchost/<bts_type>/<host>/<url>')
 @catch_error
-def set_rpchost(host, url):
+def set_rpchost(bts_type, host, url):
     for node in rpc.nodes:
-        if node.name == host:
+        if node.bts_type() == bts_type and node.name == host:
             log.debug('Setting main rpc node to %s' % host)
             rpc.main_node = node
             break

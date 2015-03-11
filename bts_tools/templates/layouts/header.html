@@ -48,7 +48,9 @@
 
                         <ul class="dropdown-menu" role="menu">
                             {% for node in rpc.nodes %}
-                            <li><a href="/rpchost/{{ node.name }}{{ request.path }}">{{ node.name }}</a></li>
+                            <li><a href="/rpchost/{{ node.bts_type() }}/{{ node.name }}{{ request.path }}">
+                                <b>{{ node.bts_type() }}:</b> {{ node.name }}
+                            </a></li>
                             {% endfor %}
                         </ul>
                     </li>

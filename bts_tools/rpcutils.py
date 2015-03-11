@@ -101,6 +101,7 @@ class BTSProxy(object):
         self.monitoring = ([] if monitoring is None else
                            [monitoring] if not isinstance(monitoring, list)
                            else monitoring)
+        self.client = client
         if client:
             data_dir = get_data_dir(client)
 
@@ -246,24 +247,54 @@ class BTSProxy(object):
     def process(self):
         return bts_process(self)
 
+    def run_env(self):
+        name = self.client
+        if not name:
+            raise ValueError('No run environment defined for node %s. Maybe a remote node?' % self.name)
+        try:
+            return core.config['run_environments'][name]
+        except KeyError:
+            raise ValueError('Unknown run environment: %s' % name)
+
+    def build_env(self):
+        name = self.run_env()['type']
+        try:
+            return core.config['build_environments'][name]
+        except KeyError:
+            raise ValueError('Unknown build environment: %s' % name)
+
     def bts_type(self):
+        # try to get the cached value first
         try:
             return self._bts_type
         except AttributeError:
-            try:
-                blockchain_name = self.about()['blockchain_name']
-            except Exception:
-                return ''
-            if blockchain_name == 'BitShares':
-                self._bts_type = 'bts'
-            elif blockchain_name == 'DevShares':
-                self._bts_type = 'dvs'
-            elif blockchain_name == 'PTS':
-                self._bts_type = 'pts'
-            elif blockchain_name == 'Sparkle':
-                self._bts_type = 'sparkle'
-            else:
-                return 'unknown'
+            # not cached yet. fall through so we can compute it
+            pass
+
+        # if no cached value, try to get the client type from the config file
+        try:
+            self._bts_type = self.run_env()['type']
+            return self._bts_type
+        except ValueError:
+            pass
+
+        # if the previous didn't work (eg: remote node), try to talk to the client
+        # directly. This works only when the client is running.
+        try:
+            blockchain_name = self.about()['blockchain_name']
+        except Exception:
+            return ''
+        if blockchain_name == 'BitShares':
+            self._bts_type = 'bts'
+        elif blockchain_name == 'DevShares':
+            self._bts_type = 'dvs'
+        elif blockchain_name == 'PTS':
+            self._bts_type = 'pts'
+        elif blockchain_name == 'Sparkle':
+            self._bts_type = 'sparkle'
+        else:
+            return 'unknown'
+
         return self._bts_type
 
     def is_active(self, delegate):
