@@ -23,6 +23,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
+
 def monitor(node, info, producing_state, last_n_notified):
     # monitor for missed blocks, only for delegate nodes
     # FIXME: revisit block_age < 60, this was meant when syncing at the beginning, but

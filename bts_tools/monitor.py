@@ -161,7 +161,7 @@ def monitoring_thread(*nodes):
             for node in nodes:
                 monitoring.missed.monitor(node, info, producing_state[node.name], last_n_notified)
                 monitoring.version.monitor(node, info, online_state)
-                monitoring.payroll.monitor(node)
+                monitoring.payroll.monitor(node, info)
 
             # only monitor cpu and network if we are monitoring localhost
             if client_node.rpc_host == 'localhost':
