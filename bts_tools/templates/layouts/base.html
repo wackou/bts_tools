@@ -59,7 +59,7 @@
                             <div class="btn btn-xs btn-success">online</div>
                         </td>
                         <td>
-                        {% if node.get_info()['blockchain_head_block_age'] < 60 %}
+                        {% if node.is_synced() %}
                             <div class="btn btn-xs btn-success">
                         {% else %}
                             <div class="btn btn-xs btn-info">

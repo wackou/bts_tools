@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 
 def monitor(node, info, producing_state, last_n_notified):
     # monitor for missed blocks, only for delegate nodes
-    # FIXME: revisit block_age < 60, this was meant when syncing at the beginning, but
+    # FIXME: revisit block_age < 60 (node.is_synced()), this was meant when syncing at the beginning, but
     #        during network crisis this might happen but we still want to monitor for missed blocks
     # TODO: blocks_produced = get_streak()
     #       if blocks_produced < last_blocks_produced:
@@ -35,7 +35,7 @@ def monitor(node, info, producing_state, last_n_notified):
     if node.type != 'delegate':
         return
 
-    if info['blockchain_head_block_age'] < 60:  # only monitor if synced
+    if node.is_synced():  # only monitor if synced
         producing, n = node.get_streak()
         producing_state.push(producing)
         if not producing and producing_state.just_changed():

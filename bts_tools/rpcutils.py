@@ -244,6 +244,12 @@ class BTSProxy(object):
     def is_online(self, cached=True):
         return self.status(cached=cached) == 'online'
 
+    def is_synced(self):
+        age = self.get_info()['blockchain_head_block_age']
+        if age is not None and age < 60:
+            return True
+        return False
+
     def process(self):
         return bts_process(self)
 
