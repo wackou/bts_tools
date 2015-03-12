@@ -18,19 +18,23 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from ..notification import send_notification
 import logging
 
 log = logging.getLogger(__name__)
 
+MIN_CONNECTIONS = 5
+
 
 def monitor(node, ctx):
-    # if seed node just came online, set its connection count to something high
-    if ctx.online_state.just_changed():
-        # TODO: only if state just changed? if we crash and restart immediately, then we should do it also...
-        desired = int(node.desired_number_of_connections or 200)
-        maximum = int(node.maximum_number_of_connections or 400)
-        log.info('Seed node just came online, setting connections to desired: %d, maximum: %d' %
-                 (desired, maximum))
-        node.network_set_advanced_node_parameters({'desired_number_of_connections': desired,
-                                                   'maximum_number_of_connections': maximum})
-
+    # check for minimum number of connections for delegate to produce
+    if ctx.info['network_num_connections'] <= MIN_CONNECTIONS:
+        ctx.connection_state.push('starved')
+        if ctx.connection_state.just_changed():
+            log.warning('Nodes %s: fewer than %d network connections...' % (ctx.node_names, MIN_CONNECTIONS))
+            send_notification(ctx.nodes, 'fewer than %d network connections...' % MIN_CONNECTIONS, alert=True)
+    else:
+        ctx.connection_state.push('connected')
+        if ctx.connection_state.just_changed():
+            log.info('Nodes %s: got more than %d connections now' % (ctx.node_names, MIN_CONNECTIONS))
+            send_notification(ctx.nodes, 'got more than %d connections now' % MIN_CONNECTIONS)

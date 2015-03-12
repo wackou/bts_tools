@@ -31,13 +31,16 @@ import logging
 
 log = logging.getLogger(__name__)
 
+# needs to be accessible at a module level (at least for now)
 stats_frames = {}
+
 # make sure we don't have huge plots that take forever to render
 maxlen = 2000
 
 cfg = None
 time_span = None
 time_interval = None
+stable_time_interval = None
 desired_maxlen = None
 
 
@@ -52,6 +55,12 @@ def load_monitoring():
         stable_time_interval = time_interval * (desired_maxlen / maxlen)
     else:
         stable_time_interval = time_interval
+
+
+class AttributeDict(dict):
+    def __init__(self, *args, **kwargs):
+        super(AttributeDict, self).__init__(*args, **kwargs)
+        self.__dict__ = self
 
 
 class StableStateMonitor(object):
@@ -88,8 +97,6 @@ class StableStateMonitor(object):
 
 
 def monitoring_thread(*nodes):
-    global time_interval
-
     client_node = nodes[0]
 
     # all different types of monitoring that should be considered by this thread
@@ -105,89 +112,50 @@ def monitoring_thread(*nodes):
     if 'feeds' in all_monitoring:
         check_feeds(nodes)
 
-    online_state = StableStateMonitor(3)
-    connection_state = StableStateMonitor(3)
-
-    # need to have one for each node name (hence the defaultdict)
-    producing_state = defaultdict(lambda: StableStateMonitor(3))
-    last_n_notified = defaultdict(int)
-
-    loop_index = 0
+    # create one global context for the client, and local contexts for each node of this client
+    global_ctx = AttributeDict(loop_index=0,
+                               time_interval=time_interval,
+                               stable_time_interval=stable_time_interval,
+                               nodes=nodes,
+                               node_names=node_names,
+                               stats=stats,
+                               online_state=StableStateMonitor(3),
+                               connection_state=StableStateMonitor(3))
+    contexts = {}
+    for node in nodes:
+        ctx = AttributeDict(producing_state=StableStateMonitor(3),
+                            last_n_notified=0)
+        contexts[node.name] = ctx
 
     while True:
-        loop_index += 1
+        global_ctx.loop_index += 1
+
         time.sleep(time_interval)
-        log.debug('-------- Monitoring status of the BitShares client --------')
+        # log.debug('-------- Monitoring status of the BitShares client --------')
         client_node.clear_rpc_cache()
 
         try:
-            if not client_node.is_online():
-                log.debug('Offline')
-                online_state.push('offline')
-
-                if online_state.just_changed():
-                    log.warning('Nodes %s just went offline...' % node_names)
-                    send_notification(nodes, 'node just went offline...', alert=True)
-
-                stats.append(StatsFrame(cpu=0, mem=0, connections=0, timestamp=datetime.utcnow()))
+            online = monitoring.online.monitor(client_node, global_ctx)
+            if not online:
                 continue
 
-            log.debug('Online')
-            online_state.push('online')
-
-            if online_state.just_changed():
-                log.info('Nodes %s just came online!' % node_names)
-                send_notification(nodes, 'node just came online!')
-
             info = client_node.get_info()
+            global_ctx.info = info
 
             if client_node.type == 'seed':
-                monitoring.seed.monitor(client_node, online_state)
+                monitoring.seed.monitor(client_node, global_ctx)
 
-            # check for minimum number of connections for delegate to produce
-            MIN_CONNECTIONS = 5
-            if info['network_num_connections'] <= MIN_CONNECTIONS:
-                connection_state.push('starved')
-                if connection_state.just_changed():
-                    log.warning('Nodes %s: fewer than %d network connections...' % (node_names, MIN_CONNECTIONS))
-                    send_notification(nodes, 'fewer than %d network connections...' % MIN_CONNECTIONS, alert=True)
-            else:
-                connection_state.push('connected')
-                if connection_state.just_changed():
-                    log.info('Nodes %s: got more than %d connections now' % (node_names, MIN_CONNECTIONS))
-                    send_notification(nodes, 'got more than %d connections now' % MIN_CONNECTIONS)
+            monitoring.network_connections.monitor(client_node, global_ctx)
+            monitoring.resources.monitor(client_node, global_ctx)
 
             # monitor each node
             for node in nodes:
-                monitoring.missed.monitor(node, info, producing_state[node.name], last_n_notified)
-                monitoring.version.monitor(node, info, online_state)
-                monitoring.payroll.monitor(node, info)
+                ctx = contexts[node.name]
+                ctx.info = info
+                monitoring.missed.monitor(node, ctx)
+                monitoring.version.monitor(node, ctx)
+                monitoring.payroll.monitor(node, ctx)
 
-            # only monitor cpu and network if we are monitoring localhost
-            if client_node.rpc_host == 'localhost':
-                p = client_node.process()
-                if p is not None:
-                    s = StatsFrame(cpu=p.cpu_percent(),
-                                   mem=p.memory_info().rss,
-                                   connections=info['network_num_connections'],
-                                   timestamp=datetime.utcnow())
-                else:
-                    s = StatsFrame(cpu=0, mem=0, connections=0, timestamp=datetime.utcnow())
-
-            else:
-                s = StatsFrame(cpu=0, mem=0, connections=0, timestamp=datetime.utcnow())
-
-            # if our stats queue is full, only append now and then to reach approximately
-            # the desired timespan while keeping the same number of items
-            if time_interval != stable_time_interval and len(stats) == stats.maxlen:
-                # note: we could have used round() instead of ceil() here but ceil()
-                #       gives us the guarantee that the time span will be at least
-                #       the one asked for, not less due to rounding effects
-                ratio = math.ceil(stable_time_interval / time_interval)
-                if loop_index % ratio == 0:
-                    stats.append(s)
-            else:
-                stats.append(s)
 
         except Exception as e:
             log.error('An exception occurred in the monitoring thread:')

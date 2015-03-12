@@ -18,5 +18,5 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import seed, missed, version, payroll
+from . import seed, missed, version, payroll, online, network_connections, resources
 

@@ -35,18 +35,18 @@ def make_published_version_region():
 published_version_region = defaultdict(make_published_version_region)
 
 
-def monitor(node, info, online_state):
+def monitor(node, ctx):
     if 'version' not in node.monitoring or node.type != 'delegate':
         return
 
     # published_version needs to be client specific
     published_version = published_version_region[node.rpc_cache_key]
 
-    if online_state.just_changed():
+    if ctx.online_state.just_changed():
         published_version.invalidate()
 
     # publish node version if we're not up-to-date (eg: just upgraded)
-    if info['wallet_unlocked']:
+    if ctx.info['wallet_unlocked']:
         def get_published_version():
             v = node.blockchain_get_account(node.name)
             try:
@@ -55,7 +55,7 @@ def monitor(node, info, online_state):
                 log.info('Client version not published yet for delegate %s' % node.name)
                 return 'none'
 
-        version = info['client_version']
+        version = ctx.info['client_version']
         pubver = published_version.get_or_create(node.name, get_published_version)
         if version != pubver:
             log.info('Publishing version %s for delegate %s (current: %s)' % (version, node.name, pubver))

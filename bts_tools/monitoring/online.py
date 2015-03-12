@@ -18,19 +18,31 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from ..notification import send_notification
+from ..core import StatsFrame
+from datetime import datetime
 import logging
 
 log = logging.getLogger(__name__)
 
 
 def monitor(node, ctx):
-    # if seed node just came online, set its connection count to something high
-    if ctx.online_state.just_changed():
-        # TODO: only if state just changed? if we crash and restart immediately, then we should do it also...
-        desired = int(node.desired_number_of_connections or 200)
-        maximum = int(node.maximum_number_of_connections or 400)
-        log.info('Seed node just came online, setting connections to desired: %d, maximum: %d' %
-                 (desired, maximum))
-        node.network_set_advanced_node_parameters({'desired_number_of_connections': desired,
-                                                   'maximum_number_of_connections': maximum})
+    if not node.is_online():
+        log.debug('Nodes %s: offline' % ctx.node_names)
+        ctx.online_state.push('offline')
 
+        if ctx.online_state.just_changed():
+            log.warning('Nodes %s just went offline...' % ctx.node_names)
+            send_notification(ctx.nodes, 'node just went offline...', alert=True)
+
+        ctx.stats.append(StatsFrame(cpu=0, mem=0, connections=0, timestamp=datetime.utcnow()))
+        return False
+
+    log.debug('Nodes %s: online' % ctx.node_names)
+    ctx.online_state.push('online')
+
+    if ctx.online_state.just_changed():
+        log.info('Nodes %s just came online!' % ctx.node_names)
+        send_notification(ctx.nodes, 'node just came online!')
+
+    return True

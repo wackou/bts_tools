@@ -49,11 +49,11 @@ def get_account_balance(node, account, asset_idx=BTS_ASSET_IDX):
     return 0
 
 
-def monitor(node, info):
+def monitor(node, ctx):
     if 'payroll' not in node.monitoring or node.type != 'delegate':
         return
 
-    if not info['wallet_unlocked']:
+    if not ctx.info['wallet_unlocked']:
         log.warning('Cannot perform payroll distribution when wallet is closed or locked')
         return
 

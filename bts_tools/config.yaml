@@ -15,7 +15,7 @@ logging:
     bts_tools: DEBUG
     bts_tools.core: INFO
     bts_tools.rpcutils: INFO
-    bts_tools.monitor: INFO
+    bts_tools.monitoring: INFO
     bts_tools.notification: INFO
     bts_tools.feeds: INFO
     bts_tools.profile: INFO
