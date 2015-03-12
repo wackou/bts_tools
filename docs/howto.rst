@@ -2,9 +2,6 @@
 How to setup a delegate - the easy tutorial
 ===========================================
 
-**WARNING: this is very much a work-in-progress. Information might be incorrect / incomplete**
-
-
 
 This guide will try to show you how to setup all the infrastructure needed to
 build, run and monitor a delegate easily and effortlessly.

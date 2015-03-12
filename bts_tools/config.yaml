@@ -217,6 +217,7 @@ monitoring:
 
     boxcar:
         tokens: []
+
     payroll:
         timezone_offset: 0                       # vps timezone difference from payee timezone (for logging purposes)
         pay_interval: 14                         # How often (in days) between each payday
