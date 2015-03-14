@@ -27,6 +27,7 @@ import argparse
 import os
 import sys
 import shutil
+import arrow
 import json
 import yaml
 import logging
@@ -262,6 +263,9 @@ Examples:
         if tag:
             run('git checkout %s && git submodule update' % tag)
         clean_config()
+
+        start = arrow.utcnow()
+
         if args.command == 'build':
             configure()
             build()
@@ -269,6 +273,13 @@ Examples:
         elif args.command == 'build_gui':
             configure_gui()
             build_gui()
+
+        elapsed_seconds = (arrow.utcnow() - start).seconds
+        mins = elapsed_seconds // 60
+        secs = elapsed_seconds % 60
+        msg = 'Compiled in%s%s' % ((' %d mins' % mins if mins else ''),
+                                   (' %d secs' % secs if secs else ''))
+        log.info(msg)
 
     elif args.command == 'run':
         run_env = select_run_environment(args.environment)
