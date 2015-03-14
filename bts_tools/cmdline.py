@@ -235,16 +235,23 @@ Examples:
     if args.command in {'build', 'build_gui'}:
         select_build_environment(args.environment)
 
-        tag = args.args[0] if args.args else None
-
         # if we are on bitshares (devshares), tags are now prepended with bts/ (dvs/),
         # check if user forgot to specify it
-        if args.environment in {'bts', 'dvs'} and tag:
-            tags = run('cd %s; git tag -l' % BTS_BUILD_DIR, io=True).stdout.strip().split('\n')
-            if args.environment == 'dvs' and 'dvs/' + tag in tags:
-                args.args[0] = 'dvs/' + tag
-            if args.environment == 'bts' and 'bts/' + tag in tags:
-                args.args[0] = 'bts/' + tag
+        def match_tag(tag):
+            if args.environment in {'bts', 'dvs'}:
+                tags = run('cd %s; git tag -l' % BTS_BUILD_DIR, io=True).stdout.strip().split('\n')
+                if args.environment == 'dvs':
+                    if 'dvs/' + tag in tags:
+                        return 'dvs/' + tag
+                    elif 'dvs/v' + tag in tags:
+                        return 'dvs/v' + tag
+                if args.environment == 'bts':
+                    if 'bts/' + tag in tags:
+                        return 'bts/' + tag
+                    elif 'bts/v' + tag in tags:
+                        return 'bts/v' + tag
+
+        tag = match_tag(args.args[0]) if args.args else None
 
         # TODO: time compilation, display it
 
