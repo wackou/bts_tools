@@ -152,6 +152,7 @@ def monitoring_thread(*nodes):
             for node in nodes:
                 ctx = contexts[node.name]
                 ctx.info = info
+                ctx.online_state = global_ctx.online_state
                 monitoring.missed.monitor(node, ctx)
                 monitoring.version.monitor(node, ctx)
                 monitoring.payroll.monitor(node, ctx)
