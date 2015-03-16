@@ -26,7 +26,7 @@ slate:
     - tradebts.gulu                # 100%  https://bitsharestalk.org/index.php?topic=13457
     - dacx.baozou                  # 100%  https://bitsharestalk.org/index.php?topic=13428
     - dev-pc.bitcube               # 100%  https://bitsharestalk.org/index.php?topic=13995 (id: pc, cube)
-    - minebitshares-reloaded       # 100%  https://bitsharestalk.org/index.php?topic=14887
+    - minebitshares-reloaded       # 100%  https://bitsharestalk.org/index.php?topic=14887 (id: nethyb)  |  seed node: euseednode.minebitshares.com, auseednode.minebitshares.com
 
     # marketing initiatives
     - marketing.methodx            # 100%  https://bitsharestalk.org/index.php?topic=11663
@@ -47,7 +47,6 @@ slate:
     - mr.agsexplorer        # id: boombastic  |  seed node: 180.153.142.120:1777
     - delegate.baozi        # id: alt         |  seed node: 106.185.26.162:1776
     - immortal.bitdelegate  # id: emski       |  seed node: seed.bitdelegate.org:42577
-    - www.minebitshares-com # id: nethyb      |  seed node: euseednode.minebitshares.com, auseednode.minebitshares.com
     - dele-puppy            # id: puppies     |  seed node: 95.85.33.16:8764
     - cny.bts500            # id: heyD
     - btsx.chinesecommunity # id: ripplexiaoshan
