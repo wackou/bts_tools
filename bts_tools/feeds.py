@@ -206,6 +206,9 @@ def check_feeds(nodes):
                 # nodes (while checking on them, for instance)
                 # TODO: do we really want to ignore rpc_host != 'localhost', or should we just do what is asked?
                 if node.type == 'delegate' and node.rpc_host == 'localhost' and 'feeds' in node.monitoring:
+                    if not node.is_online():
+                        log.warning('Cannot publish feeds for delegate %s: client is not running' % node.name)
+                        continue
                     if nfeed_checked % feed_period == 0:
                         if not node.get_info()['wallet_unlocked']:
                             log.warning('Cannot publish feeds for delegate %s: wallet is locked' % node.name)
