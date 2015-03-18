@@ -54,8 +54,8 @@ build_environments:
         gui_bin_name: BitSharesTestNet
 
     dvs:
-        git_repo: https://github.com/BitShares/DevShares.git
-        git_branch: master
+        git_repo: https://github.com/BitShares/bitshares.git
+        git_branch: devshares
         build_dir: ~/.DevShares_build
         bin_dir: ~/.DevShares_bin
         bin_name: devshares_client
