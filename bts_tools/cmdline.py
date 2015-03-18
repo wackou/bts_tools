@@ -155,7 +155,7 @@ def install_last_built_bin():
         bin_filename = '%s_%s_%s_%s' % (BTS_BIN_NAME, date, branch, commit[:8])
 
     def install(src, dst):
-        print('Installing %s' % dst)
+        print('Installing %s to %s' % (dst, BTS_BIN_DIR))
         if islink(src):
             result = join(dirname(src), os.readlink(src))
             print('Following symlink %s -> %s' % (src, result))

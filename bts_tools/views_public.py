@@ -166,12 +166,15 @@ def delegate_info(delegate_name):
 
     # there are ~2650 blocks/month/delegate, so no need to get more of them
     # FIXME: this needs to be cached, same as in rpcutils...
-    slots = rpc.main_node.blockchain_get_delegate_slot_records(delegate_name, -300000, 30000)[::-1]
+    slots = rpc.main_node.blockchain_get_delegate_slot_records(delegate_name, 10000)
     if slots:
-        producing = slots[0]['block_produced']
-        streak = list(itertools.takewhile(lambda x: (x['block_produced'] == producing), slots))
+        producing = slots[0]['block_id'] is not None
+        streak = list(itertools.takewhile(lambda x: (type(x['block_id']) is type(slots[0]['block_id'])), slots))
         last_produced = len(streak)
-        did_not_miss_since = streak[-1]['start_time']
+
+        def get_ts(slot):
+            return slot['index']['timestamp']
+        did_not_miss_since = get_ts(streak[-1])
 
         now = arrow.utcnow()
         one_day_ago = now.replace(days=-1)
@@ -181,14 +184,14 @@ def delegate_info(delegate_name):
         def ratio(slots):
             produced, total = 0, 0
             for s in slots:
-                if s['block_produced']:
+                if s['block_id'] is not None:
                     produced += 1
                 total += 1
             return float(produced) / total
 
-        last_day = list(filter(lambda x: arrow.get(x['start_time'], 'YYYYMMDDTHHmmss') > one_day_ago, slots))
-        last_week = list(filter(lambda x: arrow.get(x['start_time'], 'YYYYMMDDTHHmmss') > one_week_ago, slots))
-        last_month = list(filter(lambda x: arrow.get(x['start_time'], 'YYYYMMDDTHHmmss') > one_month_ago, slots))
+        last_day = list(filter(lambda x: arrow.get(get_ts(x)) > one_day_ago, slots))
+        last_week = list(filter(lambda x: arrow.get(get_ts(x)) > one_week_ago, slots))
+        last_month = list(filter(lambda x: arrow.get(get_ts(x)) > one_month_ago, slots))
         ratio_last_day = '%.2f%%' % (ratio(last_day) * 100)
         ratio_last_week = '%.2f%%' % (ratio(last_week) * 100)
         ratio_last_month = '%.2f%%' % (ratio(last_month) * 100)
