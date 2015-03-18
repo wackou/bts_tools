@@ -93,7 +93,13 @@ def is_valid_environment(env):
 
 
 def clone():
-    if not exists(BTS_BUILD_DIR):
+    def is_git_dir(path):
+        try:
+            run('cd "%s"; git rev-parse' % BTS_BUILD_DIR)
+            return True
+        except RuntimeError:
+            return False
+    if not exists(BTS_BUILD_DIR) or not is_git_dir(BTS_BUILD_DIR):
         run('git clone %s "%s"' % (BTS_GIT_REPO, BTS_BUILD_DIR))
         os.chdir(BTS_BUILD_DIR)
         run('git submodule init')
