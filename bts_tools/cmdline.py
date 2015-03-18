@@ -95,7 +95,7 @@ def is_valid_environment(env):
 def clone():
     def is_git_dir(path):
         try:
-            run('cd "%s"; git rev-parse' % BTS_BUILD_DIR)
+            run('cd "%s"; git rev-parse' % BTS_BUILD_DIR, verbose=False)
             return True
         except RuntimeError:
             return False
@@ -129,7 +129,7 @@ def configure_gui():
 
 def build():
     make_list = ['make'] + core.config.get('make_args', []) + BUILD_ENV.get('make_args', [])
-    run(make_list, verbose=True)
+    run(make_list)
 
 
 def build_gui():
@@ -142,11 +142,11 @@ def build_gui():
 
 def install_last_built_bin():
     # install into bin dir
-    date = run('git show -s --format=%ci HEAD', io=True).stdout.split()[0]
-    branch = run('git rev-parse --abbrev-ref HEAD', io=True).stdout.strip()
-    commit = run('git log -1', io=True).stdout.splitlines()[0].split()[1]
+    date = run('git show -s --format=%ci HEAD', io=True, verbose=False).stdout.split()[0]
+    branch = run('git rev-parse --abbrev-ref HEAD', io=True, verbose=False).stdout.strip()
+    commit = run('git log -1', io=True, verbose=False).stdout.splitlines()[0].split()[1]
 
-    r = run('git describe --tags %s' % commit, io=True)
+    r = run('git describe --tags %s' % commit, io=True, verbose=False)
     if r.status == 0:
         # we are on a tag, use it for naming binary
         tag = r.stdout.strip().replace('/', '_')
@@ -246,7 +246,7 @@ Examples:
         # check if user forgot to specify it
         def match_tag(tag):
             if args.environment in {'bts', 'dvs'}:
-                tags = run('cd %s; git tag -l' % BTS_BUILD_DIR, io=True).stdout.strip().split('\n')
+                tags = run('cd %s; git tag -l' % BTS_BUILD_DIR, io=True, verbose=False).stdout.strip().split('\n')
                 if args.environment == 'dvs':
                     if 'dvs/' + tag in tags:
                         return 'dvs/' + tag
@@ -304,7 +304,7 @@ Examples:
             print('Running specific instance of the %s client: %s' % (flavor, tag))
             bin_name = run('ls %s' % join(BTS_BIN_DIR,
                                           '%s_*%s*' % (BTS_BIN_NAME, tag[:8])),
-                           io=True).stdout.strip()
+                           io=True, verbose=False).stdout.strip()
             run_args += args.args[1:]
         else:
             # run last built version
@@ -328,7 +328,7 @@ Examples:
         else:
             cmd = [bin_name] + run_args
 
-        run(cmd, verbose=True)
+        run(cmd)
 
     elif args.command == 'run_gui':
         select_build_environment(args.environment)

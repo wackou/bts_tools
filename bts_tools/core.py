@@ -146,7 +146,7 @@ def _run(cmd, io=False, verbose=False):
         return IOStream(p.returncode, None, None)
 
 
-def run(cmd, io=False, verbose=False):
+def run(cmd, io=False, verbose=True):
     r = _run(cmd, io, verbose)
     if r.status != 0:
         raise RuntimeError('Failed running: %s' % cmd)
@@ -159,7 +159,7 @@ def get_version():
         with open(version_file) as f:
             return f.read().strip()
     try:
-        return run('git describe --tags', io=True).stdout.strip()
+        return run('git describe --tags', io=True, verbose=False).stdout.strip()
     except Exception:
         return 'unknown'
 

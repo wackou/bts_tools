@@ -151,7 +151,7 @@ class BTSProxy(object):
                 cmd += 'bts-rpc %d %s %s %s %s 2>/dev/null"' % (self.rpc_port, self.rpc_user, self.rpc_password,
                                                     funcname, ' '.join(str(arg) for arg in args))
 
-                result = run(cmd, io=True).stdout
+                result = run(cmd, io=True, verbose=False).stdout
                 try:
                     result = json.loads(result)
                 except:
