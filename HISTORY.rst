@@ -6,6 +6,15 @@
 History
 =======
 
+0.1.10 (2015-03-23)
+-------------------
+
+* modularized monitoring to make it easier to write monitoring plugins
+* more robust feed checking
+* added payroll distribution system, contributed by user Thom
+* general fixes and enhancements
+
+
 0.1.9 (2015-02-19)
 ------------------
 
