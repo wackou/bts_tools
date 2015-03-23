@@ -61,33 +61,57 @@ def get_from_yahoo(asset_list, base):
     return dict(zip(asset_list, asset_prices))
 
 
-def get_from_bter(cur, base):
-    log.debug('Getting feeds from bter: %s / %s' % (cur, base))
-    r = requests.get('http://data.bter.com/api/1/ticker/%s_%s' % (cur.lower(), base.lower()),
-                     timeout=60).json()
-    price = float(r['last']) or ((float(r['sell']) + float(r['buy'])) / 2)
-    volume = float(r['vol_%s' % cur.lower()])
-    return price, volume
+class FeedProvider(object):
+    NAME = 'base FeedProvider'
+    PROVIDER_STATES = {}
+
+    def get(self, cur, base):
+        try:
+            log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
+            result = self.get_feed(cur, base)
+        except Exception:
+            if FeedProvider.PROVIDER_STATES.get(self.NAME) == 'online':
+                log.warning('Feed provider %s just went offline' % self.NAME)
+                FeedProvider.PROVIDER_STATES[self.NAME] = 'offline'
+            raise
+        else:
+            if FeedProvider.PROVIDER_STATES.get(self.NAME, 'offline') == 'offline':
+                log.info('Feed provider %s came online' % self.NAME)
+                FeedProvider.PROVIDER_STATES[self.NAME] = 'online'
+        return result
 
 
-def get_from_btc38(cur, base):
-    log.debug('Getting feeds from btc38: %s / %s' % (cur, base))
-    headers = {'content-type': 'application/json',
-               'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
-    r = requests.get('http://api.btc38.com/v1/ticker.php',
-                     timeout=60,
-                     params={'c': cur.lower(), 'mk_type': base.lower()},
-                     headers=headers)
-    try:
-        # see: http://stackoverflow.com/questions/24703060/issues-reading-json-from-txt-file
-        r.encoding = 'utf-8-sig'
-        r = r.json()
-    except ValueError:
-        log.error('Could not decode response from btc38: %s' % r.text)
-        raise
-    price = float(r['ticker']['last']) # TODO: (bid + ask) / 2 ?
-    volume = float(r['ticker']['last']) * float(r['ticker']['vol'])
-    return price, volume
+class BterFeedProvider(FeedProvider):
+    NAME = 'Bter'
+
+    def get_feed(self, cur, base):
+        r = requests.get('http://data.bter.com/api/1/ticker/%s_%s' % (cur.lower(), base.lower()),
+                         timeout=60).json()
+        price = float(r['last']) or ((float(r['sell']) + float(r['buy'])) / 2)
+        volume = float(r['vol_%s' % cur.lower()])
+        return price, volume
+
+
+class Btc38FeedProvider(FeedProvider):
+    NAME = 'Btc38'
+
+    def get_feed(self, cur, base):
+        headers = {'content-type': 'application/json',
+                   'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
+        r = requests.get('http://api.btc38.com/v1/ticker.php',
+                         timeout=60,
+                         params={'c': cur.lower(), 'mk_type': base.lower()},
+                         headers=headers)
+        try:
+            # see: http://stackoverflow.com/questions/24703060/issues-reading-json-from-txt-file
+            r.encoding = 'utf-8-sig'
+            r = r.json()
+        except ValueError:
+            log.error('Could not decode response from btc38: %s' % r.text)
+            raise
+        price = float(r['ticker']['last']) # TODO: (bid + ask) / 2 ?
+        volume = float(r['ticker']['last']) * float(r['ticker']['vol'])
+        return price, volume
 
 
 def weighted_mean(l):
@@ -126,15 +150,14 @@ def get_feed_prices():
     yahoo_prices = get_from_yahoo(yahoo_curs, 'USD')
     cny_usd = yahoo_prices.pop('CNY')
 
+    feed_providers = [BterFeedProvider(), Btc38FeedProvider()]
+
     feeds_btc_cny = []
-    try:
-        feeds_btc_cny.append(get_from_btc38('BTC', 'CNY'))
-    except:
-        pass
-    try:
-        feeds_btc_cny.append(get_from_bter('BTC', 'CNY'))
-    except:
-        pass
+    for provider in feed_providers:
+        try:
+            feeds_btc_cny.append(provider.get('BTC', 'CNY'))
+        except:
+            pass
     if not feeds_btc_cny:
         raise core.NoFeedData('Could not get any BTC/CNY feeds')
     btc_cny = weighted_mean(feeds_btc_cny)
@@ -142,16 +165,12 @@ def get_feed_prices():
 
     # then get the weighted price in btc for the most important markets
     feeds_btc = []
-    try:  # get feeds from BTER
-        feeds_btc.extend([get_from_bter('BTS', 'BTC'),
-                          adjust(get_from_bter('BTS', 'CNY'), cny_btc)])
-    except:
-        pass
-    try:  # get feeds from BTC38
-        feeds_btc.extend([get_from_btc38('BTS', 'BTC'),
-                          adjust(get_from_btc38('BTS', 'CNY'), cny_btc)])
-    except:
-        pass
+    for provider in feed_providers:
+        try:
+            feeds_btc.extend([provider.get('BTS', 'BTC'),
+                              adjust(provider.get('BTS', 'CNY'), cny_btc)])
+        except:
+            pass
     if not feeds_btc:
         raise core.NoFeedData('Could not get any BTS/BTC feeds')
     btc_price = weighted_mean(feeds_btc)
