@@ -52,7 +52,7 @@ Install required dependencies
 The first step is to install the dependencies necessary for installing the
 tools and for compiling the BitShares client (still as root)::
 
-    # apt-get install build-essential git cmake libssl-dev libdb5.3++-dev libncurses5-dev libreadline-dev \
+    # apt-get install build-essential git cmake libssl-dev libdb++-dev libncurses5-dev libreadline-dev \
                       python3-dev python3-pip libyaml-dev libboost-all-dev ntp
 
 Note that we also install the ``ntp`` client here, this is needed to keep your
