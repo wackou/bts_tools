@@ -180,6 +180,12 @@ class BTSProxy(object):
         # get a special "smart" cache for slots as it is a very expensive call
         self._slot_cache = make_region().configure('dogpile.cache.memory')
 
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return 'BTSProxy(%s, %s)' % (self.client, self.name)
+
     def __getattr__(self, funcname):
         if funcname.startswith('_'):
             raise AttributeError

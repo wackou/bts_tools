@@ -35,7 +35,7 @@ def make_published_version_region():
 published_version_region = defaultdict(make_published_version_region)
 
 
-def monitor(node, ctx):
+def monitor(node, ctx, cfg):
     if 'version' not in node.monitoring or node.type != 'delegate':
         return
 

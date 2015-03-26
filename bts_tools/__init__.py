@@ -32,12 +32,10 @@ def init(loglevels=None):
     from .core import load_config
     from .rpcutils import load_nodes
     from .feeds import load_feeds
-    from .monitor import load_monitoring
 
     load_config(loglevels)
     load_nodes()
     load_feeds()
-    load_monitoring()
 
     from . import core
     log = logging.getLogger('bts_tools.profile')

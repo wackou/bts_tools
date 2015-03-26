@@ -201,7 +201,9 @@ nodes:
 
 monitoring:
     monitor_time_interval: 5
-    plots_time_span: 86400
+
+    cpu_ram_usage:
+        plots_time_span: 86400
 
     feeds:
         check_time_interval: 300

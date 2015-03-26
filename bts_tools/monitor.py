@@ -18,43 +18,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from collections import deque, defaultdict
-from datetime import datetime
+from collections import deque
 from itertools import chain, islice
-from .core import StatsFrame
-from .notification import send_notification
+from contextlib import suppress
 from .feeds import check_feeds
-from . import core, monitoring
-import math
+from . import core
 import time
 import logging
 
 log = logging.getLogger(__name__)
 
-# needs to be accessible at a module level (at least for now)
+# needs to be accessible at a module level (at least for now) so views can access it easily
 stats_frames = {}
-
-# make sure we don't have huge plots that take forever to render
-maxlen = 2000
-
-cfg = None
-time_span = None
-time_interval = None
-stable_time_interval = None
-desired_maxlen = None
-
-
-def load_monitoring():
-    global cfg, time_span, time_interval, desired_maxlen, stable_time_interval
-    cfg = core.config['monitoring']
-    time_span = cfg['plots_time_span']
-    time_interval = cfg['monitor_time_interval']
-    desired_maxlen = int(time_span / time_interval)
-
-    if desired_maxlen > maxlen:
-        stable_time_interval = time_interval * (desired_maxlen / maxlen)
-    else:
-        stable_time_interval = time_interval
 
 
 class AttributeDict(dict):
@@ -96,66 +71,80 @@ class StableStateMonitor(object):
         return stable_state != self.last_stable_state
 
 
+# import all monitoring plugins
+from . import monitoring
+
+
+def get_config(plugin):
+    return core.config['monitoring'].get(plugin, {})
+
+
 def monitoring_thread(*nodes):
     client_node = nodes[0]
 
-    # all different types of monitoring that should be considered by this thread
-    all_monitoring = set(chain(*(node.monitoring for node in nodes)))
-    node_names = [n.name for n in nodes]
-
     log.info('Starting thread monitoring on %s:%d for nodes %s' %
-             (client_node.rpc_host, client_node.rpc_port, ', '.join(node_names)))
+             (client_node.rpc_host, client_node.rpc_port, ', '.join(n.name for n in nodes)))
 
-    stats = stats_frames[client_node.rpc_cache_key] = deque(maxlen=min(desired_maxlen, maxlen))
+    # all different types of monitoring that should be considered by this thread
+    all_monitoring = set(chain(*(node.monitoring for node in nodes))) | {'cpu_ram_usage'}
 
     # launch feed monitoring and publishing thread
     if 'feeds' in all_monitoring:
         check_feeds(nodes)
 
+    # plugins acting on the client/wallet (ie: 1 instance per binary that is running)
+    CLIENT_PLUGINS = ['seed', 'network_connections', 'cpu_ram_usage']
+
+    # plugins acting on each node (ie: 1 for each account contained in a wallet)
+    NODE_PLUGINS = ['version', 'missed', 'payroll']
+
     # create one global context for the client, and local contexts for each node of this client
     global_ctx = AttributeDict(loop_index=0,
-                               time_interval=time_interval,
-                               stable_time_interval=stable_time_interval,
-                               nodes=nodes,
-                               node_names=node_names,
-                               stats=stats,
-                               online_state=StableStateMonitor(3),
-                               connection_state=StableStateMonitor(3))
+                               time_interval=core.config['monitoring']['monitor_time_interval'],
+                               nodes=nodes)
+
+    for plugin in ['online'] + CLIENT_PLUGINS:
+        with suppress(AttributeError):
+            getattr(monitoring, plugin).init_ctx(global_ctx, get_config(plugin))
+
     contexts = {}
     for node in nodes:
-        ctx = AttributeDict(producing_state=StableStateMonitor(3),
-                            last_n_notified=0)
+        ctx = AttributeDict()
+        for plugin in NODE_PLUGINS:
+            with suppress(AttributeError):
+                getattr(monitoring, plugin).init_ctx(ctx, get_config(plugin))
+
         contexts[node.name] = ctx
+
+    # make the stats values available to the outside
+    stats_frames[client_node.rpc_cache_key] = global_ctx.stats
 
     while True:
         global_ctx.loop_index += 1
 
-        time.sleep(time_interval)
+        time.sleep(global_ctx.time_interval)
         # log.debug('-------- Monitoring status of the BitShares client --------')
         client_node.clear_rpc_cache()
 
-        try:
-            online = monitoring.online.monitor(client_node, global_ctx)
+        try: # FIXME: this try/catch needs to be for each plugin, instead of one for the entire thread
+            online = monitoring.online.monitor(client_node, global_ctx, get_config('online'))
             if not online:
                 continue
 
-            info = client_node.get_info()
-            global_ctx.info = info
+            # monitor at a client level
+            global_ctx.info = client_node.get_info()
+            for plugin in CLIENT_PLUGINS:
+                if plugin in all_monitoring:
+                    getattr(monitoring, plugin).monitor(client_node, global_ctx, get_config(plugin))
 
-            if client_node.type == 'seed':
-                monitoring.seed.monitor(client_node, global_ctx)
-
-            monitoring.network_connections.monitor(client_node, global_ctx)
-            monitoring.resources.monitor(client_node, global_ctx)
-
-            # monitor each node
+            # monitor each node individually
             for node in nodes:
                 ctx = contexts[node.name]
-                ctx.info = info
+                ctx.info = global_ctx.info
                 ctx.online_state = global_ctx.online_state
-                monitoring.missed.monitor(node, ctx)
-                monitoring.version.monitor(node, ctx)
-                monitoring.payroll.monitor(node, ctx)
+                for plugin in NODE_PLUGINS:
+                    if plugin in node.monitoring:
+                        getattr(monitoring, plugin).monitor(node, ctx, get_config(plugin))
 
 
         except Exception as e:

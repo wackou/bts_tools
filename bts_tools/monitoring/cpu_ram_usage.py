@@ -19,14 +19,30 @@
 #
 
 from datetime import datetime
+from collections import deque
 from ..core import StatsFrame
 import math
 import logging
 
 log = logging.getLogger(__name__)
 
+# make sure we don't have huge plots that take forever to render
+maxlen = 2000
 
-def monitor(node, ctx):
+
+def init_ctx(ctx, cfg):
+    time_span = cfg['plots_time_span']
+    desired_maxlen = int(time_span / ctx.time_interval)
+
+    if desired_maxlen > maxlen:
+        ctx.stable_time_interval = ctx.time_interval * (desired_maxlen / maxlen)
+    else:
+        ctx.stable_time_interval = ctx.time_interval
+
+    ctx.stats = deque(maxlen=min(desired_maxlen, maxlen))
+
+
+def monitor(node, ctx, cfg):
     # only monitor cpu and network if we are monitoring localhost
     if node.rpc_host == 'localhost':
         p = node.process()

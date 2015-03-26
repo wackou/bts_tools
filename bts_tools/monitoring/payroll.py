@@ -49,15 +49,13 @@ def get_account_balance(node, account, asset_idx=BTS_ASSET_IDX):
     return 0
 
 
-def monitor(node, ctx):
+def monitor(node, ctx, cfg):
     if 'payroll' not in node.monitoring or node.type != 'delegate':
         return
 
     if not ctx.info['wallet_unlocked']:
         log.warning('Cannot perform payroll distribution when wallet is closed or locked')
         return
-
-    cfg = core.config['monitoring']['payroll']
 
     log.info('monitoring payroll')
     payday_file = join(core.BTS_TOOLS_HOMEDIR, cfg['payday_file'])

@@ -23,7 +23,10 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def monitor(node, ctx):
+def monitor(node, ctx, cfg):
+    if node.type != 'seed':
+        return
+
     # if seed node just came online, set its connection count to something high
     if ctx.online_state.just_changed():
         # TODO: only if state just changed? if we crash and restart immediately, then we should do it also...
