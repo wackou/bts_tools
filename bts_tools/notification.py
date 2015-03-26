@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 def send_email(to, subject, body, bcc=None, replyto=None):
     """Return True if the email could be sent, raise an exception
     otherwise."""
-    c = core.config['monitoring']['email']
+    c = core.config['notification']['email']
 
     fromaddr = replyto or c['identity']
     #toaddrs = [ to, fromaddr ]
@@ -55,14 +55,14 @@ def send_email(to, subject, body, bcc=None, replyto=None):
 
 def send_notification_email(msg, alert=False):
     log.debug('Sending notification by email: %s' % msg)
-    c = core.config['monitoring']['email']
+    c = core.config['notification']['email']
     send_email(c['recipient'], 'BTS notification', msg)
     log.info('Sent email notification: %s' % msg)
 
 
 def send_notification_boxcar(msg, alert=False):
     log.debug('Sending notification trough Boxcar: %s' % msg)
-    tokens = core.config['monitoring']['boxcar']['tokens']
+    tokens = core.config['notification']['boxcar']['tokens']
     for token in tokens:
         requests.post('https://new.boxcar.io/api/notifications',
                       data={'user_credentials': token,
@@ -75,7 +75,7 @@ def send_notification_boxcar(msg, alert=False):
 def send_notification(nodes, node_msg, alert=False):
     for ntype, notify in [('email', send_notification_email),
                           ('boxcar', send_notification_boxcar)]:
-        notify_nodes = [node for node in nodes if ntype in node.monitoring]
+        notify_nodes = [node for node in nodes if ntype in node.notification]
         if notify_nodes:
             node_names = ', '.join(n.name for n in notify_nodes)
             msg = '%s - %s: %s' % (notify_nodes[0].bts_type(), node_names, node_msg)

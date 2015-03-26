@@ -210,6 +210,17 @@ monitoring:
         publish_time_interval: 2400
         median_time_span: 1800
 
+    payroll:
+        timezone_offset: 0                       # vps timezone difference from payee timezone (for logging purposes)
+        pay_interval: 14                         # How often (in days) between each payday
+        minimum_balance: 200                     # Amount to maintain in delegate account for fees
+        payday_file: last_payday.dat             # Holds the date & time of the last payout
+        transactions_file: transactions.txt      # Holds the list of payout transactions
+        accounts: [account1, account2]           # List of accounts to pay for testing
+        pay_rate: [60, 40]                       # Percentage to distribute to each account
+
+
+notification:
     email:
         smtp_server: smtp.example.com
         smtp_user: user
@@ -219,12 +230,3 @@ monitoring:
 
     boxcar:
         tokens: []
-
-    payroll:
-        timezone_offset: 0                       # vps timezone difference from payee timezone (for logging purposes)
-        pay_interval: 14                         # How often (in days) between each payday
-        minimum_balance: 200                     # Amount to maintain in delegate account for fees
-        payday_file: last_payday.dat             # Holds the date & time of the last payout
-        transactions_file: transactions.txt      # Holds the list of payout transactions
-        accounts: [account1, account2]           # List of accounts to pay for testing
-        pay_rate: [60, 40]                       # Percentage to distribute to each account
