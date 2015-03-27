@@ -192,9 +192,9 @@ def delegate_info(delegate_name):
         last_day = list(filter(lambda x: arrow.get(get_ts(x)) > one_day_ago, slots))
         last_week = list(filter(lambda x: arrow.get(get_ts(x)) > one_week_ago, slots))
         last_month = list(filter(lambda x: arrow.get(get_ts(x)) > one_month_ago, slots))
-        ratio_last_day = '%.2f%%' % (ratio(last_day) * 100)
-        ratio_last_week = '%.2f%%' % (ratio(last_week) * 100)
-        ratio_last_month = '%.2f%%' % (ratio(last_month) * 100)
+        ratio_last_day = '%.2f%%' % (ratio(last_day) * 100) if last_day else 'N/A'
+        ratio_last_week = '%.2f%%' % (ratio(last_week) * 100) if last_week else 'N/A'
+        ratio_last_month = '%.2f%%' % (ratio(last_month) * 100) if last_month else 'N/A'
 
     else:
         producing = True
