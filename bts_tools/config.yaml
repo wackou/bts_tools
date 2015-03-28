@@ -167,19 +167,19 @@ profile: false
 #         client: bts
 #         type: delegate   # delegate node type: run a single delegate account
 #         name: delegate1  # the name of the delegate. This needs to be an existing account
-#         monitoring: [version,feeds,email]
+#         monitoring: [version, feeds]
+#         notification: [email, boxcar]
 #     -
 #         client: bts
 #         type: seed    # seed node type: no need for open wallet, high number of connections
 #         name: seed01  # the name for this seed node. This is just for you, it serves no other purpose
-#         desired_number_of_connections: 200
-#         maximum_number_of_connections: 400
 #         # you can specify the rpc connection params. This will override the values
 #         # from the data directory
 #         rpc_port: 5678
 #         rpc_user: username
 #         rpc_password: secret-password
-#         monitoring: [email]
+#         monitoring: [network_connections]
+#         notification: email
 #     -
 #         client: bts
 #         type: delegate   # remote delegate node type: access to a remote node's delegate info. You need to have ssh access to this node for this to work
@@ -195,8 +195,7 @@ nodes:
         client: bts
         type: seed
         name: seed-test
-        desired_number_of_connections: 200
-        maximum_number_of_connections: 400
+        monitoring: [seed]
 
 
 monitoring:
@@ -204,6 +203,13 @@ monitoring:
 
     cpu_ram_usage:
         plots_time_span: 86400
+
+    network_connections:
+        min_connections: 5
+
+    seed:
+        desired_number_of_connections: 200
+        maximum_number_of_connections: 400
 
     feeds:
         check_time_interval: 300

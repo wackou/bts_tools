@@ -94,8 +94,7 @@ class hashabledict(dict):
 
 class BTSProxy(object):
     def __init__(self, type, name, client=None, monitoring=None, rpc_port=None,
-                 rpc_user=None, rpc_password=None, rpc_host=None, venv_path=None,
-                 desired_number_of_connections=None, maximum_number_of_connections=None):
+                 rpc_user=None, rpc_password=None, rpc_host=None, venv_path=None):
         self.type = type
         self.name = name
         self.monitoring = ([] if monitoring is None else
@@ -123,8 +122,6 @@ class BTSProxy(object):
         self.rpc_cache_key = (self.rpc_host, self.rpc_port)
         self.venv_path = venv_path
         self.bin_name = get_bin_name(client or 'bts')
-        self.desired_number_of_connections = desired_number_of_connections
-        self.maximum_number_of_connections = maximum_number_of_connections
 
         if self.rpc_host == 'localhost':
             # direct json-rpc call

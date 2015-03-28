@@ -45,10 +45,5 @@ At the moment, the focus of the tools has been on maintaining delegate nodes on
 the BitShares network, but it is planned to support more types of specialized
 nodes in the future (when they appear).
 
-It is currently possible to maintain seed nodes, too, which can define additional
-properties in the ``config.yaml`` file:
-
-- ``desired_number_of_connections``
-- ``maximum_number_of_connections``
-
-which will be set once upon launch of the client.
+It is currently possible to maintain seed nodes, too, which do not need an open
+wallet to run and usually have a high number of network connections.

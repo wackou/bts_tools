@@ -24,8 +24,6 @@ import logging
 
 log = logging.getLogger(__name__)
 
-MIN_CONNECTIONS = 5
-
 
 def init_ctx(ctx, cfg):
     ctx.connection_state = StableStateMonitor(3)
@@ -33,13 +31,14 @@ def init_ctx(ctx, cfg):
 
 def monitor(node, ctx, cfg):
     # check for minimum number of connections for delegate to produce
-    if ctx.info['network_num_connections'] <= MIN_CONNECTIONS:
+    min_connections = cfg.get('min_connections', 5)
+    if ctx.info['network_num_connections'] <= min_connections:
         ctx.connection_state.push('starved')
         if ctx.connection_state.just_changed():
-            log.warning('Nodes %s: fewer than %d network connections...' % (', '.join(n.name for n in ctx.nodes), MIN_CONNECTIONS))
-            send_notification(ctx.nodes, 'fewer than %d network connections...' % MIN_CONNECTIONS, alert=True)
+            log.warning('Nodes %s: fewer than %d network connections...' % (', '.join(n.name for n in ctx.nodes), min_connections))
+            send_notification(ctx.nodes, 'fewer than %d network connections...' % min_connections, alert=True)
     else:
         ctx.connection_state.push('connected')
         if ctx.connection_state.just_changed():
-            log.info('Nodes %s: got more than %d connections now' % (', '.join(n.name for n in ctx.nodes), MIN_CONNECTIONS))
-            send_notification(ctx.nodes, 'got more than %d connections now' % MIN_CONNECTIONS)
+            log.info('Nodes %s: got more than %d connections now' % (', '.join(n.name for n in ctx.nodes), min_connections))
+            send_notification(ctx.nodes, 'got more than %d connections now' % min_connections)

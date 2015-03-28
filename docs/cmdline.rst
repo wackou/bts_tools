@@ -82,6 +82,22 @@ You can see a list of all binaries available by typing::
     $ bts list
 
 
+Passing additional arguments to "bts run"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can pass additional arguments to "bts run" and the tools will forward them
+to the actual invocation of the bts client. This can be useful for options that
+you only use from time to time, eg: re-indexing the blockchain, or clearing the
+peer database. If they are args that start with a double dash (eg: --my-option),
+then you need to also prepend those with an isolated double dash, ie::
+
+    $ bts run -- --resync-blockchain --clear-peer-database
+
+otherwise, the "--resync-blockchain" and "--clear-peer-database" would be
+considered to be an option for the bts script, and not an argument that should
+be forwarded.
+
+
 Building and running the BitShares GUI client
 ---------------------------------------------
 
