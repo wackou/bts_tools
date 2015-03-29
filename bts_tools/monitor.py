@@ -30,6 +30,7 @@ log = logging.getLogger(__name__)
 
 # needs to be accessible at a module level (at least for now) so views can access it easily
 stats_frames = {}
+global_stats_frames = None
 
 
 class AttributeDict(dict):
@@ -80,6 +81,8 @@ def get_config(plugin):
 
 
 def monitoring_thread(*nodes):
+    global global_stats_frames, stats_frames
+
     client_node = nodes[0]
 
     log.info('Starting thread monitoring on %s:%d for nodes %s' %
@@ -105,19 +108,21 @@ def monitoring_thread(*nodes):
 
     for plugin in ['online'] + CLIENT_PLUGINS:
         with suppress(AttributeError):
-            getattr(monitoring, plugin).init_ctx(global_ctx, get_config(plugin))
+            getattr(monitoring, plugin).init_ctx(client_node, global_ctx, get_config(plugin))
 
     contexts = {}
     for node in nodes:
         ctx = AttributeDict()
         for plugin in NODE_PLUGINS:
             with suppress(AttributeError):
-                getattr(monitoring, plugin).init_ctx(ctx, get_config(plugin))
+                getattr(monitoring, plugin).init_ctx(node, ctx, get_config(plugin))
 
         contexts[node.name] = ctx
 
     # make the stats values available to the outside
     stats_frames[client_node.rpc_cache_key] = global_ctx.stats
+    if monitoring.cpu_ram_usage.cpu_total_ctx == global_ctx:
+        global_stats_frames = global_ctx.global_stats
 
     while True:
         global_ctx.loop_index += 1
@@ -129,6 +134,8 @@ def monitoring_thread(*nodes):
         try: # FIXME: this try/catch needs to be for each plugin, instead of one for the entire thread
             online = monitoring.online.monitor(client_node, global_ctx, get_config('online'))
             if not online:
+                # we still want to monitor global cpu usage when client is offline
+                monitoring.cpu_ram_usage.monitor(client_node, global_ctx, get_config('cpu_ram_usage'))
                 continue
 
             # monitor at a client level

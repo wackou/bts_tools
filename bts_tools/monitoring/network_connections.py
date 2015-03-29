@@ -25,7 +25,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def init_ctx(ctx, cfg):
+def init_ctx(node, ctx, cfg):
     ctx.connection_state = StableStateMonitor(3)
 
 

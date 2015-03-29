@@ -31,11 +31,13 @@
 
 <script type="text/javascript">
 
+var cpu_total = [{% for pt in gpoints %}[{{ pt[0]}}, {{ pt[1] }}], {% endfor %}];
 var cpu = [{% for pt in points %}[{{ pt[0]}}, {{ pt[1] }}], {% endfor %}];
 var mem = [{% for pt in points %}[{{ pt[0]}}, {{ pt[2] }}], {% endfor %}];
 var conn = [{% for pt in points %}[{{ pt[0]}}, {{ pt[3] }}], {% endfor %}];
 
 $.plot("#cpu_plot", [{data: cpu, label: "CPU %", lines: {fill: true}},
+                     {data: cpu_total, color: "rgb(255,241,210)", shadowSize: 0, lines: {fill: true}},
                      {data: mem, label: "Memory (MB)", yaxis: 2}], {
     xaxes: [{mode: "time", timezone: "browser", lines: { fill: true } }],
     yaxes: [{min: 0, /*max: 100,*/ position: "right", tickFormatter: function(v, axis) { return v + " %" }},

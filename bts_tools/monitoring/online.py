@@ -19,15 +19,13 @@
 #
 
 from ..notification import send_notification
-from ..core import StatsFrame
 from ..monitor import StableStateMonitor
-from datetime import datetime
 import logging
 
 log = logging.getLogger(__name__)
 
 
-def init_ctx(ctx, cfg):
+def init_ctx(node, ctx, cfg):
     ctx.online_state = StableStateMonitor(3)
 
 
@@ -42,7 +40,6 @@ def monitor(node, ctx, cfg):
             log.warning('Nodes %s just went offline...' % node_names)
             send_notification(ctx.nodes, 'node just went offline...', alert=True)
 
-        ctx.stats.append(StatsFrame(cpu=0, mem=0, connections=0, timestamp=datetime.utcnow()))
         return False
 
     log.debug('Nodes %s: online' % node_names)

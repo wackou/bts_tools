@@ -126,13 +126,17 @@ def view_status():
 
     stats = list(monitor.stats_frames[rpc.main_node.rpc_cache_key])
 
-    points = [ [int((stat.timestamp - datetime(1970,1,1)).total_seconds() * 1000),
-                stat.cpu,
-                int(stat.mem / (1024*1024)),
-                stat.connections]
-               for stat in stats ]
+    points = [(int((stat.timestamp - datetime(1970,1,1)).total_seconds() * 1000),
+               stat.cpu,
+               int(stat.mem / (1024*1024)),
+               stat.connections)
+              for stat in stats]
 
-    return render_template('status.html', title='BTS Client - Status', points=points)
+    gpoints = [(int((stat.timestamp - datetime(1970,1,1)).total_seconds() * 1000),
+                stat.cpu_total)
+               for stat in list(monitor.global_stats_frames)]
+
+    return render_template('status.html', title='BTS Client - Status', points=points, gpoints=gpoints)
 
 
 def split_columns(items, attrs):

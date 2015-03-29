@@ -120,6 +120,7 @@ def get_bin_name(env):
 
 
 IOStream = namedtuple('IOStream', 'status, stdout, stderr')
+GlobalStatsFrame = namedtuple('GlobalStatsFrame', 'cpu_total, timestamp')
 StatsFrame = namedtuple('StatsFrame', 'cpu, mem, connections, timestamp')
 
 
