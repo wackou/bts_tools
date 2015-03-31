@@ -75,6 +75,15 @@ def load_config(loglevels=None):
     for name, level in loglevels.items():
         logging.getLogger(name).setLevel(getattr(logging, level))
 
+
+    # warn user and exit if config.yaml file is not in the correct format
+    m = config['monitoring']
+    if 'email' in m or 'boxcar' in m or 'cpu_ram_usage' not in m:
+        log.error('It looks like you are still using an old (0.1.x) config.yaml file.')
+        log.error('Please fix it, or delete it and start again with a new one')
+        log.error('File is located at: %s' % BTS_TOOLS_CONFIG_FILE)
+        sys.exit(1)
+
     return config
 
 
