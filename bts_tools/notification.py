@@ -72,16 +72,11 @@ def send_notification_boxcar(msg, alert=False):
     log.info('Sent Boxcar notification: %s' % msg)
 
 
-def to_list(obj):
-    if isinstance(obj, list):
-        return obj
-    return [obj]
-
 
 def send_notification(nodes, node_msg, alert=False):
     for ntype, notify in [('email', send_notification_email),
                           ('boxcar', send_notification_boxcar)]:
-        notify_nodes = [node for node in nodes if ntype in to_list(node.notification)]
+        notify_nodes = [node for node in nodes if ntype in node.notification]
         if notify_nodes:
             node_names = ', '.join(n.name for n in notify_nodes)
             msg = '%s - %s: %s' % (notify_nodes[0].bts_type(), node_names, node_msg)

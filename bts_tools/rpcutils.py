@@ -81,6 +81,7 @@ def rpc_call(host, port, user, password,
 
 ALL_SLOTS = {}
 
+
 class hashabledict(dict):
   def __key(self):
     return tuple(sorted(self.items()))
@@ -92,14 +93,22 @@ class hashabledict(dict):
     return self.__key() == other.__key()
 
 
+def to_list(obj):
+    if obj is None:
+        return []
+    elif isinstance(obj, list):
+        return obj
+    else:
+        return [obj]
+
+
 class BTSProxy(object):
-    def __init__(self, type, name, client=None, monitoring=None, rpc_port=None,
-                 rpc_user=None, rpc_password=None, rpc_host=None, venv_path=None):
+    def __init__(self, type, name, client=None, monitoring=None, notification=None,
+                 rpc_port=None, rpc_user=None, rpc_password=None, rpc_host=None, venv_path=None):
         self.type = type
         self.name = name
-        self.monitoring = ([] if monitoring is None else
-                           [monitoring] if not isinstance(monitoring, list)
-                           else monitoring)
+        self.monitoring = to_list(monitoring)
+        self.notification = to_list(notification)
         self.client = client
         if client:
             data_dir = get_data_dir(client)
