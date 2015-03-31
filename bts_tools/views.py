@@ -124,7 +124,7 @@ def view_status():
     if rpc.main_node.status() == 'unauthorized':
         return unauthorized()
 
-    stats = list(monitor.stats_frames[rpc.main_node.rpc_cache_key])
+    stats = list(monitor.stats_frames.get(rpc.main_node.rpc_cache_key, []))
 
     points = [(int((stat.timestamp - datetime(1970,1,1)).total_seconds() * 1000),
                stat.cpu,

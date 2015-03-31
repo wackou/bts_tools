@@ -29,8 +29,8 @@ import logging
 log = logging.getLogger(__name__)
 
 # needs to be accessible at a module level (at least for now) so views can access it easily
-stats_frames = {}
-global_stats_frames = None
+stats_frames = {}  # dict of {rpc_key: stats_list}
+global_stats_frames = []
 
 
 class AttributeDict(dict):
@@ -131,7 +131,7 @@ def monitoring_thread(*nodes):
         # log.debug('-------- Monitoring status of the BitShares client --------')
         client_node.clear_rpc_cache()
 
-        try: # FIXME: this try/catch needs to be for each plugin, instead of one for the entire thread
+        try:
             online = monitoring.online.monitor(client_node, global_ctx, get_config('online'))
             if not online:
                 # we still want to monitor global cpu usage when client is offline
@@ -142,7 +142,11 @@ def monitoring_thread(*nodes):
             global_ctx.info = client_node.get_info()
             for plugin in CLIENT_PLUGINS:
                 if plugin in all_monitoring:
-                    getattr(monitoring, plugin).monitor(client_node, global_ctx, get_config(plugin))
+                    try:
+                        getattr(monitoring, plugin).monitor(client_node, global_ctx, get_config(plugin))
+                    except Exception as e:
+                        log.error('An exception happened in monitoring plugin: %s' % plugin)
+                        log.exception(e)
 
             # monitor each node individually
             for node in nodes:
@@ -151,8 +155,11 @@ def monitoring_thread(*nodes):
                 ctx.online_state = global_ctx.online_state
                 for plugin in NODE_PLUGINS:
                     if plugin in node.monitoring:
-                        getattr(monitoring, plugin).monitor(node, ctx, get_config(plugin))
-
+                        try:
+                            getattr(monitoring, plugin).monitor(node, ctx, get_config(plugin))
+                        except Exception as e:
+                            log.error('An exception happened in monitoring plugin: %s' % plugin)
+                            log.exception(e)
 
         except Exception as e:
             log.error('An exception occurred in the monitoring thread:')
