@@ -72,5 +72,5 @@ slate:
     - moon.warlock       # id: davidpbrown
     - delegate-1.lafona  # 1% payrate
     - delegate-mdj       # 2% payrate (id: mdj)
-    - delegate.ihashfury # seed node: 188.226.195.137:60696  |  chain server: 188.226.195.137:61696
+    - delegate.ihashfury # seed nodes and chain servers: https://bitsharestalk.org/index.php?topic=12856.0
     - triox-delegate     # id: triox

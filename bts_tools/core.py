@@ -98,9 +98,9 @@ def load_config(loglevels=None):
     if errors:
         log.error('Invalid config.yaml file. The following errors have been found:')
         for err in errors:
-            log.error('- %s' % err)
+            log.error('* %s' % err)
         log.error('File is located at: %s' % BTS_TOOLS_CONFIG_FILE)
-        log.error('Please edit this file or delete it and let the tools create a new default one (run "bts -h", for instance).')
+        log.error('Please edit this file or delete it and let the tools create a new default one (run "bts list", for instance).')
         sys.exit(1)
 
     return config
