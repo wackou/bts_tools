@@ -76,12 +76,31 @@ def load_config(loglevels=None):
         logging.getLogger(name).setLevel(getattr(logging, level))
 
 
-    # warn user and exit if config.yaml file is not in the correct format
+    # check whether config.yaml has a correct format
+    errors = []
     m = config['monitoring']
-    if 'email' in m or 'boxcar' in m or 'cpu_ram_usage' not in m:
-        log.error('It looks like you are still using an old (0.1.x) config.yaml file.')
-        log.error('Please fix it, or delete it and start again with a new one')
+
+    if 'email' in m:
+        errors.append("'email' subsection of 'monitoring' should be moved to a 'notification' section instead")
+
+    if 'boxcar' in m:
+        errors.append("'boxcar' subsection of 'monitoring' should be moved to a 'notification' section instead")
+
+    if 'cpu_ram_usage' not in m:
+        errors.append("the 'monitoring' section should have a 'cpu_ram_usage' configuration entry")
+
+    for node in config['nodes']:
+        for notification_type in ['email', 'boxcar']:
+            if notification_type in node.get('monitoring', []):
+                errors.append("node '%s' has '%s' in its 'monitoring' section, it should be moved to a 'notification' property instead" %
+                              (node['name'], notification_type))
+
+    if errors:
+        log.error('Invalid config.yaml file. The following errors have been found:')
+        for err in errors:
+            log.error('- %s' % err)
         log.error('File is located at: %s' % BTS_TOOLS_CONFIG_FILE)
+        log.error('Please edit this file or delete it and let the tools create a new default one (run "bts -h", for instance).')
         sys.exit(1)
 
     return config
