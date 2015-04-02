@@ -101,12 +101,10 @@ def clone():
             return False
     if not exists(BTS_BUILD_DIR) or not is_git_dir(BTS_BUILD_DIR):
         run('git clone %s "%s"' % (BTS_GIT_REPO, BTS_BUILD_DIR))
-        os.chdir(BTS_BUILD_DIR)
-        run('git submodule init')
 
 
 def update():
-    run('git checkout %s && git pull && git submodule update' % BTS_GIT_BRANCH)
+    run('git checkout %s && git pull && git submodule update --init --recursive' % BTS_GIT_BRANCH)
 
 
 def clean_config():
