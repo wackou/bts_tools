@@ -8,6 +8,9 @@
 #  - run_environments [for the cmdline tool]
 #  - nodes            [for the monitoring webapp]
 #
+# For a more detailed description of the format of this file, visit:
+# https://bts-tools.readthedocs.org/en/latest/config_format.html
+#
 
 # the logging levels for the different submodules
 # can be any of DEBUG, INFO, WARNING, ERROR
@@ -24,14 +27,8 @@ logging:
 # flags to be passed to make; shared among all build environments
 make_args: ['-j2']
 
-# list of configurations for building the bitshares client
 #
-# build envs define the following vars:
-#  - git_repo: self-explanatory
-#  - git_branch: self-explanatory
-#  - make_args: additional build flags to be passed to 'make'
-#  - build_dir: the directory where the client shall be built
-#  - bin_dir: the directory where the client will be installed after being successfully built
+# list of configurations for building the bitshares client
 #
 # by default, if you don't specify a build env on the cmdline, the tools will
 # use the 'bts' environment
@@ -89,25 +86,11 @@ build_environments:
 # note: https://bitsharestalk.org/index.php?topic=14150.msg184403#msg184403
 run_args: ['--min-delegate-connection-count=0', '--statistics-enabled', '--accept-incoming-connections=0']
 
-# list of clients that can be run
 #
-# clients define the following vars:
-#  - type: the type of build you want to run. Needs to be a valid build env (ie: bts, pts, ...)
-#  - debug: set to true to run client in gdb (only available in linux for now)
-#  - data_dir: [optional] the data dir (blockchain, wallet, etc.) of the bts client.
-#                         If not specified, uses the standard location of the client
-#  - run_args: [optional] any additional flags you want to pass to the cmdline invocation of the client
+# list of clients that can be run
 #
 # by default, if you don't specify a client on the cmdline, the tools will
 # run the client using the 'bts' run environment
-#
-# Example:
-#
-# run_environments:
-#     seed-bts:
-#         type: bts
-#         debug: false
-#         run_args: ['--p2p-port', '1778', '--clear-peer-database']
 #
 run_environments:
     bts:
@@ -139,56 +122,8 @@ wsgi_debug: false
 # whether to profile how much time the RPC calls take to render
 profile: false
 
-# in the 'nodes' variable you should specify the list of instances of the bitshares client
-# you intend to run on this computer.
-# Nodes can be of 2 types:
-#  - seed nodes
-#  - delegate nodes
 #
-# The choice of node type will tune a bit the interface and enable/disable
-# functionality, such as feed publishing for delegates but not for seed nodes
-#
-# Delegate nodes can either be on localhost, or on a different host. In that case,
-# you need ssh access to the remote host where you also have the bts_tools
-# installed in a virtualenv.
-#
-# For each node you can specify which type of monitoring you want:
-#  - feeds: check price feeds, and optionally publish them if the node is a delegate
-#  - version: check if version number matches published one, publishes it otherwise
-#  - email: send an email notification when client crashes or loses network connections
-#  - boxcar: send an iOS push notification to the Boxcar app when client crashes or loses network connections
-#
-# Examples configs:
-# nodes:
-#     -
-#         # you must specify the run environment of the client
-#         # this will fetch rpc connections params automatically
-#         # NOTE: this needs to be a valid run environment!
-#         client: bts
-#         type: delegate   # delegate node type: run a single delegate account
-#         name: delegate1  # the name of the delegate. This needs to be an existing account
-#         monitoring: [version, feeds]
-#         notification: [email, boxcar]
-#     -
-#         client: bts
-#         type: seed    # seed node type: no need for open wallet, high number of connections
-#         name: seed01  # the name for this seed node. This is just for you, it serves no other purpose
-#         # you can specify the rpc connection params. This will override the values
-#         # from the data directory
-#         rpc_port: 5678
-#         rpc_user: username
-#         rpc_password: secret-password
-#         monitoring: [network_connections]
-#         notification: email
-#     -
-#         client: bts
-#         type: delegate   # remote delegate node type: access to a remote node's delegate info. You need to have ssh access to this node for this to work
-#         name: delegate3  # the name for this remote node. This is just for you, it serves no other purpose
-#         venv_path: ~/.virtualenvs/bts_tools # virtualenv dir in which the bts tools are installed on the remote machine
-#         rpc_host: user@myhost  # hostname. Anything you can pass to "ssh" you can put here (eg: your aliases in ~/.ssh/config)
-#         rpc_port: 5678
-#         rpc_user: username
-#         rpc_password: secret-password
+# list of nodes (delegate accounts / seed nodes) that are being monitored
 #
 nodes:
     -
@@ -198,6 +133,9 @@ nodes:
         monitoring: [seed]
 
 
+#
+# configuration of the monitoring plugins
+#
 monitoring:
     monitor_time_interval: 5
 
@@ -226,6 +164,9 @@ monitoring:
         pay_rate: [60, 40]                       # Percentage to distribute to each account
 
 
+#
+# configuration of the notification types
+#
 notification:
     email:
         smtp_server: smtp.example.com
