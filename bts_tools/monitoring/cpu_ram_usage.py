@@ -72,7 +72,8 @@ def monitor(node, ctx, cfg):
 
     def record_values():
         if ctx == cpu_total_ctx:
-            gs = GlobalStatsFrame(cpu_total=psutil.cpu_percent(), timestamp=datetime.utcnow())
+            gs = GlobalStatsFrame(cpu_total=psutil.cpu_percent() * psutil.cpu_count(),
+                                  timestamp=datetime.utcnow())
             ctx.global_stats.append(gs)
         ctx.stats.append(s)
 
