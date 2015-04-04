@@ -103,10 +103,6 @@ def clone():
         run('git clone %s "%s"' % (BTS_GIT_REPO, BTS_BUILD_DIR))
 
 
-def update():
-    run('git checkout %s && git pull && git submodule update --init --recursive' % BTS_GIT_BRANCH)
-
-
 def clean_config():
     run('rm -f CMakeCache.txt')
 
@@ -240,6 +236,10 @@ Examples:
     if args.command in {'build', 'build_gui'}:
         select_build_environment(args.environment)
 
+        clone()
+        os.chdir(BTS_BUILD_DIR)
+        run('git fetch --all')
+
         # if we are on bitshares (devshares), tags are now prepended with bts/ (dvs/),
         # check if user forgot to specify it
         def match_tag(tag):
@@ -258,14 +258,11 @@ Examples:
 
         tag = match_tag(args.args[0]) if args.args else None
 
-        # TODO: time compilation, display it
-
-        clone()
-
-        os.chdir(BTS_BUILD_DIR)
-        update()
         if tag:
-            run('git checkout %s && git submodule update' % tag)
+            run('git checkout %s' % tag)
+        else:
+            run('git checkout %s && git pull' % BTS_GIT_BRANCH)
+        run('git submodule update --init --recursive')
         clean_config()
 
         start = arrow.utcnow()
