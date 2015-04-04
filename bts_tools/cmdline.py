@@ -242,21 +242,16 @@ Examples:
 
         # if we are on bitshares (devshares), tags are now prepended with bts/ (dvs/),
         # check if user forgot to specify it
-        def match_tag(tag):
-            if args.environment in {'bts', 'dvs'}:
+        def search_tag(tag):
+            env = args.environment
+            if env in {'bts', 'dvs', 'pls'}:
                 tags = run('cd %s; git tag -l' % BTS_BUILD_DIR, io=True, verbose=False).stdout.strip().split('\n')
-                if args.environment == 'dvs':
-                    if 'dvs/' + tag in tags:
-                        return 'dvs/' + tag
-                    elif 'dvs/v' + tag in tags:
-                        return 'dvs/v' + tag
-                if args.environment == 'bts':
-                    if 'bts/' + tag in tags:
-                        return 'bts/' + tag
-                    elif 'bts/v' + tag in tags:
-                        return 'bts/v' + tag
+                for pattern in ['%s/%s', '%s/v%s']:
+                    if pattern % (env, tag) in tags:
+                        return pattern % (env, tag)
+            return tag
 
-        tag = match_tag(args.args[0]) if args.args else None
+        tag = search_tag(args.args[0]) if args.args else None
 
         if tag:
             run('git checkout %s' % tag)
@@ -427,6 +422,10 @@ def main_dvs():
 
 def main_pts():
     return main(flavor='pts')
+
+
+def main_pls():
+    return main(flavor='pls')
 
 
 def main_rpc_call():

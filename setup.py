@@ -38,6 +38,7 @@ entry_points = {
         'bts = bts_tools.cmdline:main_bts',
         'dvs = bts_tools.cmdline:main_dvs',
         'pts = bts_tools.cmdline:main_pts',
+        'pls = bts_tools.cmdline:main_pls',
         'bts-rpc = bts_tools.cmdline:main_rpc_call'
     ],
 }
