@@ -168,8 +168,8 @@ def delegate_info(delegate_name):
     # FIXME: this needs to be cached, same as in rpcutils...
     slots = rpc.main_node.blockchain_get_delegate_slot_records(delegate_name, 10000)
     if slots:
-        producing = slots[0]['block_id'] is not None
-        streak = list(itertools.takewhile(lambda x: (type(x['block_id']) is type(slots[0]['block_id'])), slots))
+        producing = slots[0].get('block_id') is not None
+        streak = list(itertools.takewhile(lambda x: (type(x.get('block_id')) is type(slots[0].get('block_id'))), slots))
         last_produced = len(streak)
 
         def get_ts(slot):
@@ -184,7 +184,7 @@ def delegate_info(delegate_name):
         def ratio(slots):
             produced, total = 0, 0
             for s in slots:
-                if s['block_id'] is not None:
+                if s.get('block_id') is not None:
                     produced += 1
                 total += 1
             return float(produced) / total

@@ -385,8 +385,8 @@ class BTSProxy(object):
             else:
                 latest = slots[-1]
                 rslots = reversed(slots)
-            streak = itertools.takewhile(lambda x: (type(x['block_id']) is type(latest['block_id'])), rslots)
-            return latest['block_id'] is not None, len(list(streak))
+            streak = itertools.takewhile(lambda x: (type(x.get('block_id')) is type(latest.get('block_id'))), rslots)
+            return latest.get('block_id') is not None, len(list(streak))
 
         except Exception as e:
             # can fail with RPCError when delegate has not been registered yet
