@@ -113,10 +113,9 @@ DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',
                     'dvs':         {'linux': '~/.DevShares',
                                     'darwin': '~/Library/Application Support/DevShares'},
                     'pts':         {'linux': '~/.PTS',
-                                    'darwin': '~/Library/Application Support/PTS'}
-                    # FIXME: activate these once the apps have been officially launched
-                    #'sparkle':     {'linux': '~/.Sparkle-Test66',
-                    #                'darwin': '~/Library/Application Support/Sparkle-Test66'}
+                                    'darwin': '~/Library/Application Support/PTS'},
+                    'pls':         {'linux': '~/.DAC PLAY',
+                                    'darwin': '~/Library/Application Support/DAC PLAY'}
                     }
 
 

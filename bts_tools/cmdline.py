@@ -131,7 +131,7 @@ def build_gui():
     run('rm -fr programs/qt_wallet/htdocs')
     run('cd programs/web_wallet; npm install')
     run('make buildweb') # TODO: is 'make forcebuildweb' needed?
-    run('make')
+    build()
 
 
 def install_last_built_bin():

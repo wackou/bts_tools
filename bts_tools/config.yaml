@@ -87,6 +87,7 @@ build_environments:
         build_dir: ~/.Play_build
         bin_dir: ~/.Play_bin
         bin_name: play_client
+        gui_bin_name: PLAY
 
 
 
