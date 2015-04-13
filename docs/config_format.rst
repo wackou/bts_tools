@@ -101,7 +101,7 @@ Example
             client: bts
             type: delegate   # delegate node type: run a single delegate account
             name: delegate1  # the name of the delegate. This needs to be an existing account
-            monitoring: [version,feeds]
+            monitoring: [version, feeds, missed]
             notification: [email]
         -
             type: seed    # seed node type: no need for open wallet, high number of connections
@@ -111,7 +111,7 @@ Example
             rpc_port: 5678
             rpc_user: username
             rpc_password: secret-password
-            monitoring: [network_connections]
+            monitoring: [seed, network_connections]
         -
             type: delegate   # remote delegate node type: access to a remote node's delegate info. You need to have ssh access to this node for this to work
             name: delegate3  # the name for this remote node. This is just for you, it serves no other purpose

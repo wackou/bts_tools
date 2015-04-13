@@ -328,6 +328,8 @@ class BTSProxy(object):
             # make sure we get enough slots to get them all up to our latest, even if there
             # are a lot of missed blocks by other delegates
             if new_api:
+                # FIXME: 5 is only enough if we monitor for missed block, so that get_streak()
+                #        is called often, otherwise we need more
                 slots = self.blockchain_get_delegate_slot_records(self.name, 5)
             else:
                 slots = self.blockchain_get_delegate_slot_records(self.name, -500, 100)

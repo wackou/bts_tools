@@ -92,9 +92,9 @@ build_environments:
 
 
 # flags to be passed when running the client; shared among all run environments
-# note: https://bitsharestalk.org/index.php?topic=14150.msg184403#msg184403
-# FIXME: do not use '--accept-incoming-connections=0' on seed nodes!!
-run_args: ['--min-delegate-connection-count=0', '--statistics-enabled', '--accept-incoming-connections=0']
+# TODO: add '--accept-incoming-connections=0', but for delegate nodes only (ie: not for seed nodes)
+#       see: https://bitsharestalk.org/index.php?topic=14150.msg184403#msg184403
+run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
 
 #
 # list of clients that can be run
