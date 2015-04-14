@@ -6,6 +6,18 @@
 History
 =======
 
+0.2 (2015-04-14)
+----------------
+
+* now requires python3.4
+* API CHANGE: format of the config.yaml file has changed, and you will need to update it.
+  Run "bts list" and it should tell you what to fix in your config file. For more details,
+  see: http://bts-tools.readthedocs.org/en/latest/config_format.html#nodes-list
+* added support for building DVS and BTS client >= 0.9.0
+* added support for building PLAY client (pls)
+* internal refactoring and modularization of the monitoring plugins
+
+
 0.1.10 (2015-03-23)
 -------------------
 

@@ -101,6 +101,8 @@ def load_config(loglevels=None):
             log.error('* %s' % err)
         log.error('File is located at: %s' % BTS_TOOLS_CONFIG_FILE)
         log.error('Please edit this file or delete it and let the tools create a new default one (run "bts list", for instance).')
+        log.error('Note that some monitoring functionality now needs to be specified explicitly (seed, missed, network_connections)')
+        log.error('Visit http://bts-tools.readthedocs.org/en/latest/config_format.html#nodes-list for more information).')
         sys.exit(1)
 
     return config
