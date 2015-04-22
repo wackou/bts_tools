@@ -64,7 +64,7 @@ def binary_description(node):
     """Return a human readable version description of the running binary,
     either tag version or git revision.
     """
-    client_version = node.api_version()
+    client_version = node.get_info()['client_version']
     p = bts_process(node)
     if p is None:
         return client_version
