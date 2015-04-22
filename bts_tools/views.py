@@ -219,7 +219,7 @@ def view_info():
         def format_feeds(fds):
             for asset in feeds.VISIBLE_FEEDS:
                 fmt, field_size = ('%.4g', 10) if asset in {'BTC', 'GOLD', 'SILVER'} else ('%.4f', 7)
-                fds[asset] = (fmt % fds[asset] if asset in fds else 'N/A').rjust(field_size)
+                fds[asset] = (fmt % float(fds[asset]) if asset in fds else 'N/A').rjust(field_size)
 
         format_feeds(lfeeds)
         format_feeds(mfeeds)
