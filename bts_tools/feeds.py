@@ -236,7 +236,8 @@ def check_feeds(nodes):
                         median_feeds = {c: median(c) for c in feeds}
                         feeds_msg = FEEDS_FORMAT_STRING % tuple(median_feeds[c] for c in VISIBLE_FEEDS)
                         log.info('Node %s publishing feeds: %s' % (node.name, feeds_msg))
-                        node.wallet_publish_feeds(node.name, list(median_feeds.items()))
+                        feeds_as_string = [(cur, '{:.10f}'.format(price)) for cur, price in median_feeds.items()]
+                        node.wallet_publish_feeds(node.name, feeds_as_string)
             except Exception as e:
                 log.exception(e)
 
