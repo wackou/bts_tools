@@ -18,8 +18,8 @@ slate:
     # 3rd-party developers (forum id specified when different from delegate)
     - del0.cass                    # 100%  https://bitsharestalk.org/index.php?topic=11753
     - dev.bitsharesblocks          # 100%  https://bitsharestalk.org/index.php?topic=11272 (id: svk)
-    - btstools.digitalgaia         # 30%   https://bitsharestalk.org/index.php?topic=12534 (id: wackou)
-    - backbone.riverhead           # 10%   https://bitsharestalk.org/index.php?topic=10861
+    - btstools.digitalgaia         #  30%  https://bitsharestalk.org/index.php?topic=12534 (id: wackou)
+    - backbone.riverhead           #  10%  https://bitsharestalk.org/index.php?topic=10861
     - dev-metaexchange.monsterer   # 100%  https://bitsharestalk.org/index.php?topic=12317
     - dev.sidhujag                 # 100%  https://bitsharestalk.org/index.php?topic=12027
     - elmato                       # 100%  https://bitsharestalk.org/index.php?topic=12494
@@ -36,10 +36,14 @@ slate:
     - market.cn.group101           # 100%  https://bitsharestalk.org/index.php?topic=13226
     - delegate.verbaltech          # 100%  https://bitsharestalk.org/index.php?topic=13837
     - www.bts-hk                   # 100%  https://bitsharestalk.org/index.php?topic=13724
+    - sollywood.sollars-com        # 100%  https://bitsharestalk.org/index.php?topic=13900
+    - delegate.dposhub-org         # 100%  https://bitsharestalk.org/index.php?topic=15832
+    - delegate.kencode             # 100%  https://bitsharestalk.org/index.php?topic=16072
 
     # other / special purpose delegates
     - fuzzy.beyondbitcoin          # 100%  https://bitsharestalk.org/index.php?topic=13485
     - fund.bitsharesbreakout       # 100%  https://bitsharestalk.org/index.php?topic=13500
+    - del.fav                      #  80%  https://bitsharestalk.org/index.php?topic=15094
 
     # active "standard" delegates  (3% payrate)
     - delegate.xeroc

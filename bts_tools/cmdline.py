@@ -393,14 +393,14 @@ slate:
             sys.exit(1)
 
         log.info('Clearing all previously approved delegates')
-        for d in client.wallet_list_accounts():
+        for d in client.wallet_list_approvals():
             log.debug('Unapproving delegate: %s' % d['name'])
-            client.wallet_account_set_approval(d['name'], 0)
+            client.wallet_approve(d['name'], 0)
 
         for d in slate:
             log.info('Approving delegate: %s' % d)
             try:
-                client.wallet_account_set_approval(d, 1)
+                client.wallet_approve(d, 1)
             except Exception as e:
                 log.error(str(e).split('\n')[0])
 
