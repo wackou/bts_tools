@@ -40,7 +40,7 @@ def monitor(node, ctx, cfg):
         log.warning('Cannot perform payroll distribution when wallet is closed or locked')
         return
 
-    log.info('monitoring payroll')
+    log.debug('monitoring payroll')
     payday_file = join(core.BTS_TOOLS_HOMEDIR, cfg['payday_file'])
     pay_interval = int(cfg['pay_interval'])
 
