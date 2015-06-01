@@ -22,6 +22,7 @@ from . import core
 from collections import deque
 import threading
 import requests
+import functools
 import logging
 
 log = logging.getLogger(__name__)
@@ -34,7 +35,8 @@ price_history = None
 
 """BitAssets for which we check and publish feeds."""
 BIT_ASSETS = {'USD', 'CNY', 'BTC', 'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN',
-              'RUB', 'SEK', 'SGD', 'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD'}
+              'RUB', 'SEK', 'SGD', 'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD', 'SHENZHEN'}
+# FIXME: yahoo bug for 'SHANGHAI'?
 
 """List of feeds that should be shown on the UI and in the logs. Note that we
 always check and publish all feeds, regardless of this variable."""
@@ -48,43 +50,86 @@ def load_feeds():
     price_history = {cur: deque(maxlen=history_len) for cur in BIT_ASSETS}
 
 
-def get_from_yahoo(asset_list, base):
-    log.debug('Getting feeds from yahoo: %s / %s' % (' '.join(asset_list), base))
-    asset_list = [asset.upper() for asset in asset_list]
-    base = base.upper()
-    query_string = ','.join('%s%s=X' % (asset, base) for asset in asset_list)
-    r = requests.get('http://download.finance.yahoo.com/d/quotes.csv',
-                     timeout=60,
-                     params={'s': query_string, 'f': 'l1', 'e': 'csv'})
-
-    asset_prices = map(float, r.text.split())
-    return dict(zip(asset_list, asset_prices))
+def check_online_status(f):
+    @functools.wraps(f)
+    def wrapper(self, *args, **kwargs):
+        try:
+            result = f(self, *args, **kwargs)
+        except Exception:
+            if self.state == 'online':
+                log.warning('Feed provider %s just went offline' % self.NAME)
+                self.state = 'offline'
+            raise
+        else:
+            if self.state == 'offline':
+                log.info('Feed provider %s came online' % self.NAME)
+                self.state = 'online'
+        return result
+    return wrapper
 
 
 class FeedProvider(object):
     NAME = 'base FeedProvider'
     PROVIDER_STATES = {}
 
-    def get(self, cur, base):
+    def __init__(self):
+        self.state = 'offline'
+
+
+class YahooProvider(FeedProvider):
+    NAME = 'Yahoo'
+    _YQL_URL = 'http://query.yahooapis.com/v1/public/yql'
+    _YAHOO_BTS_MAP = {'GOLD': 'XAU', 'SILVER': 'XAG', 'SHENZHEN': '399106.SZ', 'SHANGHAI': '000001.SS'}
+
+    @staticmethod
+    def to_bts(c):
+        c = c.upper()
+        for b, y in YahooProvider._YAHOO_BTS_MAP.items():
+            if c == y:
+                return b
+        return c
+
+    @staticmethod
+    def from_bts(c):
+        c = c.upper()
+        return YahooProvider._YAHOO_BTS_MAP.get(c, c)
+
+    def query_yql(self, query):
+        r = requests.get(self._YQL_URL,
+                         params=dict(q = query,
+                                     env = 'http://datatables.org/alltables.env',
+                                     format='json')).json()
         try:
-            log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
-            result = self.get_feed(cur, base)
-        except Exception:
-            if FeedProvider.PROVIDER_STATES.get(self.NAME) == 'online':
-                log.warning('Feed provider %s just went offline' % self.NAME)
-                FeedProvider.PROVIDER_STATES[self.NAME] = 'offline'
-            raise
-        else:
-            if FeedProvider.PROVIDER_STATES.get(self.NAME, 'offline') == 'offline':
-                log.info('Feed provider %s came online' % self.NAME)
-                FeedProvider.PROVIDER_STATES[self.NAME] = 'online'
-        return result
+            return r['query']['results']['quote']
+        except KeyError:
+            return r
+
+    @check_online_status
+    def query_quote(self, q):
+        log.debug('checking quote for %s at Yahoo' % q)
+        r = self.query_yql('select * from yahoo.finance.quotes where symbol in ("{}")'.format(self.from_bts(q)))
+        return float(r['LastTradePriceOnly'])
+
+    @check_online_status
+    def get(self, asset_list, base):
+        log.debug('checking feeds for %s / %s at Yahoo' % (' '.join(asset_list), base))
+        asset_list = [self.from_bts(asset) for asset in asset_list]
+        base = base.upper()
+        query_string = ','.join('%s%s=X' % (asset, base) for asset in asset_list)
+        r = requests.get('http://download.finance.yahoo.com/d/quotes.csv',
+                         timeout=60,
+                         params={'s': query_string, 'f': 'l1', 'e': 'csv'})
+
+        asset_prices = map(float, r.text.split())
+        return dict(zip((self.to_bts(asset) for asset in asset_list), asset_prices))
 
 
 class BterFeedProvider(FeedProvider):
     NAME = 'Bter'
 
-    def get_feed(self, cur, base):
+    @check_online_status
+    def get(self, cur, base):
+        log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
         r = requests.get('http://data.bter.com/api/1/ticker/%s_%s' % (cur.lower(), base.lower()),
                          timeout=60).json()
         price = float(r['last']) or ((float(r['sell']) + float(r['buy'])) / 2)
@@ -95,7 +140,9 @@ class BterFeedProvider(FeedProvider):
 class Btc38FeedProvider(FeedProvider):
     NAME = 'Btc38'
 
-    def get_feed(self, cur, base):
+    @check_online_status
+    def get(self, cur, base):
+        log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
         headers = {'content-type': 'application/json',
                    'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
         r = requests.get('http://api.btc38.com/v1/ticker.php',
@@ -123,31 +170,22 @@ def adjust(v, r):
     return v[0]*r, v[1]*r
 
 
-_YAHOO_BTS_MAP = {'GOLD': 'XAU', 'SILVER': 'XAG'}
 
-def yahoo_to_bts(c):
-    c = c.upper()
-    for b, y in _YAHOO_BTS_MAP.items():
-        if c == y:
-            return b
-    return c
-
-def bts_to_yahoo(c):
-    c = c.upper()
-    return _YAHOO_BTS_MAP.get(c, c)
 
 
 def get_feed_prices():
     # doesn't include:
     # - BTC as we don't get it from yahoo
     # - USD as it is our base currency
-    yahoo_curs = [bts_to_yahoo(c) for c in BIT_ASSETS - {'BTC', 'USD'}]
+    yahoo = YahooProvider()
+    yahoo_curs = BIT_ASSETS - {'BTC', 'USD', 'SHENZHEN'}
 
     # 1- get the BitShares price in BTC using the biggest markets: USD and CNY
 
     # first get rate conversion between USD/CNY from yahoo and CNY/BTC from
     # bter and btc38 (use CNY and not USD as the market is bigger)
-    yahoo_prices = get_from_yahoo(yahoo_curs, 'USD')
+
+    yahoo_prices = yahoo.get(yahoo_curs, 'USD')
     cny_usd = yahoo_prices.pop('CNY')
 
     feed_providers = [BterFeedProvider(), Btc38FeedProvider()]
@@ -184,9 +222,14 @@ def get_feed_prices():
 
     # 2- now get the BitShares price in all other required currencies
     for cur, yprice in yahoo_prices.items():
-        feeds[yahoo_to_bts(cur)] = usd_price / yprice
+        feeds[cur] = usd_price / yprice
 
-    # 3- update price history for all feeds
+    # 3- get the feeds for chinese composite indices
+    #    these are indices, but let's denominate them in CNY
+    for idx in {'SHENZHEN'}:
+        feeds[idx] = cny_price / yahoo.query_quote(idx)
+
+    # 4- update price history for all feeds
     for cur, price in feeds.items():
         price_history[cur].append(price)
 
