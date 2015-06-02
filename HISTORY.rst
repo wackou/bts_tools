@@ -6,6 +6,13 @@
 History
 =======
 
+0.2.3 (2015-06-02)
+------------------
+
+* added feed for SHENZHEN market-pegged asset
+* fixed payroll plugin (contributed by @ThomasFreedman)
+
+
 0.2.2 (2015-05-04)
 ------------------
 
