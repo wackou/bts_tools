@@ -21,33 +21,16 @@
 from datetime import datetime, timedelta
 from os.path import join
 from .. import core
+from .. rpcutils import BTSProxy
 import dateutil
+from dateutil import parser
 import logging
 
 log = logging.getLogger(__name__)
 
-BTS_ASSET_IDX = 0       # assert node.blockchain_get_asset(BTS_ASSET_IDX)['symbol'] == 'BTS'
-BTS_PRECISION = 100000  # node.blockchain_get_asset(BTS_ASSET_IDX)['precision']
-
-
 # Used for payroll distribution
 def parse_date(date):
     return datetime.datetime.strptime(date, "%Y%m%dT%H%M")
-
-
-# TODO: move this directly into the BTSProxy class
-def get_account_balance(node, account, asset_idx=BTS_ASSET_IDX):
-    log.debug('get_account_balance %s' % account)
-    # Returns the current balance of the given asset for the given account name
-    balances = node.wallet_account_balance(account)  # rpc returns: [['account.name', [[asset_idx, balance]]]]
-    if not balances:
-        return 0
-    for idx, balance in balances[0][1]:
-        if idx == asset_idx:
-            log.debug('balance: %s' % balance / BTS_PRECISION)
-            return balance / BTS_PRECISION  # FIXME: need to divide by asset precision
-    return 0
-
 
 def monitor(node, ctx, cfg):
     if 'payroll' not in node.monitoring or node.type != 'delegate':
@@ -57,9 +40,14 @@ def monitor(node, ctx, cfg):
         log.warning('Cannot perform payroll distribution when wallet is closed or locked')
         return
 
-    log.info('monitoring payroll')
+    log.debug('monitoring payroll')
     payday_file = join(core.BTS_TOOLS_HOMEDIR, cfg['payday_file'])
     pay_interval = int(cfg['pay_interval'])
+
+    # Use this rather than constants
+    asset = node.blockchain_get_asset('BTS')
+    bts_id = asset['id']
+    bts_precision = asset['precision']
 
     try:
         with open(payday_file, 'r') as f :
@@ -84,26 +72,26 @@ def monitor(node, ctx, cfg):
 
     try:
         # Get the pay balance available to distribute
-        account_info = node.wallet_get_account(node.name)
-        pay_balance = account_info['delegate_info']['pay_balance'] / BTS_PRECISION
+        account_info = node.get_account(node.name)  
+        pay_balance =  float(account_info['delegate_info']['pay_balance']) / bts_precision
         log.debug('Balance available to withdraw: %s' % pay_balance)
 
         # If the delegate account balance is below the minimum resupply it.
-        # We need to maintain this to pay feed publishing fees for example.
-        # Delegate account balance is different from delegate pay balance.
-        minimum_balance = cfg['minimum_balance']
-        balance = get_account_balance(node, node.name)
-        log.debug('Current balance in delegate account: %s' % balance)
+        # We need to maintain this to pay feed publishing fees for example.  ? Probably not actually
+        # Delegate account balance is different from delegate pay balance.     
+        minimum_balance = float(cfg['minimum_balance'])                      # Set min = 0 to disable
+        balance = float(BTSProxy.get_account_balance(node, node.name, 'BTS'))
         if balance < minimum_balance:
-            resupply = minimum_balance - balance
+            resupply = minimum_balance - balance  # Round it to an int to avoid problems
             if pay_balance > resupply:
-                node.wallet_delegate_withdraw_pay(node.name, node.name, resupply)
+                log.debug('Supplying shortfall of %s BTS' % resupply)
+                node.wallet_delegate_withdraw_pay(node.name, node.name, str(round(resupply,5)))
                 pay_balance -= resupply
             else:
                 log.warning('Insufficient pay to resupply delegate account. Shortfall: %s' % resupply)
 
-        # Distribute all of the pay_balance based on config.yaml file settings
-        if pay_balance > len(cfg['accounts']) : # Leave enough for fees! (1 BTS per distribution account)
+        # Distribute all of the remaining pay_balance based on config.yaml file settings
+        if int(pay_balance) > len(cfg['accounts']) : # Leave enough for fees! (1 BTS per distribution account)
             # Get the BTS price per share in USD from the market feed price
             try:
                 market = node.blockchain_market_status("USD", "BTS")
@@ -119,7 +107,7 @@ def monitor(node, ctx, cfg):
                 pay = pay_balance * (pay_rate * 0.01)    # The proportioned amount to pay
 
                 try:
-                    node.wallet_delegate_withdraw_pay(node.name, account, pay)   # It's Payday!
+                    node.wallet_delegate_withdraw_pay(node.name, account, str(round(pay,5)))  # It's Payday!
                     if feed_price == 1:
                         usd_value = '?'
                     else:
