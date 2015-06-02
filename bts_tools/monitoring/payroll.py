@@ -72,15 +72,15 @@ def monitor(node, ctx, cfg):
 
     try:
         # Get the pay balance available to distribute
-        account_info = node.get_account(node.name)  
-        pay_balance =  float(account_info['delegate_info']['pay_balance']) / bts_precision
+        account_info = node.blockchain_get_account(node.name)
+        pay_balance = float(account_info['delegate_info']['pay_balance']) / bts_precision
         log.debug('Balance available to withdraw: %s' % pay_balance)
 
         # If the delegate account balance is below the minimum resupply it.
         # We need to maintain this to pay feed publishing fees for example.  ? Probably not actually
-        # Delegate account balance is different from delegate pay balance.     
+        # Delegate account balance is different from delegate pay balance.
         minimum_balance = float(cfg['minimum_balance'])                      # Set min = 0 to disable
-        balance = float(BTSProxy.get_account_balance(node, node.name, 'BTS'))
+        balance = node.get_account_balance(node.name, 'BTS')
         if balance < minimum_balance:
             resupply = minimum_balance - balance  # Round it to an int to avoid problems
             if pay_balance > resupply:

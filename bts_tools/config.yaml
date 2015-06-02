@@ -125,6 +125,9 @@ run_environments:
     sparkle:
         type: sparkle
 
+    pls:
+        type: pls
+
 
 # activate the debug flag on the wsgi app
 wsgi_debug: false
@@ -167,7 +170,7 @@ monitoring:
     payroll:
         timezone_offset: 0                       # vps timezone difference from payee timezone (for logging purposes)
         pay_interval: 14                         # How often (in days) between each payday
-        minimum_balance: 0                     # Amount to maintain in delegate account for fees
+        minimum_balance: 0                       # Amount to maintain in delegate account for fees
         payday_file: last_payday.dat             # Holds the date & time of the last payout
         transactions_file: transactions.txt      # Holds the list of payout transactions
         accounts: [account1, account2]           # List of accounts to pay for testing

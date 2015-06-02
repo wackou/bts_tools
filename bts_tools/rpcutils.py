@@ -236,20 +236,20 @@ class BTSProxy(object):
         except KeyError:
             pass
 
-    def get_account_balance(node, account, symbol):
+    def get_account_balance(self, account, symbol):
         log.debug('get_account_balance for asset %s in %s' % (symbol, account))
-        asset = node.blockchain_get_asset(symbol)
-        asset_id = asset['id'] 
+        asset = self.blockchain_get_asset(symbol)
+        asset_id = asset['id']
         precision = asset['precision']
 
         # Returns the current balance of the given asset for the given account name
-        balances = node.wallet_account_balance(account)  # rpc returns: [['account.name', [[asset_idx, balance]]]]
+        balances = self.wallet_account_balance(account)  # rpc returns: [['account.name', [[asset_idx, balance]]]]
         if not balances:
             return 0
         for idx, bal in balances[0][1]:
             if idx == asset_id:
-                balance = (float(bal) / float(precision))
-    #            log.debug('balance: %s' % balance)
+                balance = bal / precision
+                # log.debug('balance: %s' % balance)
                 return balance
         return 0
 
