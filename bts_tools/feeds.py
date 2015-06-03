@@ -27,12 +27,6 @@ import logging
 
 log = logging.getLogger(__name__)
 
-feeds = {}
-nfeed_checked = 0
-cfg = None
-history_len = None
-price_history = None
-
 """BitAssets for which we check and publish feeds."""
 BIT_ASSETS = {'USD', 'CNY', 'BTC', 'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN',
               'RUB', 'SEK', 'SGD', 'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD'}
@@ -43,17 +37,25 @@ BIT_ASSETS_INDICES = {'SHENZHEN': 'CNY',
                       'NIKKEI': 'JPY',
                       'HANGSENG': 'HKD'}
 
-
 """List of feeds that should be shown on the UI and in the logs. Note that we
 always check and publish all feeds, regardless of this variable."""
-VISIBLE_FEEDS = ['USD', 'BTC', 'CNY', 'GOLD', 'EUR']
+DEFAULT_VISIBLE_FEEDS = ['USD', 'BTC', 'CNY', 'GOLD', 'EUR']
+
+feeds = {}
+nfeed_checked = 0
+cfg = None
+history_len = None
+price_history = None
+visible_feeds = DEFAULT_VISIBLE_FEEDS
 
 
 def load_feeds():
-    global cfg, history_len, price_history
+    global cfg, history_len, price_history, visible_feeds
     cfg = core.config['monitoring']['feeds']
     history_len = int(cfg['median_time_span'] / cfg['check_time_interval'])
     price_history = {cur: deque(maxlen=history_len) for cur in BIT_ASSETS | set(BIT_ASSETS_INDICES.keys())}
+    visible_feeds = cfg.get('visible_feeds', DEFAULT_VISIBLE_FEEDS)
+
 
 
 def check_online_status(f):
@@ -258,8 +260,6 @@ def format_qualifier(c):
         return '%g'
     return '%f'
 
-FEEDS_FORMAT_STRING = ', '.join('%s %s' % (format_qualifier(c), c) for c in VISIBLE_FEEDS)
-
 
 def check_feeds(nodes):
     # TODO: update according to: https://bitsharestalk.org/index.php?topic=9348.0;all
@@ -270,8 +270,12 @@ def check_feeds(nodes):
         get_feed_prices()
         nfeed_checked += 1
 
-        feeds_msg = FEEDS_FORMAT_STRING % tuple(feeds[c] for c in VISIBLE_FEEDS)
-        log.debug('Got feeds: %s  [%d/%d]' % (feeds_msg, nfeed_checked, feed_period))
+        def fmt(feeds):
+            fmt = ', '.join('%s %s' % (format_qualifier(c), c) for c in visible_feeds)
+            msg = fmt % tuple(feeds[c] for c in visible_feeds)
+            return msg
+
+        log.debug('Got feeds: %s  [%d/%d]' % (fmt(feeds), nfeed_checked, feed_period))
 
         for node in nodes:
             # if an exception occurs during publishing feeds for a delegate (eg: standby delegate),
@@ -291,8 +295,7 @@ def check_feeds(nodes):
                             continue
                         # publish median value of the price, not latest one
                         median_feeds = {c: median(c) for c in feeds}
-                        feeds_msg = FEEDS_FORMAT_STRING % tuple(median_feeds[c] for c in VISIBLE_FEEDS)
-                        log.info('Node %s publishing feeds: %s' % (node.name, feeds_msg))
+                        log.info('Node %s publishing feeds: %s' % (node.name, fmt(median_feeds)))
                         feeds_as_string = [(cur, '{:.10f}'.format(price)) for cur, price in median_feeds.items()]
                         node.wallet_publish_feeds(node.name, feeds_as_string)
             except Exception as e:

@@ -217,7 +217,7 @@ def view_info():
 
         # format to string here instead of in template, more flexibility in python
         def format_feeds(fds):
-            for asset in feeds.VISIBLE_FEEDS:
+            for asset in feeds.visible_feeds:
                 fmt, field_size = (('%.4g', 10)
                                    if asset in ({'BTC', 'GOLD', 'SILVER'} | set(feeds.BIT_ASSETS_INDICES.keys()))
                                    else ('%.4f', 7))
@@ -227,7 +227,7 @@ def view_info():
         format_feeds(mfeeds)
         format_feeds(pfeeds)
 
-        feeds = dict(assets=feeds.VISIBLE_FEEDS, feeds=lfeeds, pfeeds=pfeeds,
+        feeds = dict(assets=feeds.visible_feeds, feeds=lfeeds, pfeeds=pfeeds,
                      mfeeds=mfeeds, last_update=last_update)
 
     else:

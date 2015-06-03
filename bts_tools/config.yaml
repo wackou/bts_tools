@@ -166,6 +166,7 @@ monitoring:
         check_time_interval: 300
         publish_time_interval: 2400
         median_time_span: 1800
+        visible_feeds: [USD, BTC, CNY, GOLD, EUR]
 
     payroll:
         timezone_offset: 0                       # vps timezone difference from payee timezone (for logging purposes)
