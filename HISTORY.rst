@@ -6,6 +6,13 @@
 History
 =======
 
+0.2.4 (2015-06-03)
+------------------
+
+* added feed for NASDAQC, NIKKEI, HANGSENG market-pegged assets
+* list of visible feeds can be configured in config.yaml file
+
+
 0.2.3 (2015-06-02)
 ------------------
 
