@@ -35,8 +35,14 @@ price_history = None
 
 """BitAssets for which we check and publish feeds."""
 BIT_ASSETS = {'USD', 'CNY', 'BTC', 'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN',
-              'RUB', 'SEK', 'SGD', 'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD', 'SHENZHEN'}
-# FIXME: yahoo bug for 'SHANGHAI'?
+              'RUB', 'SEK', 'SGD', 'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD'}
+
+BIT_ASSETS_INDICES = {'SHENZHEN': 'CNY',
+                      # 'SHANGHAI': 'CNY',  # yahoo bug?
+                      'NASDAQC': 'USD',
+                      'NIKKEI': 'JPY',
+                      'HANGSENG': 'HKD'}
+
 
 """List of feeds that should be shown on the UI and in the logs. Note that we
 always check and publish all feeds, regardless of this variable."""
@@ -47,7 +53,7 @@ def load_feeds():
     global cfg, history_len, price_history
     cfg = core.config['monitoring']['feeds']
     history_len = int(cfg['median_time_span'] / cfg['check_time_interval'])
-    price_history = {cur: deque(maxlen=history_len) for cur in BIT_ASSETS}
+    price_history = {cur: deque(maxlen=history_len) for cur in BIT_ASSETS | set(BIT_ASSETS_INDICES.keys())}
 
 
 def check_online_status(f):
@@ -79,7 +85,13 @@ class FeedProvider(object):
 class YahooProvider(FeedProvider):
     NAME = 'Yahoo'
     _YQL_URL = 'http://query.yahooapis.com/v1/public/yql'
-    _YAHOO_BTS_MAP = {'GOLD': 'XAU', 'SILVER': 'XAG', 'SHENZHEN': '399106.SZ', 'SHANGHAI': '000001.SS'}
+    _YAHOO_BTS_MAP = {'GOLD': 'XAU',
+                      'SILVER': 'XAG',
+                      'SHENZHEN': '399106.SZ',
+                      'SHANGHAI': '000001.SS',
+                      'NIKKEI': '^N225',
+                      'NASDAQC': '^IXIC',
+                      'HANGSENG': '^HSI'}
 
     @staticmethod
     def to_bts(c):
@@ -94,6 +106,7 @@ class YahooProvider(FeedProvider):
         c = c.upper()
         return YahooProvider._YAHOO_BTS_MAP.get(c, c)
 
+    @check_online_status
     def query_yql(self, query):
         r = requests.get(self._YQL_URL,
                          params=dict(q = query,
@@ -104,11 +117,13 @@ class YahooProvider(FeedProvider):
         except KeyError:
             return r
 
-    @check_online_status
-    def query_quote(self, q):
+    def query_quote_full(self, q):
         log.debug('checking quote for %s at Yahoo' % q)
         r = self.query_yql('select * from yahoo.finance.quotes where symbol in ("{}")'.format(self.from_bts(q)))
-        return float(r['LastTradePriceOnly'])
+        return r
+
+    def query_quote(self, q):
+        return float(self.query_quote_full(q)['LastTradePriceOnly'])
 
     @check_online_status
     def get(self, asset_list, base):
@@ -178,7 +193,7 @@ def get_feed_prices():
     # - BTC as we don't get it from yahoo
     # - USD as it is our base currency
     yahoo = YahooProvider()
-    yahoo_curs = BIT_ASSETS - {'BTC', 'USD', 'SHENZHEN'}
+    yahoo_curs = BIT_ASSETS - {'BTC', 'USD'}
 
     # 1- get the BitShares price in BTC using the biggest markets: USD and CNY
 
@@ -224,10 +239,9 @@ def get_feed_prices():
     for cur, yprice in yahoo_prices.items():
         feeds[cur] = usd_price / yprice
 
-    # 3- get the feeds for chinese composite indices
-    #    these are indices, but let's denominate them in CNY
-    for idx in {'SHENZHEN'}:
-        feeds[idx] = cny_price / yahoo.query_quote(idx)
+    # 3- get the feeds for major composite indices
+    for idx, cur in BIT_ASSETS_INDICES.items():
+        feeds[idx] = feeds[cur] / yahoo.query_quote(idx)
 
     # 4- update price history for all feeds
     for cur, price in feeds.items():
@@ -240,7 +254,7 @@ def median(cur):
 
 
 def format_qualifier(c):
-    if c in {'BTC', 'GOLD', 'SILVER'}:
+    if c in {'BTC', 'GOLD', 'SILVER'} | set(BIT_ASSETS_INDICES.keys()):
         return '%g'
     return '%f'
 
