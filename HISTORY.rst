@@ -6,6 +6,12 @@
 History
 =======
 
+0.2.5 (2015-06-05)
+------------------
+
+* added feed for SHANGHAI market-pegged asset
+
+
 0.2.4 (2015-06-03)
 ------------------
 
