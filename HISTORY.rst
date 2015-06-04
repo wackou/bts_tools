@@ -6,6 +6,12 @@
 History
 =======
 
+0.2.6 (2015-06-05)
+------------------
+
+* workaround for 0.2.5 not being installable from pypi
+
+
 0.2.5 (2015-06-05)
 ------------------
 
