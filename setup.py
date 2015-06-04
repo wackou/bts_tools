@@ -29,7 +29,8 @@ HISTORY = open(os.path.join(here, 'HISTORY.rst')).read()
 VERSION = '0.2.4'
 
 
-install_requires = ['Flask', 'requests', 'psutil', 'arrow', 'pyyaml', 'dogpile.cache']
+install_requires = ['Flask', 'requests', 'psutil', 'arrow', 'pyyaml', 'dogpile.cache',
+                    'beautifulsoup4', 'lxml']
 
 setup_requires = []
 

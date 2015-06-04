@@ -20,6 +20,7 @@
 
 from . import core
 from collections import deque
+from bs4 import BeautifulSoup
 import threading
 import requests
 import functools
@@ -32,7 +33,7 @@ BIT_ASSETS = {'USD', 'CNY', 'BTC', 'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'M
               'RUB', 'SEK', 'SGD', 'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD'}
 
 BIT_ASSETS_INDICES = {'SHENZHEN': 'CNY',
-                      # 'SHANGHAI': 'CNY',  # yahoo bug?
+                      'SHANGHAI': 'CNY',
                       'NASDAQC': 'USD',
                       'NIKKEI': 'JPY',
                       'HANGSENG': 'HKD'}
@@ -64,12 +65,12 @@ def check_online_status(f):
         try:
             result = f(self, *args, **kwargs)
         except Exception:
-            if FeedProvider.PROVIDER_STATES.get(self.NAME) == 'online':
+            if FeedProvider.PROVIDER_STATES.get(self.NAME) != 'offline':
                 log.warning('Feed provider %s just went offline' % self.NAME)
                 FeedProvider.PROVIDER_STATES[self.NAME] = 'offline'
             raise
         else:
-            if FeedProvider.PROVIDER_STATES.get(self.NAME, 'offline') == 'offline':
+            if FeedProvider.PROVIDER_STATES.get(self.NAME) != 'online':
                 log.info('Feed provider %s came online' % self.NAME)
                 FeedProvider.PROVIDER_STATES[self.NAME] = 'online'
         return result
@@ -125,7 +126,15 @@ class YahooProvider(FeedProvider):
         return r
 
     def query_quote(self, q):
-        return float(self.query_quote_full(q)['LastTradePriceOnly'])
+        # Yahoo seems to have a bug on Shanghai index, use another way
+        if q == 'SHANGHAI':
+            log.debug('checking quote for %s at Yahoo' % q)
+            r = requests.get('http://finance.yahoo.com/q?s=000001.SS')
+            soup = BeautifulSoup(r.text)
+            r = float(soup.find('span', 'time_rtq_ticker').text.replace(',', ''))
+        else:
+            r = float(self.query_quote_full(q)['LastTradePriceOnly'])
+        return r
 
     @check_online_status
     def get(self, asset_list, base):
@@ -185,9 +194,6 @@ def weighted_mean(l):
 
 def adjust(v, r):
     return v[0]*r, v[1]*r
-
-
-
 
 
 def get_feed_prices():
