@@ -213,7 +213,7 @@ def view_info():
         last_update = max(f['last_update'] for f in published_feeds) if published_feeds else None
         pfeeds = { f['asset_symbol']: f['price'] for f in published_feeds }
         lfeeds = dict(feeds.feeds)
-        mfeeds = {cur: feeds.median(cur) for cur in lfeeds}
+        mfeeds = {cur: feeds.median_str(cur) for cur in lfeeds}
 
         # format to string here instead of in template, more flexibility in python
         def format_feeds(fds):

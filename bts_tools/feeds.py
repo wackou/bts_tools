@@ -261,6 +261,12 @@ def median(cur):
     return sorted(p)[len(p)//2]
 
 
+def median_str(cur):
+    try:
+        return median(cur)
+    except Exception:
+        return 'N/A'
+
 def format_qualifier(c):
     if c in {'BTC', 'GOLD', 'SILVER'} | set(BIT_ASSETS_INDICES.keys()):
         return '%g'
