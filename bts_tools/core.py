@@ -116,7 +116,7 @@ DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',
                                     'darwin': '~/Library/Application Support/DevShares'},
                     'pts':         {'linux': '~/.PTS',
                                     'darwin': '~/Library/Application Support/PTS'},
-                    'pls':         {'linux': '~/.DAC PLAY',
+                    'pls':         {'linux': '~/.DACPLAY',
                                     'darwin': '~/Library/Application Support/DAC PLAY'}
                     }
 
