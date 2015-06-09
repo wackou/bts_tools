@@ -19,11 +19,15 @@
 #
 
 from . import core
-from collections import deque
+from collections import deque, defaultdict
+from contextlib import suppress
 from bs4 import BeautifulSoup
+from concurrent.futures import ThreadPoolExecutor
 import threading
 import requests
 import functools
+import itertools
+import statistics
 import logging
 
 log = logging.getLogger(__name__)
@@ -80,34 +84,35 @@ def check_online_status(f):
 class FeedProvider(object):
     NAME = 'base FeedProvider'
     PROVIDER_STATES = {}
+    _ASSET_MAP = {}
 
     def __init__(self):
         self.state = 'offline'
+
+    @classmethod
+    def to_bts(cls, c):
+        c = c.upper()
+        for b, y in cls._ASSET_MAP.items():
+            if c == y:
+                return b
+        return c
+
+    @classmethod
+    def from_bts(cls, c):
+        c = c.upper()
+        return cls._ASSET_MAP.get(c, c)
 
 
 class YahooProvider(FeedProvider):
     NAME = 'Yahoo'
     _YQL_URL = 'http://query.yahooapis.com/v1/public/yql'
-    _YAHOO_BTS_MAP = {'GOLD': 'XAU',
-                      'SILVER': 'XAG',
-                      'SHENZHEN': '399106.SZ',
-                      'SHANGHAI': '000001.SS',
-                      'NIKKEI': '^N225',
-                      'NASDAQC': '^IXIC',
-                      'HANGSENG': '^HSI'}
-
-    @staticmethod
-    def to_bts(c):
-        c = c.upper()
-        for b, y in YahooProvider._YAHOO_BTS_MAP.items():
-            if c == y:
-                return b
-        return c
-
-    @staticmethod
-    def from_bts(c):
-        c = c.upper()
-        return YahooProvider._YAHOO_BTS_MAP.get(c, c)
+    _ASSET_MAP = {'GOLD': 'XAU',
+                  'SILVER': 'XAG',
+                  'SHENZHEN': '399106.SZ',
+                  'SHANGHAI': '000001.SS',
+                  'NIKKEI': '^N225',
+                  'NASDAQC': '^IXIC',
+                  'HANGSENG': '^HSI'}
 
     @check_online_status
     def query_yql(self, query):
@@ -121,11 +126,11 @@ class YahooProvider(FeedProvider):
             return r
 
     def query_quote_full(self, q):
-        log.debug('checking quote for %s at Yahoo' % q)
+        log.debug('checking quote for %s at %s' % (q, self.NAME))
         r = self.query_yql('select * from yahoo.finance.quotes where symbol in ("{}")'.format(self.from_bts(q)))
         return r
 
-    def query_quote(self, q):
+    def query_quote(self, q, base_currency=None):
         # Yahoo seems to have a bug on Shanghai index, use another way
         if q == 'SHANGHAI':
             log.debug('checking quote for %s at Yahoo' % q)
@@ -148,6 +153,42 @@ class YahooProvider(FeedProvider):
 
         asset_prices = map(float, r.text.split())
         return dict(zip((self.to_bts(asset) for asset in asset_list), asset_prices))
+
+
+class GoogleProvider(FeedProvider):
+    NAME = 'Google'
+    _GOOGLE_URL = 'https://www.google.com/finance'
+    _ASSET_MAP = {'SHENZHEN': 'SHE:399106',
+                  'SHANGHAI': 'SHA:000001',
+                  'NIKKEI': 'NI225',
+                  'NASDAQC': '.IXIC',
+                  'HANGSENG': 'HSI'}
+
+    @check_online_status
+    def query_quote(self, q, base_currency=None):
+        log.debug('checking quote for %s at %s' % (q, self.NAME))
+        r = requests.get(GoogleProvider._GOOGLE_URL, params=dict(q=self.from_bts(q)))
+        soup = BeautifulSoup(r.text)
+        r = float(soup.find(id='price-panel').find(class_='pr').text.replace(',', ''))
+        return r
+
+
+class BloombergProvider(FeedProvider):
+    NAME = 'Bloomberg'
+    _BLOOMBERG_URL = 'http://www.bloomberg.com/quote/{}'
+    _ASSET_MAP = {'SHENZHEN': 'SZCOMP:IND',
+                  'SHANGHAI': 'SHCOMP:IND',
+                  'NIKKEI': 'NKY:IND',
+                  'NASDAQC': 'CCMP:IND',
+                  'HANGSENG': 'HSI:IND'}
+
+    @check_online_status
+    def query_quote(self, q, base_currency=None):
+        log.debug('checking quote for %s at %s' % (q, self.NAME))
+        r = requests.get(BloombergProvider._BLOOMBERG_URL.format(self.from_bts(q)))
+        soup = BeautifulSoup(r.text)
+        r = float(soup.find(class_='price').text.replace(',', ''))
+        return r
 
 
 class BterFeedProvider(FeedProvider):
@@ -183,7 +224,7 @@ class Btc38FeedProvider(FeedProvider):
             log.error('Could not decode response from btc38: %s' % r.text)
             raise
         price = float(r['ticker']['last']) # TODO: (bid + ask) / 2 ?
-        volume = float(r['ticker']['last']) * float(r['ticker']['vol'])
+        volume = float(r['ticker']['vol'])
         return price, volume
 
 
@@ -194,6 +235,30 @@ def weighted_mean(l):
 
 def adjust(v, r):
     return v[0]*r, v[1]*r
+
+
+def get_multi_feeds(func, args, providers, stddev_tolerance=None):
+    result = defaultdict(list)
+    def get_price(pargs):
+        args, provider = pargs
+        return args, getattr(provider, func)(*args)
+
+    with ThreadPoolExecutor(max_workers=4) as e:
+        for f in [e.submit(get_price, pargs)
+                  for pargs in itertools.product(args, providers)]:
+            with suppress(Exception):
+                args, price = f.result()
+                result[args].append(price)
+
+    if stddev_tolerance:
+        for asset, price_list in result.items():
+            price = statistics.mean(price_list)
+            if statistics.stdev(price_list, price) / price > stddev_tolerance:
+                log.warning('Feeds for {asset} are not consistent amongst providers: {feeds}'.format(
+                    asset=asset, feeds=' - '.join('{}: {}'.format(p.NAME, q) for p, q in zip(providers, price_list))
+                ))
+
+    return result
 
 
 def get_feed_prices():
@@ -212,26 +277,18 @@ def get_feed_prices():
     cny_usd = yahoo_prices.pop('CNY')
 
     feed_providers = [BterFeedProvider(), Btc38FeedProvider()]
+    pairs = [('BTC', 'CNY'), ('BTS', 'BTC'), ('BTS', 'CNY')]
 
-    feeds_btc_cny = []
-    for provider in feed_providers:
-        try:
-            feeds_btc_cny.append(provider.get('BTC', 'CNY'))
-        except:
-            pass
+    all_feeds = get_multi_feeds('get', pairs, feed_providers)
+
+    feeds_btc_cny = all_feeds[('BTC', 'CNY')]
     if not feeds_btc_cny:
         raise core.NoFeedData('Could not get any BTC/CNY feeds')
     btc_cny = weighted_mean(feeds_btc_cny)
     cny_btc = 1 / btc_cny
 
     # then get the weighted price in btc for the most important markets
-    feeds_btc = []
-    for provider in feed_providers:
-        try:
-            feeds_btc.extend([provider.get('BTS', 'BTC'),
-                              adjust(provider.get('BTS', 'CNY'), cny_btc)])
-        except:
-            pass
+    feeds_btc = all_feeds[('BTS', 'BTC')] + [adjust(p, cny_btc) for p in all_feeds[('BTS', 'CNY')]]
     if not feeds_btc:
         raise core.NoFeedData('Could not get any BTS/BTC feeds')
     btc_price = weighted_mean(feeds_btc)
@@ -248,22 +305,23 @@ def get_feed_prices():
         feeds[cur] = usd_price / yprice
 
     # 3- get the feeds for major composite indices
-    for idx, cur in BIT_ASSETS_INDICES.items():
-        feeds[idx] = feeds[cur] / yahoo.query_quote(idx)
+    providers = [yahoo, GoogleProvider(), BloombergProvider()]
+
+    all_quotes = get_multi_feeds('query_quote',
+                                 BIT_ASSETS_INDICES.items(), providers,
+                                 stddev_tolerance=1e-3)
+
+    for asset, cur in BIT_ASSETS_INDICES.items():
+        feeds[asset] = feeds[cur] / statistics.mean(all_quotes[(asset, cur)])
 
     # 4- update price history for all feeds
     for cur, price in feeds.items():
         price_history[cur].append(price)
 
 
-def median(cur):
-    p = price_history[cur]
-    return sorted(p)[len(p)//2]
-
-
 def median_str(cur):
     try:
-        return median(cur)
+        return statistics.median(price_history[cur])
     except Exception:
         return 'N/A'
 
@@ -306,7 +364,7 @@ def check_feeds(nodes):
                             log.warning('Cannot publish feeds for delegate %s: wallet is locked' % node.name)
                             continue
                         # publish median value of the price, not latest one
-                        median_feeds = {c: median(c) for c in feeds}
+                        median_feeds = {c: statistics.median(price_history[c]) for c in feeds}
                         log.info('Node %s publishing feeds: %s' % (node.name, fmt(median_feeds)))
                         feeds_as_string = [(cur, '{:.10f}'.format(price)) for cur, price in median_feeds.items()]
                         node.wallet_publish_feeds(node.name, feeds_as_string)
