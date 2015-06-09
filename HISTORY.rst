@@ -6,6 +6,14 @@
 History
 =======
 
+0.2.7 (2015-06-09)
+------------------
+
+* feeds for market indices are now fetched from Yahoo, Google and Bloomberg
+* added Poloniex feed provider for BTS/BTC
+* fixed monitoring of DACPLAY instances on linux
+
+
 0.2.6 (2015-06-05)
 ------------------
 
