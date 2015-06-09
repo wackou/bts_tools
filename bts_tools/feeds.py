@@ -191,6 +191,20 @@ class BloombergProvider(FeedProvider):
         return r
 
 
+class PoloniexFeedProvider(FeedProvider):
+    NAME = 'Poloniex'
+
+    @check_online_status
+    def get(self, cur, base):
+        log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
+        r = requests.get('https://poloniex.com/public?command=returnTicker',
+                         timeout=60).json()
+        r = r['BTC_BTS']
+        price = float(r['last'])
+        volume = float(r['quoteVolume'])
+        return price, volume
+
+
 class BterFeedProvider(FeedProvider):
     NAME = 'Bter'
 
@@ -233,10 +247,6 @@ def weighted_mean(l):
     return sum(v[0]*v[1] for v in l) / sum(v[1] for v in l)
 
 
-def adjust(v, r):
-    return v[0]*r, v[1]*r
-
-
 def get_multi_feeds(func, args, providers, stddev_tolerance=None):
     result = defaultdict(list)
     def get_price(pargs):
@@ -276,10 +286,10 @@ def get_feed_prices():
     yahoo_prices = yahoo.get(yahoo_curs, 'USD')
     cny_usd = yahoo_prices.pop('CNY')
 
-    feed_providers = [BterFeedProvider(), Btc38FeedProvider()]
-    pairs = [('BTC', 'CNY'), ('BTS', 'BTC'), ('BTS', 'CNY')]
+    bter, btc38, poloniex = BterFeedProvider(), Btc38FeedProvider(), PoloniexFeedProvider()
 
-    all_feeds = get_multi_feeds('get', pairs, feed_providers)
+    all_feeds = get_multi_feeds('get', [('BTS', 'BTC')], [bter, btc38, poloniex])
+    all_feeds.update(get_multi_feeds('get', [('BTC', 'CNY'), ('BTS', 'CNY')], [bter, btc38]))
 
     feeds_btc_cny = all_feeds[('BTC', 'CNY')]
     if not feeds_btc_cny:
@@ -288,10 +298,10 @@ def get_feed_prices():
     cny_btc = 1 / btc_cny
 
     # then get the weighted price in btc for the most important markets
-    feeds_btc = all_feeds[('BTS', 'BTC')] + [adjust(p, cny_btc) for p in all_feeds[('BTS', 'CNY')]]
-    if not feeds_btc:
+    feeds_bts_btc = all_feeds[('BTS', 'BTC')] + [(p[0]*cny_btc, p[1]) for p in all_feeds[('BTS', 'CNY')]]
+    if not feeds_bts_btc:
         raise core.NoFeedData('Could not get any BTS/BTC feeds')
-    btc_price = weighted_mean(feeds_btc)
+    btc_price = weighted_mean(feeds_bts_btc)
 
     cny_price = btc_price * btc_cny
     usd_price = cny_price * cny_usd
