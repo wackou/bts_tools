@@ -151,7 +151,11 @@ class YahooProvider(FeedProvider):
                          timeout=60,
                          params={'s': query_string, 'f': 'l1', 'e': 'csv'})
 
-        asset_prices = map(float, r.text.split())
+        try:
+            asset_prices = map(float, r.text.split())
+        except Exception as e:
+            log.warning('Could not parse feeds from yahoo, response: {}'.format(r.text))
+            raise core.NoFeedData from e
         return dict(zip((self.to_bts(asset) for asset in asset_list), asset_prices))
 
 
@@ -249,23 +253,28 @@ def weighted_mean(l):
 
 def get_multi_feeds(func, args, providers, stddev_tolerance=None):
     result = defaultdict(list)
+    provider_list = defaultdict(list)
+
     def get_price(pargs):
         args, provider = pargs
-        return args, getattr(provider, func)(*args)
+        return provider, args, getattr(provider, func)(*args)
 
     with ThreadPoolExecutor(max_workers=4) as e:
         for f in [e.submit(get_price, pargs)
                   for pargs in itertools.product(args, providers)]:
             with suppress(Exception):
-                args, price = f.result()
+                provider, args, price = f.result()
                 result[args].append(price)
+                provider_list[args].append(provider)
 
     if stddev_tolerance:
         for asset, price_list in result.items():
             price = statistics.mean(price_list)
-            if statistics.stdev(price_list, price) / price > stddev_tolerance:
-                log.warning('Feeds for {asset} are not consistent amongst providers: {feeds}'.format(
-                    asset=asset, feeds=' - '.join('{}: {}'.format(p.NAME, q) for p, q in zip(providers, price_list))
+            stddev = statistics.stdev(price_list, price) / price  # relative stddev
+            if stddev > stddev_tolerance:
+                log.warning('Feeds for {asset} are not consistent amongst providers: {feeds} (stddev = {stddev:.7f})'.format(
+                    asset=asset, stddev=stddev,
+                    feeds=' - '.join('{}: {}'.format(p.NAME, q) for p, q in zip(provider_list[asset], price_list))
                 ))
 
     return result
@@ -319,7 +328,7 @@ def get_feed_prices():
 
     all_quotes = get_multi_feeds('query_quote',
                                  BIT_ASSETS_INDICES.items(), providers,
-                                 stddev_tolerance=1e-3)
+                                 stddev_tolerance=0.01)
 
     for asset, cur in BIT_ASSETS_INDICES.items():
         feeds[asset] = feeds[cur] / statistics.mean(all_quotes[(asset, cur)])
