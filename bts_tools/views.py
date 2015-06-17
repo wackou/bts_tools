@@ -221,7 +221,11 @@ def view_info():
                 fmt, field_size = (('%.4g', 10)
                                    if asset in ({'BTC', 'GOLD', 'SILVER'} | set(feeds.BIT_ASSETS_INDICES.keys()))
                                    else ('%.4f', 7))
-                fds[asset] = (fmt % float(fds[asset]) if asset in fds else 'N/A').rjust(field_size)
+                try:
+                    s = fmt % float(fds[asset])
+                except:
+                    s = 'N/A'
+                fds[asset] = s.rjust(field_size)
 
         format_feeds(lfeeds)
         format_feeds(mfeeds)

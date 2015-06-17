@@ -367,7 +367,8 @@ class BTSProxy(object):
             return False, 1
 
         # TODO: remove this once all clients (PTS included) use the new api
-        new_api = self.bts_type() in {'bts', 'dvs'} and self.api_version() >= '0.6'
+        new_api = ((self.bts_type() in {'bts', 'dvs'} and self.api_version() >= '0.6') or
+                   (self.bts_type() == 'pls'))
 
         try:
             global ALL_SLOTS

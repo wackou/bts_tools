@@ -24,7 +24,7 @@ import requests
 import functools
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('bts_tools.feeds')
 
 
 def check_online_status(f):
