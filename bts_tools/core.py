@@ -105,6 +105,14 @@ def load_config(loglevels=None):
         log.error('Visit http://bts-tools.readthedocs.org/en/latest/config_format.html#nodes-list for more information).')
         sys.exit(1)
 
+
+    # warn about parameters that should be set, and potentially adjust config with default values
+    if 'feed_providers' not in m['feeds']:
+        log.warning('You did not specify the monitoring.feeds.feed_providers variable')
+        log.warning('Using default value of [Yahoo, Bter, Btc38, Poloniex]')
+        log.warning('You might want to add [Google, Bloomberg] to that list')
+        m['feeds']['feed_providers'] = ['Yahoo', 'Bter', 'Btc38', 'Poloniex']
+
     return config
 
 

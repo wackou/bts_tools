@@ -184,7 +184,7 @@ def view_info():
             green_if_true(value >= 5)
 
         elif prop == 'blockchain_head_block_age':
-            green_if_true(value < 60)
+            green_if_true(value is not None and value < 60)
 
         elif prop == 'blockchain_average_delegate_participation':
             if value < 90:
