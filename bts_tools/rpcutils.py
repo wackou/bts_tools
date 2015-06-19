@@ -339,7 +339,7 @@ class BTSProxy(object):
     def get_last_slots(self):
         """Return the last delegate slots, and cache this until at least the next block
         production time of the wallet."""
-        new_api = self.bts_type() in {'bts', 'dvs'} and self.get_info()['client_version'] >= '0.6'
+        new_api = self.delegate_slot_records_new_api()
 
         def _get_slots():
             # make sure we get enough slots to get them all up to our latest, even if there
@@ -361,14 +361,16 @@ class BTSProxy(object):
     def api_version(self):
         return re.search(r'[\d.]+', self.get_info()['client_version']).group()
 
+    def delegate_slot_records_new_api(self):
+        return ((self.bts_type() in {'bts', 'dvs'} and self.api_version() >= '0.6') or
+                   (self.bts_type() == 'pls'))
+
     def get_streak(self, cached=True):
         if self.type != 'delegate':
             # only makes sense to call get_streak on delegate nodes
             return False, 1
 
-        # TODO: remove this once all clients (PTS included) use the new api
-        new_api = ((self.bts_type() in {'bts', 'dvs'} and self.api_version() >= '0.6') or
-                   (self.bts_type() == 'pls'))
+        new_api = self.delegate_slot_records_new_api()
 
         try:
             global ALL_SLOTS
