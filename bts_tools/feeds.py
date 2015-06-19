@@ -161,7 +161,7 @@ def get_feed_prices():
                                  stddev_tolerance=0.01)
 
     for asset, cur in BIT_ASSETS_INDICES.items():
-        feeds[asset] = feeds[cur] / statistics.mean(all_quotes[(asset, cur)])
+        feeds[asset] = 1 / statistics.mean(all_quotes[(asset, cur)])
 
     # 4- update price history for all feeds
     for cur, price in feeds.items():

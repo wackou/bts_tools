@@ -363,7 +363,7 @@ class BTSProxy(object):
 
     def delegate_slot_records_new_api(self):
         return ((self.bts_type() in {'bts', 'dvs'} and self.api_version() >= '0.6') or
-                   (self.bts_type() == 'pls'))
+                (self.bts_type() == 'pls'))
 
     def get_streak(self, cached=True):
         if self.type != 'delegate':
