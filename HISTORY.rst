@@ -6,6 +6,13 @@
 History
 =======
 
+0.2.9 (2015-06-19)
+------------------
+
+* feeds for composite indices are now priced in BTS
+* active feed providers can be configured in the config.yaml file
+
+
 0.2.8 (2015-06-10)
 ------------------
 

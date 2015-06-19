@@ -201,7 +201,7 @@ class Btc38FeedProvider(FeedProvider):
         headers = {'content-type': 'application/json',
                    'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
         r = requests.get('http://api.btc38.com/v1/ticker.php',
-                         timeout=60,
+                         timeout=10,
                          params={'c': cur.lower(), 'mk_type': base.lower()},
                          headers=headers)
         try:
