@@ -156,7 +156,7 @@ def delegate_info(delegate_name):
     for i, d in enumerate(delegates):
         if d['name'] == delegate_name:
             delegate = d
-            rank = i
+            rank = i + 1
             break
     else:
         raise ValueError('Unknown delegate: %s' % delegate_name)

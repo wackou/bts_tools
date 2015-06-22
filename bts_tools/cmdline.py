@@ -186,6 +186,7 @@ def main(flavor='bts'):
   - list             : list installed %(bin)s client binaries
   - monitor          : run the monitoring web app
   - publish_slate    : publish the slate as described in the given file
+  - deploy           : deploy built binaries to a remote server
 
 Examples:
   $ %(bin)s build          # build the latest %(bin)s client by default
@@ -206,7 +207,8 @@ Examples:
     parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
                                      formatter_class=RawTextHelpFormatter)
     parser.add_argument('command', choices=['version', 'clean_homedir', 'clean', 'build', 'build_gui',
-                                            'run', 'run_gui', 'list', 'monitor', 'publish_slate'],
+                                            'run', 'run_gui', 'list', 'monitor', 'publish_slate',
+                                            'deploy'],
                         help='the command to run')
     parser.add_argument('-r', '--norpc', action='store_true',
                         help='run binary with RPC server deactivated')
@@ -356,6 +358,22 @@ Examples:
     elif args.command == 'monitor':
         print('\nLaunching monitoring web app...')
         run('python3 -m bts_tools.wsgi')
+
+    elif args.command == 'deploy':
+        select_build_environment(args.environment)
+        try:
+            remote_host = args.args[0]
+        except IndexError:
+            log.error('You need to specify a remote host to deploy to')
+            sys.exit(1)
+        log.info('Deploying built binaries to {}'.format(remote_host))
+        remote_bin_dir = core.config['build_environments'][args.environment]['bin_dir']
+        run('rsync -avP "{}" {}:"{}"'.format(BTS_BIN_DIR, remote_host, remote_bin_dir))
+        # also link properly latest built binary
+        latest = os.path.basename(os.path.realpath(join(BTS_BIN_DIR, BTS_BIN_NAME)))
+        run('ssh {} "ln -fs {}/{} {}/{}"'.format(remote_host,
+                                                 remote_bin_dir, latest,
+                                                 remote_bin_dir, BTS_BIN_NAME))
 
     elif args.command == 'publish_slate':
         slate_file = args.args[0] if args.args else None
