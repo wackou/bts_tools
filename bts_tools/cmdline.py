@@ -41,6 +41,7 @@ BTS_HOME_DIR     = None
 BTS_BIN_DIR      = None
 BTS_BIN_NAME     = None
 BTS_GUI_BIN_NAME = None
+GRAPHENE_BASED   = None
 
 BUILD_ENV = None
 RUN_ENV   = None
@@ -51,6 +52,10 @@ def select_build_environment(env):
 
     if platform not in ['linux', 'darwin']:
         raise OSError('OS not supported yet, please submit a patch :)')
+
+    global GRAPHENE_BASED
+    if env in {'bts2'}:
+        GRAPHENE_BASED = True
 
     try:
         env = core.config['build_environments'][env]
@@ -140,12 +145,16 @@ def install_last_built_bin():
     branch = run('git rev-parse --abbrev-ref HEAD', io=True, verbose=False).stdout.strip()
     commit = run('git log -1', io=True, verbose=False).stdout.splitlines()[0].split()[1]
 
-    r = run('git describe --tags %s' % commit, io=True, verbose=False)
-    if r.status == 0:
-        # we are on a tag, use it for naming binary
-        tag = r.stdout.strip().replace('/', '_')
-        bin_filename = '%s_%s_%s' % (BTS_BIN_NAME, date, tag)
-    else:
+    try:
+        r = run('git describe --tags %s' % commit, io=True, verbose=False)
+        if r.status == 0:
+            # we are on a tag, use it for naming binary
+            tag = r.stdout.strip().replace('/', '_')
+            bin_filename = '%s_%s_%s' % (BTS_BIN_NAME, date, tag)
+        else:
+            bin_filename = '%s_%s_%s_%s' % (BTS_BIN_NAME, date, branch, commit[:8])
+    except RuntimeError:
+        # no tag yet in repo
         bin_filename = '%s_%s_%s_%s' % (BTS_BIN_NAME, date, branch, commit[:8])
 
     def install(src, dst):
@@ -161,7 +170,10 @@ def install_last_built_bin():
     if not exists(BTS_BIN_DIR):
         os.makedirs(BTS_BIN_DIR)
 
-    client = join(BTS_BUILD_DIR, 'programs', 'client', BTS_BIN_NAME)
+    if GRAPHENE_BASED:
+        client = join(BTS_BUILD_DIR, 'programs', 'witness_node', BTS_BIN_NAME)
+    else:
+        client = join(BTS_BUILD_DIR, 'programs', 'client', BTS_BIN_NAME)
 
     c = install(client, bin_filename)
 
@@ -353,7 +365,7 @@ Examples:
     elif args.command == 'list':
         select_build_environment(args.environment)
         print('\nListing built binaries for environment: %s' % args.environment)
-        run('ls -ltr "%s"/*_client*' % BTS_BIN_DIR)
+        run('ls -ltr "%s"' % BTS_BIN_DIR)
 
     elif args.command == 'monitor':
         print('\nLaunching monitoring web app...')
@@ -432,6 +444,10 @@ slate:
 
 def main_bts():
     return main(flavor='bts')
+
+
+def main_bts2():
+    return main(flavor='bts2')
 
 
 def main_dvs():

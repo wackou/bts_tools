@@ -34,6 +34,14 @@ make_args: ['-j2']
 # use the 'bts' environment
 #
 build_environments:
+    bts2:
+        git_repo: https://github.com/cryptonomex/graphene.git
+        git_branch: master
+        build_dir: ~/.BitShares2_build
+        bin_dir: ~/.BitShares2_bin
+        bin_name: witness_node
+        #gui_bin_name: BitShares
+
     bts:
         git_repo: https://github.com/BitShares/bitshares.git
         git_branch: master
@@ -105,6 +113,9 @@ run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
 run_environments:
     bts:
         type: bts
+
+    bts2:
+        type: bts2
 
     debug:
         type: bts
