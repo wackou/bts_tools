@@ -4,3 +4,8 @@
 __pycache__
 dist
 docs/_build
+
+
+# graphene
+object_database
+witness_node_data_dir

@@ -102,7 +102,7 @@ build_environments:
 # flags to be passed when running the client; shared among all run environments
 # TODO: add '--accept-incoming-connections=0', but for delegate nodes only (ie: not for seed nodes)
 #       see: https://bitsharestalk.org/index.php?topic=14150.msg184403#msg184403
-run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
+#run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
 
 #
 # list of clients that can be run
@@ -113,6 +113,7 @@ run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
 run_environments:
     bts:
         type: bts
+        run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
 
     bts2:
         type: bts2
@@ -120,15 +121,19 @@ run_environments:
     debug:
         type: bts
         debug: true
+        run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
 
     bts-dev:
         type: bts-dev
+        run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
 
     dvs:
         type: dvs
+        run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
 
     pts:
         type: pts
+        run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
 
     pts-dev:
         type: pts-dev
@@ -138,6 +143,7 @@ run_environments:
 
     pls:
         type: pls
+        run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
 
 
 # activate the debug flag on the wsgi app

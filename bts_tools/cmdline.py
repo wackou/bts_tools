@@ -319,7 +319,7 @@ Examples:
         if data_dir:
             run_args = ['--data-dir', expanduser(data_dir)] + run_args
 
-        if not args.norpc:
+        if not args.norpc and not GRAPHENE_BASED:
             run_args = ['--server'] + run_args
 
         if run_env.get('debug', False):
