@@ -29,6 +29,10 @@ def init_ctx(node, ctx, cfg):
     ctx.connection_state = StableStateMonitor(3)
 
 
+def is_valid_node(node):
+    return True
+
+
 def monitor(node, ctx, cfg):
     # check for minimum number of connections for delegate to produce
     min_connections = cfg.get('min_connections', 5)

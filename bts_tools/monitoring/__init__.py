@@ -18,5 +18,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import seed, missed, version, payroll, online, network_connections, cpu_ram_usage
+from . import seed, backbone, prefer_backbone_exclusively, missed, version,\
+    payroll, online, network_connections, cpu_ram_usage
 

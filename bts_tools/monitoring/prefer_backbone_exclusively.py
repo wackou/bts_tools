@@ -18,23 +18,29 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from .backbone import reconnect_backbone
 import logging
 
 log = logging.getLogger(__name__)
 
 
 def is_valid_node(node):
-    return node.type == 'seed'
+    return node.type == 'delegate'
 
 
 def monitor(node, ctx, cfg):
-    # if seed node just came online, set its connection count to something high
-    if ctx.online_state.just_changed():
-        # TODO: only if state just changed? if we crash and restart immediately, then we should do it also...
-        desired = cfg.get('desired_number_of_connections', 200)
-        maximum = cfg.get('maximum_number_of_connections', 400)
-        log.info('Seed node just came online, setting connections to desired: %d, maximum: %d' %
-                 (desired, maximum))
-        node.network_set_advanced_node_parameters({'desired_number_of_connections': desired,
-                                                   'maximum_number_of_connections': maximum})
+    # TODO: set list of allowed peers to be only backbone nodes
+
+    # try to connect to backbone nodes to which we are not currently connected
+    reconnect_backbone(node)
+
+    # TODO: ensure we are only connected to backbone nodes, unless the number of live backbone nodes is low
+    #       otherwise, close the connections to non-backbone nodes
+
+    # if the number of connections to the backbone is too low, open the restriction and let
+    # the delegate connect to any node. In case all the backbone nodes are simultaneously DDoS'ed,
+    # this lets the delegate reestablish a connection to the network before all the backbone nodes fall
+    if node.network_get_connection_count() <= cfg.get('mininum_required_connections', 2):  # TODO: and not just launched
+        # TODO: set list of allowed peers to all
+        pass
 

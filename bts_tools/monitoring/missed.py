@@ -30,6 +30,10 @@ def init_ctx(node, ctx, cfg):
     ctx.last_n_notified = 0
 
 
+def is_valid_node(node):
+    return node.type == 'delegate' and node.is_synced()  # only monitor if synced
+
+
 def monitor(node, ctx, cfg):
     # monitor for missed blocks, only for delegate nodes
     # FIXME: revisit block_age < 60 (node.is_synced()), this was meant when syncing at the beginning, but
@@ -38,12 +42,6 @@ def monitor(node, ctx, cfg):
     #       if blocks_produced < last_blocks_produced:
     #           # missed block somehow
     #       last_blocks_produced = blocks_produced
-    if node.type != 'delegate':
-        return
-
-    if not node.is_synced():  # only monitor if synced
-        return
-
     producing, n = node.get_streak()
     ctx.producing_state.push(producing)
 

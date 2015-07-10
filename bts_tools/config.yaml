@@ -179,6 +179,13 @@ monitoring:
         desired_number_of_connections: 200
         maximum_number_of_connections: 400
 
+    backbone:
+        desired_number_of_connections: 200
+        maximum_number_of_connections: 400
+
+    prefer_backbone_exclusively:
+        minimum_required_connections: 2
+
     feeds:
         check_time_interval: 300
         publish_time_interval: 2400

@@ -55,6 +55,10 @@ def init_ctx(node, ctx, cfg):
         ctx.global_stats = deque(maxlen=min(desired_maxlen, maxlen))
 
 
+def is_valid_node(node):
+    return True
+
+
 def monitor(node, ctx, cfg):
     # only monitor cpu and network if we are monitoring localhost
     if node.rpc_host == 'localhost':

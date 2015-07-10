@@ -32,10 +32,12 @@ log = logging.getLogger(__name__)
 def parse_date(date):
     return datetime.datetime.strptime(date, "%Y%m%dT%H%M")
 
-def monitor(node, ctx, cfg):
-    if 'payroll' not in node.monitoring or node.type != 'delegate':
-        return
 
+def is_valid_node(node):
+    return node.type == 'delegate'
+
+
+def monitor(node, ctx, cfg):
     if not ctx.info['wallet_unlocked']:
         log.warning('Cannot perform payroll distribution when wallet is closed or locked')
         return

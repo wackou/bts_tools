@@ -3,8 +3,10 @@
         <b>Delegate name: </b>
     {%- elif node.type == 'seed' -%}
         <b>Seed node: </b>
+    {%- elif node.type == 'backbone' -%}
+        <b>Backbone node: </b>
     {%- else -%}
-        <b>Node: </b>
+        <b>Node (type={{ node.type }}): </b>
     {%- endif -%}
 
     {{ node.name }}

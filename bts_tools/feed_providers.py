@@ -34,7 +34,7 @@ def check_online_status(f):
             result = f(self, *args, **kwargs)
         except Exception:
             if FeedProvider.PROVIDER_STATES.get(self.NAME) != 'offline':
-                log.warning('Feed provider %s just went offline' % self.NAME)
+                log.warning('Feed provider %s went offline' % self.NAME)
                 FeedProvider.PROVIDER_STATES[self.NAME] = 'offline'
             raise
         else:

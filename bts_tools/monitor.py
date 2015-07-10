@@ -96,7 +96,7 @@ def monitoring_thread(*nodes):
         check_feeds(nodes)
 
     # plugins acting on the client/wallet (ie: 1 instance per binary that is running)
-    CLIENT_PLUGINS = ['seed', 'network_connections', 'cpu_ram_usage']
+    CLIENT_PLUGINS = ['seed', 'backbone', 'prefer_backbone_exclusively', 'network_connections', 'cpu_ram_usage']
 
     # plugins acting on each node (ie: 1 for each account contained in a wallet)
     NODE_PLUGINS = ['version', 'missed', 'payroll']
@@ -106,16 +106,16 @@ def monitoring_thread(*nodes):
                                time_interval=core.config['monitoring']['monitor_time_interval'],
                                nodes=nodes)
 
-    for plugin in ['online'] + CLIENT_PLUGINS:
+    for plugin_name in ['online'] + CLIENT_PLUGINS:
         with suppress(AttributeError):
-            getattr(monitoring, plugin).init_ctx(client_node, global_ctx, get_config(plugin))
+            getattr(monitoring, plugin_name).init_ctx(client_node, global_ctx, get_config(plugin_name))
 
     contexts = {}
     for node in nodes:
         ctx = AttributeDict()
-        for plugin in NODE_PLUGINS:
+        for plugin_name in NODE_PLUGINS:
             with suppress(AttributeError):
-                getattr(monitoring, plugin).init_ctx(node, ctx, get_config(plugin))
+                getattr(monitoring, plugin_name).init_ctx(node, ctx, get_config(plugin_name))
 
         contexts[node.name] = ctx
 
@@ -140,12 +140,14 @@ def monitoring_thread(*nodes):
 
             # monitor at a client level
             global_ctx.info = client_node.get_info()
-            for plugin in CLIENT_PLUGINS:
-                if plugin in all_monitoring:
+            for plugin_name in CLIENT_PLUGINS:
+                if plugin_name in all_monitoring:
                     try:
-                        getattr(monitoring, plugin).monitor(client_node, global_ctx, get_config(plugin))
+                        plugin = getattr(monitoring, plugin_name)
+                        if plugin.is_valid_node(client_node):
+                            plugin.monitor(client_node, global_ctx, get_config(plugin_name))
                     except Exception as e:
-                        log.error('An exception happened in monitoring plugin: %s' % plugin)
+                        log.error('An exception happened in monitoring plugin: %s' % plugin_name)
                         log.exception(e)
 
             # monitor each node individually
@@ -153,12 +155,14 @@ def monitoring_thread(*nodes):
                 ctx = contexts[node.name]
                 ctx.info = global_ctx.info
                 ctx.online_state = global_ctx.online_state
-                for plugin in NODE_PLUGINS:
-                    if plugin in node.monitoring:
+                for plugin_name in NODE_PLUGINS:
+                    if plugin_name in node.monitoring:
                         try:
-                            getattr(monitoring, plugin).monitor(node, ctx, get_config(plugin))
+                            plugin = getattr(monitoring, plugin_name)
+                            if plugin.is_valid_node(node):
+                                plugin.monitor(node, ctx, get_config(plugin_name))
                         except Exception as e:
-                            log.error('An exception happened in monitoring plugin: %s' % plugin)
+                            log.error('An exception happened in monitoring plugin: %s' % plugin_name)
                             log.exception(e)
 
         except Exception as e:

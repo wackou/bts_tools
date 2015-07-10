@@ -18,23 +18,43 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from .. import core
 import logging
 
 log = logging.getLogger(__name__)
 
 
+def reconnect_backbone(node):
+    # try to connect to backbone nodes to which we are not currently connected
+    backbone_nodes = core.config.get('backbone', [])
+    peers = node.network_get_peer_info()
+    #print('peers: {}'.format({p['addr'] for p in peers}))
+    not_connected = set(backbone_nodes) - {p['addr'] for p in peers}
+    #print('not connected: %s' % not_connected)
+    if not_connected:
+        log.debug('Trying to reconnect to the following backbone nodes: {}'.format(not_connected))
+    for p in not_connected:
+        # TODO: implement rate limiting to avoid hammering the server in case it's down and could
+        #       have a hard time coming back up if all delegates try connecting like crazy
+        node.network_add_node(p, 'add')
+
+
 def is_valid_node(node):
-    return node.type == 'seed'
+    return True
 
 
 def monitor(node, ctx, cfg):
-    # if seed node just came online, set its connection count to something high
+    # if backbone node just came online, set its connection count to something high
     if ctx.online_state.just_changed():
         # TODO: only if state just changed? if we crash and restart immediately, then we should do it also...
         desired = cfg.get('desired_number_of_connections', 200)
         maximum = cfg.get('maximum_number_of_connections', 400)
-        log.info('Seed node just came online, setting connections to desired: %d, maximum: %d' %
+        log.info('Backbone node just came online, setting connections to desired: %d, maximum: %d' %
                  (desired, maximum))
         node.network_set_advanced_node_parameters({'desired_number_of_connections': desired,
                                                    'maximum_number_of_connections': maximum})
+
+    # try to connect to backbone nodes to which we are not currently connected
+    reconnect_backbone(node)
+
 
