@@ -99,7 +99,7 @@ def monitoring_thread(*nodes):
     CLIENT_PLUGINS = ['seed', 'backbone', 'prefer_backbone_exclusively', 'network_connections', 'cpu_ram_usage']
 
     # plugins acting on each node (ie: 1 for each account contained in a wallet)
-    NODE_PLUGINS = ['version', 'missed', 'payroll']
+    NODE_PLUGINS = ['version', 'missed', 'payroll', 'voted_in']
 
     # create one global context for the client, and local contexts for each node of this client
     global_ctx = AttributeDict(loop_index=0,
