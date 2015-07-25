@@ -27,6 +27,9 @@ log = logging.getLogger(__name__)
 def reconnect_backbone(node):
     # try to connect to backbone nodes to which we are not currently connected
     backbone_nodes = core.config.get('backbone', [])
+    if not backbone_nodes:
+        log.warning('No backbone nodes configured. Cannot reconnect to backbone...')
+        return
     peers = node.network_get_peer_info()
     #print('peers: {}'.format({p['addr'] for p in peers}))
     not_connected = set(backbone_nodes) - {p['addr'] for p in peers}
