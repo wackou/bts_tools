@@ -158,7 +158,7 @@ def get_feed_prices():
 
     all_quotes = get_multi_feeds('query_quote',
                                  BIT_ASSETS_INDICES.items(), providers_quotes & active_providers,
-                                 stddev_tolerance=0.01)
+                                 stddev_tolerance=0.02)
 
     for asset, cur in BIT_ASSETS_INDICES.items():
         feeds[asset] = 1 / statistics.mean(all_quotes[(asset, cur)])
