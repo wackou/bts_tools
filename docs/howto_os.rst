@@ -22,28 +22,10 @@ Install base up-to-date OS
 
 Installing the base OS will depend on your VPS provider, so check their
 documentation for that. The tutorial will use Debian Jessie as base distro,
-so you should install it directly whenever possible (or a release candidate
-version of it). You can download the most recent release of the Debian
-Jessie installer `here <https://www.debian.org/devel/debian-installer/>`_,
+so you should install it directly whenever possible. You can download the
+most recent release of the Debian Jessie installer
+`here <https://www.debian.org/devel/debian-installer/>`_,
 preferably the netinst version.
-
-.. note:: As Debian Jessie has not been officially released yet, your VPS
-   provider might not offer it as an install option, so install Debian Wheezy
-   instead (Debian stable, or 7.0), and upgrade to Jessie by doing the following:
-
-   Edit the file ``/etc/apt/sources.list`` and add those lines (or replace
-   what's there with them)::
-
-
-       deb http://ftp.debian.org/debian jessie main contrib non-free
-       deb http://security.debian.org/ jessie/updates main contrib non-free
-
-
-   Then run the following in your shell (as root, no sudo by default on debian)::
-
-       # apt-get update && apt-get dist-upgrade
-
-   At this point, you might want to reboot to get on the new kernel.
 
 
 Install required dependencies
