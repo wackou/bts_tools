@@ -19,9 +19,25 @@
 #
 
 from .. import core
+import socket
+import fcntl
+import struct
 import logging
 
 log = logging.getLogger(__name__)
+
+
+def get_ip_address(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        struct.pack('256s', ifname[:15])
+    )[20:24])
+
+
+def get_ip():
+    return get_ip_address('eth0')
 
 
 def reconnect_backbone(node):
@@ -33,6 +49,7 @@ def reconnect_backbone(node):
     peers = node.network_get_peer_info()
     #print('peers: {}'.format({p['addr'] for p in peers}))
     not_connected = set(backbone_nodes) - {p['addr'] for p in peers}
+    not_connected -= {'%s:1776' % get_ip()}  # FIXME: hardcoded value!
     #print('not connected: %s' % not_connected)
     if not_connected:
         log.debug('Trying to reconnect to the following backbone nodes: {}'.format(not_connected))
