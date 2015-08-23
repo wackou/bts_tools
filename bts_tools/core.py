@@ -187,6 +187,7 @@ def _run(cmd, io=False, verbose=False):
 def run(cmd, io=False, verbose=True):
     r = _run(cmd, io, verbose)
     if r.status != 0:
+        log.warning('Failed running: %s' % cmd)
         raise RuntimeError('Failed running: %s' % cmd)
     return r
 
