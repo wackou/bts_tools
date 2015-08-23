@@ -373,19 +373,21 @@ Examples:
 
     elif args.command == 'deploy':
         select_build_environment(args.environment)
-        try:
-            remote_host = args.args[0]
-        except IndexError:
+
+        if not args.args:
             log.error('You need to specify a remote host to deploy to')
             sys.exit(1)
-        log.info('Deploying built binaries to {}'.format(remote_host))
-        remote_bin_dir = core.config['build_environments'][args.environment]['bin_dir']
-        run('rsync -avP "{}" {}:"{}"'.format(BTS_BIN_DIR, remote_host, remote_bin_dir))
-        # also link properly latest built binary
-        latest = os.path.basename(os.path.realpath(join(BTS_BIN_DIR, BTS_BIN_NAME)))
-        run('ssh {} "ln -fs {}/{} {}/{}"'.format(remote_host,
-                                                 remote_bin_dir, latest,
-                                                 remote_bin_dir, BTS_BIN_NAME))
+
+        for remote_host in args.args:
+            log.info('Deploying built binaries to {}'.format(remote_host))
+            remote_bin_dir = core.config['build_environments'][args.environment]['bin_dir']
+            run('rsync -avzP "{}/" {}:"{}/"'.format(BTS_BIN_DIR, remote_host, remote_bin_dir))
+            # also link properly latest built binary
+            # FIXME: only run this if the previous command succeeded
+            latest = os.path.basename(os.path.realpath(join(BTS_BIN_DIR, BTS_BIN_NAME)))
+            run('ssh {} "ln -fs {}/{} {}/{}"'.format(remote_host,
+                                                     remote_bin_dir, latest,
+                                                     remote_bin_dir, BTS_BIN_NAME))
 
     elif args.command == 'publish_slate':
         slate_file = args.args[0] if args.args else None
