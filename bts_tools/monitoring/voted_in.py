@@ -41,11 +41,11 @@ def monitor(node, ctx, cfg):
 
         if ctx.active_state.just_changed():
             log.info('Delegate %s got voted in!' % node.name)
-            send_notification(ctx.nodes, 'delegate got voted in!')
+            send_notification([node], 'delegate got voted in!')
 
     else:
         ctx.active_state.push('standby')
 
         if ctx.active_state.just_changed():
             log.warning('Delegate %s got voted out...' % node.name)
-            send_notification(ctx.nodes, 'delegate got voted out...', alert=True)
+            send_notification([node], 'delegate got voted out...', alert=True)
