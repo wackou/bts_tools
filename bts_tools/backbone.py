@@ -45,14 +45,20 @@ def get_ip():
 
 
 def get_p2p_port(node):
+    # NOTE: this returns 0 while the client is starting (ie: already responds
+    #       to JSON-RPC but hasn't started the p2p code yet)
     return int(node.network_get_info()['listening_on'].split(':')[1])
 
 
 def node_list(node):
-    backbone_nodes = set(core.config.get('backbone', []))
+    backbone_nodes = {(n.split(':')[0], int(n.split(':')[1]))
+                      for n in core.config.get('backbone', [])}
     if not backbone_nodes:
         log.warning('No backbone nodes configured. Cannot reconnect to backbone...')
         return []
+    # resolve dns names
+    backbone_nodes = {(socket.gethostbyname(host), port) for host, port in backbone_nodes}
+    backbone_nodes = {'%s:%d' % (host, port) for host, port in backbone_nodes}
     # need to exclude the calling node from the list
     with suppress(Exception):
         backbone_nodes -= {'%s:%d' % (get_ip(), get_p2p_port(node))}

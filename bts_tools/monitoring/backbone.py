@@ -18,23 +18,32 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from .. import core
 from ..backbone import non_connected_node_list
-from contextlib import suppress
 import logging
 
 log = logging.getLogger(__name__)
 
+WAIT_RECONNECT = 60  # seconds before trying to reconnect to a host
 
 
-def reconnect_backbone(node):
+def reconnect_backbone(node, ctx):
     # try to connect to backbone nodes to which we are not currently connected
     not_connected = non_connected_node_list(node)
     if not_connected:
         log.debug('Trying to reconnect to the following backbone nodes: {}'.format(not_connected))
-    for p in not_connected:
-        # TODO: implement rate limiting to avoid hammering the server in case it's down and could
-        #       have a hard time coming back up if all delegates try connecting like crazy
-        node.network_add_node(p, 'add')
+    period = WAIT_RECONNECT // core.config['monitoring']['monitor_time_interval']
+    old_node_connect_age = ctx.get('node_connect_age', {})
+    ctx.node_connect_age = {}
+    for n in not_connected:
+        ctx.node_connect_age[n] = old_node_connect_age.get(n, -1) + 1
+        if ctx.node_connect_age[n] % period == 0:
+            log.info('reconnect node %s' % n)
+            # implement rate limiting to avoid hammering the server in case it's down and could
+            # have a hard time coming back up if all delegates try connecting like crazy
+            node.network_add_node(n, 'add')
+        else:
+            log.info('not trying to reconnect to node %s, waiting' % n)
 
 
 def is_valid_node(node):
@@ -53,6 +62,6 @@ def monitor(node, ctx, cfg):
                                                    'maximum_number_of_connections': maximum})
 
     # try to connect to backbone nodes to which we are not currently connected
-    reconnect_backbone(node)
+    reconnect_backbone(node, ctx)
 
 
