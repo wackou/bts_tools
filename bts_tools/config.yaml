@@ -198,7 +198,7 @@ monitoring:
         check_time_interval: 300
         publish_time_interval: 2400
         median_time_span: 1800
-        feed_providers: [Yahoo, Bter, Btc38, Poloniex]  # [Google, Bloomberg] also available
+        feed_providers: [Yahoo, Bter, Btc38, Poloniex, Google, Bloomberg]
         visible_feeds: [USD, BTC, CNY, GOLD, EUR]
 
     payroll:
