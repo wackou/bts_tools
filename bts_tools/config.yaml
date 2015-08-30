@@ -164,6 +164,14 @@ nodes:
 
 
 #
+# list of ip:port for the backbone nodes
+#
+backbone:
+    - 46.226.109.66:1776
+    - 108.61.178.25:1776
+
+
+#
 # configuration of the monitoring plugins
 #
 monitoring:

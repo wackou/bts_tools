@@ -18,39 +18,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from .. import core
-import socket
-import fcntl
-import struct
+from ..backbone import non_connected_node_list
+from contextlib import suppress
 import logging
 
 log = logging.getLogger(__name__)
 
 
-def get_ip_address(ifname):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(
-        s.fileno(),
-        0x8915,  # SIOCGIFADDR
-        struct.pack('256s', ifname[:15])
-    )[20:24])
-
-
-def get_ip():
-    return get_ip_address('eth0')
-
 
 def reconnect_backbone(node):
     # try to connect to backbone nodes to which we are not currently connected
-    backbone_nodes = core.config.get('backbone', [])
-    if not backbone_nodes:
-        log.warning('No backbone nodes configured. Cannot reconnect to backbone...')
-        return
-    peers = node.network_get_peer_info()
-    #print('peers: {}'.format({p['addr'] for p in peers}))
-    not_connected = set(backbone_nodes) - {p['addr'] for p in peers}
-    not_connected -= {'%s:1776' % get_ip()}  # FIXME: hardcoded value!
-    #print('not connected: %s' % not_connected)
+    not_connected = non_connected_node_list(node)
     if not_connected:
         log.debug('Trying to reconnect to the following backbone nodes: {}'.format(not_connected))
     for p in not_connected:
