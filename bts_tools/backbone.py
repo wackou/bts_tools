@@ -55,9 +55,14 @@ def node_list(node):
                       for n in core.config.get('backbone', [])}
     if not backbone_nodes:
         log.warning('No backbone nodes configured. Cannot reconnect to backbone...')
-        return []
+        return set()
     # resolve dns names
-    backbone_nodes = {(socket.gethostbyname(host), port) for host, port in backbone_nodes}
+    try:
+        backbone_nodes = {(socket.gethostbyname(host), port) for host, port in backbone_nodes}
+    except Exception:
+        # if we can't resolve names, we're probably not connected to the internet
+        log.warning('Cannot resolve IP addresses for backbone nodes...')
+        return set()
     backbone_nodes = {'%s:%d' % (host, port) for host, port in backbone_nodes}
     # need to exclude the calling node from the list
     with suppress(Exception):

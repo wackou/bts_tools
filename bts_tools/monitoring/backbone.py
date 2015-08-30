@@ -29,21 +29,17 @@ WAIT_RECONNECT = 60  # seconds before trying to reconnect to a host
 
 def reconnect_backbone(node, ctx):
     # try to connect to backbone nodes to which we are not currently connected
-    not_connected = non_connected_node_list(node)
-    if not_connected:
-        log.debug('Trying to reconnect to the following backbone nodes: {}'.format(not_connected))
     period = WAIT_RECONNECT // core.config['monitoring']['monitor_time_interval']
     old_node_connect_age = ctx.get('node_connect_age', {})
     ctx.node_connect_age = {}
-    for n in not_connected:
+
+    for n in non_connected_node_list(node):
         ctx.node_connect_age[n] = old_node_connect_age.get(n, -1) + 1
+        # implement rate limiting to avoid hammering the server in case it's down and could
+        # have a hard time coming back up if all delegates try connecting like crazy
         if ctx.node_connect_age[n] % period == 0:
-            log.info('reconnect node %s' % n)
-            # implement rate limiting to avoid hammering the server in case it's down and could
-            # have a hard time coming back up if all delegates try connecting like crazy
+            log.debug('Trying to reconnect to backbone node: %s' % n)
             node.network_add_node(n, 'add')
-        else:
-            log.info('not trying to reconnect to node %s, waiting' % n)
 
 
 def is_valid_node(node):

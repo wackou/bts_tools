@@ -149,6 +149,8 @@ class BTSProxy(object):
         else:
             # do it over ssh using bts-rpc
             # FIXME: make sure the password doesn't come out in an ssh log or bash history
+            #        for instance, if command fails, we end up with sth like that in the logs:
+            # 2015-08-31 00:43:48,520 WARNING  [bts_tools.core:run:190] -- Failed running: ssh myhost "source ~/.virtualenvs/bts_tools/bin/activate; bts-rpc 1234 rpcuser XXXrpcpasswordXXX get_info
             def remote_call(funcname, *args):
                 cmd = 'ssh %s "' % self.rpc_host
                 if self.venv_path:

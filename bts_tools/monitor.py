@@ -83,6 +83,13 @@ def get_config(plugin):
 def monitoring_thread(*nodes):
     global global_stats_frames, stats_frames
 
+    # plugins acting on the client/wallet (ie: 1 instance per binary that is running)
+    CLIENT_PLUGINS = ['seed', 'backbone', 'prefer_backbone_exclusively', 'network_connections',
+                      'cpu_ram_usage', 'wallet_state', 'fork']
+
+    # plugins acting on each node (ie: 1 for each account contained in a wallet)
+    NODE_PLUGINS = ['version', 'missed', 'payroll', 'voted_in']
+
     client_node = nodes[0]
 
     log.info('Starting thread monitoring on %s:%d for nodes %s' %
@@ -91,15 +98,14 @@ def monitoring_thread(*nodes):
     # all different types of monitoring that should be considered by this thread
     all_monitoring = set(chain(*(node.monitoring for node in nodes))) | {'cpu_ram_usage'}
 
+    # check validity of name in all_monitoring and warn for non-existent plugins
+    for m in all_monitoring:
+        if m not in CLIENT_PLUGINS and m not in NODE_PLUGINS and m != 'feeds':
+            log.warning('Unknown plugin specified in monitoring config: %s' % m)
+
     # launch feed monitoring and publishing thread
     if 'feeds' in all_monitoring:
         check_feeds(nodes)
-
-    # plugins acting on the client/wallet (ie: 1 instance per binary that is running)
-    CLIENT_PLUGINS = ['seed', 'backbone', 'prefer_backbone_exclusively', 'network_connections', 'cpu_ram_usage']
-
-    # plugins acting on each node (ie: 1 for each account contained in a wallet)
-    NODE_PLUGINS = ['version', 'missed', 'payroll', 'voted_in']
 
     # create one global context for the client, and local contexts for each node of this client
     global_ctx = AttributeDict(loop_index=0,
