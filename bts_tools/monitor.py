@@ -97,10 +97,22 @@ def monitoring_thread(*nodes):
 
     # all different types of monitoring that should be considered by this thread
     all_monitoring = set(chain(*(node.monitoring for node in nodes))) | {'cpu_ram_usage'}
+    if 'delegate' in all_monitoring:
+        # TODO: add 'prefer_backbone_exclusively'
+        all_monitoring |= {'missed', 'network_connections', 'voted_in', 'wallet_state', 'fork', 'version', 'feeds'}
+    if 'inactive_delegate' in all_monitoring:
+        # for monitoring a delegate but not publishing feeds or anything official
+        all_monitoring |= {'missed', 'network_connections', 'voted_in', 'wallet_state', 'fork'}
+    if client_node.type == 'seed':
+        all_monitoring.add('seed')
+    if client_node.type == 'backbone':
+        all_monitoring.add('backbone')
 
     # check validity of name in all_monitoring and warn for non-existent plugins
     for m in all_monitoring:
-        if m not in CLIENT_PLUGINS and m not in NODE_PLUGINS and m != 'feeds':
+        if (m not in CLIENT_PLUGINS and
+            m not in NODE_PLUGINS and
+            m not in {'feeds', 'delegate', 'inactive_delegate'}):
             log.warning('Unknown plugin specified in monitoring config: %s' % m)
 
     # launch feed monitoring and publishing thread

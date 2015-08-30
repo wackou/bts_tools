@@ -63,33 +63,54 @@ For each node, you need to specify the following attributes:
   will allow to fetch the RPC parameters automatically. If you don't specify it, you need
   to fill in the ``rpc_host``, ``rpc_port``, ``rpc_user``, ``rpc_password`` and ``venv_path``
   instead. You will need ssh access if it is a remote host. **TODO:** expand doc about ssh
-- ``type``: the type of the node being monitored. Either ``seed`` or ``delegate``
+- ``type``: the type of the node being monitored. Either ``seed``, ``delegate`` or ``backbone``
 - ``name``: the name of the node (delegate account name)
 - ``monitoring``: the list of monitoring plugins that should be run on this node
 - ``notification``: the type of notification to be sent for events of this node
 
-Nodes can be of 2 types:
+Nodes can be of 3 types:
 
-- seed nodes
 - delegate nodes
+- seed nodes
+- backbone nodes
 
 The choice of node type will tune a bit the interface and enable/disable
 functionality, such as feed publishing for delegates but not for seed nodes
+or backbone nodes
+
+
+Monitoring plugins
+~~~~~~~~~~~~~~~~~~
 
 For each node you can specify which type of monitoring you want:
 
 - ``seed``: will set the number of desired/max connections as specified in the ``monitoring`` config section
+- ``backbone``: will check that the backbone node runs as intended
 - ``feeds``: check price feeds, and optionally publish them if the node is a delegate
 - ``version``: check if version number matches published one, publishes it otherwise
 - ``missed``: check for missed blocks for a delegate
 - ``network_connections``: check that number of active connections to the network is higher than a threshold
 - ``payroll``: periodically distribute delegate pay amongst the configured accounts in the ``monitoring`` section.
+- ``wallet_state``: check when wallet is opened/closed and locked/unlocked
+- ``fork``: tries to detect whether client is being moved to a minority fork
+- ``voted_in``: check when a delegate is voted in/out
 
+You can also use the following special monitoring plugins as wildcards:
+
+- ``delegate``: use for monitoring a full-fledged delegate. It will activate the following plugins: ``missed``,
+  ``network_connections``, ``voted_in``, ``wallet_state``, ``fork``, ``version``, ``feeds``
+- ``inactive_delegate``: use for monitoring a delegate without publishing any information (feeds or version).
+  It will activate the following plugins: ``missed``, ``network_connections``, ``voted_in``, ``wallet_state``, ``fork``
+
+
+Notification plugins
+~~~~~~~~~~~~~~~~~~~~
 
 You should also configure which type of notification you want to receive:
 
 - ``email``: send an email notification when client crashes or loses network connections
 - ``boxcar``: send an iOS push notification to the Boxcar app when client crashes or loses network connections
+
 
 Example
 ~~~~~~~
@@ -99,13 +120,13 @@ Example
     nodes:
         -
             client: bts
-            type: delegate   # delegate node type: run a single delegate account
-            name: delegate1  # the name of the delegate. This needs to be an existing account
-            monitoring: [version, feeds, missed]
+            type: delegate          # delegate node type: run a single delegate account
+            name: delegate1         # the name of the delegate. This needs to be an existing account
+            monitoring: [delegate]  # activate default monitoring plugins for delegate
             notification: [email]
         -
-            type: seed    # seed node type: no need for open wallet, high number of connections
-            name: seed01  # the name for this seed node. This is just for you, it serves no other purpose
+            type: seed       # seed node type: no need for open wallet, high number of connections
+            name: seed01     # the name for this seed node. This is just for you, it serves no other purpose
             # you can specify the rpc connection params. This will override the values
             # from the data directory
             rpc_port: 5678
