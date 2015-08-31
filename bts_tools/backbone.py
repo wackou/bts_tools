@@ -23,6 +23,7 @@ from contextlib import suppress
 import socket
 import fcntl
 import struct
+import sys
 import logging
 
 log = logging.getLogger(__name__)
@@ -38,8 +39,9 @@ def get_ip_address(ifname):
 
 
 def get_ip():
-    return socket.gethostbyname(socket.gethostname())
-    """
+    if sys.platform == 'darwin':
+        return socket.gethostbyname(socket.gethostname())
+    else:
         for iface in [b'eth0', b'en1']:
             #with suppress(Exception):
             try:
@@ -48,7 +50,7 @@ def get_ip():
                 log.warning('iface : %s' % iface)
                 log.exception(e)
     raise OSError('Could not get IP address')
-    """
+
 
 def get_ip_nofail():
     try:
