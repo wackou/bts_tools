@@ -91,23 +91,26 @@ def monitoring_thread(*nodes):
     NODE_PLUGINS = ['version', 'missed', 'payroll', 'voted_in']
 
     client_node = nodes[0]
+    node_names = ', '.join(n.name for n in nodes)
 
     log.info('Starting thread monitoring on %s:%d for nodes %s' %
-             (client_node.rpc_host, client_node.rpc_port, ', '.join(n.name for n in nodes)))
+             (client_node.rpc_host, client_node.rpc_port, node_names))
 
     # all different types of monitoring that should be considered by this thread
     all_monitoring = set(chain(*(node.monitoring for node in nodes))) | {'cpu_ram_usage'}
     if 'delegate' in all_monitoring:
-        # TODO: add 'prefer_backbone_exclusively'
+        # TODO: add 'prefer_backbone_exclusively' when implemented
         all_monitoring |= {'missed', 'network_connections', 'voted_in', 'wallet_state', 'fork', 'version', 'feeds'}
     if 'inactive_delegate' in all_monitoring:
         # for monitoring a delegate but not publishing feeds or anything official
         all_monitoring |= {'missed', 'network_connections', 'voted_in', 'wallet_state', 'fork'}
     if client_node.type == 'seed':
-        all_monitoring.add('seed')
+        all_monitoring |= {'seed', 'network_connections', 'fork'}
     if client_node.type == 'backbone':
-        all_monitoring.add('backbone')
+        all_monitoring |= {'backbone', 'network_connections', 'fork'}
 
+    plugin_names = ', '.join(all_monitoring)
+    log.info('Monitoring plugins loaded = %s' % (node_names, plugin_names))
     # check validity of name in all_monitoring and warn for non-existent plugins
     for m in all_monitoring:
         if (m not in CLIENT_PLUGINS and

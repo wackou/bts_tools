@@ -37,6 +37,11 @@ def monitor(node, ctx, cfg):
     # TODO: also check delegate participation is low (github #17)
     node_names = ', '.join(n.name for n in ctx.nodes)
 
+    # if we just came online, force state to not in sync so we get the notification when we're up-to-date
+    if ctx.online_state.just_changed():
+        for _ in range(3):
+            ctx.blockchain_uptodate.push('stale')
+
     if int(ctx.info['blockchain_head_block_age']) < 60:
         ctx.blockchain_uptodate.push('up-to-date')
 
