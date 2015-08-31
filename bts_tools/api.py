@@ -40,6 +40,7 @@ def create_app(settings_override=None):
 
     # make bts_tools module available in all the templates
     app.jinja_env.globals.update(core=bts_tools.core,
+                                 backbone=bts_tools.backbone,
                                  rpc=bts_tools.rpcutils,
                                  monitor=bts_tools.monitor)
 

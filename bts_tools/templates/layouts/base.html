@@ -29,7 +29,9 @@
             <table class="table table-hover" style="margin-top: 0 !important; margin-bottom: 0 !important;">
             <thead><tr>
                 <th>Type</th>
-                <th>Host</th>
+                <th>RPC Host</th>
+                <th>IP</th>
+                <th>p2p port</th>
                 <th>Hosted nodes</th>
                 <th>Status</th>
                 <th>Block head</th>
@@ -53,6 +55,8 @@
                     {% endif %}
                     </td>
                     <td>{{ host }}</td>
+                    <td>{{ backbone.get_ip_nofail() if node.rpc_host == 'localhost' and node.is_online() else '' }}</td>
+                    <td>{{ backbone.get_p2p_port(node) if node.is_online() else '' }}</td>
                     <td>{{ node_names|join(', ') }}</td>
                     {% if node.is_online() %}
                         <td>

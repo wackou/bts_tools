@@ -110,7 +110,7 @@ def monitoring_thread(*nodes):
         all_monitoring |= {'backbone', 'network_connections', 'fork'}
 
     plugin_names = ', '.join(all_monitoring)
-    log.info('Monitoring plugins loaded = %s' % (node_names, plugin_names))
+    log.info('Nodes %s: monitoring plugins loaded = %s' % (node_names, plugin_names))
     # check validity of name in all_monitoring and warn for non-existent plugins
     for m in all_monitoring:
         if (m not in CLIENT_PLUGINS and

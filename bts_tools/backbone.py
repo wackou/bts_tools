@@ -38,10 +38,23 @@ def get_ip_address(ifname):
 
 
 def get_ip():
-    for iface in [b'eth0', b'en1']:
-        with suppress(Exception):
-            return get_ip_address(iface)
+    return socket.gethostbyname(socket.gethostname())
+    """
+        for iface in [b'eth0', b'en1']:
+            #with suppress(Exception):
+            try:
+                return get_ip_address(iface)
+            except Exception as e:
+                log.warning('iface : %s' % iface)
+                log.exception(e)
     raise OSError('Could not get IP address')
+    """
+
+def get_ip_nofail():
+    try:
+        return get_ip()
+    except Exception:
+        return 'N/A'
 
 
 def get_p2p_port(node):
