@@ -80,6 +80,12 @@ def get_config(plugin):
     return core.config['monitoring'].get(plugin, {})
 
 
+def append_unique(l1, l2):
+    for obj in l2:
+        if obj not in l1:
+            l1.append(obj)
+
+
 def monitoring_thread(*nodes):
     global global_stats_frames, stats_frames
 
@@ -96,18 +102,21 @@ def monitoring_thread(*nodes):
     log.info('Starting thread monitoring on %s:%d for nodes %s' %
              (client_node.rpc_host, client_node.rpc_port, node_names))
 
+    # expand "wildcard" monitoring plugins
+    for n in nodes:
+        if 'delegate' in n.monitoring:
+            # TODO: add 'prefer_backbone_exclusively' when implemented
+            append_unique(n.monitoring, ['missed', 'network_connections', 'voted_in', 'wallet_state', 'fork', 'version', 'feeds'])
+        if 'inactive_delegate' in n.monitoring:
+            # for monitoring a delegate but not publishing feeds or anything official
+            append_unique(n.monitoring, ['missed', 'network_connections', 'voted_in', 'wallet_state', 'fork'])
+        if client_node.type == 'seed':
+            append_unique(n.monitoring, ['seed', 'network_connections', 'fork'])
+        if client_node.type == 'backbone':
+            append_unique(n.monitoring, ['backbone', 'network_connections', 'fork'])
+
     # all different types of monitoring that should be considered by this thread
     all_monitoring = set(chain(*(node.monitoring for node in nodes))) | {'cpu_ram_usage'}
-    if 'delegate' in all_monitoring:
-        # TODO: add 'prefer_backbone_exclusively' when implemented
-        all_monitoring |= {'missed', 'network_connections', 'voted_in', 'wallet_state', 'fork', 'version', 'feeds'}
-    if 'inactive_delegate' in all_monitoring:
-        # for monitoring a delegate but not publishing feeds or anything official
-        all_monitoring |= {'missed', 'network_connections', 'voted_in', 'wallet_state', 'fork'}
-    if client_node.type == 'seed':
-        all_monitoring |= {'seed', 'network_connections', 'fork'}
-    if client_node.type == 'backbone':
-        all_monitoring |= {'backbone', 'network_connections', 'fork'}
 
     plugin_names = ', '.join(all_monitoring)
     log.info('Nodes %s: monitoring plugins loaded = %s' % (node_names, plugin_names))
