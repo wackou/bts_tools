@@ -22,6 +22,7 @@ from os.path import join, dirname, expanduser, exists, abspath
 from collections import namedtuple
 from subprocess import Popen, PIPE
 from functools import wraps
+from contextlib import suppress
 import sys
 import os
 import shutil
@@ -41,6 +42,13 @@ BTS_TOOLS_HOMEDIR = expanduser(BTS_TOOLS_HOMEDIR)
 BTS_TOOLS_CONFIG_FILE = join(BTS_TOOLS_HOMEDIR, 'config.yaml')
 
 config = None
+
+
+def append_unique(l1, l2):
+    for obj in l2:
+        if obj not in l1:
+            l1.append(obj)
+
 
 def load_config(loglevels=None):
     log.info('Using home dir for BTS tools: %s' % BTS_TOOLS_HOMEDIR)
@@ -113,6 +121,44 @@ def load_config(loglevels=None):
         log.warning('You might want to add [Google, Bloomberg] to that list')
         m['feeds']['feed_providers'] = ['Yahoo', 'Bter', 'Btc38', 'Poloniex']
 
+    # expand wildcards for monitoring plugins
+    for n in config['nodes']:
+        n.setdefault('monitoring', [])
+
+        def add_cmdline_args(args):
+            # only do this for delegates running on localhost (for which we have a 'client' field defined)
+            if 'client' in n:
+                client = config['run_environments'][n['client']]
+                # --statistics-enabled not available for PTS yet
+                if client['type'] == 'pts':
+                    with suppress(ValueError):
+                        args.remove('--statistics-enabled')
+                append_unique(client.setdefault('run_args', []), args)
+
+        def add_monitoring(l2):
+            append_unique(n['monitoring'], l2)
+
+        # options for 'delegate' node types
+        if n['type'] == 'delegate':
+            add_cmdline_args(['--min-delegate-connection-count=0', '--statistics-enabled'])
+        if 'delegate' in n['monitoring']:
+            # TODO: add 'prefer_backbone_exclusively' when implemented; in this case we also need:
+
+            # TODO: "--accept-incoming-connections 0" (or limit list of allowed peers from within the client)
+            add_monitoring(['missed', 'network_connections', 'voted_in', 'wallet_state', 'fork', 'version', 'feeds'])
+        if 'inactive_delegate' in n['monitoring']:
+            # for monitoring a delegate but not publishing feeds or anything official
+            add_monitoring(['missed', 'network_connections', 'voted_in', 'wallet_state', 'fork'])
+
+        # options for seed node types
+        if n['type'] == 'seed':
+            add_monitoring(['seed', 'network_connections', 'fork'])
+
+        # options for backbone node types
+        if n['type'] == 'backbone':
+            add_cmdline_args(['--disable-peer-advertising'])
+            add_monitoring(['backbone', 'network_connections', 'fork'])
+
     return config
 
 
@@ -138,6 +184,7 @@ def get_data_dir(env):
 
     data_dir = env.get('data_dir') or DEFAULT_HOMEDIRS.get(env['type'], {}).get(platform)
     return expanduser(data_dir) if data_dir else None
+
 
 def get_bin_name(env):
     try:

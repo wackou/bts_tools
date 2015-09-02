@@ -27,7 +27,25 @@ def is_valid_node(node):
     return node.type == 'seed'
 
 
+def sublist_index(l1, l2):
+    """Returns the index at which l1 is a sublist of l2, -1 otherwise."""
+    for i in range(len(l2)-len(l1)):
+        for j in range(len(l1)):
+            if l1[j] != l2[i+j]:
+                break
+            else:
+                return i
+    return -1
+
+
 def monitor(node, ctx, cfg):
+    # check that seed node does allow incoming connections
+    proc = node.process()
+    if proc and ('--accept-incoming-connections=0' in proc.cmdline() or
+                 sublist_index(['--accept-incoming-connections', '0'], proc.cmdline() >= 0)):
+        log.error('Seed nodes %s have not been launched with option to reject incoming connections' % node.name)
+        log.error('This renders the seed node useless. Please fix it!')
+
     # if seed node just came online, set its connection count to something high
     if ctx.online_state.just_changed():
         # TODO: only if state just changed? if we crash and restart immediately, then we should do it also...

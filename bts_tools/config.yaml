@@ -98,12 +98,6 @@ build_environments:
         gui_bin_name: PLAY
 
 
-
-# flags to be passed when running the client; shared among all run environments
-# TODO: add '--accept-incoming-connections=0', but for delegate nodes only (ie: not for seed nodes)
-#       see: https://bitsharestalk.org/index.php?topic=14150.msg184403#msg184403
-#run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
-
 #
 # list of clients that can be run
 #
@@ -113,7 +107,6 @@ build_environments:
 run_environments:
     bts:
         type: bts
-        run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
 
     bts2:
         type: bts2
@@ -121,19 +114,15 @@ run_environments:
     debug:
         type: bts
         debug: true
-        run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
 
     bts-dev:
         type: bts-dev
-        run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
 
     dvs:
         type: dvs
-        run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
 
     pts:
         type: pts
-        run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
 
     pts-dev:
         type: pts-dev
@@ -143,7 +132,6 @@ run_environments:
 
     pls:
         type: pls
-        run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
 
 
 # activate the debug flag on the wsgi app
@@ -167,8 +155,8 @@ nodes:
 # list of ip:port for the backbone nodes
 #
 backbone:
-    - backbone01.digitalgaia.io:1776
-    - backbone02.digitalgaia.io:1776
+    - backbone01.digitalgaia.io:1777
+    - backbone02.digitalgaia.io:1777
 
 
 #

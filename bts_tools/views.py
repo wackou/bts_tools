@@ -23,7 +23,7 @@ from functools import wraps
 from collections import defaultdict
 from datetime import datetime
 from . import rpcutils as rpc
-from . import core, monitor, slogging
+from . import core, monitor, slogging, backbone
 import bts_tools
 import requests.exceptions
 import logging
@@ -282,6 +282,50 @@ def view_delegates():
                            order='[[ 2, "desc" ]]')
 
 
+@bp.route('/backbone')
+@clear_rpc_cache
+@catch_error
+@core.profile
+def view_backbone_nodes():
+    peers = rpc.main_node.network_get_peer_info()
+
+    headers = ['Address', 'Status', 'Connected since', 'Platform', 'BitShares git time', 'fc git time']
+
+    attrs = defaultdict(list)
+    for i, _ in enumerate(peers):
+        attrs['datetime'].append((i, 2))
+        attrs['datetime'].append((i, 4))
+        attrs['datetime'].append((i, 5))
+
+    backbone_nodes = backbone.node_list(rpc.main_node)
+
+    if not backbone_nodes:
+        return render_template('error.html',
+                       msg='No backbone nodes currently configured in the config.yaml file...')
+
+    connected = {}
+    for p in peers:
+        if p['addr'] in backbone_nodes:
+            connected[p['addr']] = p
+
+    data = [(connected[p]['addr'],
+             '<div class="btn btn-xs btn-success">online</div>',
+             connected[p]['conntime'],
+             connected[p].get('platform'),
+             connected[p].get('bitshares_git_revision_unix_timestamp', 'unknown'),
+             connected[p].get('fc_git_revision_unix_timestamp', 'unknown'))
+             if p in connected else
+             (p,
+              '<div class="btn btn-xs btn-danger">offline</div>',
+              '', '', '', '')
+             for p in backbone_nodes ]
+
+    return render_template('network.html',
+                           title='Backbone nodes',
+                           headers=headers,
+                           data=data, attrs=attrs, order='[[ 1, "desc" ]]')
+
+
 @bp.route('/peers')
 @clear_rpc_cache
 @catch_error
@@ -305,6 +349,7 @@ def view_connected_peers():
              for p in peers ]
 
     return render_template('network.html',
+                           title='Connected peers',
                            headers=headers,
                            data=data, attrs=attrs, order='[[ 1, "desc" ]]')
 
@@ -340,6 +385,7 @@ def view_potential_peers():
              for p in peers ]
 
     return render_template('network.html',
+                           title='Potential peers',
                            headers=headers,
                            data=data, attrs=attrs, order='[[ 1, "desc" ]]')
 

@@ -41,7 +41,7 @@
                     {%- elif attrs and (field.index-1, loop.index-1) in attrs.get('datetime', []) -%}
                         {{ f | datetime }}
                     {%- else -%}
-                        {{ f }}
+                        {{ f | safe }}
                     {%- endif -%}
                 </td>
             {%- endfor %}

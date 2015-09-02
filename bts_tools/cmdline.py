@@ -294,12 +294,6 @@ Examples:
     elif args.command == 'run':
         run_env = select_run_environment(args.environment)
         run_args = core.config.get('run_args', []) + run_env.get('run_args', [])
-        # --statistics-enabled not available for PTS yet
-        if run_env['type'] == 'pts':
-            try:
-                run_args.remove('--statistics-enabled')
-            except ValueError:
-                pass
         tag = args.args[0] if args.args else None
 
         # FIXME: only use tag if it actually corresponds to one

@@ -31,6 +31,8 @@ log = logging.getLogger(__name__)
 
 
 def format_datetime(d):
+    if not d.strip():
+        return ''
     if d == 'unknown':
         return d
     if '-' in d and ':' in d:

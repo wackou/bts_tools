@@ -24,6 +24,7 @@ import socket
 import fcntl
 import struct
 import sys
+import functools
 import logging
 
 log = logging.getLogger(__name__)
@@ -65,6 +66,14 @@ def get_p2p_port(node):
     return int(node.network_get_info()['listening_on'].split(':')[1])
 
 
+@functools.lru_cache()
+def resolve_dns(host):
+    if ':' in host:
+        ip, port = host.split(':')
+        return '%s:%s' % (resolve_dns(ip), port)
+    return socket.gethostbyname(host)
+
+
 def node_list(node):
     backbone_nodes = {(n.split(':')[0], int(n.split(':')[1]))
                       for n in core.config.get('backbone', [])}
@@ -73,7 +82,7 @@ def node_list(node):
         return set()
     # resolve dns names
     try:
-        backbone_nodes = {(socket.gethostbyname(host), port) for host, port in backbone_nodes}
+        backbone_nodes = {(resolve_dns(host), port) for host, port in backbone_nodes}
     except Exception:
         # if we can't resolve names, we're probably not connected to the internet
         log.warning('Cannot resolve IP addresses for backbone nodes...')
