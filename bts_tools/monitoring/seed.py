@@ -42,7 +42,7 @@ def monitor(node, ctx, cfg):
     # check that seed node does allow incoming connections
     proc = node.process()
     if proc and ('--accept-incoming-connections=0' in proc.cmdline() or
-                 sublist_index(['--accept-incoming-connections', '0'], proc.cmdline() >= 0)):
+                 sublist_index(['--accept-incoming-connections', '0'], proc.cmdline()) >= 0):
         log.error('Seed nodes %s have not been launched with option to reject incoming connections' % node.name)
         log.error('This renders the seed node useless. Please fix it!')
 
