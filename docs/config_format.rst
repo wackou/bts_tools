@@ -22,7 +22,7 @@ running, for instance a delegate node and a seed node.
 
 The clients define the following variables:
  - **type**: the type of build you want to run. Needs to be a valid build env (ie: bts, pts, ...)
- - **debug**: set to true to run client in gdb (only available in linux for now)
+ - **debug**: *[optional]* set to true to run client in gdb (only available in linux for now)
  - **data_dir**: *[optional]* the data dir (blockchain, wallet, etc.) of the bts client. If not
    specified, uses the standard location of the client
  - **run_args**: *[optional]* any additional flags you want to pass to the cmdline invocation of the client
@@ -47,6 +47,23 @@ Example
 
 This allows you to run a seed node on port 1778, and clear its peer database
 each time you run it.
+
+
+Backbone nodes
+--------------
+
+This section contains the list of ``host:ip`` for the clients that constitute the backbone nodes.
+Defaults should work ok, but you can configure them yourselves if you want to try alternate backbone nodes.
+
+Example
+~~~~~~~
+
+::
+
+    backbone:
+        - backbone01.digitalgaia.io:1777
+        - backbone02.digitalgaia.io:1777
+        - backbone03.digitalgaia.io:1777
 
 
 Nodes list
@@ -99,7 +116,7 @@ You can also use the following special monitoring plugins as wildcards:
 
 - ``delegate``: use for monitoring a full-fledged delegate. It will activate the following plugins: ``missed``,
   ``network_connections``, ``voted_in``, ``wallet_state``, ``fork``, ``version``, ``feeds``
-- ``inactive_delegate``: use for monitoring a delegate without publishing any information (feeds or version).
+- ``watcher_delegate``: use for monitoring a delegate without publishing any information (feeds or version).
   It will activate the following plugins: ``missed``, ``network_connections``, ``voted_in``, ``wallet_state``, ``fork``
 
 
@@ -125,14 +142,14 @@ Example
             monitoring: [delegate]  # activate default monitoring plugins for delegate
             notification: [email]
         -
-            type: seed       # seed node type: no need for open wallet, high number of connections
-            name: seed01     # the name for this seed node. This is just for you, it serves no other purpose
+            type: seed        # seed node type: no need for open wallet, high number of connections
+            client: seed-bts  # need to be a valid run environment
+            name: seed01      # the name for this seed node. This is just for you, it serves no other purpose
             # you can specify the rpc connection params. This will override the values
             # from the data directory
             rpc_port: 5678
             rpc_user: username
             rpc_password: secret-password
-            monitoring: [seed, network_connections]
         -
             type: delegate   # remote delegate node type: access to a remote node's delegate info. You need to have ssh access to this node for this to work
             name: delegate3  # the name for this remote node. This is just for you, it serves no other purpose
@@ -156,3 +173,5 @@ Notifications
 In the ``notification`` section, you will be able to configure how notifications
 will be sent to you. There are 2 ways of being notified: ``email`` and ``boxcar``
 (iOS push notifications).
+
+See default provided ``config.yaml`` file for the fields you need to configure.

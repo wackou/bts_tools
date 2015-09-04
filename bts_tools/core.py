@@ -124,6 +124,8 @@ def load_config(loglevels=None):
     # expand wildcards for monitoring plugins
     for n in config['nodes']:
         n.setdefault('monitoring', [])
+        if not isinstance(n['monitoring'], list):
+            n['monitoring'] = [n['monitoring']]
 
         def add_cmdline_args(args):
             # only do this for delegates running on localhost (for which we have a 'client' field defined)
@@ -146,7 +148,7 @@ def load_config(loglevels=None):
 
             # TODO: "--accept-incoming-connections 0" (or limit list of allowed peers from within the client)
             add_monitoring(['missed', 'network_connections', 'voted_in', 'wallet_state', 'fork', 'version', 'feeds'])
-        if 'inactive_delegate' in n['monitoring']:
+        if 'watcher_delegate' in n['monitoring']:
             # for monitoring a delegate but not publishing feeds or anything official
             add_monitoring(['missed', 'network_connections', 'voted_in', 'wallet_state', 'fork'])
 

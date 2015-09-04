@@ -105,7 +105,7 @@ def monitoring_thread(*nodes):
     for m in all_monitoring:
         if (m not in CLIENT_PLUGINS and
             m not in NODE_PLUGINS and
-            m not in {'feeds', 'delegate', 'inactive_delegate'}):
+            m not in {'feeds', 'delegate', 'watcher_delegate'}):
             log.warning('Unknown plugin specified in monitoring config: %s' % m)
 
     # launch feed monitoring and publishing thread

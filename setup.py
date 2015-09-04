@@ -49,10 +49,10 @@ entry_points = {
 args = dict(name='bts_tools',
             version=VERSION,
             description='BitShares delegate tools',
-            long_description=README,
+            long_description=README + '\n\n\n' + HISTORY,
             # Get strings from
             # http://pypi.python.org/pypi?%3Aaction=list_classifiers
-            classifiers=['Development Status :: 3 - Alpha',
+            classifiers=['Development Status :: 4 - Beta',
                          'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
                          'Operating System :: OS Independent',
                          'Programming Language :: Python :: 3',
@@ -74,7 +74,6 @@ version_file = os.path.join(here, 'bts_tools', 'version.txt')
 create_version_file = not os.path.exists(version_file)
 
 if create_version_file:
-    print('Creating version file with version = %s' % VERSION)
     with open(version_file, 'w') as f:
         try:
             p = subprocess.Popen('git describe --tags', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

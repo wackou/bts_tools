@@ -47,4 +47,4 @@ Documentation contents
 
 
 
-.. _my delegate: bts://btstools.digitalgaia/approve
+.. _my delegate: bts://delegate.verbaltech/approve

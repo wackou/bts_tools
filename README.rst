@@ -1,5 +1,5 @@
 BitShares delegate tools
-------------------------
+========================
 
 There are 2 tools currently provided:
 
@@ -13,13 +13,13 @@ development, and feel free to visit my page for other delegate proposals
 at `digitalgaia.io <http://digitalgaia.io>`_. Thanks!
 
 Documentation
-=============
+-------------
 
 The main documentation for the tools, as well as a tutorial, can be found
 on `ReadTheDocs <http://bts-tools.readthedocs.org/>`_.
 
 Command-line client
-===================
+-------------------
 
 just run the ``bts`` script with the command you want to execute:
 
@@ -71,7 +71,7 @@ just run the ``bts`` script with the command you want to execute:
     You should also look into ~/.bts_tools/config.yaml to tune it to your liking.
 
 Monitoring web app
-==================
+------------------
 
 To run the debug/development monitoring web app, just do the following:
 
