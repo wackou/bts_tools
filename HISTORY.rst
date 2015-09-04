@@ -6,6 +6,34 @@
 History
 =======
 
+0.2.10 (2015-09-03)
+-------------------
+
+* added support for managing backbone nodes
+* new view in menu "network > backbone status" that shows the configured backbone nodes and
+  whether we are connected to them or not
+* added monitoring plugins:
+  - 'voted_in': monitors when a delegate is voted in or out
+  - 'wallet_state': monitors when a wallet is opened/closed and locked/unlocked
+  - 'fork': tries to detect when the client is being on a fork and/or out-of-sync
+* simplified config yaml file: there are now wildcards monitoring plugins you can use for most
+  common tasks:
+
+  - for delegate:
+
+    + 'delegate': used to monitor an active delegate. This will activate the 'missed',
+      'network_connections', 'voted_in', 'wallet_state', 'fork', 'version' and 'feeds'
+      monitoring plugins
+    + 'watcher_delegate': used to monitor a watcher delegate, i.e. without publishing
+      any info (version, feeds) to the blockchain. This will activate the 'missed',
+      'network_connections', 'voted_in', 'wallet_state' and 'fork' monitoring plugins
+
+  - for seed nodes and delegate nodes, you don't have to specify required command-line args or
+    monitoring plugins any longer, it is added automatically in function of the node type
+
+* added "bts deploy" command to copy built binary to specified ssh host(s)
+
+
 0.2.9 (2015-06-19)
 ------------------
 

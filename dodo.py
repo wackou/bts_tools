@@ -65,11 +65,11 @@ def set_version(pos):
 
     replace_version('setup.py',
                     r"VERSION = '\S*'",
-                    r"VERSION = '%s'")
+                    r"VERSION = '%s'" % version)
 
     replace_version('docs/conf.py',
                     r"release = '\S*'",
-                    r"release = '%s'")
+                    r"release = '%s'" % version)
 
 
 def task_set_version():
