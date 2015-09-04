@@ -9,3 +9,5 @@ docs/_build
 # graphene
 object_database
 witness_node_data_dir
+
+.doit.json
