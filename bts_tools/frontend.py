@@ -56,7 +56,7 @@ def get_country_for_ip(ip):
 def add_ip_flag(ip):
     country = get_country_for_ip(ip)
     if not country:
-        return ''
+        return ip
     flag = '<i class="famfamfam-flag-%s" style="margin:0 8px 0 0;"></i>' % country
     return '<table><tr><td>%s</td><td>%s</td></tr></table>' % (flag, ip)
 
