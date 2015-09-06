@@ -21,7 +21,8 @@
 from flask import render_template, Flask
 from bts_tools import views
 from bts_tools import rpcutils as rpc
-from itertools import groupby
+from geolite2 import geolite2
+from functools import lru_cache
 import bts_tools
 import bts_tools.monitor
 import threading
@@ -41,6 +42,25 @@ def format_datetime(d):
     return '%s-%s-%s %s:%s:%s' % (d[0:4], d[4:6], d[6:8], d[9:11], d[11:13], d[13:15])
 
 
+@lru_cache()
+def get_country_for_ip(ip):
+    if not ip.strip():
+        return None
+    reader = geolite2.reader()
+    try:
+        return reader.get(ip)['country']['iso_code'].lower()
+    except:
+        return None
+
+
+def add_ip_flag(ip):
+    country = get_country_for_ip(ip)
+    if not country:
+        return ''
+    flag = '<i class="famfamfam-flag-%s" style="margin:0 8px 0 0;"></i>' % country
+    return '<table><tr><td>%s</td><td>%s</td></tr></table>' % (flag, ip)
+
+
 def create_app(settings_override=None):
     """Returns the BitShares Delegate Tools Server dashboard application instance"""
 
@@ -56,6 +76,7 @@ def create_app(settings_override=None):
 
     # custom filter for showing dates
     app.jinja_env.filters['datetime'] = format_datetime
+    app.jinja_env.filters['add_ip_flag'] = add_ip_flag
 
     # make bts_tools module available in all the templates
     app.jinja_env.globals.update(core=bts_tools.core,

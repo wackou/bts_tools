@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/static/css/bootstrap.3.1.1.min.css">
     <link rel="stylesheet" href="/static/css/jquery.dataTables.1.10RC1.css">
     <link rel="stylesheet" href="/static/css/dataTables.bootstrap.css">
+    <link rel="stylesheet" href="/static/css/famfamfam-flags.css">
     <link rel="stylesheet" href="/static/css/application.css">
     {% block stylesheet %}{% endblock %}
 </head>
@@ -55,7 +56,7 @@
                     {% endif %}
                     </td>
                     <td>{{ host }}</td>
-                    <td>{{ backbone.get_ip_nofail() if node.rpc_host == 'localhost' and node.is_online() else '' }}</td>
+                    <td>{{ (backbone.get_ip_nofail() if node.rpc_host == 'localhost' and node.is_online() else '') | add_ip_flag | safe }}</td>
                     <td>{{ backbone.get_p2p_port(node) if node.is_online() else '' }}</td>
                     <td>{{ node_names|join(', ') }}</td>
                     {% if node.is_online() %}
