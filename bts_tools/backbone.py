@@ -95,4 +95,8 @@ def node_list(node):
 
 
 def non_connected_node_list(node):
-    return node_list(node) - {p['addr'] for p in node.network_get_peer_info()}
+    try:
+        return node_list(node) - {p['addr'] for p in node.network_get_peer_info()}
+    except:
+        log.debug('Node %s not connected to the p2p network' % node.name)
+        return set()
