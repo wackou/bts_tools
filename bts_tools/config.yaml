@@ -17,6 +17,7 @@
 logging:
     bts_tools: DEBUG
     bts_tools.core: INFO
+    bts_tools.backbone: INFO
     bts_tools.rpcutils: INFO
     bts_tools.monitoring: INFO
     bts_tools.notification: INFO
@@ -110,6 +111,7 @@ run_environments:
 
     bts2:
         type: bts2
+        data_dir: ~/.BitShares2
 
     debug:
         type: bts
