@@ -36,6 +36,7 @@ make_args: ['-j2']
 #
 build_environments:
     bts2:
+        debug: false
         git_repo: https://github.com/cryptonomex/graphene.git
         git_branch: master
         build_dir: ~/.BitShares2_build

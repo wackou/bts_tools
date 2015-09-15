@@ -195,7 +195,6 @@ def main(flavor='bts'):
   - clean_homedir    : clean home directory. WARNING: this will delete your wallet!
   - clean            : clean build directory
   - build            : update and build %(bin)s client
-  - build_debug      : update and build debug version of %(bin)s client
   - build_gui        : update and build %(bin)s gui client
   - run              : run latest compiled %(bin)s client, or the one with the given hash or tag
   - run_gui          : run latest compiled %(bin)s gui client
@@ -222,8 +221,8 @@ Examples:
     EPILOG="""You should also look into ~/.bts_tools/config.yaml to tune it to your liking."""
     parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
                                      formatter_class=RawTextHelpFormatter)
-    parser.add_argument('command', choices=['version', 'clean_homedir', 'clean', 'build', 'build_debug',
-                                            'build_gui', 'run', 'run_gui', 'list', 'monitor', 'publish_slate',
+    parser.add_argument('command', choices=['version', 'clean_homedir', 'clean', 'build', 'build_gui',
+                                            'run', 'run_gui', 'list', 'monitor', 'publish_slate',
                                             'deploy'],
                         help='the command to run')
     parser.add_argument('-r', '--norpc', action='store_true',
@@ -251,7 +250,7 @@ Examples:
         args.args = [args.environment] + args.args
         args.environment = flavor
 
-    if args.command in {'build', 'build_debug', 'build_gui'}:
+    if args.command in {'build', 'build_gui'}:
         select_build_environment(args.environment)
 
         clone()
@@ -281,11 +280,7 @@ Examples:
         start = arrow.utcnow()
 
         if args.command == 'build':
-            configure(debug=False)
-            build()
-            install_last_built_bin()
-        elif args.command == 'build_debug':
-            configure(debug=True)
+            configure(debug=BUILD_ENV.get('debug', False))
             build()
             install_last_built_bin()
         elif args.command == 'build_gui':
