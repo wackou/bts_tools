@@ -327,8 +327,6 @@ class BTSProxy(object):
             self._bts_type = 'dvs'
         elif blockchain_name == 'PTS':
             self._bts_type = 'pts'
-        elif blockchain_name == 'Sparkle':
-            self._bts_type = 'sparkle'
         else:
             return 'unknown'
 

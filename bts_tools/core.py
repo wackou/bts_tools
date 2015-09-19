@@ -176,6 +176,20 @@ DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',
                                     'darwin': '~/Library/Application Support/DAC PLAY'}
                     }
 
+DEFAULT_BIN_FILENAMES = {'bts2': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
+                         'bts': ['client/bitshares_client'],
+                         'dvs': ['client/devshares_client'],
+                         'pts': ['client/pts_client'],
+                         'pls': ['client/play_client']
+                         }
+
+DEFAULT_GUI_BIN_FILENAMES = {'bts2': '',
+                             'bts': 'BitShares',
+                             'dvs': 'DevShares',
+                             'pts': 'PTS',
+                             'pls': 'PLAY'
+                             }
+
 
 def get_data_dir(env):
     try:
@@ -188,21 +202,33 @@ def get_data_dir(env):
     return expanduser(data_dir) if data_dir else None
 
 
-def get_bin_name(env):
-    try:
-        env = config['run_environments'][env]
-    except KeyError:
-        log.error('Unknown run environment: %s' % env)
-        sys.exit(1)
+def get_gui_bin_name(build_env):
+    return DEFAULT_GUI_BIN_FILENAMES[build_env]
 
-    build_env = env['type']
-    try:
-        build_env = config['build_environments'][build_env]
-    except KeyError:
-        log.error('Unknown build environment: %s' % build_env)
-        sys.exit(1)
 
-    return build_env['bin_name']
+def get_all_bin_names(run_env=None, build_env=None):
+    if run_env is not None:
+        try:
+            env = config['run_environments'][run_env]
+        except KeyError:
+            log.error('Unknown run environment: %s' % env)
+            sys.exit(1)
+
+        return get_all_bin_names(build_env=env['type'])
+
+    elif build_env is not None:
+        return DEFAULT_BIN_FILENAMES[build_env]
+
+    else:
+        raise ValueError('You need to specify either a build env or run env')
+
+
+def get_full_bin_name(run_env=None, build_env=None):
+    return get_all_bin_names(run_env, build_env)[0]
+
+
+def get_bin_name(run_env=None, build_env=None):
+    return os.path.basename(get_full_bin_name(run_env, build_env))
 
 
 IOStream = namedtuple('IOStream', 'status, stdout, stderr')

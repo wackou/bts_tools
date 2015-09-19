@@ -44,7 +44,8 @@ def static_from_root():
 @core.profile
 def offline():
     try:
-        client_name = rpc.main_node.build_env()['gui_bin_name']
+        build_env_name = rpc.main_node.run_env()['type']
+        client_name = core.get_gui_bin_name(build_env_name)
     except:
         client_name = 'BitShares'
 

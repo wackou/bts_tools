@@ -41,63 +41,42 @@ build_environments:
         git_branch: master
         build_dir: ~/.BitShares2_build
         bin_dir: ~/.BitShares2_bin
-        bin_name: witness_node
-        #gui_bin_name: BitShares
 
     bts:
         git_repo: https://github.com/BitShares/bitshares.git
         git_branch: master
         build_dir: ~/.BitShares_build
         bin_dir: ~/.BitShares_bin
-        bin_name: bitshares_client
-        gui_bin_name: BitShares
 
     bts-dev:
         git_repo: https://github.com/BitShares/bitshares.git
         git_branch: develop
         build_dir: ~/.BitSharesDev_build
         bin_dir: ~/.BitSharesDev_bin
-        bin_name: bitshares_client
-        gui_bin_name: BitSharesTestNet
 
     dvs:
         git_repo: https://github.com/BitShares/bitshares.git
         git_branch: devshares
         build_dir: ~/.DevShares_build
         bin_dir: ~/.DevShares_bin
-        bin_name: devshares_client
-        gui_bin_name: DevShares
 
     pts:
         git_repo: https://github.com/PTS-DPOS/PTS.git
         git_branch: master
         build_dir: ~/.PTS_build
         bin_dir: ~/.PTS_bin
-        bin_name: pts_client
-        gui_bin_name: PTS
 
     pts-dev:
         git_repo: https://github.com/PTS-DPOS/PTS.git
         git_branch: develop
         build_dir: ~/.PTSdev_build
         bin_dir: ~/.PTSdev_bin
-        bin_name: pts_client
-        gui_bin_name: PTS
-
-    sparkle:
-        git_repo: https://github.com/sparkle5/Sparkle.git
-        git_branch: sparkle
-        build_dir: ~/.Sparkle_build
-        bin_dir: ~/.Sparkle_bin
-        bin_name: sparkle_client
 
     pls:
         git_repo: https://github.com/dacsunlimited/dac_play.git
         git_branch: master
         build_dir: ~/.Play_build
         bin_dir: ~/.Play_bin
-        bin_name: play_client
-        gui_bin_name: PLAY
 
 
 #
@@ -129,9 +108,6 @@ run_environments:
 
     pts-dev:
         type: pts-dev
-
-    sparkle:
-        type: sparkle
 
     pls:
         type: pls

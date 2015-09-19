@@ -20,7 +20,8 @@
 
 from os.path import join, dirname, exists, islink, expanduser
 from argparse import RawTextHelpFormatter
-from .core import platform, run, get_data_dir
+from contextlib import suppress
+from .core import platform, run, get_data_dir, get_bin_name, get_gui_bin_name, get_all_bin_names
 from . import core, init
 from .rpcutils import rpc_call, BTSProxy
 import argparse
@@ -47,20 +48,21 @@ BUILD_ENV = None
 RUN_ENV   = None
 
 
-def select_build_environment(env):
-    log.info("Using build environment '%s' on platform: '%s'" % (env, platform))
+def select_build_environment(env_name):
+    log.info("Using build environment '%s' on platform: '%s'" % (env_name, platform))
 
     if platform not in ['linux', 'darwin']:
         raise OSError('OS not supported yet, please submit a patch :)')
 
     global GRAPHENE_BASED
-    if env in {'bts2'}:
+    if env_name in {'bts2'}:
         GRAPHENE_BASED = True
 
     try:
-        env = core.config['build_environments'][env]
+        env = core.config['build_environments'][env_name]
+        env['name'] = env_name
     except KeyError:
-        log.error('Unknown build environment: %s' % env)
+        log.error('Unknown build environment: %s' % env_name)
         sys.exit(1)
 
     global BTS_GIT_REPO, BTS_GIT_BRANCH, BTS_BUILD_DIR, BTS_BIN_DIR, BUILD_ENV, BTS_BIN_NAME, BTS_GUI_BIN_NAME
@@ -68,8 +70,8 @@ def select_build_environment(env):
     BTS_GIT_BRANCH   = env['git_branch']
     BTS_BUILD_DIR    = expanduser(env['build_dir'])
     BTS_BIN_DIR      = expanduser(env['bin_dir'])
-    BTS_BIN_NAME     = env['bin_name']
-    BTS_GUI_BIN_NAME = env.get('gui_bin_name')
+    BTS_BIN_NAME     = get_bin_name(build_env=env_name)
+    BTS_GUI_BIN_NAME = get_gui_bin_name(build_env=env_name)
 
     BUILD_ENV = env
     return env
@@ -79,6 +81,7 @@ def select_run_environment(env_name):
     log.info("Running '%s' client" % env_name)
     try:
         env = core.config['run_environments'][env_name]
+        env['name'] = env_name
     except KeyError:
         log.error('Unknown run environment: %s' % env_name)
         sys.exit(1)
@@ -118,6 +121,7 @@ if platform == 'darwin':
     CONFIGURE_OPTS = ['PATH=%s:$PATH' % '/usr/local/opt/qt5/bin',
                       'PKG_CONFIG_PATH=%s:$PKG_CONFIG_PATH' % '/usr/local/opt/openssl/lib/pkgconfig']
 
+
 def configure(debug=False):
     if debug:
         run('%s cmake -DCMAKE_BUILD_TYPE=Debug .' % ' '.join(CONFIGURE_OPTS))
@@ -148,17 +152,21 @@ def install_last_built_bin():
     branch = run('git rev-parse --abbrev-ref HEAD', io=True, verbose=False).stdout.strip()
     commit = run('git log -1', io=True, verbose=False).stdout.splitlines()[0].split()[1]
 
-    try:
-        r = run('git describe --tags %s' % commit, io=True, verbose=False)
-        if r.status == 0:
-            # we are on a tag, use it for naming binary
-            tag = r.stdout.strip().replace('/', '_')
-            bin_filename = '%s_%s_%s' % (BTS_BIN_NAME, date, tag)
-        else:
-            bin_filename = '%s_%s_%s_%s' % (BTS_BIN_NAME, date, branch, commit[:8])
-    except RuntimeError:
-        # no tag yet in repo
-        bin_filename = '%s_%s_%s_%s' % (BTS_BIN_NAME, date, branch, commit[:8])
+    # find a nice filename representation
+    def decorated_filename(filename):
+        try:
+            r = run('git describe --tags %s' % commit, io=True, verbose=False)
+            if r.status == 0:
+                # we are on a tag, use it for naming binary
+                tag = r.stdout.strip().replace('/', '_')
+                bin_filename = '%s_%s_%s' % (filename, date, tag)
+            else:
+                bin_filename = '%s_%s_%s_%s' % (filename, date, branch, commit[:8])
+        except RuntimeError:
+            # no tag yet in repo
+            bin_filename = '%s_%s_%s_%s' % (filename, date, branch, commit[:8])
+
+        return bin_filename
 
     def install(src, dst):
         print('Installing %s to %s' % (dst, BTS_BIN_DIR))
@@ -166,26 +174,25 @@ def install_last_built_bin():
             result = join(dirname(src), os.readlink(src))
             print('Following symlink %s -> %s' % (src, result))
             src = result
-        dst = join(BTS_BIN_DIR, dst)
+        dst = join(BTS_BIN_DIR, os.path.basename(dst))
         shutil.copy(src, dst)
         return dst
+
+    def install_and_symlink(bin_name):
+        bin_filename = decorated_filename(bin_name)
+        client = join(BTS_BUILD_DIR, 'programs', bin_name)
+        c = install(client, bin_filename)
+        last_installed = join(BTS_BIN_DIR, os.path.basename(bin_name))
+        with suppress(Exception):
+            os.unlink(last_installed)
+        os.symlink(c, last_installed)
 
     if not exists(BTS_BIN_DIR):
         os.makedirs(BTS_BIN_DIR)
 
-    if GRAPHENE_BASED:
-        client = join(BTS_BUILD_DIR, 'programs', 'witness_node', BTS_BIN_NAME)
-    else:
-        client = join(BTS_BUILD_DIR, 'programs', 'client', BTS_BIN_NAME)
+    for bname in get_all_bin_names(BUILD_ENV['name']):
+        install_and_symlink(bname)
 
-    c = install(client, bin_filename)
-
-    last_installed = join(BTS_BIN_DIR, BTS_BIN_NAME)
-    try:
-        os.unlink(last_installed)
-    except:
-        pass
-    os.symlink(c, last_installed)
 
 
 def main(flavor='bts'):
