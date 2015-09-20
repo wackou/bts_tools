@@ -164,10 +164,22 @@ def load_config(loglevels=None):
     return config
 
 
+def is_graphene_based(n):
+    from .rpcutils import BTSProxy
+    if isinstance(n, BTSProxy):
+        return is_graphene_based(n.bts_type())
+    if 'type' in n:
+        # if we're a run env, get it from the build env
+        return is_graphene_based(n['type'])
+    return n == 'bts2'
+
+
 DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',
                                     'darwin': '~/Library/Application Support/BitShares XTS'},
                     'bts':         {'linux': '~/.BitShares',
                                     'darwin': '~/Library/Application Support/BitShares'},
+                    'bts2':        {'linux': '~/.BitShares2',
+                                    'darwin': '~/Library/Application Support/BitShares2'},
                     'dvs':         {'linux': '~/.DevShares',
                                     'darwin': '~/Library/Application Support/DevShares'},
                     'pts':         {'linux': '~/.PTS',

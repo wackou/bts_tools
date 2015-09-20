@@ -21,7 +21,7 @@
 from os.path import join, dirname, exists, islink, expanduser
 from argparse import RawTextHelpFormatter
 from contextlib import suppress
-from .core import platform, run, get_data_dir, get_bin_name, get_gui_bin_name, get_all_bin_names
+from .core import platform, run, get_data_dir, get_bin_name, get_gui_bin_name, get_all_bin_names, is_graphene_based
 from . import core, init
 from .rpcutils import rpc_call, BTSProxy
 import argparse
@@ -42,7 +42,6 @@ BTS_HOME_DIR     = None
 BTS_BIN_DIR      = None
 BTS_BIN_NAME     = None
 BTS_GUI_BIN_NAME = None
-GRAPHENE_BASED   = None
 
 BUILD_ENV = None
 RUN_ENV   = None
@@ -53,10 +52,6 @@ def select_build_environment(env_name):
 
     if platform not in ['linux', 'darwin']:
         raise OSError('OS not supported yet, please submit a patch :)')
-
-    global GRAPHENE_BASED
-    if env_name in {'bts2'}:
-        GRAPHENE_BASED = True
 
     try:
         env = core.config['build_environments'][env_name]
@@ -323,7 +318,7 @@ Examples:
         if data_dir:
             run_args = ['--data-dir', expanduser(data_dir)] + run_args
 
-        if not args.norpc and not GRAPHENE_BASED:
+        if not args.norpc and not is_graphene_based(run_env):
             run_args = ['--server'] + run_args
 
         if run_env.get('debug', False):
