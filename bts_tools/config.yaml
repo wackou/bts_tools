@@ -92,6 +92,7 @@ run_environments:
     bts2:
         type: bts2
         data_dir: ~/.BitShares2
+        genesis_json: ~/sep-18-testnet-genesis.json
 
     debug:
         type: bts

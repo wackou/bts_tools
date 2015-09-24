@@ -69,14 +69,20 @@
                         {% else %}
                             <div class="btn btn-xs btn-info">
                         {% endif %}
-                                {{ node.get_info()['blockchain_head_block_num'] }}
+                                {{ node.get_head_block_num() }}
                             </div>
                         </td>
 
-                        {% set info = node.get_info() %}
-                        <td>{{ green_if_true(info['wallet_open']) }}</td>
-                        <td>{{ green_if_true(info['wallet_unlocked']) }}</td>
-                        <td>{{ green_if_true(info['wallet_block_production_enabled']) }}</td>
+                        {% if core.is_graphene_based(node) %}
+                            <td>{{ green_if_true(not node.is_new()) }}</td>
+                            <td>{{ green_if_true(not node.is_locked()) }}</td>
+                            <td></td>
+                        {% else %}
+                            {% set info = node.get_info() %}
+                            <td>{{ green_if_true(info['wallet_open']) }}</td>
+                            <td>{{ green_if_true(info['wallet_unlocked']) }}</td>
+                            <td>{{ green_if_true(info['wallet_block_production_enabled']) }}</td>
+                        {% endif %}
 
                     {% else %}
                         <td><div class="btn btn-xs btn-danger">{{ node.status() }}</div></td>

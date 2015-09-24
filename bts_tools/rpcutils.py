@@ -18,17 +18,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from .core import UnauthorizedError, RPCError, run, get_data_dir, get_bin_name
+from .core import UnauthorizedError, RPCError, run, get_data_dir, get_bin_name, is_graphene_based
 from .process import bts_binary_running, bts_process
 from . import core
 from collections import defaultdict, deque
 from os.path import join, expanduser
 from dogpile.cache import make_region
+from grapheneapi import GrapheneAPI
 import bts_tools.core  # needed to be able to exec('raise bts.core.Exception')
 import builtins        # needed to be able to reraise builtin exceptions
 import importlib
 import requests
 import itertools
+import configparser
+import arrow
 import json
 import re
 import logging
@@ -115,10 +118,20 @@ class BTSProxy(object):
 
             try:
                 log.info('Loading RPC config for %s from %s' % (self.name, data_dir))
-                rpc=json.load(open(expanduser(join(data_dir, 'config.json'))))['rpc']
-                cfg_port = int(rpc['httpd_endpoint'].split(':')[1])
-            except Exception:
+                if is_graphene_based(client):
+                    config = configparser.ConfigParser()
+                    config.read_string('[bts]\n' + open(expanduser(join(data_dir, 'config.ini'))).read())
+                    rpc = {}  # FIXME: need it to get the rpc user and rpc password, if necessary
+                    try:
+                        cfg_port = int(config['bts']['rpc-endpoint'].split(':')[1])
+                    except KeyError:
+                        cfg_port = 0
+                else:
+                    rpc = json.load(open(expanduser(join(data_dir, 'config.json'))))['rpc']
+                    cfg_port = int(rpc['httpd_endpoint'].split(':')[1])
+            except Exception as e:
                 log.warning('Cannot read RPC config from %s' % data_dir)
+                log.exception(e)
                 rpc = {}
                 cfg_port = None
         else:
@@ -131,6 +144,7 @@ class BTSProxy(object):
         self.rpc_cache_key = (self.rpc_host, self.rpc_port)
         self.venv_path = venv_path
         self.bin_name = get_bin_name(client or 'bts')
+        self.graphene_api = GrapheneAPI(self.rpc_host, self.rpc_port, self.rpc_user, self.rpc_password)
 
         if self.rpc_host == 'localhost':
             # direct json-rpc call
@@ -217,7 +231,10 @@ class BTSProxy(object):
                     return result
 
         try:
-            result = self._rpc_call(funcname, *args)
+            if is_graphene_based(self):
+                result = getattr(self.graphene_api, funcname)(*args)
+            else:
+                result = self._rpc_call(funcname, *args)
         except Exception as e:
             # also cache when exceptions are raised
             if funcname not in NON_CACHEABLE_METHODS:
@@ -230,6 +247,16 @@ class BTSProxy(object):
             log.debug('  added result in cache')
 
         return result
+
+    # FIXME: deprecate me
+    def authenticated_rpc_call(self, funcname, *args):
+        """Graphene only"""
+        from .graphene import call_sequence
+        return call_sequence('localhost', self.rpc_port,  # FIXME: remove localhost, add self.rpc_host
+                             [[1, 'login', self.rpc_user, self.rpc_password],
+                              [1, 'network_node'],
+                              [2, 'get_connected_peers']
+                              ])
 
     def clear_rpc_cache(self):
         try:
@@ -257,7 +284,10 @@ class BTSProxy(object):
 
     def status(self, cached=True):
         try:
-            self.rpc_call('get_info', cached=cached)
+            if is_graphene_based(self):
+                self.rpc_call('info', cached=cached)
+            else:
+                self.rpc_call('get_info', cached=cached)
             return 'online'
 
         except (requests.exceptions.ConnectionError, # http connection refused
@@ -276,10 +306,14 @@ class BTSProxy(object):
         return self.status(cached=cached) == 'online'
 
     def is_synced(self):
-        age = self.get_info()['blockchain_head_block_age']
-        if age is not None and age < 60:
-            return True
-        return False
+        if is_graphene_based(self):
+            age = self.info()['head_block_age']
+            return 'second' in age
+        else:
+            age = self.get_info()['blockchain_head_block_age']
+            if age is not None and age < 60:
+                return True
+            return False
 
     def process(self):
         return bts_process(self)
@@ -333,8 +367,17 @@ class BTSProxy(object):
         return self._bts_type
 
     def is_active(self, delegate):
-        active_delegates = [d['name'] for d in self.blockchain_list_delegates(0, 101)]
-        return delegate in active_delegates
+        if is_graphene_based(self):
+            return self.get_witness(delegate)['id'] in self.info()['active_witnesses']
+        else:
+            active_delegates = [d['name'] for d in self.blockchain_list_delegates(0, 101)]
+            return delegate in active_delegates
+
+    def get_head_block_num(self):
+        if is_graphene_based(self):
+            return int(self.info()['head_block_num'])
+        else:
+            return int(self.get_info()['blockchain_head_block_num'])
 
     def get_last_slots(self):
         """Return the last delegate slots, and cache this until at least the next block
@@ -366,6 +409,9 @@ class BTSProxy(object):
                 (self.bts_type() == 'pls'))
 
     def get_streak(self, cached=True):
+        # FIXME: support graphene
+        if is_graphene_based(self):
+            return True, 0
         if self.type != 'delegate':
             # only makes sense to call get_streak on delegate nodes
             return False, 1

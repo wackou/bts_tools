@@ -141,7 +141,7 @@ def load_config(loglevels=None):
             append_unique(n['monitoring'], l2)
 
         # options for 'delegate' node types
-        if n['type'] == 'delegate':
+        if n['type'] == 'delegate' and not is_graphene_based(n):
             add_cmdline_args(['--min-delegate-connection-count=0', '--statistics-enabled'])
         if 'delegate' in n['monitoring']:
             # TODO: add 'prefer_backbone_exclusively' when implemented; in this case we also need:
@@ -168,10 +168,14 @@ def is_graphene_based(n):
     from .rpcutils import BTSProxy
     if isinstance(n, BTSProxy):
         return is_graphene_based(n.bts_type())
-    if 'type' in n:
+    elif 'type' in n and 'client' in n:
+        # if we're a node desc, get it from the run_env
+        return is_graphene_based(n['client'])
+    elif 'type' in n:
         # if we're a run env, get it from the build env
         return is_graphene_based(n['type'])
-    return n == 'bts2'
+    else:
+        return n == 'bts2'
 
 
 DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',

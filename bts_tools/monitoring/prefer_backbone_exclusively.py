@@ -19,6 +19,7 @@
 #
 
 from .backbone import reconnect_backbone
+from ..backbone import node_list
 import logging
 
 log = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ def monitor(node, ctx, cfg):
     # TODO: set list of allowed peers to be only backbone nodes
 
     # try to connect to backbone nodes to which we are not currently connected
-    reconnect_backbone(node)
+    reconnect_backbone(node, ctx)
 
     # TODO: ensure we are only connected to backbone nodes, unless the number of live backbone nodes is low
     #       otherwise, close the connections to non-backbone nodes

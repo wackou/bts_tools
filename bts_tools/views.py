@@ -24,6 +24,7 @@ from collections import defaultdict
 from datetime import datetime
 from . import rpcutils as rpc
 from . import core, monitor, slogging, backbone
+from .core import is_graphene_based
 import bts_tools
 import requests.exceptions
 import logging
@@ -165,7 +166,10 @@ def split_columns(items, attrs):
 @core.profile
 def view_info():
     attrs = defaultdict(list)
-    info_items = sorted(rpc.main_node.get_info().items())
+    if is_graphene_based(rpc.main_node):
+        info_items = sorted(rpc.main_node.info().items())
+    else:
+        info_items = sorted(rpc.main_node.get_info().items())
 
     attrs['bold'] = [(i, 0) for i in range(len(info_items))]
     for i, (prop, value) in enumerate(info_items):
@@ -206,9 +210,10 @@ def view_info():
             if value is not None:
                 attrs['datetime'].append((i, 1))
 
-    info_items, attrs = split_columns(info_items, attrs)
+    if not is_graphene_based(rpc.main_node):
+        info_items, attrs = split_columns(info_items, attrs)
 
-    if rpc.main_node.type == 'delegate':
+    if rpc.main_node.type == 'delegate' and not is_graphene_based(rpc.main_node):  # FIXME: graphene support
         from . import feeds
         published_feeds = rpc.main_node.blockchain_get_feeds_from_delegate(rpc.main_node.name)
         last_update = max(f['last_update'] for f in published_feeds) if published_feeds else None

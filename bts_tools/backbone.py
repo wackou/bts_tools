@@ -61,9 +61,12 @@ def get_ip_nofail():
 
 
 def get_p2p_port(node):
-    # NOTE: this returns 0 while the client is starting (ie: already responds
-    #       to JSON-RPC but hasn't started the p2p code yet)
-    return int(node.network_get_info()['listening_on'].split(':')[1])
+    if core.is_graphene_based(node):
+        return 0  # FIXME: implement me
+    else:
+        # NOTE: this returns 0 while the client is starting (ie: already responds
+        #       to JSON-RPC but hasn't started the p2p code yet)
+        return int(node.network_get_info()['listening_on'].split(':')[1])
 
 
 @functools.lru_cache()
