@@ -24,7 +24,6 @@ from . import core
 from collections import defaultdict, deque
 from os.path import join, expanduser
 from dogpile.cache import make_region
-from grapheneapi import GrapheneAPI
 import bts_tools.core  # needed to be able to exec('raise bts.core.Exception')
 import builtins        # needed to be able to reraise builtin exceptions
 import importlib
@@ -37,6 +36,13 @@ import re
 import logging
 
 log = logging.getLogger(__name__)
+
+try:
+    from grapheneapi import GrapheneAPI
+except ImportError:
+    log.warning('Could not find python-graphenelib. No support for monitoring graphene clients')
+    GrapheneAPI = lambda *args: None  # stub
+
 
 NON_CACHEABLE_METHODS = {'wallet_publish_price_feed',
                          'wallet_publish_feeds',
