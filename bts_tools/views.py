@@ -192,6 +192,7 @@ def view_info():
             green_if_true(value is not None and value < 60)
 
         elif prop == 'blockchain_average_delegate_participation':
+            value = float(value)
             if value < 90:
                 attrs['orange'].append((i, 1))
             elif value < 80:
