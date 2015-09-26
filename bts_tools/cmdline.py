@@ -379,15 +379,24 @@ Examples:
 
         for remote_host in args.args:
             log.info('Deploying built binaries to {}'.format(remote_host))
-            latest = os.path.basename(os.path.realpath(join(BTS_BIN_DIR, BTS_BIN_NAME)))
             remote_bin_dir = core.config['build_environments'][args.environment]['bin_dir']
-            # strip binary before sending, saves up to 10x space
-            run('strip "{}/{}"'.format(BTS_BIN_DIR, latest))
+
+            # strip binaries before sending, saves up to 10x space
+            for bin_name in get_all_bin_names(BUILD_ENV['name']):
+                bin_name = os.path.basename(bin_name)
+                latest = os.path.basename(os.path.realpath(join(BTS_BIN_DIR, bin_name)))
+                run('strip "{}/{}"'.format(BTS_BIN_DIR, latest))
+
+            # sync all
             run('rsync -avzP "{}/" {}:"{}/"'.format(BTS_BIN_DIR, remote_host, remote_bin_dir))
-            # also link properly latest built binary
-            run('ssh {} "ln -fs {}/{} {}/{}"'.format(remote_host,
-                                                     remote_bin_dir, latest,
-                                                     remote_bin_dir, BTS_BIN_NAME))
+
+            # also symlink properly latest built binaries)
+            for bin_name in get_all_bin_names(BUILD_ENV['name']):
+                bin_name = os.path.basename(bin_name)
+                latest = os.path.basename(os.path.realpath(join(BTS_BIN_DIR, bin_name)))
+                run('ssh {} "ln -fs {}/{} {}/{}"'.format(remote_host,
+                                                         remote_bin_dir, latest,
+                                                         remote_bin_dir, bin_name))
 
     elif args.command == 'publish_slate':
         slate_file = args.args[0] if args.args else None
