@@ -6,6 +6,14 @@
 History
 =======
 
+0.2.11 (2015-09-26)
+-------------------
+
+* fix issue with BitShares 0.9.3 client
+* build environments can now specify the "debug" flag to produce debug builds
+* extremely preliminary support for graphene clients, only for the brave
+
+
 0.2.10 (2015-09-03)
 -------------------
 
