@@ -331,12 +331,12 @@ Examples:
 
             witness_port = run_env.get('witness_port')
             if witness_port:
-                run_args += ['--rpc-endpoint', str(witness_port)]
+                run_args += ['--rpc-endpoint', '0.0.0.0:{}'.format(witness_port)]
 
         elif args.command == 'run_cli':
             cli_port = run_env.get('cli_port')
             if cli_port:
-                run_args += ['--rpc-endpoint', str(cli_port)]
+                run_args += ['--rpc-endpoint', '0.0.0.0:{}'.format(cli_port)]
 
             chain_id = run_env.get('chain_id')
             if chain_id:
