@@ -93,7 +93,18 @@ run_environments:
     bts2:
         type: bts2
         data_dir: ~/.BitShares2
-        genesis_json: ~/sep-18-testnet-genesis.json
+        witness_port: 8090
+        cli_port: 8093
+        genesis_file: ~/sep-18-testnet-genesis.json
+        chain_id: 0f8b631d7a9dfebf16d6776fab96b629a14429762bf9c3eb95db1e4e4af637a4
+
+    seed:
+        type: bts2
+        data_dir: ~/.BitShares2_seed
+
+    backbone:
+        type: bts2
+        data_dir: ~/.BitShares2_backbone
 
     debug:
         type: bts

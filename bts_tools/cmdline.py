@@ -199,6 +199,7 @@ def main(flavor='bts'):
   - build            : update and build %(bin)s client
   - build_gui        : update and build %(bin)s gui client
   - run              : run latest compiled %(bin)s client, or the one with the given hash or tag
+  - run_cli          : run latest compiled %(bin)s cli wallet (graphene)
   - run_gui          : run latest compiled %(bin)s gui client
   - list             : list installed %(bin)s client binaries
   - monitor          : run the monitoring web app
@@ -224,7 +225,7 @@ Examples:
     parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
                                      formatter_class=RawTextHelpFormatter)
     parser.add_argument('command', choices=['version', 'clean_homedir', 'clean', 'build', 'build_gui',
-                                            'run', 'run_gui', 'list', 'monitor', 'publish_slate',
+                                            'run', 'run_cli', 'run_gui', 'list', 'monitor', 'publish_slate',
                                             'deploy'],
                         help='the command to run')
     parser.add_argument('-r', '--norpc', action='store_true',
@@ -296,27 +297,50 @@ Examples:
                                    (' %d secs' % secs if secs else ''))
         log.info(msg)
 
-    elif args.command == 'run':
+    elif args.command in ['run', 'run_cli']:
         run_env = select_run_environment(args.environment)
         run_args = core.config.get('run_args', []) + run_env.get('run_args', [])
         tag = args.args[0] if args.args else None
+
+        if args.command == 'run':
+            bin_name = BTS_BIN_NAME
+        elif args.command == 'run_cli':
+            bin_name = 'cli_wallet'
 
         # FIXME: only use tag if it actually corresponds to one
         if False: #tag:
             # if git rev specified, runs specific version
             print('Running specific instance of the %s client: %s' % (flavor, tag))
             bin_name = run('ls %s' % join(BTS_BIN_DIR,
-                                          '%s_*%s*' % (BTS_BIN_NAME, tag[:8])),
+                                          '%s_*%s*' % (bin_name, tag[:8])),
                            io=True, verbose=False).stdout.strip()
             run_args += args.args[1:]
         else:
             # run last built version
-            bin_name = join(BTS_BIN_DIR, BTS_BIN_NAME)
+            bin_name = join(BTS_BIN_DIR, bin_name)
             run_args += args.args
 
         data_dir = run_env.get('data_dir')
         if data_dir:
             run_args = ['--data-dir', expanduser(data_dir)] + run_args
+
+        if args.command == 'run':
+            genesis_file = run_env.get('genesis_file')
+            if genesis_file:
+                run_args += ['--genesis-json', expanduser(genesis_file)]
+
+            witness_port = run_env.get('witness_port')
+            if witness_port:
+                run_args += ['--rpc-endpoint', witness_port]
+
+        elif args.command == 'run_cli':
+            cli_port = run_env.get('cli_port')
+            if cli_port:
+                run_args += ['--rpc-endpoint', cli_port]
+
+            chain_id = run_env.get('chain_id')
+            if chain_id:
+                run_args += ['--chain-id', chain_id]
 
         if not args.norpc and not is_graphene_based(run_env):
             run_args = ['--server'] + run_args
