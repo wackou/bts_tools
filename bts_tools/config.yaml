@@ -95,6 +95,7 @@ run_environments:
         data_dir: ~/.BitShares2
         witness_port: 8090
         cli_port: 8093
+        seed_nodes: ['104.236.118.105:1776']
         genesis_file: ~/sep-18-testnet-genesis.json
         chain_id: 0f8b631d7a9dfebf16d6776fab96b629a14429762bf9c3eb95db1e4e4af637a4
 

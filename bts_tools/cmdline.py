@@ -333,6 +333,10 @@ Examples:
             if witness_port:
                 run_args += ['--rpc-endpoint', '0.0.0.0:{}'.format(witness_port)]
 
+            seed_nodes = run_env.get('seed_nodes', [])
+            for node in seed_nodes:
+                run_args += ['--seed-node', node]
+
         elif args.command == 'run_cli':
             cli_port = run_env.get('cli_port')
             if cli_port:
