@@ -320,23 +320,23 @@ Examples:
             bin_name = join(BTS_BIN_DIR, bin_name)
             run_args += args.args
 
-        data_dir = run_env.get('data_dir')
-        if data_dir:
-            run_args = ['--data-dir', expanduser(data_dir)] + run_args
-
         if args.command == 'run':
+            data_dir = run_env.get('data_dir')
+            if data_dir:
+                run_args = ['--data-dir', expanduser(data_dir)] + run_args
+
             genesis_file = run_env.get('genesis_file')
             if genesis_file:
                 run_args += ['--genesis-json', expanduser(genesis_file)]
 
             witness_port = run_env.get('witness_port')
             if witness_port:
-                run_args += ['--rpc-endpoint', witness_port]
+                run_args += ['--rpc-endpoint', str(witness_port)]
 
         elif args.command == 'run_cli':
             cli_port = run_env.get('cli_port')
             if cli_port:
-                run_args += ['--rpc-endpoint', cli_port]
+                run_args += ['--rpc-endpoint', str(cli_port)]
 
             chain_id = run_env.get('chain_id')
             if chain_id:
