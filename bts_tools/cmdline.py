@@ -340,7 +340,7 @@ Examples:
         elif args.command == 'run_cli':
             witness_port = run_env.get('witness_port')
             if witness_port:
-                run_args += ['--server-rpc-endpoint', '127.0.0.1:{}'.format(witness_port)]
+                run_args += ['--server-rpc-endpoint', 'ws://127.0.0.1:{}'.format(witness_port)]
 
             cli_port = run_env.get('cli_port')
             if cli_port:
