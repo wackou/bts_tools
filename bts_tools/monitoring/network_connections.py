@@ -20,6 +20,7 @@
 
 from ..notification import send_notification
 from ..monitor import StableStateMonitor
+from ..core import is_graphene_based
 import logging
 
 log = logging.getLogger(__name__)
@@ -30,7 +31,11 @@ def init_ctx(node, ctx, cfg):
 
 
 def is_valid_node(node):
-    return True
+    if is_graphene_based(node):
+        log.warning('implement me!')
+        return False
+    else:
+        return True
 
 
 def monitor(node, ctx, cfg):

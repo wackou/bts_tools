@@ -42,7 +42,7 @@ def monitor(node, ctx, cfg):
         for _ in range(3):
             ctx.blockchain_uptodate.push('stale')
 
-    if int(ctx.info['blockchain_head_block_age']) < 60:
+    if node.is_synced():
         ctx.blockchain_uptodate.push('up-to-date')
 
         if ctx.blockchain_uptodate.just_changed():

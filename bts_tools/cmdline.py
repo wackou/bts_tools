@@ -344,7 +344,7 @@ Examples:
 
             cli_port = run_env.get('cli_port')
             if cli_port:
-                run_args += ['--rpc-endpoint', '0.0.0.0:{}'.format(cli_port)]
+                run_args += ['--rpc-http-endpoint', '0.0.0.0:{}'.format(cli_port)]
 
             chain_id = run_env.get('chain_id')
             if chain_id:
