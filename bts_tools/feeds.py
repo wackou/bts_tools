@@ -209,7 +209,7 @@ def check_feeds(nodes):
                         if not node.is_online():
                             log.warning('Cannot publish feeds for delegate %s: client is not running' % node.name)
                             continue
-                        if not node.get_info()['wallet_unlocked']:
+                        if node.is_locked():
                             log.warning('Cannot publish feeds for delegate %s: wallet is locked' % node.name)
                             continue
                         # publish median value of the price, not latest one

@@ -321,6 +321,18 @@ class BTSProxy(object):
                 return True
             return False
 
+    def is_new(self):
+        if is_graphene_based(self):
+            return self.rpc_call('is_new')
+        else:
+            return not self.get_info()['wallet_open']
+
+    def is_locked(self):
+        if is_graphene_based(self):
+            return self.rpc_call('is_locked')
+        else:
+            return not self.get_info()['wallet_unlocked']
+
     def process(self):
         return bts_process(self)
 

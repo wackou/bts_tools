@@ -79,8 +79,8 @@
                             <td></td>
                         {% else %}
                             {% set info = node.get_info() %}
-                            <td>{{ green_if_true(info['wallet_open']) }}</td>
-                            <td>{{ green_if_true(info['wallet_unlocked']) }}</td>
+                            <td>{{ green_if_true(not node.is_new()) }}</td>
+                            <td>{{ green_if_true(not node.is_locked()) }}</td>
                             <td>{{ green_if_true(info['wallet_block_production_enabled']) }}</td>
                         {% endif %}
 

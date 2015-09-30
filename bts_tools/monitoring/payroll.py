@@ -38,7 +38,7 @@ def is_valid_node(node):
 
 
 def monitor(node, ctx, cfg):
-    if not ctx.info['wallet_unlocked']:
+    if node.is_locked():
         log.warning('Cannot perform payroll distribution when wallet is closed or locked')
         return
 

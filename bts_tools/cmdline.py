@@ -460,7 +460,7 @@ slate:
 
         client = BTSProxy(type='delegate', name=delegate, client=args.environment)
 
-        if not client.get_info()['wallet_unlocked']:
+        if client.is_locked():
             log.error('Cannot publish slate: wallet locked...')
             log.error('Please unlock your wallet first and try again')
             sys.exit(1)

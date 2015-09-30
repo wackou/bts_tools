@@ -47,7 +47,7 @@ def monitor(node, ctx, cfg):
         published_version.invalidate()
 
     # publish node version if we're not up-to-date (eg: just upgraded)
-    if ctx.info['wallet_unlocked']:
+    if not node.is_locked():
         def get_published_version():
             v = node.blockchain_get_account(node.name)
             try:
