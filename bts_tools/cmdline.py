@@ -333,6 +333,10 @@ Examples:
             if witness_port:
                 run_args += ['--rpc-endpoint', '0.0.0.0:{}'.format(witness_port)]
 
+            p2p_port = run_env.get('p2p_port')
+            if p2p_port:
+                run_args += ['--p2p-endpoint', '0.0.0.0:{}'.format(p2p_port)]
+
             seed_nodes = run_env.get('seed_nodes', [])
             for node in seed_nodes:
                 run_args += ['--seed-node', node]

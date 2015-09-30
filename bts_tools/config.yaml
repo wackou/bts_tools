@@ -93,6 +93,7 @@ run_environments:
     bts2:
         type: bts2
         data_dir: ~/.BitShares2
+        p2p_port: 1776
         witness_port: 8090
         cli_port: 8093
         seed_nodes: ['104.236.118.105:1776']
