@@ -431,7 +431,7 @@ class BTSProxy(object):
 
     def get_streak(self, cached=True):
         # FIXME: support graphene
-        if is_graphene_based(self):
+        if self.is_graphene_based():
             return True, 0
         if self.type != 'delegate':
             # only makes sense to call get_streak on delegate nodes
@@ -483,7 +483,19 @@ class BTSProxy(object):
             log.exception(e)
             return False, -1
 
+    def asset_data(self, asset):
+        # bitAssets data (id, precision, etc.) don't ever change, so cache them forever
+        try:
+            all_data = self._all_bitassets_data
+        except AttributeError:
+            from .feeds import BIT_ASSETS, BIT_ASSETS_INDICES
+            all_data = {}
+            for asset in BIT_ASSETS | BIT_ASSETS_INDICES:
+                all_data[asset] = self.get_asset(asset)
+                print('GOT ASSET DATA: {}'.format(asset))
+            self._all_bitassets_data = all_data
 
+        return all_data[asset]
 
 
 nodes = []

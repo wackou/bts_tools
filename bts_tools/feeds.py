@@ -27,6 +27,7 @@ from concurrent.futures import ThreadPoolExecutor
 import threading
 import itertools
 import statistics
+import fractions
 import logging
 
 log = logging.getLogger(__name__)
@@ -215,8 +216,43 @@ def check_feeds(nodes):
                         # publish median value of the price, not latest one
                         median_feeds = {c: statistics.median(price_history[c]) for c in feeds}
                         log.info('Node %s publishing feeds: %s' % (node.name, fmt(median_feeds)))
-                        feeds_as_string = [(cur, '{:.10f}'.format(price)) for cur, price in median_feeds.items()]
-                        node.wallet_publish_feeds(node.name, feeds_as_string)
+                        if node.is_graphene_based():
+                            for asset, price in median_feeds.items():
+                                asset_id = node.asset_data(asset)['id']
+                                asset_precision = node.asset_data(asset)['precision']
+                                base_precision  = node.asset_data('1.3.0')['precision']
+                                core_price = price * 10**(asset_precision - base_precision)
+                                # TODO: check if this denominator is enough for high value assets, such as gold
+                                p = fractions.Fraction.from_float(core_price).limit_denominator(100000)
+
+                                price = {
+                                    "settlement_price": {
+                                        "quote": {
+                                            "asset_id": "1.3.0",
+                                            "amount": p.denominator
+                                        },
+                                        "base": {
+                                            "asset_id": asset_id,
+                                            "amount": p.numerator
+                                        }
+                                    },
+                                    "core_exchange_rate": {
+                                        "quote": {
+                                            "asset_id": asset_id,
+                                            "amount": p.numerator
+                                        },
+                                        "base": {
+                                            "asset_id": "1.3.0",
+                                            # TODO: copied from Xeroc's script, where does this 5% come from??
+                                            "amount": int(p.denominator * 1.05) # 5% extra
+                                        }
+                                    }
+                                 }
+                                node.publish_asset_feed(node.name, asset, price, True)  # True: sign+broadcast
+
+                        else:
+                            feeds_as_string = [(cur, '{:.10f}'.format(price)) for cur, price in median_feeds.items()]
+                            node.wallet_publish_feeds(node.name, feeds_as_string)
             except Exception as e:
                 log.exception(e)
 
