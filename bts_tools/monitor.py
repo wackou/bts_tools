@@ -22,7 +22,6 @@ from collections import deque
 from itertools import chain, islice
 from contextlib import suppress
 from .feeds import check_feeds
-from .core import is_graphene_based
 from . import core
 import time
 import logging
@@ -151,7 +150,7 @@ def monitoring_thread(*nodes):
                 continue
 
             # monitor at a client level
-            if is_graphene_based(client_node):
+            if client_node.is_graphene_based():
                 global_ctx.info = client_node.info()
             else:
                 global_ctx.info = client_node.get_info()

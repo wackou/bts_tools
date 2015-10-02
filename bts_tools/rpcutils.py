@@ -237,7 +237,7 @@ class BTSProxy(object):
                     return result
 
         try:
-            if is_graphene_based(self):
+            if self.is_graphene_based():
                 result = getattr(self.graphene_api, funcname)(*args)
             else:
                 result = self._rpc_call(funcname, *args)
@@ -290,7 +290,7 @@ class BTSProxy(object):
 
     def status(self, cached=True):
         try:
-            if is_graphene_based(self):
+            if self.is_graphene_based():
                 self.rpc_call('info', cached=cached)
             else:
                 self.rpc_call('get_info', cached=cached)
@@ -312,7 +312,7 @@ class BTSProxy(object):
         return self.status(cached=cached) == 'online'
 
     def is_synced(self):
-        if is_graphene_based(self):
+        if self.is_graphene_based():
             age = self.info()['head_block_age']
             return 'second' in age
         else:
@@ -322,13 +322,13 @@ class BTSProxy(object):
             return False
 
     def is_new(self):
-        if is_graphene_based(self):
+        if self.is_graphene_based():
             return self.rpc_call('is_new')
         else:
             return not self.get_info()['wallet_open']
 
     def is_locked(self):
-        if is_graphene_based(self):
+        if self.is_graphene_based():
             return self.rpc_call('is_locked')
         else:
             return not self.get_info()['wallet_unlocked']
@@ -384,15 +384,18 @@ class BTSProxy(object):
 
         return self._bts_type
 
+    def is_graphene_based(self):
+        return is_graphene_based(self)
+
     def is_active(self, delegate):
-        if is_graphene_based(self):
+        if self.is_graphene_based():
             return self.get_witness(delegate)['id'] in self.info()['active_witnesses']
         else:
             active_delegates = [d['name'] for d in self.blockchain_list_delegates(0, 101)]
             return delegate in active_delegates
 
     def get_head_block_num(self):
-        if is_graphene_based(self):
+        if self.is_graphene_based():
             return int(self.info()['head_block_num'])
         else:
             return int(self.get_info()['blockchain_head_block_num'])

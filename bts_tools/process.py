@@ -18,8 +18,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from .core import is_graphene_based
-import os.path
 import psutil
 import logging
 
@@ -65,7 +63,7 @@ def binary_description(node):
     """Return a human readable version description of the running binary,
     either tag version or git revision.
     """
-    if is_graphene_based(node):
+    if node.is_graphene_based():
         client_version = 'unknown'
     else:
         client_version = node.get_info()['client_version']

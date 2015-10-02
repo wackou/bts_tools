@@ -61,7 +61,8 @@ def get_ip_nofail():
 
 
 def get_p2p_port(node):
-    if core.is_graphene_based(node):
+    if node.is_graphene_based():
+        log.warning('implement me!!')
         return 0  # FIXME: implement me
     else:
         # NOTE: this returns 0 while the client is starting (ie: already responds

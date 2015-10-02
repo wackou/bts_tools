@@ -73,7 +73,7 @@
                             </div>
                         </td>
 
-                        {% if core.is_graphene_based(node) %}
+                        {% if node.is_graphene_based() %}
                             <td>{{ green_if_true(not node.is_new()) }}</td>
                             <td>{{ green_if_true(not node.is_locked()) }}</td>
                             <td></td>

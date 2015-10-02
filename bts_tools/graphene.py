@@ -23,7 +23,7 @@ import logging
 log = logging.getLogger(__name__)
 
 # export bitshares 0.9.x balance keys
-def print_balances():
+def print_balances(n):
     for account, addresses in n.wallet_account_balance_ids():
         print('\nAccount: %s\n' % account)
         keys = set()
