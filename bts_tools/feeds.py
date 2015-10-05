@@ -19,6 +19,7 @@
 #
 
 from . import core
+from .rpcutils import hashabledict
 from .feed_providers import YahooProvider, BterFeedProvider, Btc38FeedProvider,\
     PoloniexFeedProvider, GoogleProvider, BloombergProvider, ALL_FEED_PROVIDERS
 from collections import deque, defaultdict

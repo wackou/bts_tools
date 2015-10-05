@@ -30,7 +30,8 @@ def bts_process(node):
         log.error('DEPRECATED: call to process.bts_process() without specifying a node...')
         return None
 
-    if node.rpc_host != 'localhost':
+    host = node.witness_host if node.is_graphene_based() else node.rpc_host
+    if host != 'localhost':
         return None
 
     #log.debug('find bts binary')
@@ -38,10 +39,14 @@ def bts_process(node):
     procs = [p for p in psutil.process_iter()
              if node.bin_name in p.name()]
 
-    # find the process corresponding to our node by looking at the http rpc port
+    # find the process corresponding to our node by looking at the rpc port
+    port = node.witness_port if node.is_graphene_based() else node.rpc_port
     for p in procs:
-        if node.rpc_port in [c.laddr[1] for c in p.connections()]:
+        print('considering proc {}'.format(p))
+        if port in [c.laddr[1] for c in p.connections()]:
             return p
+
+    print('NONE FOUND')
 
     return None
 

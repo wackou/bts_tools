@@ -64,9 +64,10 @@ def monitor(node, ctx, cfg):
     if node.rpc_host == 'localhost':
         p = node.process()
         if p is not None:
+            connections = int(node.network_get_info()['connection_count']) if node.is_graphene_based() else ctx.info['network_num_connections']
             s = StatsFrame(cpu=p.cpu_percent(),
                            mem=p.memory_info().rss,
-                           connections=ctx.info['network_num_connections'],
+                           connections=connections,
                            timestamp=datetime.utcnow())
         else:
             s = StatsFrame(cpu=0, mem=0, connections=0, timestamp=datetime.utcnow())

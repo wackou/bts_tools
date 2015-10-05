@@ -20,6 +20,7 @@
 
 from .core import UnauthorizedError, RPCError, run, get_data_dir, get_bin_name, is_graphene_based
 from .process import bts_binary_running, bts_process
+from .graphene import call_sequence
 from . import core
 from collections import defaultdict, deque
 from os.path import join, expanduser
@@ -92,14 +93,21 @@ ALL_SLOTS = {}
 
 
 class hashabledict(dict):
-  def __key(self):
-    return tuple(sorted(self.items()))
+    def __init__(self, *args, **kwargs):
+        """try to also convert inner dicts to hashable dicts"""
+        super().__init__(*args, **kwargs)
+        for k, v in self.items():
+            if isinstance(v, dict):
+                self[k] = hashabledict(v)
 
-  def __hash__(self):
-    return hash(self.__key())
+    def __key(self):
+        return tuple(sorted(self.items()))
 
-  def __eq__(self, other):
-    return self.__key() == other.__key()
+    def __hash__(self):
+        return hash(self.__key())
+
+    def __eq__(self, other):
+        return self.__key() == other.__key()
 
 
 def to_list(obj):
@@ -113,7 +121,10 @@ def to_list(obj):
 
 class BTSProxy(object):
     def __init__(self, type, name, client=None, monitoring=None, notification=None,
-                 rpc_port=None, rpc_user=None, rpc_password=None, rpc_host=None, venv_path=None):
+                 rpc_port=None, rpc_user=None, rpc_password=None, rpc_host=None, venv_path=None,
+                 # graphene fields
+                 witness_host=None, witness_port=None, witness_user=None, witness_password=None,
+                 wallet_host=None, wallet_port=None, wallet_user=None, wallet_password=None):
         self.type = type
         self.name = name
         self.monitoring = to_list(monitoring)
@@ -149,8 +160,18 @@ class BTSProxy(object):
         self.rpc_host = rpc_host or 'localhost'
         self.rpc_cache_key = (self.rpc_host, self.rpc_port)
         self.venv_path = venv_path
+
+        self.witness_host     = witness_host
+        self.witness_port     = witness_port
+        self.witness_user     = witness_user
+        self.witness_password = witness_password
+        self.wallet_host      = wallet_host
+        self.wallet_port      = wallet_port
+        self.wallet_user      = wallet_user
+        self.wallet_password  = wallet_password
+
         self.bin_name = get_bin_name(client or 'bts')
-        self.graphene_api = GrapheneAPI(self.rpc_host, self.rpc_port, self.rpc_user, self.rpc_password)
+        self.graphene_api = GrapheneAPI(self.wallet_host, self.wallet_port, self.wallet_user, self.wallet_password)
 
         if self.rpc_host == 'localhost':
             # direct json-rpc call
@@ -333,6 +354,16 @@ class BTSProxy(object):
         else:
             return not self.get_info()['wallet_unlocked']
 
+    def network_get_info(self):
+        if self.is_graphene_based():
+            return call_sequence(self.witness_host, self.witness_port,
+                                 [[1, 'login', self.witness_user, self.witness_password],
+                                  [1, 'network_node'],
+                                  [2, 'network_get_info']  # FIXME: not guaranteed to be 2
+                                  ])
+        else:
+            return self.rpc_call('network_get_info')
+
     def process(self):
         return bts_process(self)
 
@@ -490,9 +521,9 @@ class BTSProxy(object):
         except AttributeError:
             from .feeds import BIT_ASSETS, BIT_ASSETS_INDICES
             all_data = {}
-            for asset in BIT_ASSETS | BIT_ASSETS_INDICES:
+            for asset in BIT_ASSETS | BIT_ASSETS_INDICES.keys() | {'CORE'}:
                 all_data[asset] = self.get_asset(asset)
-                print('GOT ASSET DATA: {}'.format(asset))
+                print('\nGOT ASSET DATA: {} {}'.format(asset, json.dumps(all_data[asset], indent=4)))
             self._all_bitassets_data = all_data
 
         return all_data[asset]
