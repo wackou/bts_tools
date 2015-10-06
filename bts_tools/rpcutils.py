@@ -275,16 +275,6 @@ class BTSProxy(object):
 
         return result
 
-    # FIXME: deprecate me
-    def authenticated_rpc_call(self, funcname, *args):
-        """Graphene only"""
-        from .graphene import call_sequence
-        return call_sequence('localhost', self.rpc_port,  # FIXME: remove localhost, add self.rpc_host
-                             [[1, 'login', self.rpc_user, self.rpc_password],
-                              [1, 'network_node'],
-                              [2, 'get_connected_peers']
-                              ])
-
     def clear_rpc_cache(self):
         try:
             log.debug('Clearing RPC cache for host: %s' % self.rpc_host)
@@ -523,7 +513,6 @@ class BTSProxy(object):
             all_data = {}
             for asset in BIT_ASSETS | BIT_ASSETS_INDICES.keys() | {'CORE'}:
                 all_data[asset] = self.get_asset(asset)
-                print('\nGOT ASSET DATA: {} {}'.format(asset, json.dumps(all_data[asset], indent=4)))
             self._all_bitassets_data = all_data
 
         return all_data[asset]

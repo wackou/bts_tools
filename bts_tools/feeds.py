@@ -27,6 +27,7 @@ from contextlib import suppress
 from concurrent.futures import ThreadPoolExecutor
 import threading
 import itertools
+import json
 import statistics
 import fractions
 import logging
@@ -206,7 +207,8 @@ def check_feeds(nodes):
                 # we also require rpc_host == 'localhost', we don't want to publish on remote
                 # nodes (while checking on them, for instance)
                 # TODO: do we really want to ignore rpc_host != 'localhost', or should we just do what is asked?
-                if node.type == 'delegate' and node.rpc_host == 'localhost' and 'feeds' in node.monitoring:
+                #   and node.rpc_host == 'localhost'
+                if node.type == 'delegate' and 'feeds' in node.monitoring:
                     if nfeed_checked % feed_period == 0:
                         if not node.is_online():
                             log.warning('Cannot publish feeds for delegate %s: client is not running' % node.name)
@@ -221,35 +223,47 @@ def check_feeds(nodes):
                             for asset, price in median_feeds.items():
                                 asset_id = node.asset_data(asset)['id']
                                 asset_precision = node.asset_data(asset)['precision']
-                                base_precision  = node.asset_data('1.3.0')['precision']
-                                core_price = price * 10**(asset_precision - base_precision)
-                                # TODO: check if this denominator is enough for high value assets, such as gold
-                                p = fractions.Fraction.from_float(core_price).limit_denominator(100000)
+                                base_precision  = node.asset_data('CORE')['precision']
+
+                                result = node.get_bitasset_data(asset)
+
+                                # find nice fraction with at least N significant digits
+                                N = 4
+                                numerator = int(price * 10**asset_precision)
+                                denominator = 10**base_precision
+                                multiplier = 0
+                                while len(str(numerator)) < N:
+                                    multiplier += 1
+                                    numerator = int(price * 10**(asset_precision+multiplier))
+                                    denominator = 10**(base_precision+multiplier)
 
                                 price = {
                                     "settlement_price": {
                                         "quote": {
                                             "asset_id": "1.3.0",
-                                            "amount": p.denominator
+                                            "amount": denominator
                                         },
                                         "base": {
                                             "asset_id": asset_id,
-                                            "amount": p.numerator
+                                            "amount": numerator
                                         }
                                     },
                                     "core_exchange_rate": {
                                         "quote": {
                                             "asset_id": asset_id,
-                                            "amount": p.numerator
+                                            "amount": numerator
                                         },
                                         "base": {
                                             "asset_id": "1.3.0",
-                                            # TODO: copied from Xeroc's script, where does this 5% come from??
-                                            "amount": int(p.denominator * 1.05) # 5% extra
+                                            # from: https://bitsharestalk.org/index.php/topic,18382.0/all.html
+                                            # also, the exchange_rate is for transactions fees that are paid in bitasset ..
+                                            # in my script .. paying your transactions in bitUSD (or any other bitasset)
+                                            # is 5% more expensive (read: supposed to be)
+                                            "amount": int(denominator * 1.05) # 5% extra
                                         }
                                     }
-                                 }
-                                node.publish_asset_feed(node.name, asset, price, True)  # True: sign+broadcast
+                                }
+                                node.publish_asset_feed(node.name, asset, hashabledict(price), True)  # True: sign+broadcast
 
                         else:
                             feeds_as_string = [(cur, '{:.10f}'.format(price)) for cur, price in median_feeds.items()]

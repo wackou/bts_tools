@@ -165,7 +165,7 @@ def split_columns(items, attrs):
 @core.profile
 def view_info():
     attrs = defaultdict(list)
-    if is_graphene_based(rpc.main_node):
+    if rpc.main_node.is_graphene_based():
         info_items = sorted(rpc.main_node.info().items())
     else:
         info_items = sorted(rpc.main_node.get_info().items())

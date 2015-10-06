@@ -109,7 +109,7 @@ def monitoring_thread(*nodes):
             log.warning('Unknown plugin specified in monitoring config: %s' % m)
 
     # launch feed monitoring and publishing thread
-    if 'feeds' in all_monitoring and client_node.bts_type() == 'bts':
+    if 'feeds' in all_monitoring and client_node.bts_type() in ['bts', 'bts2']:
         check_feeds(nodes)
 
     # create one global context for the client, and local contexts for each node of this client
