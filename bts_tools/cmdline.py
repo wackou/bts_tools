@@ -121,7 +121,7 @@ def configure(debug=False):
     if debug:
         run('%s cmake -DCMAKE_BUILD_TYPE=Debug .' % ' '.join(CONFIGURE_OPTS))
     else:
-        run('%s cmake .' % ' '.join(CONFIGURE_OPTS))
+        run('%s cmake -DCMAKE_BUILD_TYPE=Release .' % ' '.join(CONFIGURE_OPTS))
 
 
 def configure_gui():
