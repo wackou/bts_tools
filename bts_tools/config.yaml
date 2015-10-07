@@ -96,9 +96,9 @@ run_environments:
         p2p_port: 1776
         witness_port: 8090
         cli_port: 8093
-        seed_nodes: ['104.236.118.105:1776']
-        genesis_file: ~/sep-18-testnet-genesis.json
-        chain_id: 0f8b631d7a9dfebf16d6776fab96b629a14429762bf9c3eb95db1e4e4af637a4
+        seed_nodes: ['104.236.51.238:2005']
+        genesis_file: ~/oct5-genesis.json
+        chain_id: 60e21871125ea9995fe498b7f68a87a85c6583725ea5448f6fd969c59a37df83
 
     seed:
         type: bts2
@@ -139,10 +139,16 @@ profile: false
 #
 nodes:
     -
-        client: bts
-        type: seed
-        name: seed-test
-        monitoring: [seed]
+        client: bts2
+        type: delegate
+        name: my_witness_name
+        #monitoring: [feeds]
+        witness_host: localhost
+        witness_port: 8090
+        witness_user: myuser          # defined in api_access.json
+        witness_password: mypassword  # defined in api_access.json
+        wallet_host: localhost
+        wallet_port: 8093
 
 
 #
