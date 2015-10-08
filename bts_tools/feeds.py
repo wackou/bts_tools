@@ -204,10 +204,6 @@ def check_feeds(nodes):
             # then we should still go on for the other nodes (and not let exceptions propagate)
             try:
                 # only publish feeds if we're running a delegate node
-                # we also require rpc_host == 'localhost', we don't want to publish on remote
-                # nodes (while checking on them, for instance)
-                # TODO: do we really want to ignore rpc_host != 'localhost', or should we just do what is asked?
-                #   and node.rpc_host == 'localhost'
                 if node.type == 'delegate' and 'feeds' in node.monitoring:
                     if nfeed_checked % feed_period == 0:
                         if not node.is_online():
@@ -221,16 +217,16 @@ def check_feeds(nodes):
                         log.info('Node %s publishing feeds: %s' % (node.name, fmt(median_feeds)))
                         if node.is_graphene_based():
                             for asset, price in median_feeds.items():
-                                # publish all feeds even if a single one fails
-                                if asset in ['MXN']:
+                                if asset not in ['USD', 'CNY', 'EUR', 'BTC', 'GOLD']:
                                     continue
+                                # publish all feeds even if a single one fails
                                 try:
                                     asset_id = node.asset_data(asset)['id']
                                     asset_precision = node.asset_data(asset)['precision']
                                     base_precision  = node.asset_data('CORE')['precision']
 
                                     # FIXME: unused var
-                                    result = node.get_bitasset_data(asset)
+                                    #result = node.get_bitasset_data(asset)
 
                                     # find nice fraction with at least N significant digits
                                     N = 4
@@ -268,7 +264,6 @@ def check_feeds(nodes):
                                             }
                                         }
                                     }
-                                    #print('PUB {} - {}'.format(asset, price))
                                     node.publish_asset_feed(node.name, asset, hashabledict(price), True)  # True: sign+broadcast
                                 except Exception as e:
                                     log.exception(e)
