@@ -349,7 +349,7 @@ class BTSProxy(object):
             return call_sequence(self.witness_host, self.witness_port,
                                  [[1, 'login', self.witness_user, self.witness_password],
                                   [1, 'network_node'],
-                                  [2, 'network_get_info']  # FIXME: not guaranteed to be 2
+                                  [2, 'get_info']  # FIXME: not guaranteed to be 2
                                   ])
         else:
             return self.rpc_call('network_get_info')
