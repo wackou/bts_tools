@@ -39,7 +39,7 @@ build_environments:
     bts2:
         debug: false
         git_repo: https://github.com/bitshares/bitshares-2.git
-        git_branch: master
+        git_branch: bitshares
         build_dir: ~/.BitShares2_build
         bin_dir: ~/.BitShares2_bin
 
