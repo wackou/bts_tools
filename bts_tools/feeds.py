@@ -251,16 +251,16 @@ def check_feeds(nodes):
                                         },
                                         "core_exchange_rate": {
                                             "quote": {
-                                                "asset_id": asset_id,
-                                                "amount": numerator
-                                            },
-                                            "base": {
                                                 "asset_id": "1.3.0",
                                                 # from: https://bitsharestalk.org/index.php/topic,18382.0/all.html
                                                 # also, the exchange_rate is for transactions fees that are paid in bitasset ..
                                                 # in my script .. paying your transactions in bitUSD (or any other bitasset)
                                                 # is 5% more expensive (read: supposed to be)
                                                 "amount": int(denominator * 1.05) # 5% extra
+                                            },
+                                            "base": {
+                                                "asset_id": asset_id,
+                                                "amount": numerator
                                             }
                                         }
                                     }
