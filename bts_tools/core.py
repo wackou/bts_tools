@@ -177,15 +177,12 @@ def is_graphene_based(n):
         return is_graphene_based(n['type'])
     else:
         # if we're a string, we might be a build env or a run env
-        if n == 'bts2':
-            return True
         try:
-            # we're a run_env
-            env = config['run_environments'][n]
-            return is_graphene_based(env)
+            # if we're a run env, get the associated build env
+            n = config['run_environments'][n]['type']
         except KeyError:
-            # we're a build env, and != 'bts2'
-            return False
+            pass
+        return n == 'bts2'
 
 
 DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',

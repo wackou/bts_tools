@@ -217,13 +217,13 @@ def check_feeds(nodes):
                         log.info('Node %s publishing feeds: %s' % (node.name, fmt(median_feeds)))
                         if node.is_graphene_based():
                             for asset, price in median_feeds.items():
-                                if asset not in ['USD', 'CNY', 'EUR', 'BTC', 'GOLD']:
-                                    continue
+                                #if asset not in ['USD', 'CNY', 'EUR', 'BTC', 'GOLD']:
+                                #    continue
                                 # publish all feeds even if a single one fails
                                 try:
                                     asset_id = node.asset_data(asset)['id']
                                     asset_precision = node.asset_data(asset)['precision']
-                                    base_precision  = node.asset_data('CORE')['precision']
+                                    base_precision  = node.asset_data('BTS')['precision']
 
                                     # FIXME: unused var
                                     #result = node.get_bitasset_data(asset)

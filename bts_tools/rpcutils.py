@@ -511,8 +511,8 @@ class BTSProxy(object):
         except AttributeError:
             from .feeds import BIT_ASSETS, BIT_ASSETS_INDICES
             all_data = {}
-            for asset in BIT_ASSETS | BIT_ASSETS_INDICES.keys() | {'CORE'}:
-                all_data[asset] = self.get_asset(asset)
+            for a in BIT_ASSETS | BIT_ASSETS_INDICES.keys() | {'BTS'}:
+                all_data[a] = self.get_asset(a)
             self._all_bitassets_data = all_data
 
         return all_data[asset]
