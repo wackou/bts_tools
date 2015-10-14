@@ -154,7 +154,7 @@ class BTSProxy(object):
         else:
             rpc = {}
             cfg_port = None
-        self.rpc_port = rpc_port or cfg_port or 0
+        self.rpc_port = witness_port or rpc_port or cfg_port or 0
         self.rpc_user = rpc_user or rpc.get('rpc_user') or ''
         self.rpc_password = rpc_password or rpc.get('rpc_password') or ''
         self.rpc_host = rpc_host or 'localhost'
