@@ -372,7 +372,7 @@ Examples:
             # and everything else doesn't get scattered all over the place
             data_dir = run_env.get('data_dir')
             if data_dir:
-                cmd = 'cd "{}"; {}'.format(data_dir, join_shell_cmd(cmd))
+                cmd = 'cd "{}"; {}'.format(expanduser(data_dir), join_shell_cmd(cmd))
 
         run(cmd)
 
