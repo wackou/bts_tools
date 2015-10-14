@@ -134,7 +134,7 @@ class BTSProxy(object):
             data_dir = get_data_dir(client)
 
             try:
-                log.info('Loading RPC config for %s from %s' % (self.name, data_dir))
+                log.info('Loading RPC config for %s from %s (run_env = %s)' % (self.name, data_dir, client))
                 if is_graphene_based(client):
                     config = configparser.ConfigParser()
                     config.read_string('[bts]\n' + open(expanduser(join(data_dir, 'config.ini'))).read())

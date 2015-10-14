@@ -370,9 +370,9 @@ Examples:
         if is_graphene_based(run_env):
             # for graphene clients, always cd to data dir first (if defined), this ensures the wallet file
             # and everything else doesn't get scattered all over the place
-            data_dir = run_env.get('data_dir')
+            data_dir = get_data_dir(run_env)
             if data_dir:
-                cmd = 'cd "{}"; {}'.format(expanduser(data_dir), join_shell_cmd(cmd))
+                cmd = 'cd "{}"; {}'.format(data_dir, join_shell_cmd(cmd))
 
         run(cmd)
 

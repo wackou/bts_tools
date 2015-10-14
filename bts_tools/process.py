@@ -42,11 +42,8 @@ def bts_process(node):
     # find the process corresponding to our node by looking at the rpc port
     port = node.witness_port if node.is_graphene_based() else node.rpc_port
     for p in procs:
-        print('considering proc {}'.format(p))
         if port in [c.laddr[1] for c in p.connections()]:
             return p
-
-    print('NONE FOUND')
 
     return None
 

@@ -30,17 +30,14 @@ def init_ctx(node, ctx, cfg):
 
 
 def is_valid_node(node):
-    if node.is_graphene_based():
-        log.warning('implement me!')
-        return False
-    else:
-        return True
+    return True
 
 
 def monitor(node, ctx, cfg):
     # check for minimum number of connections for delegate to produce
     min_connections = cfg.get('min_connections', 5)
-    if ctx.info['network_num_connections'] <= min_connections:
+    num_connections = node.network_get_info()['connection_count'] if node.is_graphene_based() else ctx.info['network_num_connections']
+    if num_connections <= min_connections:
         ctx.connection_state.push('starved')
         if ctx.connection_state.just_changed():
             log.warning('Nodes %s: fewer than %d network connections...' % (', '.join(n.name for n in ctx.nodes), min_connections))
