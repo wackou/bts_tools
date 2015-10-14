@@ -252,12 +252,17 @@ GlobalStatsFrame = namedtuple('GlobalStatsFrame', 'cpu_total, timestamp')
 StatsFrame = namedtuple('StatsFrame', 'cpu, mem, connections, timestamp')
 
 
-def _run(cmd, io=False, verbose=False):
+def join_shell_cmd(cmd):
     if isinstance(cmd, list):
         if len(cmd) > 1: # if we have args, quote them properly
             cmd = cmd[0] + ' "' + '" "'.join(cmd[1:]) + '"'
         else:
             cmd = cmd[0]
+    return cmd
+
+
+def _run(cmd, io=False, verbose=False):
+    cmd = join_shell_cmd(cmd)
 
     (log.info if verbose else log.debug)('SHELL: running command: %s' % cmd)
 

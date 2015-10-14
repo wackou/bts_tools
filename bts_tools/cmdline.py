@@ -21,7 +21,7 @@
 from os.path import join, dirname, exists, islink, expanduser
 from argparse import RawTextHelpFormatter
 from contextlib import suppress
-from .core import platform, run, get_data_dir, get_bin_name, get_gui_bin_name, get_all_bin_names, is_graphene_based
+from .core import platform, run, get_data_dir, get_bin_name, get_gui_bin_name, get_all_bin_names, is_graphene_based, join_shell_cmd
 from . import core, init
 from .rpcutils import rpc_call, BTSProxy
 import argparse
@@ -366,6 +366,13 @@ Examples:
 
         else:
             cmd = [bin_name] + run_args
+
+        if is_graphene_based(run_env):
+            # for graphene clients, always cd to data dir first (if defined), this ensures the wallet file
+            # and everything else doesn't get scattered all over the place
+            data_dir = run_env.get('data_dir')
+            if data_dir:
+                cmd = 'cd "{}"; {}'.format(data_dir, join_shell_cmd(cmd))
 
         run(cmd)
 
