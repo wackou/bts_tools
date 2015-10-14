@@ -165,6 +165,7 @@ def load_config(loglevels=None):
 
 
 def is_graphene_based(n):
+    # TODO: this function really can't get any uglier... Would benefit from a facelift
     from .rpcutils import BTSProxy
     if isinstance(n, BTSProxy):
         return is_graphene_based(n.bts_type())
@@ -176,13 +177,15 @@ def is_graphene_based(n):
         return is_graphene_based(n['type'])
     else:
         # if we're a string, we might be a build env or a run env
+        if n == 'bts2':
+            return True
         try:
             # we're a run_env
             env = config['run_environments'][n]
             return is_graphene_based(env)
         except KeyError:
-            # we're a build env
-            return n == 'bts2'
+            # we're a build env, and != 'bts2'
+            return False
 
 
 DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',
