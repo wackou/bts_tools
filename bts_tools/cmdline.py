@@ -128,8 +128,10 @@ def configure_gui():
     run('%s cmake -DINCLUDE_QT_WALLET=ON .' % ' '.join(CONFIGURE_OPTS))
 
 
-def build():
+def build(threads=None):
     make_list = ['make'] + core.config.get('make_args', []) + BUILD_ENV.get('make_args', [])
+    if threads:
+        make_list.append('-j%d' % threads)
     run(make_list)
 
 
@@ -272,6 +274,11 @@ Examples:
             return tag
 
         tag = search_tag(args.args[0]) if args.args else None
+        nthreads = None
+        # if we specified -jXX, then it's not a tag, it's a thread count for compiling
+        if tag and tag.startswith('-j'):
+            nthreads = int(tag[2:])
+            tag = None
 
         if tag:
             run('git checkout %s' % tag)
@@ -284,7 +291,7 @@ Examples:
 
         if args.command == 'build':
             configure(debug=BUILD_ENV.get('debug', False))
-            build()
+            build(nthreads)
             install_last_built_bin()
         elif args.command == 'build_gui':
             configure_gui()
