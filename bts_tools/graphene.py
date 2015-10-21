@@ -18,9 +18,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from . import core
+from datetime import datetime
+from functools import partial
+from autobahn.asyncio.websocket import WebSocketClientProtocol, WebSocketClientFactory
+import json
+import asyncio
 import logging
 
 log = logging.getLogger(__name__)
+
 
 # export bitshares 0.9.x balance keys
 def print_balances(n):
@@ -38,98 +45,106 @@ def print_balances(n):
 
 
 
-from autobahn.asyncio.websocket import WebSocketClientProtocol, WebSocketClientFactory
-import json
-import asyncio
+DATABASE_API = 1
+NETWORK_API = None  # to be fetched upon connecting
 
-class GrapheneWebsocketProtocol(WebSocketClientProtocol):
-    def __init__(self, loop):
+# FIXME: this should be per-host, and would probably benefit from being integrated
+#        directly in each node's rpc_cache
+WSINFO = {}
+
+def ws_rpc_call(api, method, *args):
+    key = (api, method,  args)
+    try:
+        result = WSINFO[key]
+        return result['result']
+    except KeyError:
+        # FIXME: distinguish when key is not in or when 'result' is not in
+        #        (ie: deserialize exception if any)
+        raise RuntimeError('{}: {}({}) not in websocket cache'.format(api, method, ', '.join(args)))
+
+
+class MonitoringProtocol(WebSocketClientProtocol):
+    def __init__(self, witness_user, witness_passwd):
         super().__init__()
-        self.loop = loop
+        self.user = witness_user
+        self.passwd = witness_passwd
         self.request_id = 0
+        self.request_map = {}
 
     def rpc_call(self, api, method, *args):
         self.request_id += 1
+        # TODO: convert args where required to hashable_dict (see: btsproxy.rpc_cache implementation)
+        call_params = (api, method, args)
+        self.request_map[self.request_id] = call_params
         payload = {'jsonrpc': '2.0',
                    'id': self.request_id,
                    'method': 'call',
-                   'params': [api, method, list(args)]}
+                   'params': call_params} # TODO: use list(call_params)?? (if don't remember what this is for, then delete this comment)
         log.debug('rpc call: {}'.format(payload))
         self.sendMessage(json.dumps(payload).encode('utf8'))
 
     def onConnect(self, response) :
         log.debug("Server connected: {0}".format(response.peer))
+        # login, authenticate
+        self.rpc_call(DATABASE_API, 'login', self.user, self.passwd)
+        self.rpc_call(DATABASE_API, 'network_node')
 
     def onMessage(self, payload, isBinary):
+        global NETWORK_API
         res = json.loads(payload.decode('utf8'))
-        log.debug("Server: " + json.dumps(res,indent=1))
-        return res['result']
+        log.debug('Got response for request id {}: {}'.format(res['id'], json.dumps(res, indent=4)))
+        api, method, args = self.request_map.pop(res['id'])
+
+        p = {'result': res['result'] if 'result' in res else None,
+             'server_response': res,
+             'last_updated': datetime.utcnow()}
+        WSINFO[(api, method, args)] = p
+
+        if (api, method) == (DATABASE_API, 'network_node'):
+            if NETWORK_API is None:
+                # we just started and finished connecting, set up the actual monitoring
+                def update_info():
+                    # call all that we want to cache
+                    self.rpc_call(NETWORK_API, 'get_info')
+
+                    nseconds = core.config['monitoring']['monitor_time_interval']
+                    self.factory.loop.call_later(nseconds, update_info)
+
+                self.factory.loop.call_soon(update_info)
+
+            NETWORK_API = p['result']
+            log.info('Granted access to network api')
+
+        if not self.request_map:
+            log.debug('received all responses to pending requests')
+            # we could call update_info from here, but then there would be 5 seconds between
+            # the last answer from the server and the first request again, whereas in the other
+            # case (as implemented now), there are 5 seconds between each set of requests
+            # (we don't expect it to change much, but it feels more "stable" this way. We'll see...)
+            #yield from self.updateInfo()
+
 
     def onClose(self, wasClean, code, reason):
         log.debug("WebSocket connection closed: {0}".format(reason))
 
     def connection_lost(self, exc):
         log.debug('connection closed, stopping run loop')
-        self.loop.stop()
+        #self.loop.stop()
 
 
-class SingleCall(GrapheneWebsocketProtocol):
-    def __init__(self, loop, result, api, method, *args):
-        super().__init__(loop)
-        self.api = api
-        self.method = method
-        self.args = args
-        self.result = result
 
-    def onOpen(self):
-        log.debug("WebSocket single call connection open.")
-        self.rpc_call(self.api, self.method, self.args)
-
-    def onMessage(self, payload, isBinary):
-        super().onMessage(payload, isBinary)
-        self.sendClose()
-
-
-class CallSequence(GrapheneWebsocketProtocol):
-    def __init__(self, loop, result_holder, calls):
-        """result_holder a list of 1 element, allows to modify external ref"""
-        super().__init__(loop)
-        self.calls = calls
-        self.call_idx = 0 # what to do when calls = []?
-        self.result = result_holder
-
-    def onOpen(self):
-        log.debug("WebSocket single call connection open.")
-        self.callNext()
-
-    def callNext(self):
-        api, method, *args = self.calls[self.call_idx]
-        log.debug('calling next method {} {}'.format(api, method))
-        self.call_idx += 1
-        self.rpc_call(api, method, *args)
-
-    def onMessage(self, payload, isBinary):
-        result = super().onMessage(payload, isBinary)
-        if self.call_idx < len(self.calls):
-            # TODO: what happens if we fail before the end of the call sequence?
-            self.callNext()
-        else:
-            self.result[0] = result
-            self.sendClose()
-
-
-def run_protocol(Protocol, host, port, *args):
+def run_monitoring(host, port, user, passwd):
     import threading
+
+    log.info('Starting witness websocket monitoring on {}:{}'.format(host, port))
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    log.debug('loop: {}'.format(loop))
-    log.debug(threading.current_thread().name)
-
-    result = [None]
+    log.debug('new event loop: {}'.format(loop))
+    log.debug('in thread {}'.format(threading.current_thread().name))
 
     factory          = WebSocketClientFactory("ws://{}:{:d}".format(host, port), debug=True)
-    factory.protocol = lambda: Protocol(loop, result, *args)
+    factory.protocol = partial(MonitoringProtocol, user, passwd)
 
     try:
         coro = loop.create_connection(factory, host, port)
@@ -139,24 +154,4 @@ def run_protocol(Protocol, host, port, *args):
         pass
     finally:
         loop.close()
-    return result[0]
 
-
-def call_sequence(host, port, seq):
-    return run_protocol(CallSequence, host, port, seq)
-
-def single_call(host, port, api, method, *args):
-    return run_protocol(CallSequence, host, port, [[api, method] + list(args)])
-
-"""
-#a=single_call(0, 'get_accounts', ['1.2.0'])
-a=single_call(0, 'get_chain_id')
-print('-'*100)
-print(a)
-""
-
-call_sequence(host, port,
-              [[1, 'login', 'user', 'password'],
-               [1, 'network_node'],
-               [2, 'get_connected_peers']])
-"""

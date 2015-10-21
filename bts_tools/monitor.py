@@ -22,8 +22,9 @@ from collections import deque
 from itertools import chain, islice
 from contextlib import suppress
 from .feeds import check_feeds
-from . import core
+from . import core, graphene
 import time
+import threading
 import logging
 
 log = logging.getLogger(__name__)
@@ -111,6 +112,14 @@ def monitoring_thread(*nodes):
     # launch feed monitoring and publishing thread
     if 'feeds' in all_monitoring and client_node.bts_type() in ['bts', 'bts2']:
         check_feeds(nodes)
+
+    # launch async thread for communicating via websockets with a graphene witness client
+    if client_node.bts_type() == 'bts2':
+        t = threading.Thread(target=graphene.run_monitoring, args=(client_node.witness_host,
+                                                                   client_node.witness_port,
+                                                                   client_node.witness_user,
+                                                                   client_node.witness_password))
+        t.start()
 
     # create one global context for the client, and local contexts for each node of this client
     global_ctx = AttributeDict(loop_index=0,

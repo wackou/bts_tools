@@ -20,7 +20,8 @@
 
 from .core import UnauthorizedError, RPCError, run, get_data_dir, get_bin_name, is_graphene_based
 from .process import bts_binary_running, bts_process
-from .graphene import call_sequence
+from .graphene import ws_rpc_call
+from . import graphene  # needed to access DATABASE_API, NETWORK_API dynamically, can't import them directly
 from . import core
 from collections import defaultdict, deque
 from os.path import join, expanduser
@@ -346,11 +347,7 @@ class BTSProxy(object):
 
     def network_get_info(self):
         if self.is_graphene_based():
-            return call_sequence(self.witness_host, self.witness_port,
-                                 [[1, 'login', self.witness_user, self.witness_password],
-                                  [1, 'network_node'],
-                                  [2, 'get_info']  # FIXME: not guaranteed to be 2
-                                  ])
+            return ws_rpc_call(graphene.NETWORK_API, 'get_info')
         else:
             return self.rpc_call('network_get_info')
 
