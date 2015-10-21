@@ -263,11 +263,30 @@ def set_rpchost(bts_type, host, url):
     return redirect(url)
 
 
-@bp.route('/delegates')
+@bp.route('/witness/<witness_name>')
+@clear_rpc_cache
+@catch_error
+@core.profile
+def view_witness(witness_name):
+    attrs = defaultdict(list)
+    if rpc.main_node.is_graphene_based():
+        info_items = sorted(rpc.main_node.get_witness(witness_name).items())
+    else:
+        info_items = sorted(rpc.main_node.get_info().items())
+
+    attrs['bold'] = [(i, 0) for i in range(len(info_items))]
+
+    return render_template('tableview.html',
+                           data=info_items, attrs=attrs)
+
+
+@bp.route('/witnesses')
 @clear_rpc_cache
 @catch_error
 @core.profile
 def view_delegates():
+    if rpc.main_node.is_graphene_based():
+        return redirect('https://bitshares.openledger.info/#/explorer/witnesses')
     response = rpc.main_node.blockchain_list_delegates(0, 300)
 
     headers = ['Position', 'Delegate name', 'Votes for', 'Pay rate', 'Last block', 'Produced', 'Missed']
