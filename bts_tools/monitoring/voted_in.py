@@ -35,9 +35,7 @@ def is_valid_node(node):
 
 def monitor(node, ctx, cfg):
     # FIXME: only monitor when blockchain is synced
-    active_delegates = [d['name'] for d in node.blockchain_list_delegates(0, 101)]
-
-    if node.name in active_delegates:
+    if node.is_active(node.name):
         ctx.active_state.push('active')
 
         if ctx.active_state.just_changed():
