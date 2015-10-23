@@ -25,6 +25,7 @@ from datetime import datetime
 from . import rpcutils as rpc
 from . import core, monitor, slogging, backbone
 import bts_tools
+import grapheneapi
 import requests.exceptions
 import logging
 
@@ -50,9 +51,9 @@ def offline():
         client_name = 'BitShares'
 
     return render_template('error.html',
-                           msg='The %s client is currently offline. '
+                           msg='The %s %s is currently offline. '
                                'Please run it and activate the HTTP RPC server.'
-                               % client_name)
+                               % (client_name, 'cli wallet' if rpc.main_node.is_graphene_based() else 'client'))
 
 
 @core.profile
@@ -74,7 +75,8 @@ def catch_error(f):
     def wrapper(*args, **kwargs):
         try:
             return f(*args, **kwargs)
-        except requests.exceptions.ConnectionError:
+        except (requests.exceptions.ConnectionError,
+                grapheneapi.grapheneapi.RPCConnection):
             core.is_online = False
             return offline()
         except core.RPCError as e:

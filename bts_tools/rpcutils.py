@@ -28,6 +28,7 @@ from os.path import join, expanduser
 from dogpile.cache import make_region
 import bts_tools.core  # needed to be able to exec('raise bts.core.Exception')
 import builtins        # needed to be able to reraise builtin exceptions
+import grapheneapi
 import importlib
 import requests
 import itertools
@@ -309,6 +310,7 @@ class BTSProxy(object):
             return 'online'
 
         except (requests.exceptions.ConnectionError, # http connection refused
+                grapheneapi.grapheneapi.RPCConnection, # connection to cli_wallet refused
                 RPCError, # bts binary is not running, no connection attempted
                 RuntimeError): # host is down, ssh doesn't work
             return 'offline'

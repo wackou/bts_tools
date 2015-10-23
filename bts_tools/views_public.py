@@ -59,7 +59,9 @@ def catch_error(f):
     def wrapper(*args, **kwargs):
         try:
             return f(*args, **kwargs)
-        except (core.RPCError, requests.exceptions.ConnectionError):
+        except (core.RPCError,
+                requests.exceptions.ConnectionError,
+                grapheneapi.grapheneapi.RPCConnection):
             core.is_online = False
             return offline()
         except core.UnauthorizedError:
