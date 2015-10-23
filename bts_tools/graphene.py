@@ -23,6 +23,7 @@ from datetime import datetime
 from functools import partial
 from autobahn.asyncio.websocket import WebSocketClientProtocol, WebSocketClientFactory
 import json
+import time
 import asyncio
 import logging
 
@@ -101,19 +102,17 @@ class MonitoringProtocol(WebSocketClientProtocol):
         WSINFO[(api, method, args)] = p
 
         if (api, method) == (DATABASE_API, 'network_node'):
-            if NETWORK_API is None:
-                # we just started and finished connecting, set up the actual monitoring
-                def update_info():
+            NETWORK_API = p['result']
+            log.info('Granted access to network api')
+            nseconds = core.config['monitoring']['monitor_time_interval']
+            def update_info():
+                if NETWORK_API is not None:
                     # call all that we want to cache
                     self.rpc_call(NETWORK_API, 'get_info')
 
-                    nseconds = core.config['monitoring']['monitor_time_interval']
-                    self.factory.loop.call_later(nseconds, update_info)
+                self.factory.loop.call_later(nseconds, update_info)
 
-                self.factory.loop.call_soon(update_info)
-
-            NETWORK_API = p['result']
-            log.info('Granted access to network api')
+            self.factory.loop.call_soon(update_info)
 
         if not self.request_map:
             log.debug('received all responses to pending requests')
@@ -126,10 +125,11 @@ class MonitoringProtocol(WebSocketClientProtocol):
 
     def onClose(self, wasClean, code, reason):
         log.debug("WebSocket connection closed: {0}".format(reason))
+        log.warning("WebSocket connection closed: {0}".format(reason))
 
     def connection_lost(self, exc):
         log.debug('connection closed, stopping run loop')
-        #self.loop.stop()
+        self.factory.loop.stop()
 
 
 
@@ -138,20 +138,27 @@ def run_monitoring(host, port, user, passwd):
 
     log.info('Starting witness websocket monitoring on {}:{}'.format(host, port))
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    log.debug('new event loop: {}'.format(loop))
-    log.debug('in thread {}'.format(threading.current_thread().name))
+    while True:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        log.debug('new event loop: {}'.format(loop))
+        log.debug('in thread {}'.format(threading.current_thread().name))
 
-    factory          = WebSocketClientFactory("ws://{}:{:d}".format(host, port), debug=True)
-    factory.protocol = partial(MonitoringProtocol, user, passwd)
+        factory          = WebSocketClientFactory("ws://{}:{:d}".format(host, port), debug=True)
+        factory.protocol = partial(MonitoringProtocol, user, passwd)
 
-    try:
-        coro = loop.create_connection(factory, host, port)
-        loop.run_until_complete(coro)
-        loop.run_forever()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        loop.close()
+        try:
+            coro = loop.create_connection(factory, host, port)
+            loop.run_until_complete(coro)
+            log.info('Successfully connected to witness on {}:{}'.format(host, port))
+            loop.run_forever()
+            log.warning('Lost connection to witness node on {}:{}'.format(host, port))
+        except KeyboardInterrupt:
+            log.info('Run loop exited manually (ctrl-C)')
+        except OSError:
+            log.debug('WebSocket connection refused to {}:{}'.format(host, port))
+        finally:
+            loop.close()
 
+        nseconds = core.config['monitoring']['monitor_time_interval']
+        time.sleep(nseconds) # wait some time before trying to reconnect
