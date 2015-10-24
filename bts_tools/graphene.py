@@ -22,6 +22,7 @@ from . import core
 from datetime import datetime
 from functools import partial
 from autobahn.asyncio.websocket import WebSocketClientProtocol, WebSocketClientFactory
+from collections import defaultdict
 import json
 import time
 import asyncio
@@ -45,18 +46,27 @@ def print_balances(n):
         print('\n\nTO IMPORT: keys = ["%s"]\n\n' % '", "'.join(keys))
 
 
-
+# FIXME: these variables need to be set per host, not global
 DATABASE_API = 1
 NETWORK_API = None  # to be fetched upon connecting
 
+def api_name(api_id):
+    if api_id == DATABASE_API:
+        return 'database'
+    elif api_id == NETWORK_API:
+        return 'network'
+    else:
+        return '??'
+
+
 # FIXME: this should be per-host, and would probably benefit from being integrated
 #        directly in each node's rpc_cache
-WSINFO = {}
+_ws_rpc_cache = defaultdict(dict)
 
-def ws_rpc_call(api, method, *args):
+def ws_rpc_call(host, port, api, method, *args):
     key = (api, method,  args)
     try:
-        result = WSINFO[key]
+        result = _ws_rpc_cache[(host, port)][key]
         return result['result']
     except KeyError:
         # FIXME: distinguish when key is not in or when 'result' is not in
@@ -65,8 +75,10 @@ def ws_rpc_call(api, method, *args):
 
 
 class MonitoringProtocol(WebSocketClientProtocol):
-    def __init__(self, witness_user, witness_passwd):
+    def __init__(self, witness_host, witness_port, witness_user, witness_passwd):
         super().__init__()
+        self.host = witness_host
+        self.port = witness_port
         self.user = witness_user
         self.passwd = witness_passwd
         self.request_id = 0
@@ -99,7 +111,7 @@ class MonitoringProtocol(WebSocketClientProtocol):
         p = {'result': res['result'] if 'result' in res else None,
              'server_response': res,
              'last_updated': datetime.utcnow()}
-        WSINFO[(api, method, args)] = p
+        _ws_rpc_cache[(self.host, self.port)][(api, method, args)] = p
 
         if (api, method) == (DATABASE_API, 'network_node'):
             NETWORK_API = p['result']
@@ -145,7 +157,7 @@ def run_monitoring(host, port, user, passwd):
         log.debug('in thread {}'.format(threading.current_thread().name))
 
         factory          = WebSocketClientFactory("ws://{}:{:d}".format(host, port), debug=True)
-        factory.protocol = partial(MonitoringProtocol, user, passwd)
+        factory.protocol = partial(MonitoringProtocol, host, port, user, passwd)
 
         try:
             coro = loop.create_connection(factory, host, port)

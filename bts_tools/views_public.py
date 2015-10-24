@@ -60,8 +60,7 @@ def catch_error(f):
         try:
             return f(*args, **kwargs)
         except (core.RPCError,
-                requests.exceptions.ConnectionError,
-                grapheneapi.grapheneapi.RPCConnection):
+                requests.exceptions.ConnectionError):
             core.is_online = False
             return offline()
         except core.UnauthorizedError:
@@ -125,7 +124,7 @@ def crossdomain(origin=None, methods=None, headers=None,
 def clear_rpc_cache(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        bts_tools.rpcutils.clear_rpc_cache()
+        rpc.main_node.clear_rpc_cache()
         return f(*args, **kwargs)
     return wrapper
 

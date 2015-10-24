@@ -20,7 +20,6 @@
 
 from .core import UnauthorizedError, RPCError, run, get_data_dir, get_bin_name, is_graphene_based
 from .process import bts_binary_running, bts_process
-from .graphene import ws_rpc_call
 from . import graphene  # needed to access DATABASE_API, NETWORK_API dynamically, can't import them directly
 from . import core
 from collections import defaultdict, deque
@@ -28,7 +27,6 @@ from os.path import join, expanduser
 from dogpile.cache import make_region
 import bts_tools.core  # needed to be able to exec('raise bts.core.Exception')
 import builtins        # needed to be able to reraise builtin exceptions
-import grapheneapi
 import importlib
 import requests
 import itertools
@@ -40,35 +38,34 @@ import logging
 
 log = logging.getLogger(__name__)
 
-try:
-    from grapheneapi import GrapheneAPI
-except ImportError:
-    log.warning('Could not find python-graphenelib. No support for monitoring graphene clients')
-    GrapheneAPI = lambda *args: None  # stub
-
 
 NON_CACHEABLE_METHODS = {'wallet_publish_price_feed',
                          'wallet_publish_feeds',
                          'wallet_publish_version'}
 
 _rpc_cache = defaultdict(dict)
-
-def clear_rpc_cache():
-    log.debug("------------ clearing rpc cache ------------")
-    _rpc_cache.clear()
-
+_rpc_call_id = defaultdict(int)
 
 def rpc_call(host, port, user, password,
-             funcname, *args):
-    url = "http://%s:%d/rpc" % (host, port)
+             funcname, *args, __graphene=False):
+    url = 'http://%s:%d/rpc' % (host, port)
     headers = {'content-type': 'application/json'}
+    _rpc_call_id[(host, port)] += 1
 
-    payload = {
-        "method": funcname,
-        "params": args,
-        "jsonrpc": "2.0",
-        "id": 0,
-    }
+    if __graphene:
+        payload = {
+            'method': 'call',
+            'params': [graphene.DATABASE_API, funcname, args],
+            'jsonrpc': '2.0',
+            'id': _rpc_call_id[(host, port)]
+        }
+    else:
+        payload = {
+            'method': funcname,
+            'params': args,
+            'jsonrpc': '2.0',
+            'id': _rpc_call_id[(host, port)]
+        }
 
     response = requests.post(url,
                              auth=(user, password),
@@ -156,11 +153,12 @@ class BTSProxy(object):
         else:
             rpc = {}
             cfg_port = None
-        self.rpc_port = witness_port or rpc_port or cfg_port or 0
-        self.rpc_user = rpc_user or rpc.get('rpc_user') or ''
-        self.rpc_password = rpc_password or rpc.get('rpc_password') or ''
-        self.rpc_host = rpc_host or 'localhost'
+        self.rpc_port = wallet_port or rpc_port or cfg_port or 0
+        self.rpc_user = wallet_user or rpc_user or rpc.get('rpc_user') or ''
+        self.rpc_password = wallet_password or rpc_password or rpc.get('rpc_password') or ''
+        self.rpc_host = wallet_host or rpc_host or 'localhost'
         self.rpc_cache_key = (self.rpc_host, self.rpc_port)
+        self.ws_rpc_cache_key = (self.witness_host, self.witness_port)
         self.venv_path = venv_path
 
         self.witness_host     = witness_host
@@ -173,7 +171,14 @@ class BTSProxy(object):
         self.wallet_password  = wallet_password
 
         self.bin_name = get_bin_name(client or 'bts')
-        self.graphene_api = GrapheneAPI(self.wallet_host, self.wallet_port, self.wallet_user, self.wallet_password)
+
+        if self.is_graphene_based():
+            # direct json-rpc call
+            def direct_call(funcname, *args):
+                return rpc_call(self.wallet_host, self.wallet_port,
+                                self.wallet_user, self.wallet_password,
+                                funcname, *args, __graphene=self.is_graphene_based())
+            self._rpc_call = direct_call
 
         if self.rpc_host == 'localhost':
             # direct json-rpc call
@@ -245,7 +250,7 @@ class BTSProxy(object):
         return call
 
     def rpc_call(self, funcname, *args, cached=True):
-        log.debug(('RPC call @ %s: %s(%s)' % (self.rpc_host, funcname, ', '.join(repr(arg) for arg in args))
+        log.debug(('RPC call @ %s: %s(%s)' % (self.rpc_cache_key, funcname, ', '.join(repr(arg) for arg in args))
                   + (' (cached = False)' if not cached else '')))
         args = tuple(hashabledict(arg) if isinstance(arg, dict) else arg for arg in args)
 
@@ -260,10 +265,7 @@ class BTSProxy(object):
                     return result
 
         try:
-            if self.is_graphene_based():
-                result = getattr(self.graphene_api, funcname)(*args)
-            else:
-                result = self._rpc_call(funcname, *args)
+            result = self._rpc_call(funcname, *args)
         except Exception as e:
             # also cache when exceptions are raised
             if funcname not in NON_CACHEABLE_METHODS:
@@ -279,10 +281,18 @@ class BTSProxy(object):
 
     def clear_rpc_cache(self):
         try:
-            log.debug('Clearing RPC cache for host: %s' % self.rpc_host)
+            log.debug('Clearing RPC cache for host: %s:%d' % self.rpc_cache_key)
             del _rpc_cache[self.rpc_cache_key]
         except KeyError:
             pass
+
+    def ws_rpc_call(self, api, method, *args):
+        log.debug('WebSocket RPC call @ %s: %s::%s(%s)' % (self.ws_rpc_cache_key,
+                                                 graphene.api_name(api),
+                                                 method,
+                                                 ', '.join(repr(arg) for arg in args)))
+
+        return graphene.ws_rpc_call(self.witness_host, self.witness_port, api, method, *args)
 
     def get_account_balance(self, account, symbol):
         log.debug('get_account_balance for asset %s in %s' % (symbol, account))
@@ -310,7 +320,6 @@ class BTSProxy(object):
             return 'online'
 
         except (requests.exceptions.ConnectionError, # http connection refused
-                grapheneapi.grapheneapi.RPCConnection, # connection to cli_wallet refused
                 RPCError, # bts binary is not running, no connection attempted
                 RuntimeError): # host is down, ssh doesn't work
             return 'offline'
@@ -349,7 +358,7 @@ class BTSProxy(object):
 
     def network_get_info(self):
         if self.is_graphene_based():
-            return ws_rpc_call(graphene.NETWORK_API, 'get_info')
+            return self.ws_rpc_call(graphene.NETWORK_API, 'get_info')
         else:
             return self.rpc_call('network_get_info')
 

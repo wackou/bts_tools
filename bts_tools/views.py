@@ -25,7 +25,6 @@ from datetime import datetime
 from . import rpcutils as rpc
 from . import core, monitor, slogging, backbone
 import bts_tools
-import grapheneapi
 import requests.exceptions
 import logging
 
@@ -75,8 +74,7 @@ def catch_error(f):
     def wrapper(*args, **kwargs):
         try:
             return f(*args, **kwargs)
-        except (requests.exceptions.ConnectionError,
-                grapheneapi.grapheneapi.RPCConnection):
+        except (requests.exceptions.ConnectionError):
             core.is_online = False
             return offline()
         except core.RPCError as e:
@@ -104,7 +102,7 @@ def catch_error(f):
 def clear_rpc_cache(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        bts_tools.rpcutils.clear_rpc_cache()
+        rpc.main_node.clear_rpc_cache()
         return f(*args, **kwargs)
     return wrapper
 
