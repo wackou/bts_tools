@@ -30,8 +30,7 @@ VERSION = '0.2.11'
 
 
 install_requires = ['Flask', 'requests', 'psutil', 'arrow', 'pyyaml', 'dogpile.cache',
-                    'beautifulsoup4', 'maxminddb-geolite2',
-                    #'python-graphenelib', 'autobahn'
+                    'beautifulsoup4', 'maxminddb-geolite2', 'autobahn'
                     ]
 
 setup_requires = []
