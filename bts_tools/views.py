@@ -166,7 +166,14 @@ def split_columns(items, attrs):
 def view_info():
     attrs = defaultdict(list)
     if rpc.main_node.is_graphene_based():
-        info_items = sorted(rpc.main_node.info().items())
+        n = rpc.main_node
+        info = n.info()
+        # TODO: we should cache the witness and committee member names, they never change
+        info['active_witnesses'] = [n.get_account(n.get_witness(w)['witness_account'])['name']
+                                    for w in info['active_witnesses']]
+        info['active_committee_members'] = [n.get_account(n.get_committee_member(cm)['committee_member_account'])['name']
+                                            for cm in info['active_committee_members']]
+        info_items = sorted(info.items())
     else:
         info_items = sorted(rpc.main_node.get_info().items())
 
