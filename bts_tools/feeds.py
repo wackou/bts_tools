@@ -25,6 +25,7 @@ from .feed_providers import YahooProvider, BterFeedProvider, Btc38FeedProvider,\
 from collections import deque, defaultdict
 from contextlib import suppress
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta
 import threading
 import itertools
 import json
@@ -186,7 +187,30 @@ def format_qualifier(c):
 def check_feeds(nodes):
     # TODO: update according to: https://bitsharestalk.org/index.php?topic=9348.0;all
     global nfeed_checked
-    feed_period = int(cfg['publish_time_interval'] / cfg['check_time_interval'])
+
+    try:
+        feed_period = int(cfg['publish_time_interval'] / cfg['check_time_interval'])
+    except KeyError:
+        feed_period = None
+    try:
+        feed_slot = cfg['publish_time_slot']
+    except KeyError:
+        feed_slot = None
+
+    last_updated = datetime.utcnow() - timedelta(days=1)
+
+    def should_publish():
+        if feed_period is not None and nfeed_checked % feed_period == 0:
+            log.debug('Should publish because time interval has passed: {} seconds'.format(cfg['publish_time_interval']))
+            return True
+        now = datetime.utcnow()
+        if (feed_slot is not None and
+            now.minute == feed_slot and
+            now - last_updated > timedelta(minutes=5)):
+            log.debug('Should publish because time slot has arrived: time {:02d}:{:02d}'.format(now.hour, now.minute))
+            return True
+        log.debug('No need to publish feeds')
+        return False
 
     try:
         get_feed_prices()
@@ -205,7 +229,7 @@ def check_feeds(nodes):
             try:
                 # only publish feeds if we're running a delegate node
                 if node.type == 'delegate' and 'feeds' in node.monitoring:
-                    if nfeed_checked % feed_period == 0:
+                    if should_publish():
                         if not node.is_online():
                             log.warning('Cannot publish feeds for delegate %s: client is not running' % node.name)
                             continue
@@ -225,9 +249,6 @@ def check_feeds(nodes):
                                     asset_precision = node.asset_data(asset)['precision']
                                     base_precision  = node.asset_data('BTS')['precision']
 
-                                    # FIXME: unused var
-                                    #result = node.get_bitasset_data(asset)
-
                                     # find nice fraction with at least N significant digits
                                     N = 4
                                     numerator = int(price * 10**asset_precision)
@@ -239,28 +260,26 @@ def check_feeds(nodes):
                                         denominator = 10**(base_precision+multiplier)
 
                                     price = {
-                                        "settlement_price": {
-                                            "quote": {
-                                                "asset_id": "1.3.0",
-                                                "amount": denominator
+                                        'settlement_price': {
+                                            'quote': {
+                                                'asset_id': '1.3.0',
+                                                'amount': denominator
                                             },
-                                            "base": {
-                                                "asset_id": asset_id,
-                                                "amount": numerator
+                                            'base': {
+                                                'asset_id': asset_id,
+                                                'amount': numerator
                                             }
                                         },
-                                        "core_exchange_rate": {
-                                            "quote": {
-                                                "asset_id": "1.3.0",
-                                                # from: https://bitsharestalk.org/index.php/topic,18382.0/all.html
-                                                # also, the exchange_rate is for transactions fees that are paid in bitasset ..
-                                                # in my script .. paying your transactions in bitUSD (or any other bitasset)
-                                                # is 5% more expensive (read: supposed to be)
-                                                "amount": int(denominator * 1.05) # 5% extra
+                                        'maintenance_collateral_ratio': cfg['maintenance_collateral_ratio'],
+                                        'maximum_short_squeeze_ratio': cfg['maximum_short_squeeze_ratio'],
+                                        'core_exchange_rate': {
+                                            'quote': {
+                                                'asset_id': '1.3.0',
+                                                'amount': int(denominator * cfg['core_exchange_factor'])
                                             },
-                                            "base": {
-                                                "asset_id": asset_id,
-                                                "amount": numerator
+                                            'base': {
+                                                'asset_id': asset_id,
+                                                'amount': numerator
                                             }
                                         }
                                     }
@@ -271,6 +290,9 @@ def check_feeds(nodes):
                         else:
                             feeds_as_string = [(cur, '{:.10f}'.format(price)) for cur, price in median_feeds.items()]
                             node.wallet_publish_feeds(node.name, feeds_as_string)
+
+                        last_updated = datetime.utcnow()
+
             except Exception as e:
                 log.exception(e)
 

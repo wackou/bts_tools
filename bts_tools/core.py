@@ -121,6 +121,20 @@ def load_config(loglevels=None):
         log.warning('You might want to add [Google, Bloomberg] to that list')
         m['feeds']['feed_providers'] = ['Yahoo', 'Bter', 'Btc38', 'Poloniex']
 
+    def check_feed_option(name, default_value):
+        if name not in m['feeds']:
+            log.warning("{} not in config['monitoring']['feeds']. Setting to default value: {}".format(name, default_value))
+            m['feeds'][name] = default_value
+
+    check_feed_option('core_exchange_factor', 0.95)
+    check_feed_option('maintenance_collateral_ratio', 1750)
+    check_feed_option('maximum_short_squeeze_ratio', 1100)
+
+    if (m['feeds'].get('publish_time_interval') is None and
+        m['feeds'].get('publish_time_slot') is None):
+        log.warning('Will not be able to publish feeds. You need to specify '
+                    'either publish_time_interval or publish_time_slot')
+
     # expand wildcards for monitoring plugins
     for n in config['nodes']:
         n.setdefault('monitoring', [])

@@ -146,7 +146,7 @@ class BTSProxy(object):
                         self.witness_signing_key = json.loads(config['bts']['private-key'])[0]
                     except KeyError:
                         self.witness_signing_key = None
-                    log.error('signing key: {}'.format(self.witness_signing_key))
+                    log.debug('signing key: {}'.format(self.witness_signing_key))
                 else:
                     rpc = json.load(open(expanduser(join(data_dir, 'config.json'))))['rpc']
                     cfg_port = int(rpc['httpd_endpoint'].split(':')[1])
