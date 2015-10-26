@@ -47,7 +47,8 @@ def print_balances(n):
 
 
 # FIXME: these variables need to be set per host, not global
-DATABASE_API = 1
+DATABASE_API = 0
+LOGIN_API = 1
 NETWORK_API = None  # to be fetched upon connecting
 
 def api_name(api_id):
@@ -99,8 +100,8 @@ class MonitoringProtocol(WebSocketClientProtocol):
     def onConnect(self, response) :
         log.debug("Server connected: {0}".format(response.peer))
         # login, authenticate
-        self.rpc_call(DATABASE_API, 'login', self.user, self.passwd)
-        self.rpc_call(DATABASE_API, 'network_node')
+        self.rpc_call(LOGIN_API, 'login', self.user, self.passwd)
+        self.rpc_call(LOGIN_API, 'network_node')
 
     def onMessage(self, payload, isBinary):
         global NETWORK_API
