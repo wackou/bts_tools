@@ -118,6 +118,7 @@ def get_feed_prices():
 
     # 1- get the BitShares price in BTC using the biggest markets: USD and CNY
 
+    # TODO: use some other source for btc valuation than btc/cny on bter/btc38...
     # first get rate conversion between USD/CNY from yahoo and CNY/BTC from
     # bter and btc38 (use CNY and not USD as the market is bigger)
     cny_usd = yahoo_prices.pop('CNY')
@@ -204,11 +205,16 @@ def check_feeds(nodes):
             log.debug('Should publish because time interval has passed: {} seconds'.format(cfg['publish_time_interval']))
             return True
         now = datetime.utcnow()
-        if (feed_slot is not None and
-            now.minute == feed_slot and
-            now - last_updated > timedelta(minutes=5)):
-            log.debug('Should publish because time slot has arrived: time {:02d}:{:02d}'.format(now.hour, now.minute))
-            return True
+        check_time_interval_minutes = cfg['check_time_interval'] // 60 + 1
+        if feed_slot is not None:
+            start_slot = feed_slot
+            end_slot = feed_slot + check_time_interval_minutes
+            if (((start_slot <= now.minute <= end_slot) or
+                 (end_slot >= 60 and now.minute <= end_slot % 60)) and
+                now - last_updated > timedelta(minutes=max(3*check_time_interval_minutes, 50))):
+
+                log.debug('Should publish because time slot has arrived: time {:02d}:{:02d}'.format(now.hour, now.minute))
+                return True
         log.debug('No need to publish feeds')
         return False
 
@@ -221,7 +227,7 @@ def check_feeds(nodes):
             msg = fmt % tuple(feeds[c] for c in visible_feeds)
             return msg
 
-        log.debug('Got feeds: %s  [%d/%d]' % (fmt(feeds), nfeed_checked, feed_period))
+        log.debug('Got feeds: %s  [%d/%s]' % (fmt(feeds), nfeed_checked, feed_period or 'min={:02d}'.format(feed_slot)))
 
         for node in nodes:
             # if an exception occurs during publishing feeds for a delegate (eg: standby delegate),

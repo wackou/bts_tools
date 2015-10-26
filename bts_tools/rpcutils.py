@@ -185,7 +185,7 @@ class BTSProxy(object):
                                 funcname, *args, __graphene=self.is_graphene_based())
             self._rpc_call = direct_call
 
-        if self.rpc_host == 'localhost':
+        elif self.rpc_host == 'localhost':
             # direct json-rpc call
             def local_call(funcname, *args):
                 # we want to avoid connecting to the client and block because
