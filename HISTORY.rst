@@ -6,6 +6,14 @@
 History
 =======
 
+0.3 (2015-10-27)
+----------------
+
+* first release with support for BitShares 2 clients (and graphene-based in general)
+  use: bts2 build, bts2 run, bts2 run_cli, bts2 monitor, etc...
+* a lot of functionality still missing... Here be dragons!!
+
+
 0.2.11 (2015-09-26)
 -------------------
 
