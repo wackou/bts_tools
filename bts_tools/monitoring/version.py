@@ -36,7 +36,7 @@ published_version_region = defaultdict(make_published_version_region)
 
 
 def is_valid_node(node):
-    return node.type == 'delegate'
+    return node.type == 'delegate' and not node.is_graphene_based()
 
 
 def monitor(node, ctx, cfg):

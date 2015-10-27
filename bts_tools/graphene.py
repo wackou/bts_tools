@@ -46,10 +46,11 @@ def print_balances(n):
         print('\n\nTO IMPORT: keys = ["%s"]\n\n' % '", "'.join(keys))
 
 
-# FIXME: these variables need to be set per host, not global
+# Note: this is only an enum, it does not correspond to the actual api id
 DATABASE_API = 0
 LOGIN_API = 1
-NETWORK_API = None  # to be fetched upon connecting
+NETWORK_API = 2
+
 
 def api_name(api_id):
     if api_id == DATABASE_API:
@@ -90,6 +91,12 @@ class MonitoringProtocol(WebSocketClientProtocol):
     def rpc_call(self, api, method, *args):
         self.request_id += 1
         # TODO: convert args where required to hashable_dict (see: btsproxy.rpc_cache implementation)
+        if api == NETWORK_API:
+            # get actual api id
+            api = _ws_rpc_cache[(self.host, self.port)].get('NETWORK_API')
+            if api is None:
+                log.debug('Not calling network api: {} - unauthorized access to network_api'.format(method))
+                return
         call_params = (api, method, args)
         self.request_map[self.request_id] = call_params
         payload = {'jsonrpc': '2.0',
@@ -106,24 +113,30 @@ class MonitoringProtocol(WebSocketClientProtocol):
         self.rpc_call(LOGIN_API, 'network_node')
 
     def onMessage(self, payload, isBinary):
-        global NETWORK_API
         res = json.loads(payload.decode('utf8'))
         log.debug('Got response for request id {}: {}'.format(res['id'], json.dumps(res, indent=4)))
         api, method, args = self.request_map.pop(res['id'])
+        cache = _ws_rpc_cache[(self.host, self.port)]
 
         p = {'result': res['result'] if 'result' in res else None,
              'server_response': res,
              'last_updated': datetime.utcnow()}
-        _ws_rpc_cache[(self.host, self.port)][(api, method, args)] = p
+        cache[(api, method, args)] = p
 
         if (api, method) == (LOGIN_API, 'network_node'):
-            NETWORK_API = p['result']
-            log.info('Granted access to network api')
+            api_id = p['result']
+            cache['NETWORK_API'] = api_id
+            if api_id is not None:
+                log.info('Granted access to network api')
+            else:
+                log.warning('Refused access to network api. Make sure to set your user/password properly!')
             nseconds = core.config['monitoring']['monitor_time_interval']
+
+            # FIXME: should not run this from here, otherwise calling login.network_node multiple times
+            #        would wreak havoc
             def update_info():
-                if NETWORK_API is not None:
-                    # call all that we want to cache
-                    self.rpc_call(NETWORK_API, 'get_info')
+                # call all that we want to cache
+                self.rpc_call(NETWORK_API, 'get_info')
 
                 self.factory.loop.call_later(nseconds, update_info)
 
