@@ -196,7 +196,7 @@ def is_graphene_based(n):
             n = config['run_environments'][n]['type']
         except KeyError:
             pass
-        return n == 'bts2'
+        return n == 'bts2' or n == 'muse'
 
 
 DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',
@@ -205,6 +205,8 @@ DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',
                                     'darwin': '~/Library/Application Support/BitShares'},
                     'bts2':        {'linux': '~/.BitShares2',
                                     'darwin': '~/Library/Application Support/BitShares2'},
+                    'muse':        {'linux': '~/.Muse',
+                                    'darwin': '~/Library/Application Support/Muse'},
                     'dvs':         {'linux': '~/.DevShares',
                                     'darwin': '~/Library/Application Support/DevShares'},
                     'pts':         {'linux': '~/.PTS',
@@ -214,6 +216,7 @@ DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',
                     }
 
 DEFAULT_BIN_FILENAMES = {'bts2': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
+                         'muse': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
                          'bts': ['client/bitshares_client'],
                          'dvs': ['client/devshares_client'],
                          'pts': ['client/pts_client'],
@@ -221,6 +224,7 @@ DEFAULT_BIN_FILENAMES = {'bts2': ['witness_node/witness_node', 'cli_wallet/cli_w
                          }
 
 DEFAULT_GUI_BIN_FILENAMES = {'bts2': '',
+                             'muse': '',
                              'bts': 'BitShares',
                              'dvs': 'DevShares',
                              'pts': 'PTS',

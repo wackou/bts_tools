@@ -43,6 +43,13 @@ build_environments:
         build_dir: ~/.BitShares2_build
         bin_dir: ~/.BitShares2_bin
 
+    muse:
+        debug: false
+        git_repo: https://github.com/peertracksinc/muse.git
+        git_branch: muse
+        build_dir: ~/.Muse_build
+        bin_dir: ~/.Muse_bin
+
     bts:
         git_repo: https://github.com/BitShares/bitshares.git
         git_branch: master
@@ -110,6 +117,13 @@ run_environments:
         p2p_port: 1777
         witness_port: 8290
         cli_port: 8293
+
+    muse:
+        type: muse
+        data_dir: ~/.Muse
+        p2p_port: 1779
+        witness_port: 8090
+        cli_port: 8093
 
     debug:
         type: bts

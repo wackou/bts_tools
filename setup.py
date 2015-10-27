@@ -39,6 +39,7 @@ entry_points = {
     'console_scripts': [
         'bts = bts_tools.cmdline:main_bts',
         'bts2 = bts_tools.cmdline:main_bts2',
+        'muse = bts_tools.cmdline:main_muse',
         'dvs = bts_tools.cmdline:main_dvs',
         'pts = bts_tools.cmdline:main_pts',
         'pls = bts_tools.cmdline:main_pls',

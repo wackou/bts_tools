@@ -11,6 +11,7 @@ able to handle all the following blockchains:
 - 'pts': PTS-DPOS
 - 'pls': DAC PLAY
 - 'bts2': BitShares 2.0 (aka Graphene)
+- 'muse': Muse
 
 Support for the other DPOS clients is built-in directly in the ``bts``
 cmdline tool, and you only need to specify the corresponding build or run
@@ -25,6 +26,7 @@ As a convenience feature, the following aliases to the ``bts`` tool are provided
 - ``pts``: builds using the PTS environment by default
 - ``pls``: builds using the DAC PLAY environment by default
 - ``bts2``: builds using the BitShares 2.0 environment by default
+- ``muse``: builds using the Muse environment by default
 
 This means that::
 

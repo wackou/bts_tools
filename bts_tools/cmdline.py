@@ -511,6 +511,10 @@ def main_bts2():
     return main(flavor='bts2')
 
 
+def main_muse():
+    return main(flavor='muse')
+
+
 def main_dvs():
     return main(flavor='dvs')
 
