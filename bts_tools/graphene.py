@@ -54,6 +54,8 @@ NETWORK_API = None  # to be fetched upon connecting
 def api_name(api_id):
     if api_id == DATABASE_API:
         return 'database'
+    elif api_id == LOGIN_API:
+        return 'login'
     elif api_id == NETWORK_API:
         return 'network'
     else:
@@ -114,7 +116,7 @@ class MonitoringProtocol(WebSocketClientProtocol):
              'last_updated': datetime.utcnow()}
         _ws_rpc_cache[(self.host, self.port)][(api, method, args)] = p
 
-        if (api, method) == (DATABASE_API, 'network_node'):
+        if (api, method) == (LOGIN_API, 'network_node'):
             NETWORK_API = p['result']
             log.info('Granted access to network api')
             nseconds = core.config['monitoring']['monitor_time_interval']
