@@ -28,9 +28,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 import threading
 import itertools
-import json
 import statistics
-import fractions
 import logging
 
 log = logging.getLogger(__name__)

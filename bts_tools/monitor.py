@@ -109,10 +109,6 @@ def monitoring_thread(*nodes):
             m not in {'feeds', 'delegate', 'watcher_delegate'}):
             log.warning('Unknown plugin specified in monitoring config: %s' % m)
 
-    # launch feed monitoring and publishing thread
-    if 'feeds' in all_monitoring and client_node.bts_type() in ['bts', 'bts2']:
-        check_feeds(nodes)
-
     # launch async thread for communicating via websockets with a graphene witness client
     if client_node.bts_type() == 'bts2':
         t = threading.Thread(target=graphene.run_monitoring, args=(client_node.witness_host,
@@ -120,6 +116,10 @@ def monitoring_thread(*nodes):
                                                                    client_node.witness_user,
                                                                    client_node.witness_password))
         t.start()
+
+    # launch feed monitoring and publishing thread
+    if 'feeds' in all_monitoring and client_node.bts_type() in ['bts', 'bts2']:
+        check_feeds(nodes)
 
     # create one global context for the client, and local contexts for each node of this client
     global_ctx = AttributeDict(loop_index=0,
