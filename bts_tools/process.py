@@ -31,16 +31,17 @@ def bts_process(node):
         return None
 
     host = node.witness_host if node.is_graphene_based() else node.rpc_host
+    port = node.witness_port if node.is_graphene_based() else node.rpc_port
+
     if host != 'localhost':
         return None
 
-    #log.debug('find bts binary')
+    #log.debug('find bts binary on {}:{}'.format(host, port))
     # find bitshares process
     procs = [p for p in psutil.process_iter()
              if node.bin_name in p.name()]
 
     # find the process corresponding to our node by looking at the rpc port
-    port = node.witness_port if node.is_graphene_based() else node.rpc_port
     for p in procs:
         if port in [c.laddr[1] for c in p.connections()]:
             return p
