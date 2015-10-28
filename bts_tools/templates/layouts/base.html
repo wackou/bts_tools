@@ -38,7 +38,7 @@
                 <th>Head block</th>
                 <th>Wallet open</th>
                 <th>Wallet unlocked</th>
-                <th>{% if node.is_graphene_based() %}Signing key active{% else %}Block production enabled{% endif %}</th>
+                <th>{% if rpc.main_node.is_graphene_based() %}Signing key active{% else %}Block production enabled{% endif %}</th>
             </tr></thead>
             <tbody>
             {% for host, node_names, node in rpc.client_instances() %}
