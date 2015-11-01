@@ -67,6 +67,12 @@ def set_version(pos):
                     r"VERSION = '\S*'",
                     r"VERSION = '%s'" % version)
 
+    major_minor = '.'.join(version.split('.')[:2])
+
+    replace_version('docs/conf.py',
+                    r"version = '\S*'",
+                    r"version = '%s'" % major_minor)
+
     replace_version('docs/conf.py',
                     r"release = '\S*'",
                     r"release = '%s'" % version)
@@ -83,4 +89,18 @@ def task_upload_pypi():
     """Build and upload the package on PyPI"""
     #git stash && rm -fr dist/ && python setup.py sdist upload && git stash apply && python setup.py develop
     return {'actions': ['python setup.py register sdist upload'],
+            'verbosity': 2}
+
+
+def task_git_update():
+    """Update from git, while stashing before and popping the stash after"""
+    # note: if we stashed and the pull failed, we still want to stash apply
+    return {'actions': ['git stash && (git pull; git stash apply)'],
+            'verbosity': 2}
+
+
+def task_update_installed_tools():
+    """Update the tools installed in the current virtualenv with the sdist
+    created from the current dir"""
+    return {'actions': ['rm -fr dist; python setup.py sdist && (pip uninstall -y bts_tools; pip install dist/bts_tools-*.tar.gz)'],
             'verbosity': 2}
