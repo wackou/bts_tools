@@ -6,6 +6,19 @@
 History
 =======
 
+0.3.1 (2015-11-01)
+------------------
+
+* support for Muse clients
+* better feeds script. Process is now the following:
+  - get the BTS/BTC valuation from Poloniex, CCEDK, Bter, Btc38 (configurable)
+  - get the BTC/USD valuation from BitcoinAverage, with fallback on Bitfinex and Bitstamp
+  - get the BTS valuation in other fiat currencies using Yahoo forex rates
+  - get market indices using Yahoo, Google, Bloomberg (configurable)
+* can specify 'boost_root' option in build environment in config.yaml
+* minor bugfixes everywhere
+
+
 0.3 (2015-10-27)
 ----------------
 
