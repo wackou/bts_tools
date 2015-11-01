@@ -88,7 +88,7 @@ def task_set_version():
 def task_upload_pypi():
     """Build and upload the package on PyPI"""
     #git stash && rm -fr dist/ && python setup.py sdist upload && git stash apply && python setup.py develop
-    return {'actions': ['python setup.py register sdist upload'],
+    return {'actions': ['git stash && (python setup.py register sdist upload; git stash apply)'],
             'verbosity': 2}
 
 
