@@ -118,10 +118,17 @@ if platform == 'darwin':
 
 
 def configure(debug=False):
+    cmake_opts = []
+    boost_root = BUILD_ENV.get('boost_root')
+    if boost_root:
+        cmake_opts += ['-DBOOST_ROOT="{}"'.format(boost_root)]
+
     if debug:
-        run('%s cmake -DCMAKE_BUILD_TYPE=Debug .' % ' '.join(CONFIGURE_OPTS))
+        run('{} cmake -DCMAKE_BUILD_TYPE=Debug {} .'.format(' '.join(CONFIGURE_OPTS),
+                                                            ' '.join(cmake_opts)))
     else:
-        run('%s cmake -DCMAKE_BUILD_TYPE=Release .' % ' '.join(CONFIGURE_OPTS))
+        run('{} cmake -DCMAKE_BUILD_TYPE=Release {} .'.format(' '.join(CONFIGURE_OPTS),
+                                                              ' '.join(cmake_opts)))
 
 
 def configure_gui():
