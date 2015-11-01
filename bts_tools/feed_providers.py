@@ -20,6 +20,7 @@
 
 from . import core
 from bs4 import BeautifulSoup
+from datetime import datetime
 import requests
 import functools
 import logging
@@ -45,10 +46,48 @@ def check_online_status(f):
     return wrapper
 
 
+def check_market(f):
+    @functools.wraps(f)
+    def wrapper(self, cur, base):
+        if (cur, base) not in self.AVAILABLE_MARKETS:
+            msg = '{} does not provide feeds for market {}/{}'.format(self.NAME, cur, base)
+            log.warning(msg)
+            raise core.NoFeedData(msg)
+        return f(self, cur, base)
+    return wrapper
+
+
+
+class FeedPrice(object):
+    """Represent a feed price value. Contains additional metadata such as volume, etc.
+
+    volume should be represented as number of <cur> units, not <base>."""
+    def __init__(self, provider_name, cur, base, price, volume=None, last_updated=None):
+        self.provider_name = provider_name
+        self.cur = cur
+        self.base = base
+        self.price = price
+        self.volume = volume
+        self.last_updated = last_updated or datetime.utcnow()
+
+    def __str__(self):
+        return 'FeedPrice: {}/{} {}{} from {}'.format(
+            self.cur, self.base, self.price,
+            ' - vol={}'.format(self.volume) if self.volume is not None else '',
+            self.provider_name)
+
+    def __repr__(self):
+        return '<{}>'.format(str(self))
+
+
 class FeedProvider(object):
+    """need to implement a get(cur, base) method. It returns price and volume.
+    The volume is expressed in <cur> units."""
     NAME = 'base FeedProvider'
+    AVAILABLE_MARKETS = []  # redefine in derived classes, used by @check_market decorator
     PROVIDER_STATES = {}
     _ASSET_MAP = {}
+    TIMEOUT = 60
 
     def __init__(self):
         self.state = 'offline'
@@ -58,6 +97,9 @@ class FeedProvider(object):
 
     def __eq__(self, other):
         return hash(self) == hash(other)
+
+    def feed_price(self, cur, base, price, volume=None):
+        return FeedPrice(self.NAME, cur, base, price, volume)
 
     @classmethod
     def to_bts(cls, c):
@@ -109,7 +151,7 @@ class YahooProvider(FeedProvider):
             r = float(soup.find('span', 'time_rtq_ticker').text.replace(',', ''))
         else:
             r = float(self.query_quote_full(q)['LastTradePriceOnly'])
-        return r
+        return self.feed_price(q, base_currency, r)
 
     @check_online_status
     def get(self, asset_list, base):
@@ -118,7 +160,7 @@ class YahooProvider(FeedProvider):
         base = base.upper()
         query_string = ','.join('%s%s=X' % (asset, base) for asset in asset_list)
         r = requests.get('http://download.finance.yahoo.com/d/quotes.csv',
-                         timeout=60,
+                         timeout=self.TIMEOUT,
                          params={'s': query_string, 'f': 'l1', 'e': 'csv'})
 
         try:
@@ -144,7 +186,7 @@ class GoogleProvider(FeedProvider):
         r = requests.get(GoogleProvider._GOOGLE_URL, params=dict(q=self.from_bts(q)))
         soup = BeautifulSoup(r.text)
         r = float(soup.find(id='price-panel').find(class_='pr').text.replace(',', ''))
-        return r
+        return self.feed_price(q, base_currency, r)
 
 
 class BloombergProvider(FeedProvider):
@@ -162,38 +204,101 @@ class BloombergProvider(FeedProvider):
         r = requests.get(BloombergProvider._BLOOMBERG_URL.format(self.from_bts(q)))
         soup = BeautifulSoup(r.text)
         r = float(soup.find(class_='price').text.replace(',', ''))
-        return r
+        return self.feed_price(q, base_currency, r)
+
+
+class BitcoinAverageFeedProvider(FeedProvider):
+    NAME = 'BitcoinAverage'
+    AVAILABLE_MARKETS = [('BTC', 'USD')]
+
+    @check_online_status
+    @check_market
+    def get(self, cur, base):
+        log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
+        r = requests.get('https://api.bitcoinaverage.com/ticker/{}'.format(base),
+                         timeout=self.TIMEOUT).json()
+        return self.feed_price(cur, base, float(r['last']), float(r['total_vol']))
+
+
+class BitfinexFeedProvider(FeedProvider):
+    NAME = 'Bitfinex'
+    AVAILABLE_MARKETS = [('BTC', 'USD')]
+
+    @check_online_status
+    @check_market
+    def get(self, cur, base):
+        log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
+        r = requests.get('https://api.bitfinex.com/v1/pubticker/{}{}'.format(cur.lower(), base.lower()),
+                         timeout=self.TIMEOUT).json()
+        return self.feed_price(cur, base, float(r['last_price']), float(r['volume']))
+
+
+class BitstampFeedProvider(FeedProvider):
+    NAME = 'Bitstamp'
+    AVAILABLE_MARKETS = [('BTC', 'USD')]
+
+    @check_online_status
+    @check_market
+    def get(self, cur, base):
+        log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
+        r = requests.get('https://www.bitstamp.net/api/ticker/',
+                         timeout=self.TIMEOUT).json()
+        return self.feed_price(cur, base, float(r['last']), float(r['volume']))
 
 
 class PoloniexFeedProvider(FeedProvider):
     NAME = 'Poloniex'
+    AVAILABLE_MARKETS = [('BTS', 'BTC')]
 
     @check_online_status
+    @check_market
     def get(self, cur, base):
         log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
         r = requests.get('https://poloniex.com/public?command=returnTicker',
-                         timeout=60).json()
-        r = r['BTC_BTS']
-        price = float(r['last'])
-        volume = float(r['quoteVolume'])
-        return price, volume
+                         timeout=self.TIMEOUT).json()
+        r = r['{}_{}'.format(base, cur)]
+        return self.feed_price(cur, base,
+                               price=float(r['last']),
+                               volume=float(r['quoteVolume']))
+
+
+class CCEDKFeedProvider(FeedProvider):
+    NAME = 'CCEDK'
+    MARKET_IDS = {('BTS', 'BTC'): 50,
+                  ('BTS', 'USD'): 55,
+                  ('BTS', 'CNY'): 123,
+                  ('BTS', 'EUR'): 54}
+    AVAILABLE_MARKETS = list(MARKET_IDS.keys())
+
+    @check_online_status
+    @check_market
+    def get(self, cur, base):
+        log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
+        r = requests.get('https://www.ccedk.com/api/v1/stats/marketdepthfull?pair_id=%d' % self.MARKET_IDS[(cur, base)],
+                         timeout=self.TIMEOUT)
+        r = r.json()['response']['entity']
+        return self.feed_price(cur, base,
+                               price=float(r['last_price']),
+                               volume=float(r['vol']))
 
 
 class BterFeedProvider(FeedProvider):
     NAME = 'Bter'
+    AVAILABLE_MARKETS = [('BTS', 'BTC'), ('BTS', 'CNY'), ('BTC', 'CNY')]
 
     @check_online_status
     def get(self, cur, base):
         log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
         r = requests.get('http://data.bter.com/api/1/ticker/%s_%s' % (cur.lower(), base.lower()),
-                         timeout=60).json()
-        price = float(r['last']) or ((float(r['sell']) + float(r['buy'])) / 2)
-        volume = float(r['vol_%s' % cur.lower()])
-        return price, volume
+                         timeout=self.TIMEOUT).json()
+        return self.feed_price(cur, base,
+                               price=float(r['last']) or ((float(r['sell']) + float(r['buy'])) / 2),
+                               volume=float(r['vol_%s' % cur.lower()]))
 
 
 class Btc38FeedProvider(FeedProvider):
     NAME = 'Btc38'
+    AVAILABLE_MARKETS = [('BTS', 'BTC'), ('BTS', 'CNY'), ('BTC', 'CNY')]
 
     @check_online_status
     def get(self, cur, base):
@@ -211,15 +316,19 @@ class Btc38FeedProvider(FeedProvider):
         except ValueError:
             log.error('Could not decode response from btc38: %s' % r.text)
             raise
-        price = float(r['ticker']['last']) # TODO: (bid + ask) / 2 ?
-        volume = float(r['ticker']['vol'])
-        return price, volume
+        return self.feed_price(cur, base,
+                               price=float(r['ticker']['last']), # TODO: (bid + ask) / 2 ?
+                               volume=float(r['ticker']['vol']))
 
 
 ALL_FEED_PROVIDERS = {'yahoo': YahooProvider,
+                      'google': GoogleProvider,
+                      'bloomberg': BloombergProvider,
+                      'bitcoinaverage': BitcoinAverageFeedProvider,
+                      'bitfinex': BitfinexFeedProvider,
+                      'bitstamp': BitstampFeedProvider,
+                      'poloniex': PoloniexFeedProvider,
+                      'ccedk': CCEDKFeedProvider,
                       'bter': BterFeedProvider,
                       'btc38': Btc38FeedProvider,
-                      'poloniex': PoloniexFeedProvider,
-                      'google': GoogleProvider,
-                      'bloomberg': BloombergProvider
                       }

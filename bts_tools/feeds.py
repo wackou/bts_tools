@@ -21,7 +21,8 @@
 from . import core
 from .rpcutils import hashabledict
 from .feed_providers import YahooProvider, BterFeedProvider, Btc38FeedProvider,\
-    PoloniexFeedProvider, GoogleProvider, BloombergProvider, ALL_FEED_PROVIDERS
+    PoloniexFeedProvider, GoogleProvider, BloombergProvider, BitcoinAverageFeedProvider,\
+    CCEDKFeedProvider, BitfinexFeedProvider, BitstampFeedProvider, ALL_FEED_PROVIDERS
 from collections import deque, defaultdict
 from contextlib import suppress
 from concurrent.futures import ThreadPoolExecutor
@@ -64,13 +65,22 @@ def load_feeds():
 
 
 def weighted_mean(l):
-    """return the weighted mean of a list of [(value, weight)]"""
-    return sum(v[0]*v[1] for v in l) / sum(v[1] for v in l)
+    """return the weighted mean of a list of FeedPrices"""
+    if len(l) == 1:
+        return l[0].price
+    total_volume = sum(f.volume for f in l)
+    result = sum(f.price*f.volume for f in l) / total_volume
+    log.debug('Weighted mean for {}/{}: {:.4g}'.format(l[0].cur, l[0].base, result))
+    log.debug('Exchange      Price          Volume          Contribution')
+    for f in l:
+        percent = 100 * f.volume / total_volume
+        log.debug('{:14s} {:12.4g} {:14.2f} {:14.2f}%'.format(f.provider_name, f.price, f.volume, percent))
+    return result
 
 
 def get_multi_feeds(func, args, providers, stddev_tolerance=None):
-    result = defaultdict(list)
-    provider_list = defaultdict(list)
+    result = []
+    provider_list = []
 
     def get_price(pargs):
         args, provider = pargs
@@ -81,22 +91,29 @@ def get_multi_feeds(func, args, providers, stddev_tolerance=None):
                   for pargs in itertools.product(args, providers)]:
             with suppress(Exception):
                 provider, args, price = f.result()
-                result[args].append(price)
-                provider_list[args].append(provider)
+                result.append(price)
+                provider_list.append(provider)
 
     if stddev_tolerance:
-        for asset, price_list in result.items():
-            if len(price_list) < 2:
+        feeds_per_market = [(k, list(v)) for k, v in itertools.groupby(result, lambda x: (x.cur, x.base))]
+        for market, feed_list in feeds_per_market:
+            if len(feed_list) < 2:
                 continue  # cannot compute stddev with less than 2 elements
+            price_list = [f.price for f in feed_list]
             price = statistics.mean(price_list)
             stddev = statistics.stdev(price_list, price) / price  # relative stddev
             if stddev > stddev_tolerance:
                 log.warning('Feeds for {asset} are not consistent amongst providers: {feeds} (stddev = {stddev:.7f})'.format(
-                    asset=asset, stddev=stddev,
-                    feeds=' - '.join('{}: {}'.format(p.NAME, q) for p, q in zip(provider_list[asset], price_list))
+                    asset=market, stddev=stddev,
+                    feeds=' - '.join('{}: {}'.format(p.NAME, q) for p, q in zip(provider_list[market], feed_list))
                 ))
 
     return result
+
+
+def filter_market(feed_list, market):
+    """market should be a tuple (cur, base)"""
+    return [f for f in feed_list if (f.cur, f.base) == market]
 
 
 def get_feed_prices():
@@ -114,43 +131,62 @@ def get_feed_prices():
     yahoo_curs = BIT_ASSETS - {'BTC', 'USD'}
     yahoo_prices = yahoo.get(yahoo_curs, 'USD')
 
-    # 1- get the BitShares price in BTC using the biggest markets: USD and CNY
+    # 1- get the BitShares price in major markets: BTC, USD and CNY
 
     # TODO: use some other source for btc valuation than btc/cny on bter/btc38...
     # first get rate conversion between USD/CNY from yahoo and CNY/BTC from
     # bter and btc38 (use CNY and not USD as the market is bigger)
     cny_usd = yahoo_prices.pop('CNY')
 
-    bter, btc38, poloniex = BterFeedProvider(), Btc38FeedProvider(), PoloniexFeedProvider()
+    bter, btc38, poloniex, ccedk, bitcoinavg, bitfinex, bitstamp = (
+        BterFeedProvider(), Btc38FeedProvider(), PoloniexFeedProvider(),
+        CCEDKFeedProvider(), BitcoinAverageFeedProvider(), BitfinexFeedProvider(),
+        BitstampFeedProvider())
 
-    providers_bts_btc = {bter, btc38, poloniex} & active_providers
+    # 1.1- first get the bts/btc valuation
+    # FIXME: log markets and their contribution so we can check volume is correct
+    providers_bts_btc = {bter, btc38, poloniex, ccedk} & active_providers
     if not providers_bts_btc:
         log.warning('No feed providers for BTS/BTC feed price')
     all_feeds = get_multi_feeds('get', [('BTS', 'BTC')], providers_bts_btc)
 
-    providers_bts_cny = {bter, btc38} & active_providers
-    if not providers_bts_cny:
-        log.warning('No feed providers for BTS/CNY feed price')
-    all_feeds.update(get_multi_feeds('get', [('BTC', 'CNY'), ('BTS', 'CNY')], providers_bts_cny))
+    # providers_bts_cny = {bter, btc38} & active_providers
+    # if not providers_bts_cny:
+    #     log.warning('No feed providers for BTS/CNY feed price')
+    # all_feeds.update(get_multi_feeds('get', [('BTC', 'CNY'), ('BTS', 'CNY)')], providers_bts_cny))
+    #
+    # feeds_btc_cny = all_feeds[('BTC', 'CNY')]
+    # if not feeds_btc_cny:
+    #     raise core.NoFeedData('Could not get any BTC/CNY feeds')
+    # btc_cny = weighted_mean(feeds_btc_cny)
+    # cny_btc = 1 / btc_cny
 
-    feeds_btc_cny = all_feeds[('BTC', 'CNY')]
-    if not feeds_btc_cny:
-        raise core.NoFeedData('Could not get any BTC/CNY feeds')
-    btc_cny = weighted_mean(feeds_btc_cny)
-    cny_btc = 1 / btc_cny
-
-    # then get the weighted price in btc for the most important markets
-    feeds_bts_btc = all_feeds[('BTS', 'BTC')] + [(p[0]*cny_btc, p[1]) for p in all_feeds[('BTS', 'CNY')]]
+    feeds_bts_btc = filter_market(all_feeds, ('BTS', 'BTC')) #+ [(p[0]*cny_btc, p[1]) for p in all_feeds[('BTS', 'CNY')]]
     if not feeds_bts_btc:
         raise core.NoFeedData('Could not get any BTS/BTC feeds')
+
     btc_price = weighted_mean(feeds_bts_btc)
 
-    cny_price = btc_price * btc_cny
-    usd_price = cny_price * cny_usd
+    # 1.2- get the btc/usd (bitcoin avg)
+    try:
+        feeds_btc_usd = [bitcoinavg.get('BTC', 'USD')]
+    except Exception:
+        # fall back on Bitfinex, Bitstamp if BitcoinAverage is down - TODO: add Kraken, others?
+        log.debug('Could not get USD/BTC')
+        feeds_btc_usd = get_multi_feeds('get', [('BTC', 'USD')], {bitfinex, bitstamp})
 
-    feeds['USD'] = usd_price
+    btc_usd = weighted_mean(feeds_btc_usd)
+
+    usd_price = btc_price * btc_usd
+    cny_price = usd_price / cny_usd
+
     feeds['BTC'] = btc_price
+    feeds['USD'] = usd_price
     feeds['CNY'] = cny_price
+
+    log.debug('Got btc/usd price: {}'.format(btc_usd))
+    log.debug('Got usd price: {}'.format(usd_price))
+    log.debug('Got cny price: {}'.format(cny_price))
 
     # 2- now get the BitShares price in all other required currencies
     for cur, yprice in yahoo_prices.items():
@@ -164,7 +200,7 @@ def get_feed_prices():
                                  stddev_tolerance=0.02)
 
     for asset, cur in BIT_ASSETS_INDICES.items():
-        feeds[asset] = 1 / statistics.mean(all_quotes[(asset, cur)])
+        feeds[asset] = 1 / statistics.mean(f.price for f in filter_market(all_quotes, (asset, cur)))
 
     # 4- update price history for all feeds
     for cur, price in feeds.items():
