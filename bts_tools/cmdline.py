@@ -21,6 +21,7 @@
 from os.path import join, dirname, exists, islink, expanduser
 from argparse import RawTextHelpFormatter
 from contextlib import suppress
+from pathlib import Path
 from .core import platform, run, get_data_dir, get_bin_name, get_gui_bin_name, get_all_bin_names, is_graphene_based, join_shell_cmd
 from . import core, init
 from .rpcutils import rpc_call, BTSProxy
@@ -386,6 +387,9 @@ Examples:
             # and everything else doesn't get scattered all over the place
             data_dir = get_data_dir(run_env['name'])
             if data_dir:
+                # ensure it exists to be able to cd into it
+                with suppress(FileExistsError):
+                    Path.mkdir(parents=True)
                 cmd = 'cd "{}"; {}'.format(data_dir, join_shell_cmd(cmd))
 
         run(cmd)

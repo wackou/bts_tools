@@ -85,6 +85,8 @@ def node_list(node):
         backbone_nodes = {(resolve_dns(host), port) for host, port in backbone_nodes}
     except Exception:
         # if we can't resolve names, we're probably not connected to the internet
+        # FIXME: if DNS is down but we're still connected to the internet, we still
+        #        want to connect to those nodes for which we already have the ip addr
         log.warning('Cannot resolve IP addresses for backbone nodes...')
         return set()
     backbone_nodes = {'%s:%d' % (host, port) for host, port in backbone_nodes}

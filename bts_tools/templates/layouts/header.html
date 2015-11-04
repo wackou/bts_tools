@@ -37,6 +37,7 @@
                 {% else %}
                 <li {% if request.path == '/witnesses' %}class="active"{% endif %}><a href="/witnesses">Delegates</a></li>
                 {% endif %}
+                <!--
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                         Network <span class="caret"></span>
@@ -48,6 +49,7 @@
                         <li><a href="/peers/potential">Potential peers</a></li>
                     </ul>
                 </li>
+                -->
                 <li {% if request.path == '/logs' %}class="active"{% endif %}><a href="/logs">Logs</a></li>
             </ul>
 

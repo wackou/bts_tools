@@ -283,6 +283,9 @@ def check_feeds(nodes):
                             for asset, price in median_feeds.items():
                                 if asset in BIT_ASSETS_INDICES:
                                     continue
+                                if asset in ['RUB', 'SEK']:
+                                    # markets temporarily disabled because they are in a black swan state
+                                    continue
                                 # publish all feeds even if a single one fails
                                 try:
                                     asset_id = node.asset_data(asset)['id']
