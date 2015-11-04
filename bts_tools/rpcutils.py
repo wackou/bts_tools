@@ -135,7 +135,10 @@ class BTSProxy(object):
                 log.info('Loading RPC config for %s from %s (run_env = %s)' % (self.name, data_dir, client))
                 if is_graphene_based(client):
                     config = configparser.ConfigParser()
-                    config.read_string('[bts]\n' + open(expanduser(join(data_dir, 'config.ini'))).read())
+                    config_str = '[bts]\n' + open(expanduser(join(data_dir, 'config.ini'))).read()
+                    # config parser can't handle duplicate values, and we don't need seed nodes
+                    config_lines = [l for l in config_str.splitlines() if not l.startswith('seed-node')]
+                    config.read_string('\n'.join(config_lines))
                     rpc = {}  # FIXME: need it to get the rpc user and rpc password, if necessary
                     try:
                         cfg_port = int(config['bts']['rpc-endpoint'].split(':')[1])
