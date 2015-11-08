@@ -182,6 +182,11 @@ class BTSProxy(object):
         if self.is_graphene_based():
             # direct json-rpc call
             def direct_call(funcname, *args):
+                # we want to avoid connecting to the client and block because
+                # it is in a stopped state (eg: in gdb after having crashed)
+                if self.wallet_host in ['localhost', '127.0.0.1'] and not bts_binary_running(self):
+                    raise RPCError('Connection aborted: BTS binary does not seem to be running')
+
                 return rpc_call(self.wallet_host, self.wallet_port,
                                 self.wallet_user, self.wallet_password,
                                 funcname, *args, __graphene=self.is_graphene_based())

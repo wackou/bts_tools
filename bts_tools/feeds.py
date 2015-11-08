@@ -232,6 +232,7 @@ def check_feeds(nodes):
     except KeyError:
         feed_slot = None
 
+    # FIXME: seems like updating or checking last_updated doesn't work...
     last_updated = datetime.utcnow() - timedelta(days=1)
 
     def should_publish():

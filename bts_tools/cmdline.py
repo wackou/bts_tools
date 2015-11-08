@@ -215,6 +215,7 @@ def main(flavor='bts'):
   - monitor          : run the monitoring web app
   - publish_slate    : publish the slate as described in the given file
   - deploy           : deploy built binaries to a remote server
+  - deploy_seed      : full deploy of a seed node on given ip address. Needs ssh root access
 
 Examples:
   $ %(bin)s build          # build the latest %(bin)s client by default
