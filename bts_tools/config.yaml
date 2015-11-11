@@ -121,9 +121,9 @@ run_environments:
     muse:
         type: muse
         data_dir: ~/.Muse
-        p2p_port: 1779
-        witness_port: 8090
-        cli_port: 8093
+        p2p_port: 1781
+        witness_port: 8390
+        cli_port: 8393
 
     debug:
         type: bts

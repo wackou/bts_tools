@@ -18,12 +18,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from .core import UnauthorizedError, RPCError, run, get_data_dir, get_bin_name, is_graphene_based
+from .core import UnauthorizedError, RPCError, run, get_data_dir, get_bin_name, is_graphene_based,\
+    hashabledict, to_list, FeedPrice
 from .process import bts_binary_running, bts_process
+from .feeds import BIT_ASSETS, BIT_ASSETS_INDICES
 from . import graphene  # needed to access DATABASE_API, NETWORK_API dynamically, can't import them directly
 from . import core
 from collections import defaultdict, deque
 from os.path import join, expanduser
+from datetime import datetime
 from dogpile.cache import make_region
 import bts_tools.core  # needed to be able to exec('raise bts.core.Exception')
 import builtins        # needed to be able to reraise builtin exceptions
@@ -88,33 +91,6 @@ def rpc_call(host, port, user, password,
 
 
 ALL_SLOTS = {}
-
-
-class hashabledict(dict):
-    def __init__(self, *args, **kwargs):
-        """try to also convert inner dicts to hashable dicts"""
-        super().__init__(*args, **kwargs)
-        for k, v in self.items():
-            if isinstance(v, dict):
-                self[k] = hashabledict(v)
-
-    def __key(self):
-        return tuple(sorted(self.items()))
-
-    def __hash__(self):
-        return hash(self.__key())
-
-    def __eq__(self, other):
-        return self.__key() == other.__key()
-
-
-def to_list(obj):
-    if obj is None:
-        return []
-    elif isinstance(obj, list):
-        return obj
-    else:
-        return [obj]
 
 
 class BTSProxy(object):
@@ -529,13 +505,66 @@ class BTSProxy(object):
         try:
             all_data = self._all_bitassets_data
         except AttributeError:
-            from .feeds import BIT_ASSETS, BIT_ASSETS_INDICES
             all_data = {}
-            for a in BIT_ASSETS | BIT_ASSETS_INDICES.keys() | {'BTS'}:
-                all_data[a] = self.get_asset(a)
+            p = BIT_ASSETS | BIT_ASSETS_INDICES.keys() | {'BTS'}
+            for asset_name in BIT_ASSETS | BIT_ASSETS_INDICES.keys() | {'BTS'}:
+                asset_data = self.get_asset(asset_name)
+                all_data[asset_name] = asset_data        # resolve SYMBOL
+                all_data[asset_data['id']] = asset_data  # resolve id
+
             self._all_bitassets_data = all_data
 
         return all_data[asset]
+
+    def get_blockchain_feeds(self, asset_list):
+        result = []
+        for asset in asset_list:
+            asset_data = self.get_bitasset_data(asset)
+
+            try:
+                base  = asset_data['current_feed']['settlement_price']['base']
+                quote = asset_data['current_feed']['settlement_price']['quote']
+                assert base != '1.3.0'
+                base_precision  = self.asset_data(base['asset_id'])['precision']
+                quote_precision = self.asset_data(quote['asset_id'])['precision']
+                base_price  = int(base['amount']) / 10**base_precision
+                quote_price = int(quote['amount']) / 10**quote_precision
+                result.append(FeedPrice(base_price / quote_price, asset, 'BTS'))
+
+            except ZeroDivisionError :
+                print("No price feeds for asset %s available on the blockchain, yet!" % asset)
+
+        return result
+
+    def get_witness_feeds(self, witness_name, asset_list=None):
+        p = BIT_ASSETS | BIT_ASSETS_INDICES.keys()
+
+        witness_id = self.get_witness(witness_name)['witness_account']
+        asset_list = asset_list or BIT_ASSETS | BIT_ASSETS_INDICES.keys()
+        result = []
+        for asset in asset_list:
+            asset_data = self.get_bitasset_data(asset)
+
+            try:
+                for feed in asset_data['feeds']:
+                    if feed[0] == witness_id:
+                        last_update = datetime.strptime(feed[1][0], '%Y-%m-%dT%H:%M:%S')
+                        base  = feed[1][1]['settlement_price']['base']
+                        quote = feed[1][1]['settlement_price']['quote']
+                        assert base != '1.3.0'
+                        base_precision  = self.asset_data(base['asset_id'])['precision']
+                        quote_precision = self.asset_data(quote['asset_id'])['precision']
+                        base_price  = int(base['amount']) / 10**base_precision
+                        quote_price = int(quote['amount']) / 10**quote_precision
+                        result.append(FeedPrice(base_price / quote_price, asset, 'BTS', last_updated=last_update))
+                        break
+                else:
+                    log.warning('No published feeds found for witness {} - id: {}'.format(witness_name, witness_id))
+
+            except ZeroDivisionError :
+                print("No price feeds for asset %s available on the blockchain, yet!" % asset)
+
+        return result
 
 
 nodes = []

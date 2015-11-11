@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+from datetime import datetime
 from os.path import join, dirname, expanduser, exists, abspath
 from collections import namedtuple
 from subprocess import Popen, PIPE
@@ -338,6 +338,33 @@ class NoFeedData(Exception):
     pass
 
 
+class hashabledict(dict):
+    def __init__(self, *args, **kwargs):
+        """try to also convert inner dicts to hashable dicts"""
+        super().__init__(*args, **kwargs)
+        for k, v in self.items():
+            if isinstance(v, dict):
+                self[k] = hashabledict(v)
+
+    def __key(self):
+        return tuple(sorted(self.items()))
+
+    def __hash__(self):
+        return hash(self.__key())
+
+    def __eq__(self, other):
+        return self.__key() == other.__key()
+
+
+def to_list(obj):
+    if obj is None:
+        return []
+    elif isinstance(obj, list):
+        return obj
+    else:
+        return [obj]
+
+
 def profile(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -358,3 +385,25 @@ def profile(f):
             plog.debug('Function %s(%s): exception in %0.3f ms' % (f.__name__, args_str, (stop_time-start_time)*1000))
             raise
     return wrapper
+
+
+class FeedPrice(object):
+    """Represent a feed price value. Contains additional metadata such as volume, etc.
+
+    volume should be represented as number of <cur> units, not <base>."""
+    def __init__(self, price, cur, base, volume=None, last_updated=None, provider=None):
+        self.price = price
+        self.cur = cur
+        self.base = base
+        self.volume = volume
+        self.last_updated = last_updated or datetime.utcnow()
+        self.provider = provider
+
+    def __str__(self):
+        return 'FeedPrice: {} {}/{}{}{}'.format(
+            self.price, self.cur, self.base,
+            ' - vol={}'.format(self.volume) if self.volume is not None else '',
+            ' from {}'.format(self.provider) if self.provider else '')
+
+    def __repr__(self):
+        return '<{}>'.format(str(self))

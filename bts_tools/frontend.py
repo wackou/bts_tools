@@ -23,6 +23,7 @@ from bts_tools import views
 from bts_tools import rpcutils as rpc
 from geolite2 import geolite2
 from functools import lru_cache
+from datetime import datetime
 import bts_tools
 import bts_tools.monitor
 import threading
@@ -32,6 +33,8 @@ log = logging.getLogger(__name__)
 
 
 def format_datetime(d):
+    if isinstance(d, datetime):
+        return d.isoformat(' ')
     if not d.strip():
         return ''
     if d == 'unknown':

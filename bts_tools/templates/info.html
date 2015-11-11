@@ -3,11 +3,12 @@
 {################################ HTML CONTENT ################################}
 {% block content %}
 
-{% if rpc.main_node.type == 'delegate' and rpc.main_node.bts_type() == 'bts' %}
+{% if rpc.main_node.type == 'delegate' and rpc.main_node.bts_type() in ['bts', 'bts2'] %}
 <pre>
 <b>Price feeds:</b>  published: {% for asset in assets %}{{pfeeds[asset]}} <b>{{asset}}</b> {% endfor %}     <b>Last update:</b> {% if last_update %}{{last_update | datetime}}{% else %}N/A{% endif %}
        last hour median: {% for asset in assets %}{{mfeeds[asset]}} <b>{{asset}}</b> {% endfor %}
                  latest: {% for asset in assets %}{{feeds[asset]}} <b>{{asset}}</b> {% endfor %}
+             blockchain: {% for asset in assets %}{{bfeeds[asset]}} <b>{{asset}}</b> {% endfor %}
 </pre>
 {% endif %}
 

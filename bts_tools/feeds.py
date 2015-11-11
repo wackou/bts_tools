@@ -19,7 +19,7 @@
 #
 
 from . import core
-from .rpcutils import hashabledict
+from .core import hashabledict
 from .feed_providers import YahooProvider, BterFeedProvider, Btc38FeedProvider,\
     PoloniexFeedProvider, GoogleProvider, BloombergProvider, BitcoinAverageFeedProvider,\
     CCEDKFeedProvider, BitfinexFeedProvider, BitstampFeedProvider, ALL_FEED_PROVIDERS
@@ -74,7 +74,7 @@ def weighted_mean(l):
     log.debug('Exchange      Price          Volume          Contribution')
     for f in l:
         percent = 100 * f.volume / total_volume
-        log.debug('{:14s} {:12.4g} {:14.2f} {:14.2f}%'.format(f.provider_name, f.price, f.volume, percent))
+        log.debug('{:14s} {:12.4g} {:14.2f} {:14.2f}%'.format(f.provider, f.price, f.volume, percent))
     return result
 
 

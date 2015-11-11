@@ -20,7 +20,6 @@
 
 from . import core
 from bs4 import BeautifulSoup
-from datetime import datetime
 import requests
 import functools
 import logging
@@ -57,29 +56,6 @@ def check_market(f):
     return wrapper
 
 
-
-class FeedPrice(object):
-    """Represent a feed price value. Contains additional metadata such as volume, etc.
-
-    volume should be represented as number of <cur> units, not <base>."""
-    def __init__(self, provider_name, cur, base, price, volume=None, last_updated=None):
-        self.provider_name = provider_name
-        self.cur = cur
-        self.base = base
-        self.price = price
-        self.volume = volume
-        self.last_updated = last_updated or datetime.utcnow()
-
-    def __str__(self):
-        return 'FeedPrice: {}/{} {}{} from {}'.format(
-            self.cur, self.base, self.price,
-            ' - vol={}'.format(self.volume) if self.volume is not None else '',
-            self.provider_name)
-
-    def __repr__(self):
-        return '<{}>'.format(str(self))
-
-
 class FeedProvider(object):
     """need to implement a get(cur, base) method. It returns price and volume.
     The volume is expressed in <cur> units."""
@@ -98,8 +74,8 @@ class FeedProvider(object):
     def __eq__(self, other):
         return hash(self) == hash(other)
 
-    def feed_price(self, cur, base, price, volume=None):
-        return FeedPrice(self.NAME, cur, base, price, volume)
+    def feed_price(self, cur, base, price, volume=None, last_updated=None):
+        return core.FeedPrice(price, cur, base, volume, last_updated, provider=self.NAME)
 
     @classmethod
     def to_bts(cls, c):
@@ -147,7 +123,7 @@ class YahooProvider(FeedProvider):
         if q == 'SHANGHAI':
             log.debug('checking quote for %s at Yahoo' % q)
             r = requests.get('http://finance.yahoo.com/q?s=000001.SS')
-            soup = BeautifulSoup(r.text)
+            soup = BeautifulSoup(r.text, 'html.parser')
             r = float(soup.find('span', 'time_rtq_ticker').text.replace(',', ''))
         else:
             r = float(self.query_quote_full(q)['LastTradePriceOnly'])
@@ -184,7 +160,7 @@ class GoogleProvider(FeedProvider):
     def query_quote(self, q, base_currency=None):
         log.debug('checking quote for %s at %s' % (q, self.NAME))
         r = requests.get(GoogleProvider._GOOGLE_URL, params=dict(q=self.from_bts(q)))
-        soup = BeautifulSoup(r.text)
+        soup = BeautifulSoup(r.text, 'html.parser')
         r = float(soup.find(id='price-panel').find(class_='pr').text.replace(',', ''))
         return self.feed_price(q, base_currency, r)
 
@@ -202,7 +178,7 @@ class BloombergProvider(FeedProvider):
     def query_quote(self, q, base_currency=None):
         log.debug('checking quote for %s at %s' % (q, self.NAME))
         r = requests.get(BloombergProvider._BLOOMBERG_URL.format(self.from_bts(q)))
-        soup = BeautifulSoup(r.text)
+        soup = BeautifulSoup(r.text, 'html.parser')
         r = float(soup.find(class_='price').text.replace(',', ''))
         return self.feed_price(q, base_currency, r)
 

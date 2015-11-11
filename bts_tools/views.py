@@ -220,11 +220,20 @@ def view_info():
     if not rpc.main_node.is_graphene_based():
         info_items, attrs = split_columns(info_items, attrs)
 
-    if rpc.main_node.type == 'delegate' and not rpc.main_node.is_graphene_based():  # FIXME: graphene support
+    if rpc.main_node.type == 'delegate':
         from . import feeds
-        published_feeds = rpc.main_node.blockchain_get_feeds_from_delegate(rpc.main_node.name)
-        last_update = max(f['last_update'] for f in published_feeds) if published_feeds else None
-        pfeeds = { f['asset_symbol']: f['price'] for f in published_feeds }
+
+        if rpc.main_node.is_graphene_based():
+            published_feeds = rpc.main_node.get_witness_feeds(rpc.main_node.name, feeds.visible_feeds)
+            last_update = max(f.last_updated for f in published_feeds) if published_feeds else None
+            pfeeds = {f.cur: f.price for f in published_feeds}
+            bfeeds = {f.cur: f.price for f in rpc.main_node.get_blockchain_feeds(feeds.visible_feeds)}
+        else:
+            published_feeds = rpc.main_node.blockchain_get_feeds_from_delegate(rpc.main_node.name)
+            last_update = max(f['last_update'] for f in published_feeds) if published_feeds else None
+            pfeeds = { f['asset_symbol']: f['price'] for f in published_feeds }
+            bfeeds = {}
+
         lfeeds = dict(feeds.feeds)
         mfeeds = {cur: feeds.median_str(cur) for cur in lfeeds}
 
@@ -243,9 +252,10 @@ def view_info():
         format_feeds(lfeeds)
         format_feeds(mfeeds)
         format_feeds(pfeeds)
+        format_feeds(bfeeds)
 
         feeds = dict(assets=feeds.visible_feeds, feeds=lfeeds, pfeeds=pfeeds,
-                     mfeeds=mfeeds, last_update=last_update)
+                     mfeeds=mfeeds, bfeeds=bfeeds, last_update=last_update)
 
     else:
         feeds = {}

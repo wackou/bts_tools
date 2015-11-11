@@ -6,7 +6,6 @@ This is the day-to-day todo list. For a more high-level overview, see the `roadm
 Main
 ----
 
-* add the published feed info back to info view
 * fix network views
 
   * show total number of potential peers, even though the table only contains a subset of them
@@ -25,6 +24,7 @@ Misc / Minor
 ------------
 
 * implement more robust BtsProxy.is_localhost()
+* fix terminology for feeds (quote, base, etc.) see: http://www.wikiwand.com/en/Currency_pair
 * status view has total cpu on top of process cpu, z-order should be reversed
 * views_public.py:170 needs some desperate caching
 * RUN_ENV looks unused
@@ -37,6 +37,13 @@ Devops
 * secure owner key: https://bitsharestalk.org/index.php?topic=14344.0
 * securing a server: https://www.debian.org/doc/manuals/securing-debian-howto/
 
+
+Misc / informative threads
+--------------------------
+
+* git forking model: https://bitsharestalk.org/index.php?topic=19690
+* how to use websocket subscribe: https://bitsharestalk.org/index.php?topic=19661
+* failover script: https://bitsharestalk.org/index.php/topic,18875.msg254099/topicseen.html#msg254099
 
 
 ROADMAP
