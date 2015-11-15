@@ -6,10 +6,9 @@ This is the day-to-day todo list. For a more high-level overview, see the `roadm
 Main
 ----
 
-* fix network views
-
-  * show total number of potential peers, even though the table only contains a subset of them
-
+* published_feeds in info view seems wrong (= blockchain, not witness)
+* fix caching issue in rpcutils:253
+* fix selection in header menu of mutiple witnesses having the same name (ie: on different hosts)
 * fix blocks missed / produced
 * "bts deploy_seed <ip_addr>" completely sets up a new instance. Should also communicate with
   dns provider to update the dns entry of the new seed node
@@ -17,13 +16,15 @@ Main
   communicate between instances directly and implement needed apis in the tools instead of
   in the witness node
   * then, fix "signing key active" display in view header (need bts_tools json-rpc for that)
-* update doc / screenshots and finalize port to graphene
+* update doc / screenshots
+* fix all FIXMEs left in the code and finalize port to graphene
 
 
 Misc / Minor
 ------------
 
 * implement more robust BtsProxy.is_localhost()
+* show total number of potential peers, even though the table only contains a subset of them
 * fix terminology for feeds (quote, base, etc.) see: http://www.wikiwand.com/en/Currency_pair
 * status view has total cpu on top of process cpu, z-order should be reversed
 * views_public.py:170 needs some desperate caching

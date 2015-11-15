@@ -31,13 +31,14 @@
 			<ul class="nav navbar-nav">
                 <li {% if request.path == '/status' %}class="active"{% endif %}><a href="/status">Status</a></li>
                 <li {% if request.path == '/info' %}class="active"{% endif %}><a href="/info">Info</a></li>
+                <!--
                 <li {% if request.path == '/witness/{{ rpc.main_node.name }}' %}class="active"{% endif %}><a href="/witness/{{ rpc.main_node.name }}">Witness info</a></li>
                 {% if rpc.main_node.is_graphene_based() %}
                 <li {% if request.path == '/witnesses' %}class="active"{% endif %}><a href="/witnesses">Witnesses</a></li>
                 {% else %}
                 <li {% if request.path == '/witnesses' %}class="active"{% endif %}><a href="/witnesses">Delegates</a></li>
                 {% endif %}
-                <!--
+                -->
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                         Network <span class="caret"></span>
@@ -49,7 +50,6 @@
                         <li><a href="/peers/potential">Potential peers</a></li>
                     </ul>
                 </li>
-                -->
                 <li {% if request.path == '/logs' %}class="active"{% endif %}><a href="/logs">Logs</a></li>
             </ul>
 

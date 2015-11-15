@@ -127,7 +127,7 @@ class MonitoringProtocol(WebSocketClientProtocol):
             api_id = p['result']
             cache['NETWORK_API'] = api_id
             if api_id is not None:
-                log.info('Granted access to network api')
+                log.info('Granted access to network api on {}:{}'.format(self.host, self.port))
             else:
                 log.warning('Refused access to network api. Make sure to set your user/password properly!')
             nseconds = core.config['monitoring']['monitor_time_interval']
@@ -137,6 +137,9 @@ class MonitoringProtocol(WebSocketClientProtocol):
             def update_info():
                 # call all that we want to cache
                 self.rpc_call(NETWORK_API, 'get_info')
+                self.rpc_call(NETWORK_API, 'get_connected_peers')
+                self.rpc_call(NETWORK_API, 'get_potential_peers')
+                self.rpc_call(NETWORK_API, 'get_advanced_node_parameters')
 
                 self.factory.loop.call_later(nseconds, update_info)
 

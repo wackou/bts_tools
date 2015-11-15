@@ -350,6 +350,24 @@ class BTSProxy(object):
         else:
             return self.rpc_call('network_get_info')
 
+    def network_get_connected_peers(self):
+        if self.is_graphene_based():
+            return [p['info'] for p in self.ws_rpc_call(graphene.NETWORK_API, 'get_connected_peers')]
+        else:
+            return self.rpc_call('network_get_peer_info')
+
+    def network_get_potential_peers(self):
+        if self.is_graphene_based():
+            return self.ws_rpc_call(graphene.NETWORK_API, 'get_potential_peers')
+        else:
+            return self.rpc_call('network_list_potential_peers')
+
+    def network_get_advanced_node_parameters(self):
+        if self.is_graphene_based():
+            return self.ws_rpc_call(graphene.NETWORK_API, 'get_advanced_node_parameters')
+        else:
+            return self.rpc_call('network_get_advanced_node_parameters')
+
     def process(self):
         return bts_process(self)
 

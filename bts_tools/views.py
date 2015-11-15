@@ -260,8 +260,20 @@ def view_info():
     else:
         feeds = {}
 
-    return render_template('info.html', title='BTS Client - Info',
-                           data=info_items, attrs=attrs, **feeds)
+    if rpc.main_node.is_graphene_based():
+        info_items2 = sorted(rpc.main_node.get_witness(rpc.main_node.name).items())
+        attrs2 = defaultdict(list)
+        attrs2['bold'] = [(i, 0) for i in range(len(info_items))]
+    else:
+        info_items2 = None
+        attrs2 = None
+
+
+
+    return render_template('info.html', #title='BTS Client - Info',
+                           title='Global info', data=info_items, attrs=attrs,
+                           title2='Witness info', data2=info_items2, attrs2=attrs2,
+                           **feeds)
 
 
 @bp.route('/rpchost/<bts_type>/<host>/<url>')
@@ -329,7 +341,7 @@ def view_delegates():
 @catch_error
 @core.profile
 def view_backbone_nodes():
-    peers = rpc.main_node.network_get_peer_info()
+    peers = rpc.main_node.network_get_connected_peers()
 
     headers = ['Address', 'Status', 'Connected since', 'Platform', 'BitShares git time', 'fc git time']
 
@@ -373,7 +385,7 @@ def view_backbone_nodes():
 @catch_error
 @core.profile
 def view_connected_peers():
-    peers = rpc.main_node.network_get_peer_info()
+    peers = rpc.main_node.network_get_connected_peers()
 
     headers = ['Address', 'Connected since', 'Platform', 'BitShares git time', 'fc git time']
 
@@ -401,7 +413,7 @@ def view_connected_peers():
 @catch_error
 @core.profile
 def view_potential_peers():
-    peers = rpc.main_node.network_list_potential_peers()
+    peers = rpc.main_node.network_get_potential_peers()
 
     # TODO: find a better way to do this, see https://github.com/BitShares/bitshares/issues/908
     peers = peers[:300]
