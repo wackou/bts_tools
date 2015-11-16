@@ -7,7 +7,6 @@ Main
 ----
 
 * fix blocks missed / produced
-* fix muse support
 * "bts deploy_seed <ip_addr>" completely sets up a new instance. Should also communicate with
   dns provider to update the dns entry of the new seed node
 * bts_tools uwsgi instance should also expose a json-rpc interface. This would allow to

@@ -220,7 +220,7 @@ def view_info():
     if not rpc.main_node.is_graphene_based():
         info_items, attrs = split_columns(info_items, attrs)
 
-    if rpc.main_node.type == 'delegate':
+    if rpc.main_node.type == 'delegate' and rpc.main_node.bts_type() in ['bts2']:
         from . import feeds
 
         if rpc.main_node.is_graphene_based():
