@@ -35,6 +35,7 @@ import requests
 import itertools
 import configparser
 import json
+import copy
 import re
 import logging
 
@@ -224,6 +225,10 @@ class BTSProxy(object):
         # get a special "smart" cache for slots as it is a very expensive call
         self._slot_cache = make_region().configure('dogpile.cache.memory')
 
+        # caches for committee member and witness names
+        self._witness_names = {}
+        self._committee_member_names = {}
+
     def __str__(self):
         return self.name
 
@@ -250,7 +255,7 @@ class BTSProxy(object):
                     raise result
                 else:
                     log.debug('  using cached result')
-                    return result
+                    return copy.copy(result)
 
         try:
             result = self._rpc_call(funcname, *args)
@@ -265,7 +270,7 @@ class BTSProxy(object):
             _rpc_cache[self.rpc_cache_key][(funcname, args)] = result
             log.debug('  added result in cache')
 
-        return result
+        return copy.copy(result)
 
     def clear_rpc_cache(self):
         try:
@@ -343,6 +348,28 @@ class BTSProxy(object):
             return self.rpc_call('is_locked')
         else:
             return not self.get_info()['wallet_unlocked']
+
+    def get_witness_name(self, witness_id):
+        try:
+            return self._witness_names[witness_id]
+        except KeyError:
+            pass
+
+        result = self.get_account(self.get_witness(witness_id)['witness_account'])['name']
+        self._witness_names[witness_id] = result
+
+        return result
+
+    def get_committee_member_name(self, committee_member_id):
+        try:
+            return self._committee_member_names[committee_member_id]
+        except KeyError:
+            pass
+
+        result = self.get_account(self.get_committee_member(committee_member_id)['committee_member_account'])['name']
+        self._committee_member_names[committee_member_id] = result
+
+        return result
 
     def network_get_info(self):
         if self.is_graphene_based():

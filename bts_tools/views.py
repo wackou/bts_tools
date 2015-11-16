@@ -167,11 +167,11 @@ def view_info():
     attrs = defaultdict(list)
     if rpc.main_node.is_graphene_based():
         n = rpc.main_node
-        info = dict(n.info())  # this could be a cached value, we do not want to modify it
+        info = n.info()
         # TODO: we should cache the witness and committee member names, they never change
-        info['active_witnesses'] = [n.get_account(n.get_witness(w)['witness_account'])['name']
+        info['active_witnesses'] = [n.get_witness_name(w)
                                     for w in info['active_witnesses']]
-        info['active_committee_members'] = [n.get_account(n.get_committee_member(cm)['committee_member_account'])['name']
+        info['active_committee_members'] = [n.get_committee_member_name(cm)
                                             for cm in info['active_committee_members']]
         info_items = sorted(info.items())
     else:

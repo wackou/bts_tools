@@ -6,10 +6,9 @@ This is the day-to-day todo list. For a more high-level overview, see the `roadm
 Main
 ----
 
-* published_feeds in info view seems wrong (= blockchain, not witness)
-* fix caching issue in rpcutils:253
 * fix selection in header menu of mutiple witnesses having the same name (ie: on different hosts)
 * fix blocks missed / produced
+* fix muse support
 * "bts deploy_seed <ip_addr>" completely sets up a new instance. Should also communicate with
   dns provider to update the dns entry of the new seed node
 * bts_tools uwsgi instance should also expose a json-rpc interface. This would allow to
