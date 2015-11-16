@@ -62,7 +62,7 @@
 
                         <ul class="dropdown-menu" role="menu">
                             {% for node in rpc.nodes %}
-                            <li><a href="/rpchost/{{ node.bts_type() }}/{{ node.name }}{{ request.path }}">
+                            <li><a href="/rpchost/{{ node.bts_type() }}/{{ node.rpc_host }}:{{ node.rpc_port }}/{{ node.name }}{{ request.path }}">
                                 <b>{{ node.bts_type() }}:</b> {{ node.name }}
                             </a></li>
                             {% endfor %}

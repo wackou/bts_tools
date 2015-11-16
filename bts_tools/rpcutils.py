@@ -24,7 +24,7 @@ from .process import bts_binary_running, bts_process
 from .feeds import BIT_ASSETS, BIT_ASSETS_INDICES
 from . import graphene  # needed to access DATABASE_API, NETWORK_API dynamically, can't import them directly
 from . import core
-from collections import defaultdict, deque
+from collections import defaultdict, deque, OrderedDict
 from os.path import join, expanduser
 from datetime import datetime
 from dogpile.cache import make_region
@@ -623,15 +623,17 @@ def load_nodes():
 
 
 def unique_node_clients():
-    global nodes
-    sort_func = lambda n: n.rpc_cache_key
-    for (host, port), gnodes in itertools.groupby(sorted(nodes, key=sort_func), sort_func):
-        yield (host, port), list(gnodes)
+    result = OrderedDict()
+    for n in nodes:
+        try:
+            result[n.rpc_cache_key].append(n)
+        except KeyError:
+            result[n.rpc_cache_key] = [n]
+    return list(result.items())
 
 
 def client_instances():
     """return a list of triples (hostname, [node names], node_instance)"""
-    global nodes
     for (host, port), gnodes in unique_node_clients():
         yield ('%s:%d' % (host, port), [n.name for n in gnodes], gnodes[0])
 

@@ -276,17 +276,17 @@ def view_info():
                            **feeds)
 
 
-@bp.route('/rpchost/<bts_type>/<host>/<url>')
+@bp.route('/rpchost/<bts_type>/<host>/<name>/<url>')
 @catch_error
-def set_rpchost(bts_type, host, url):
+def set_rpchost(bts_type, host, name, url):
     for node in rpc.nodes:
-        if node.bts_type() == bts_type and node.name == host:
-            log.debug('Setting main rpc node to %s' % host)
+        if node.bts_type() == bts_type and '{}:{}'.format(node.rpc_host, node.rpc_port) == host and node.name == name:
+            log.debug('Setting main rpc node to %s %s on %s' % (bts_type, name, host))
             rpc.main_node = node
             break
     else:
         # invalid host name
-        log.debug('Invalid node name: %s' % host)
+        log.debug('Invalid node name: %s on %s' % (name, host))
         pass
 
     return redirect(url)

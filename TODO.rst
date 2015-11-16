@@ -6,7 +6,6 @@ This is the day-to-day todo list. For a more high-level overview, see the `roadm
 Main
 ----
 
-* fix selection in header menu of mutiple witnesses having the same name (ie: on different hosts)
 * fix blocks missed / produced
 * fix muse support
 * "bts deploy_seed <ip_addr>" completely sets up a new instance. Should also communicate with
