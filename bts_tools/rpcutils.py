@@ -349,6 +349,9 @@ class BTSProxy(object):
         else:
             return not self.get_info()['wallet_unlocked']
 
+    def is_localhost(self):
+        return self.rpc_host in ['localhost', '127.0.0.1']
+
     def get_witness_name(self, witness_id):
         try:
             return self._witness_names[witness_id]
@@ -388,6 +391,12 @@ class BTSProxy(object):
             return self.ws_rpc_call(graphene.NETWORK_API, 'get_potential_peers')
         else:
             return self.rpc_call('network_list_potential_peers')
+
+    def network_set_advanced_node_parameters(self, params):
+        if self.is_graphene_based():
+            return self.ws_rpc_call(graphene.NETWORK_API, 'set_advanced_node_parameters', params)
+        else:
+            return self.rpc_call('network_get_advanced_node_parameters')
 
     def network_get_advanced_node_parameters(self):
         if self.is_graphene_based():

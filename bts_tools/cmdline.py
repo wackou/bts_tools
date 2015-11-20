@@ -390,7 +390,7 @@ Examples:
             if data_dir:
                 # ensure it exists to be able to cd into it
                 with suppress(FileExistsError):
-                    Path.mkdir(parents=True)
+                    Path(data_dir).mkdir(parents=True)
                 cmd = 'cd "{}"; {}'.format(data_dir, join_shell_cmd(cmd))
 
         run(cmd)

@@ -23,6 +23,10 @@ from datetime import datetime
 from functools import partial
 from autobahn.asyncio.websocket import WebSocketClientProtocol, WebSocketClientFactory
 from collections import defaultdict
+from concurrent.futures import Future
+from contextlib import suppress
+import functools
+import threading
 import json
 import time
 import asyncio
@@ -63,11 +67,34 @@ def api_name(api_id):
         return '??'
 
 
-# FIXME: this should be per-host, and would probably benefit from being integrated
+_event_loops = {}
+
+# FIXME: this would probably benefit from being integrated
 #        directly in each node's rpc_cache
 _ws_rpc_cache = defaultdict(dict)
 
+# dict of active monitoring protocols
+_monitoring_protocols = {}
+
+
 def ws_rpc_call(host, port, api, method, *args):
+    cached = False  # TODO: decide whether to maintain cached=True
+    if not cached:
+        result = Future()
+        try:
+            loop = _event_loops[(host, port)]
+        except KeyError:
+            raise RuntimeError('Websocket event loop for {}:{} not available yet')
+        protocol = _monitoring_protocols[(host, port)]
+
+        loop.call_soon_threadsafe(functools.partial(protocol.rpc_call, api, method, *args, result=result))
+        try:
+            return result.result(timeout=5)
+        except TimeoutError:
+            log.warning('timeout while calling {} {}({})'.format(api, method, ', '.join(args)))
+            return None
+
+    # else: check whether it is in the cache
     key = (api, method,  args)
     try:
         result = _ws_rpc_cache[(host, port)][key]
@@ -87,8 +114,11 @@ class MonitoringProtocol(WebSocketClientProtocol):
         self.passwd = witness_passwd
         self.request_id = 0
         self.request_map = {}
+        _monitoring_protocols[(witness_host, witness_port)] = self
 
-    def rpc_call(self, api, method, *args):
+
+    def rpc_call(self, api, method, *args, result=None):
+        """result should be a Future instance"""
         self.request_id += 1
         # TODO: convert args where required to hashable_dict (see: btsproxy.rpc_cache implementation)
         if api == NETWORK_API:
@@ -98,7 +128,7 @@ class MonitoringProtocol(WebSocketClientProtocol):
                 log.debug('Not calling network api: {} - unauthorized access to network_api'.format(method))
                 return
         call_params = (api, method, args)
-        self.request_map[self.request_id] = call_params
+        self.request_map[self.request_id] = (result, call_params)
         payload = {'jsonrpc': '2.0',
                    'id': self.request_id,
                    'method': 'call',
@@ -115,13 +145,19 @@ class MonitoringProtocol(WebSocketClientProtocol):
     def onMessage(self, payload, isBinary):
         res = json.loads(payload.decode('utf8'))
         log.debug('Got response for request id {}: {}'.format(res['id'], json.dumps(res, indent=4)))
-        api, method, args = self.request_map.pop(res['id'])
+        result, (api, method, args) = self.request_map.pop(res['id'])
+        args = tuple(core.hashabledict(arg) if isinstance(arg, dict) else arg for arg in args)
         cache = _ws_rpc_cache[(self.host, self.port)]
 
+        # FIXME: what if res raises an exception?
         p = {'result': res['result'] if 'result' in res else None,
              'server_response': res,
              'last_updated': datetime.utcnow()}
-        cache[(api, method, args)] = p
+        # if we gave a future, return it, otherwise put the result in the cache
+        if result is not None:
+            result.set_result(p['result'])
+        else:
+            cache[(api, method, args)] = p
 
         if (api, method) == (LOGIN_API, 'network_node'):
             api_id = p['result']
@@ -130,29 +166,9 @@ class MonitoringProtocol(WebSocketClientProtocol):
                 log.info('Granted access to network api on {}:{}'.format(self.host, self.port))
             else:
                 log.warning('Refused access to network api. Make sure to set your user/password properly!')
-            nseconds = core.config['monitoring']['monitor_time_interval']
-
-            # FIXME: should not run this from here, otherwise calling login.network_node multiple times
-            #        would wreak havoc
-            def update_info():
-                # call all that we want to cache
-                self.rpc_call(NETWORK_API, 'get_info')
-                self.rpc_call(NETWORK_API, 'get_connected_peers')
-                self.rpc_call(NETWORK_API, 'get_potential_peers')
-                self.rpc_call(NETWORK_API, 'get_advanced_node_parameters')
-
-                self.factory.loop.call_later(nseconds, update_info)
-
-            self.factory.loop.call_soon(update_info)
 
         if not self.request_map:
             log.debug('received all responses to pending requests')
-            # we could call update_info from here, but then there would be 5 seconds between
-            # the last answer from the server and the first request again, whereas in the other
-            # case (as implemented now), there are 5 seconds between each set of requests
-            # (we don't expect it to change much, but it feels more "stable" this way. We'll see...)
-            #yield from self.updateInfo()
-
 
     def onClose(self, wasClean, code, reason):
         log.debug("WebSocket connection closed: {0}".format(reason))
@@ -163,19 +179,17 @@ class MonitoringProtocol(WebSocketClientProtocol):
         self.factory.loop.stop()
 
 
-
 def run_monitoring(host, port, user, passwd):
-    import threading
-
     log.info('Starting witness websocket monitoring on {}:{}'.format(host, port))
 
     while True:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
+        _event_loops[(host, port)] = loop
         log.debug('new event loop: {}'.format(loop))
         log.debug('in thread {}'.format(threading.current_thread().name))
 
-        factory          = WebSocketClientFactory("ws://{}:{:d}".format(host, port), debug=True)
+        factory = WebSocketClientFactory("ws://{}:{:d}".format(host, port), debug=True)
         factory.protocol = partial(MonitoringProtocol, host, port, user, passwd)
 
         try:
@@ -190,6 +204,10 @@ def run_monitoring(host, port, user, passwd):
             log.debug('WebSocket connection refused to {}:{}'.format(host, port))
         finally:
             loop.close()
+
+        with suppress(KeyError):
+            del _monitoring_protocols[(host, port)]
+        del _event_loops[(host, port)]
 
         nseconds = core.config['monitoring']['monitor_time_interval']
         time.sleep(nseconds) # wait some time before trying to reconnect
