@@ -13,6 +13,7 @@ Main
   communicate between instances directly and implement needed apis in the tools instead of
   in the witness node
   * then, fix "signing key active" display in view header (need bts_tools json-rpc for that)
+* remove deprecated bts-rpc tool, was unusably slow anyway (and we can do better in graphene anyway)
 * update doc / screenshots
 * fix all FIXMEs left in the code and finalize port to graphene
 
@@ -20,7 +21,6 @@ Main
 Misc / Minor
 ------------
 
-* implement more robust BtsProxy.is_localhost()
 * show total number of potential peers, even though the table only contains a subset of them
 * fix terminology for feeds (quote, base, etc.) see: http://www.wikiwand.com/en/Currency_pair
 * status view has total cpu on top of process cpu, z-order should be reversed
@@ -42,6 +42,9 @@ Misc / informative threads
 * git forking model: https://bitsharestalk.org/index.php?topic=19690
 * how to use websocket subscribe: https://bitsharestalk.org/index.php?topic=19661
 * failover script: https://bitsharestalk.org/index.php/topic,18875.msg254099/topicseen.html#msg254099
+* api threads
+  * get_account_history: https://bitsharestalk.org/index.php/topic,20133.0/topicseen.html
+
 
 
 ROADMAP

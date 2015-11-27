@@ -48,7 +48,7 @@ def init_ctx(node, ctx, cfg):
 
     ctx.stats = deque(maxlen=min(desired_maxlen, maxlen))
 
-    if node.rpc_host == 'localhost' and cpu_total_ctx is None:
+    if node.rpc_host.is_witness_localhost() and cpu_total_ctx is None:
         # first monitoring thread that initializes its context gets to be
         # the one that will fill in the global cpu values
         cpu_total_ctx = ctx
@@ -61,7 +61,7 @@ def is_valid_node(node):
 
 def monitor(node, ctx, cfg):
     # only monitor cpu and network if we are monitoring localhost
-    if node.rpc_host == 'localhost':
+    if node.rpc_host.is_witness_localhost():
         p = node.process()
         if p is not None:
             connections = int(node.network_get_info()['connection_count']) if node.is_graphene_based() else ctx.info['network_num_connections']

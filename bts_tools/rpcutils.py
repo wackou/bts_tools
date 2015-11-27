@@ -95,12 +95,14 @@ ALL_SLOTS = {}
 
 
 class BTSProxy(object):
-    def __init__(self, type, name, client=None, monitoring=None, notification=None,
+    def __init__(self, type, name, client=None, bts_type=None, monitoring=None, notification=None,
                  rpc_port=None, rpc_user=None, rpc_password=None, rpc_host=None, venv_path=None,
                  # graphene fields
                  witness_host=None, witness_port=None, witness_user=None, witness_password=None,
                  wallet_host=None, wallet_port=None, wallet_user=None, wallet_password=None):
         self.type = type
+        if bts_type is not None:
+            self._bts_type = bts_type
         self.name = name
         self.monitoring = to_list(monitoring)
         self.notification = to_list(notification)
@@ -161,7 +163,7 @@ class BTSProxy(object):
             def direct_call(funcname, *args):
                 # we want to avoid connecting to the client and block because
                 # it is in a stopped state (eg: in gdb after having crashed)
-                if self.wallet_host in ['localhost', '127.0.0.1'] and not bts_binary_running(self):
+                if self.is_localhost() and not bts_binary_running(self):
                     raise RPCError('Connection aborted: BTS binary does not seem to be running')
 
                 return rpc_call(self.wallet_host, self.wallet_port,
@@ -352,6 +354,9 @@ class BTSProxy(object):
     def is_localhost(self):
         return self.rpc_host in ['localhost', '127.0.0.1']
 
+    def is_witness_localhost(self):
+        return self.witness_host in ['localhost', '127.0.0.1']
+
     def get_witness_name(self, witness_id):
         try:
             return self._witness_names[witness_id]
@@ -443,6 +448,7 @@ class BTSProxy(object):
         try:
             blockchain_name = self.about()['blockchain_name']
         except Exception:
+            log.warning('Could not find blockchain name for {}:{}'.format(self.rpc_host, self.rpc_port))
             return ''
         if blockchain_name == 'BitShares':
             self._bts_type = 'bts'
