@@ -20,6 +20,8 @@
 
 from . import core
 from bs4 import BeautifulSoup
+from datetime import datetime
+import json
 import requests
 import functools
 import logging
@@ -91,7 +93,7 @@ class FeedProvider(object):
         return cls._ASSET_MAP.get(c, c)
 
 
-class YahooProvider(FeedProvider):
+class YahooFeedProvider(FeedProvider):
     NAME = 'Yahoo'
     _YQL_URL = 'http://query.yahooapis.com/v1/public/yql'
     _ASSET_MAP = {'GOLD': 'XAU',
@@ -147,7 +149,7 @@ class YahooProvider(FeedProvider):
         return dict(zip((self.to_bts(asset) for asset in asset_list), asset_prices))
 
 
-class GoogleProvider(FeedProvider):
+class GoogleFeedProvider(FeedProvider):
     NAME = 'Google'
     _GOOGLE_URL = 'https://www.google.com/finance'
     _ASSET_MAP = {'SHENZHEN': 'SHE:399106',
@@ -159,13 +161,13 @@ class GoogleProvider(FeedProvider):
     @check_online_status
     def query_quote(self, q, base_currency=None):
         log.debug('checking quote for %s at %s' % (q, self.NAME))
-        r = requests.get(GoogleProvider._GOOGLE_URL, params=dict(q=self.from_bts(q)))
+        r = requests.get(self._GOOGLE_URL, params=dict(q=self.from_bts(q)))
         soup = BeautifulSoup(r.text, 'html.parser')
         r = float(soup.find(id='price-panel').find(class_='pr').text.replace(',', ''))
         return self.feed_price(q, base_currency, r)
 
 
-class BloombergProvider(FeedProvider):
+class BloombergFeedProvider(FeedProvider):
     NAME = 'Bloomberg'
     _BLOOMBERG_URL = 'http://www.bloomberg.com/quote/{}'
     _ASSET_MAP = {'SHENZHEN': 'SZCOMP:IND',
@@ -177,7 +179,7 @@ class BloombergProvider(FeedProvider):
     @check_online_status
     def query_quote(self, q, base_currency=None):
         log.debug('checking quote for %s at %s' % (q, self.NAME))
-        r = requests.get(BloombergProvider._BLOOMBERG_URL.format(self.from_bts(q)))
+        r = requests.get(self._BLOOMBERG_URL.format(self.from_bts(q)))
         soup = BeautifulSoup(r.text, 'html.parser')
         r = float(soup.find(class_='price').text.replace(',', ''))
         return self.feed_price(q, base_currency, r)
@@ -263,6 +265,7 @@ class BterFeedProvider(FeedProvider):
     AVAILABLE_MARKETS = [('BTS', 'BTC'), ('BTS', 'CNY'), ('BTC', 'CNY')]
 
     @check_online_status
+    @check_market
     def get(self, cur, base):
         log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
         r = requests.get('http://data.bter.com/api/1/ticker/%s_%s' % (cur.lower(), base.lower()),
@@ -277,6 +280,7 @@ class Btc38FeedProvider(FeedProvider):
     AVAILABLE_MARKETS = [('BTS', 'BTC'), ('BTS', 'CNY'), ('BTC', 'CNY')]
 
     @check_online_status
+    @check_market
     def get(self, cur, base):
         log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
         headers = {'content-type': 'application/json',
@@ -297,14 +301,28 @@ class Btc38FeedProvider(FeedProvider):
                                volume=float(r['ticker']['vol']))
 
 
-ALL_FEED_PROVIDERS = {'yahoo': YahooProvider,
-                      'google': GoogleProvider,
-                      'bloomberg': BloombergProvider,
-                      'bitcoinaverage': BitcoinAverageFeedProvider,
-                      'bitfinex': BitfinexFeedProvider,
-                      'bitstamp': BitstampFeedProvider,
-                      'poloniex': PoloniexFeedProvider,
-                      'ccedk': CCEDKFeedProvider,
-                      'bter': BterFeedProvider,
-                      'btc38': Btc38FeedProvider,
-                      }
+class YunbiFeedProvider(FeedProvider):
+    NAME = 'Yunbi'
+    AVAILABLE_MARKETS = [('BTS', 'BTC'), ('BTS', 'CNY'), ('BTC', 'CNY')]
+
+    @check_online_status
+    @check_market
+    def get(self, cur, base):
+        log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
+        headers = {'content-type': 'application/json',
+                   'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
+        r = requests.get('https://yunbi.com/api/v2/tickers.json',
+                         timeout=10,
+                         headers=headers).json()
+        r = r['{}{}'.format(cur.lower(), base.lower())]
+        return self.feed_price(cur, base,
+                               price=float(r['ticker']['last']),
+                               volume=float(r['ticker']['vol']),
+                               last_updated=datetime.utcfromtimestamp(r['at']))
+
+_suffix = 'FeedProvider'
+ALL_FEED_PROVIDERS = {name[:-len(_suffix)].lower(): cls
+                      for (name, cls) in globals().items()
+                      if name.endswith(_suffix)}
+
+del ALL_FEED_PROVIDERS['']  # remove base FeedProvider class
