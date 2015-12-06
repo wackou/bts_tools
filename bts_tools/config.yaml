@@ -204,9 +204,9 @@ monitoring:
         maintenance_collateral_ratio: 1750  # Call when collateral only pays off 175% the debt
         maximum_short_squeeze_ratio: 1100   # Stop calling when collateral only pays off 110% of the debt
         check_time_interval: 300
-        #publish_time_interval: 2400         # use this to publish feeds at fixed time intervals (in seconds)
-        publish_time_slot: 0                # use this to publish every hour at a fixed number of minutes (in minutes)
-        median_time_span: 1800
+        publish_time_interval: 900          # use this to publish feeds at fixed time intervals (in seconds)
+        #publish_time_slot: 0               # use this to publish every hour at a fixed number of minutes (in minutes)
+        median_time_span: 900
         feed_providers: [Poloniex, CCEDK, Bter, Btc38, Yunbi, # BTS valuation
                          Yahoo, Google, Bloomberg]            # market indices
         visible_feeds: [USD, BTC, CNY, GOLD, EUR]
