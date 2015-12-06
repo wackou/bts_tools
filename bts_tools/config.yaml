@@ -207,8 +207,8 @@ monitoring:
         #publish_time_interval: 2400         # use this to publish feeds at fixed time intervals (in seconds)
         publish_time_slot: 0                # use this to publish every hour at a fixed number of minutes (in minutes)
         median_time_span: 1800
-        feed_providers: [Poloniex, CCEDK, Bter, Btc38, # BTS valuation
-                         Yahoo, Google, Bloomberg]     # market indices
+        feed_providers: [Poloniex, CCEDK, Bter, Btc38, Yunbi, # BTS valuation
+                         Yahoo, Google, Bloomberg]            # market indices
         visible_feeds: [USD, BTC, CNY, GOLD, EUR]
 
     payroll:

@@ -20,9 +20,10 @@
 
 from . import core
 from .core import hashabledict
-from .feed_providers import YahooProvider, BterFeedProvider, Btc38FeedProvider,\
-    PoloniexFeedProvider, GoogleProvider, BloombergProvider, BitcoinAverageFeedProvider,\
-    CCEDKFeedProvider, BitfinexFeedProvider, BitstampFeedProvider, ALL_FEED_PROVIDERS
+from .feed_providers import YahooFeedProvider, BterFeedProvider, Btc38FeedProvider,\
+    PoloniexFeedProvider, GoogleFeedProvider, BloombergFeedProvider, BitcoinAverageFeedProvider,\
+    CCEDKFeedProvider, BitfinexFeedProvider, BitstampFeedProvider, YunbiFeedProvider,\
+    ALL_FEED_PROVIDERS
 from collections import deque, defaultdict
 from contextlib import suppress
 from concurrent.futures import ThreadPoolExecutor
@@ -127,25 +128,18 @@ def get_feed_prices():
     # do not include:
     # - BTC as we don't get it from yahoo
     # - USD as it is our base currency
-    yahoo = YahooProvider()
-    yahoo_curs = BIT_ASSETS - {'BTC', 'USD'}
+    yahoo = YahooFeedProvider()
+    yahoo_curs = BIT_ASSETS - {'BTC', 'USD', 'CNY'}
     yahoo_prices = yahoo.get(yahoo_curs, 'USD')
 
     # 1- get the BitShares price in major markets: BTC, USD and CNY
-
-    # TODO: use some other source for btc valuation than btc/cny on bter/btc38...
-    # first get rate conversion between USD/CNY from yahoo and CNY/BTC from
-    # bter and btc38 (use CNY and not USD as the market is bigger)
-    cny_usd = yahoo_prices.pop('CNY')
-
-    bter, btc38, poloniex, ccedk, bitcoinavg, bitfinex, bitstamp = (
+    bter, btc38, poloniex, ccedk, bitcoinavg, bitfinex, bitstamp, yunbi = (
         BterFeedProvider(), Btc38FeedProvider(), PoloniexFeedProvider(),
         CCEDKFeedProvider(), BitcoinAverageFeedProvider(), BitfinexFeedProvider(),
-        BitstampFeedProvider())
+        BitstampFeedProvider(), YunbiFeedProvider())
 
     # 1.1- first get the bts/btc valuation
-    # FIXME: log markets and their contribution so we can check volume is correct
-    providers_bts_btc = {bter, btc38, poloniex, ccedk} & active_providers
+    providers_bts_btc = {bter, btc38, poloniex, ccedk, yunbi} & active_providers
     if not providers_bts_btc:
         log.warning('No feed providers for BTS/BTC feed price')
     all_feeds = get_multi_feeds('get', [('BTS', 'BTC')], providers_bts_btc)
@@ -178,7 +172,19 @@ def get_feed_prices():
     btc_usd = weighted_mean(feeds_btc_usd)
 
     usd_price = btc_price * btc_usd
-    cny_price = usd_price / cny_usd
+
+    # 1.3- get the bts/cny valuation directly from cny markets. Going from bts/btc and
+    #      btc/cny to bts/cny introduces a slight difference (2-3%) that doesn't exist on
+    #      the actual chinese markets
+    providers_bts_cny = {bter, btc38, yunbi} & active_providers
+
+    # TODO: should go at the beginning: submit all fetching tasks to an event loop / threaded executor,
+    # compute valuations once we have everything
+    #all_feeds.append(get_multi_feeds('get', [('BTS', 'CNY')], providers_bts_cny))
+    feeds_bts_cny = get_multi_feeds('get', [('BTS', 'CNY')], providers_bts_cny)
+    bts_cny = weighted_mean(feeds_bts_cny)
+
+    cny_price = bts_cny
 
     feeds['BTC'] = btc_price
     feeds['USD'] = usd_price
@@ -193,7 +199,7 @@ def get_feed_prices():
         feeds[cur] = usd_price / yprice
 
     # 3- get the feeds for major composite indices
-    providers_quotes = {yahoo, GoogleProvider(), BloombergProvider()}
+    providers_quotes = {yahoo, GoogleFeedProvider(), BloombergFeedProvider()}
 
     all_quotes = get_multi_feeds('query_quote',
                                  BIT_ASSETS_INDICES.items(), providers_quotes & active_providers,
