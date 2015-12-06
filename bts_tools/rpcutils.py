@@ -198,7 +198,7 @@ class BTSProxy(object):
                 cmd += 'bts-rpc %d %s %s %s %s 2>/dev/null"' % (self.rpc_port, self.rpc_user, self.rpc_password,
                                                     funcname, ' '.join(str(arg) for arg in args))
 
-                result = run(cmd, io=True, verbose=False).stdout
+                result = run(cmd, capture_io=True, verbose=False).stdout
                 try:
                     result = json.loads(result)
                 except:
@@ -355,7 +355,8 @@ class BTSProxy(object):
         return self.rpc_host in ['localhost', '127.0.0.1']
 
     def is_witness_localhost(self):
-        return self.witness_host in ['localhost', '127.0.0.1']
+        host = self.witness_host if self.is_graphene_based() else self.rpc_host
+        return host in ['localhost', '127.0.0.1']
 
     def get_witness_name(self, witness_id):
         try:

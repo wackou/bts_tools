@@ -61,7 +61,7 @@ def is_valid_node(node):
 
 def monitor(node, ctx, cfg):
     # only monitor cpu and network if we are monitoring localhost
-    if node.rpc_host.is_witness_localhost():
+    if node.is_witness_localhost():
         p = node.process()
         if p is not None:
             connections = int(node.network_get_info()['connection_count']) if node.is_graphene_based() else ctx.info['network_num_connections']

@@ -286,12 +286,12 @@ def join_shell_cmd(cmd):
     return cmd
 
 
-def _run(cmd, io=False, verbose=False):
+def _run(cmd, capture_io=False, verbose=False):
     cmd = join_shell_cmd(cmd)
 
     (log.info if verbose else log.debug)('SHELL: running command: %s' % cmd)
 
-    if io:
+    if capture_io:
         p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
         if sys.version_info[0] >= 3:
@@ -305,10 +305,12 @@ def _run(cmd, io=False, verbose=False):
         return IOStream(p.returncode, None, None)
 
 
-def run(cmd, io=False, verbose=True):
-    r = _run(cmd, io, verbose)
+def run(cmd, capture_io=False, verbose=True):
+    r = _run(cmd, capture_io, verbose)
     if r.status != 0:
         log.warning('Failed running: %s' % cmd)
+        if capture_io:
+            log.warning('\nSTDOUT:\n{}\nSTDERR:\n:{}'.format(r.stdout, r.stderr))
         raise RuntimeError('Failed running: %s' % cmd)
     return r
 
@@ -319,7 +321,7 @@ def get_version():
         with open(version_file) as f:
             return f.read().strip()
     try:
-        return run('git describe --tags', io=True, verbose=False).stdout.strip()
+        return run('git describe --tags', capture_io=True, verbose=False).stdout.strip()
     except Exception:
         return 'unknown'
 

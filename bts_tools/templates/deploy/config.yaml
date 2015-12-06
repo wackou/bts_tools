@@ -1,0 +1,217 @@
+---
+# Config file containing the build, run and monitor environments and
+# other configuration variables
+#
+# This file should contain sensible default values in as many places as
+# possible, but you will have to at least specify your own values in the
+# following categories:
+#  - run_environments [for the cmdline tool]
+#  - nodes            [for the monitoring webapp]
+#
+# For a more detailed description of the format of this file, visit:
+# https://bts-tools.readthedocs.org/en/latest/config_format.html
+#
+
+# the logging levels for the different submodules
+# can be any of DEBUG, INFO, WARNING, ERROR
+logging:
+    bts_tools: DEBUG
+    bts_tools.core: INFO
+    bts_tools.backbone: INFO
+    bts_tools.graphene: INFO
+    bts_tools.rpcutils: INFO
+    bts_tools.monitoring: INFO
+    bts_tools.notification: INFO
+    bts_tools.feeds: INFO
+    bts_tools.profile: INFO
+
+
+# flags to be passed to make; shared among all build environments
+make_args: ['-j2']
+
+#
+# list of configurations for building the bitshares client
+#
+# by default, if you don't specify a build env on the cmdline, the tools will
+# use the 'bts' environment
+#
+build_environments:
+    bts2:
+        debug: false
+        git_repo: https://github.com/bitshares/bitshares-2.git
+        git_branch: bitshares
+        build_dir: ~/.BitShares2_build
+        bin_dir: ~/.BitShares2_bin
+
+    muse:
+        debug: false
+        git_repo: https://github.com/peertracksinc/muse.git
+        git_branch: muse
+        build_dir: ~/.Muse_build
+        bin_dir: ~/.Muse_bin
+
+    bts:
+        git_repo: https://github.com/BitShares/bitshares.git
+        git_branch: master
+        build_dir: ~/.BitShares_build
+        bin_dir: ~/.BitShares_bin
+
+    bts-dev:
+        git_repo: https://github.com/BitShares/bitshares.git
+        git_branch: develop
+        build_dir: ~/.BitSharesDev_build
+        bin_dir: ~/.BitSharesDev_bin
+
+    dvs:
+        git_repo: https://github.com/BitShares/bitshares.git
+        git_branch: devshares
+        build_dir: ~/.DevShares_build
+        bin_dir: ~/.DevShares_bin
+
+    pts:
+        git_repo: https://github.com/PTS-DPOS/PTS.git
+        git_branch: master
+        build_dir: ~/.PTS_build
+        bin_dir: ~/.PTS_bin
+
+    pts-dev:
+        git_repo: https://github.com/PTS-DPOS/PTS.git
+        git_branch: develop
+        build_dir: ~/.PTSdev_build
+        bin_dir: ~/.PTSdev_bin
+
+    pls:
+        git_repo: https://github.com/dacsunlimited/dac_play.git
+        git_branch: master
+        build_dir: ~/.Play_build
+        bin_dir: ~/.Play_bin
+
+
+#
+# list of clients that can be run
+#
+# by default, if you don't specify a client on the cmdline, the tools will
+# run the client using the 'bts' run environment
+#
+run_environments:
+    bts:
+        type: bts
+
+    bts2:
+        type: bts2
+        data_dir: ~/.BitShares2
+        p2p_port: 1779
+        witness_port: 8090
+        cli_port: 8093
+
+    seed:
+        type: bts2
+        data_dir: ~/.BitShares2_seed
+        p2p_port: 1776
+        witness_port: 8190
+        cli_port: 8193
+
+    backbone:
+        type: bts2
+        data_dir: ~/.BitShares2_backbone
+        p2p_port: 1777
+        witness_port: 8290
+        cli_port: 8293
+
+    muse:
+        type: muse
+        data_dir: ~/.Muse
+        p2p_port: 1781
+        witness_port: 8390
+        cli_port: 8393
+
+    debug:
+        type: bts
+        debug: true
+
+    bts-dev:
+        type: bts-dev
+
+    dvs:
+        type: dvs
+
+    pts:
+        type: pts
+
+    pts-dev:
+        type: pts-dev
+
+    pls:
+        type: pls
+
+
+# activate the debug flag on the wsgi app
+wsgi_debug: false
+
+# whether to profile how much time the RPC calls take to render
+profile: false
+
+#
+# list of nodes (delegate accounts / seed nodes) that are being monitored
+#
+nodes: []
+
+#
+# list of ip:port for the backbone nodes
+#
+backbone:
+    - backbone01.digitalgaia.io:1777
+    - backbone02.digitalgaia.io:1777
+
+#
+# configuration of the monitoring plugins
+#
+monitoring:
+    monitor_time_interval: 5
+
+    cpu_ram_usage:
+        plots_time_span: 86400
+
+    network_connections:
+        min_connections: 5
+
+    seed:
+        desired_number_of_connections: 200
+        maximum_number_of_connections: 400
+
+    backbone:
+        desired_number_of_connections: 200
+        maximum_number_of_connections: 400
+
+    prefer_backbone_exclusively:
+        minimum_required_connections: 2
+
+    feeds:
+        core_exchange_factor: 0.95          # 5% discount if paying fees in bitassets
+        maintenance_collateral_ratio: 1750  # Call when collateral only pays off 175% the debt
+        maximum_short_squeeze_ratio: 1100   # Stop calling when collateral only pays off 110% of the debt
+        check_time_interval: 300
+        #publish_time_interval: 2400         # use this to publish feeds at fixed time intervals (in seconds)
+        publish_time_slot: 0                # use this to publish every hour at a fixed number of minutes (in minutes)
+        median_time_span: 1800
+        feed_providers: [Poloniex, CCEDK, Btc38, Yunbi, # BTS valuation
+                         Yahoo, Google, Bloomberg]      # market indices
+        visible_feeds: [USD, BTC, CNY, GOLD, EUR]
+
+    payroll:
+        timezone_offset: 0                       # vps timezone difference from payee timezone (for logging purposes)
+        pay_interval: 14                         # How often (in days) between each payday
+        minimum_balance: 0                       # Amount to maintain in delegate account for fees
+        payday_file: last_payday.dat             # Holds the date & time of the last payout
+        transactions_file: transactions.txt      # Holds the list of payout transactions
+        accounts: [account1, account2]           # List of accounts to pay for testing
+        pay_rate: [60, 40]                       # Percentage to distribute to each account
+
+
+#
+# configuration of the notification types
+#
+notification:
+    email: {}
+    boxcar:
+        tokens: []

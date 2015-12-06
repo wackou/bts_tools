@@ -22,16 +22,19 @@ from os.path import join, dirname, exists, islink, expanduser
 from argparse import RawTextHelpFormatter
 from contextlib import suppress
 from pathlib import Path
+from jinja2 import Environment, PackageLoader
+from ruamel import yaml
 from .core import platform, run, get_data_dir, get_bin_name, get_gui_bin_name, get_all_bin_names, is_graphene_based, join_shell_cmd
 from . import core, init
 from .rpcutils import rpc_call, BTSProxy
+from .vps.vultr import VultrAPI
 import argparse
 import os
 import sys
 import shutil
 import arrow
 import json
-import yaml
+#import yaml
 import logging
 
 log = logging.getLogger(__name__)
@@ -153,14 +156,14 @@ def build_gui():
 
 def install_last_built_bin():
     # install into bin dir
-    date = run('git show -s --format=%ci HEAD', io=True, verbose=False).stdout.split()[0]
-    branch = run('git rev-parse --abbrev-ref HEAD', io=True, verbose=False).stdout.strip()
-    commit = run('git log -1', io=True, verbose=False).stdout.splitlines()[0].split()[1]
+    date = run('git show -s --format=%ci HEAD', capture_io=True, verbose=False).stdout.split()[0]
+    branch = run('git rev-parse --abbrev-ref HEAD', capture_io=True, verbose=False).stdout.strip()
+    commit = run('git log -1', capture_io=True, verbose=False).stdout.splitlines()[0].split()[1]
 
     # find a nice filename representation
     def decorated_filename(filename):
         try:
-            r = run('git describe --tags %s' % commit, io=True, verbose=False)
+            r = run('git describe --tags %s' % commit, capture_io=True, verbose=False)
             if r.status == 0:
                 # we are on a tag, use it for naming binary
                 tag = r.stdout.strip().replace('/', '_')
@@ -198,6 +201,29 @@ def install_last_built_bin():
     for bname in get_all_bin_names(BUILD_ENV['name']):
         install_and_symlink(bname)
 
+def deploy(build_env, remote_host):
+    select_build_environment(build_env)
+
+    log.info('Deploying built binaries to {}'.format(remote_host))
+    remote_bin_dir = core.config['build_environments'][build_env]['bin_dir']
+
+    # strip binaries before sending, saves up to 10x space
+    for bin_name in get_all_bin_names(BUILD_ENV['name']):
+        bin_name = os.path.basename(bin_name)
+        latest = os.path.basename(os.path.realpath(join(BTS_BIN_DIR, bin_name)))
+        run('strip "{}/{}"'.format(BTS_BIN_DIR, latest))
+
+    # sync all
+    run('rsync -avzP "{}/" {}:"{}/"'.format(BTS_BIN_DIR, remote_host, remote_bin_dir))
+
+    # also symlink properly latest built binaries)
+    for bin_name in get_all_bin_names(BUILD_ENV['name']):
+        bin_name = os.path.basename(bin_name)
+        latest = os.path.basename(os.path.realpath(join(BTS_BIN_DIR, bin_name)))
+        run('ssh {} "ln -fs {}/{} {}/{}"'.format(remote_host,
+                                                 remote_bin_dir, latest,
+                                                 remote_bin_dir, bin_name))
+
 
 
 def main(flavor='bts'):
@@ -215,7 +241,7 @@ def main(flavor='bts'):
   - monitor          : run the monitoring web app
   - publish_slate    : publish the slate as described in the given file
   - deploy           : deploy built binaries to a remote server
-  - deploy_seed      : full deploy of a seed node on given ip address. Needs ssh root access
+  - deploy_node      : full deploy of a seed or witness node on given ip address. Needs ssh root access
 
 Examples:
   $ %(bin)s build          # build the latest %(bin)s client by default
@@ -237,7 +263,7 @@ Examples:
                                      formatter_class=RawTextHelpFormatter)
     parser.add_argument('command', choices=['version', 'clean_homedir', 'clean', 'build', 'build_gui',
                                             'run', 'run_cli', 'run_gui', 'list', 'monitor', 'publish_slate',
-                                            'deploy'],
+                                            'deploy', 'deploy_node'],
                         help='the command to run')
     parser.add_argument('-r', '--norpc', action='store_true',
                         help='run binary with RPC server deactivated')
@@ -276,7 +302,7 @@ Examples:
         def search_tag(tag):
             env = args.environment
             if env in {'bts', 'dvs', 'pls'}:
-                tags = run('cd %s; git tag -l' % BTS_BUILD_DIR, io=True, verbose=False).stdout.strip().split('\n')
+                tags = run('cd %s; git tag -l' % BTS_BUILD_DIR, capture_io=True, verbose=False).stdout.strip().split('\n')
                 for pattern in ['%s/%s', '%s/v%s']:
                     if pattern % (env, tag) in tags:
                         return pattern % (env, tag)
@@ -329,7 +355,7 @@ Examples:
             print('Running specific instance of the %s client: %s' % (flavor, tag))
             bin_name = run('ls %s' % join(BTS_BIN_DIR,
                                           '%s_*%s*' % (bin_name, tag[:8])),
-                           io=True, verbose=False).stdout.strip()
+                           capture_io=True, verbose=False).stdout.strip()
             run_args += args.args[1:]
         else:
             # run last built version
@@ -433,32 +459,132 @@ Examples:
         run('python3 -m bts_tools.wsgi')
 
     elif args.command == 'deploy':
-        select_build_environment(args.environment)
-
         if not args.args:
             log.error('You need to specify a remote host to deploy to')
             sys.exit(1)
 
         for remote_host in args.args:
-            log.info('Deploying built binaries to {}'.format(remote_host))
-            remote_bin_dir = core.config['build_environments'][args.environment]['bin_dir']
+            deploy(args.environment, remote_host)
 
-            # strip binaries before sending, saves up to 10x space
-            for bin_name in get_all_bin_names(BUILD_ENV['name']):
-                bin_name = os.path.basename(bin_name)
-                latest = os.path.basename(os.path.realpath(join(BTS_BIN_DIR, bin_name)))
-                run('strip "{}/{}"'.format(BTS_BIN_DIR, latest))
+    elif args.command == 'deploy_node':
+        config_file = args.args[0] if args.args else None
+        print()
+        if not config_file:
+            log.error('You need to specify a deployment config file as argument')
+            log.info('It should be a YAML file with the following format')
+            config_example = """
+host: 192.168.0.1  # ip or name of host to deploy to, needs ssh access
+pause: true  # pause between installation steps
+is_debian: true
+install_compile_dependencies: false
 
-            # sync all
-            run('rsync -avzP "{}/" {}:"{}/"'.format(BTS_BIN_DIR, remote_host, remote_bin_dir))
+unix_hostname: seed01
+unix_user: &user myuser
+unix_password: changeme!
+git_name: John Doe
+git_email: johndoe@example.com
+nginx_server_name: seed01.bitsharesnodes.com
+uwsgi_user: *user
+uwsgi_group: *user
+"""
+            print(config_example)
+            #default_config = join(dirname(__file__), 'deploy_config.yaml')
+            #log.info('You can find an example config at: %s' % default_config)
+            sys.exit(1)
 
-            # also symlink properly latest built binaries)
-            for bin_name in get_all_bin_names(BUILD_ENV['name']):
-                bin_name = os.path.basename(bin_name)
-                latest = os.path.basename(os.path.realpath(join(BTS_BIN_DIR, bin_name)))
-                run('ssh {} "ln -fs {}/{} {}/{}"'.format(remote_host,
-                                                         remote_bin_dir, latest,
-                                                         remote_bin_dir, bin_name))
+        log.info('Reading config from file: %s' % config_file)
+        with open(config_file, 'r') as f:
+            cfg = yaml.load(f)
+
+        # 0.0- create vps instance
+        if cfg.get('host'):
+            # do not create an instance, use the one on the given ip address
+            pass
+
+        elif cfg['vps'].get('provider', '').lower() == 'vultr':
+            v = cfg['vps']['vultr']
+            vultr = VultrAPI(v['api_key'])
+            params = dict(v)
+            params.pop('api_key')
+            params['label'] = cfg['unix_hostname']
+            ip_addr = vultr.create_server(**params)
+            cfg['host'] = ip_addr
+
+        else:
+            log.warning('No host and no valid vps provider given. Exiting...')
+            return
+
+        # 0- prepare the bundle of files to be copied on the remote host
+        build_dir = '/tmp/bts_deploy'
+        run('rm -fr {d}; mkdir {d}'.format(d=build_dir))
+        env = Environment(loader=PackageLoader('bts_tools', 'templates/deploy'))
+
+        def render_template(template_name, output_name=None):
+            template = env.get_template(template_name)
+            with open(join(build_dir, output_name or template_name), 'w') as output_file:
+                output_file.write(template.render(**cfg))
+
+        # 0.1- generate the install script
+        render_template('install_new_graphene_node.sh')
+        render_template('install_user.sh')
+
+        # 0.2- generate config.yaml file
+        config_yaml = yaml.load(env.get_template('config.yaml').render(), Loader=yaml.RoundTripLoader)
+        config_yaml.update(cfg['config_yaml'])
+        with open(join(build_dir, 'config.yaml'), 'w') as config_yaml_file:
+            config_yaml_file.write(yaml.dump(config_yaml, indent=4, Dumper=yaml.RoundTripDumper))
+
+        # 0.3- generate api_access.json
+
+
+        # 0.4- nginx
+        nginx = join(build_dir, 'etc', 'nginx')
+        run('mkdir -p {} {}'.format(join(nginx, 'sites-available'),
+                                    join(nginx, 'sites-enabled')))
+        render_template('nginx_sites_available', join(nginx, 'sites-available', 'default'))
+        run('cd {}; ln -s ../sites-available/default'.format(join(nginx, 'sites-enabled')))
+        run('cd {}; tar cvzf {} etc/nginx'.format(build_dir, join(build_dir, 'etcNginx.tgz')))
+
+        def run_remote(cmd):
+            run('ssh root@{} "{}"'.format(host, cmd))
+
+        def copy(filename, dest_dir):
+            run('scp "{}" root@"{}:{}"/'.format(filename, dest_dir))
+
+
+        # 0.5- uwsgi
+        uwsgi = join(build_dir, 'etc', 'uwsgi')
+        run('mkdir -p {} {}'.format(join(uwsgi, 'apps-available'),
+                                    join(uwsgi, 'apps-enabled')))
+        render_template('uwsgi_apps_available', join(uwsgi, 'apps-available', 'bts_tools.ini'))
+        run('cd {}; ln -s ../apps-available/bts_tools.ini'.format(join(uwsgi, 'apps-enabled')))
+        run('cd {}; tar cvzf {} etc/uwsgi'.format(build_dir, join(build_dir, 'etcUwsgi.tgz')))
+
+        # 0.6- get authorized_keys if any
+        if cfg.get('ssh_keys'):
+            with open(join(build_dir, 'authorized_keys'), 'w') as key_file:
+                for key in cfg['ssh_keys']:
+                    key_file.write('{}\n'.format(key))
+
+        run('rm -fr {}'.format(join(build_dir, 'etc')))
+
+        host = cfg['host']
+        # 1- ssh to host and scp or rsync the installation scripts and tarballs
+        log.info('Copying install scripts to remote host')
+        run('ssh root@{} "apt-get install -yfV rsync"'.format(host))
+        run('rsync -avzP {}/* root@{}:/tmp/'.format(build_dir, host))
+
+        # 2- run the installation script remotely
+        log.info('Installing remote host')
+        run('ssh root@{} "cd /tmp; bash install_new_graphene_node.sh"'.format(host))
+
+        # 3- copy prebuilt binaries
+        log.info('Deploying prebuilt binaries')
+        deploy(args.environment, '{}@{}'.format(cfg['unix_user'], host))
+
+        # 4- reboot remote host
+        log.info('Installation completed successfully, starting fresh node')
+        run('ssh root@{} reboot'.format(host))
 
     elif args.command == 'publish_slate':
         slate_file = args.args[0] if args.args else None

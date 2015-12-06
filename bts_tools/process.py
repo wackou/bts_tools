@@ -30,11 +30,11 @@ def bts_process(node):
         log.error('DEPRECATED: call to process.bts_process() without specifying a node...')
         return None
 
-    host = node.witness_host if node.is_graphene_based() else node.rpc_host
-    port = node.witness_port if node.is_graphene_based() else node.rpc_port
-
-    if not host.is_witness_localhost():
+    if not node.is_witness_localhost():
         return None
+
+    #host = node.witness_host if node.is_graphene_based() else node.rpc_host
+    port = node.witness_port if node.is_graphene_based() else node.rpc_port
 
     #log.debug('find bts binary on {}:{}'.format(host, port))
     # find bitshares process

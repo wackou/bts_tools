@@ -6,6 +6,8 @@ This is the day-to-day todo list. For a more high-level overview, see the `roadm
 Main
 ----
 
+* feed script should get all markets at once from a single feed provider (when possible)
+  in order to avoid spamming the service
 * fix blocks missed / produced
 * "bts deploy_seed <ip_addr>" completely sets up a new instance. Should also communicate with
   dns provider to update the dns entry of the new seed node
@@ -15,6 +17,7 @@ Main
   * then, fix "signing key active" display in view header (need bts_tools json-rpc for that)
 * remove deprecated bts-rpc tool, was unusably slow anyway (and we can do better in graphene anyway)
 * update doc / screenshots
+* write detailed doc about how the feed script works
 * fix all FIXMEs left in the code and finalize port to graphene
 
 
