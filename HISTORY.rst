@@ -6,6 +6,12 @@
 History
 =======
 
+0.3.2 (2015-11-06)
+------------------
+
+* interim release that fixes feed for CNY markets
+
+
 0.3.1 (2015-11-01)
 ------------------
 
