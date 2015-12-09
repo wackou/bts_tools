@@ -32,9 +32,10 @@ import argparse
 import os
 import sys
 import shutil
+import base64
+import hashlib
 import arrow
 import json
-#import yaml
 import logging
 
 log = logging.getLogger(__name__)
@@ -467,6 +468,7 @@ Examples:
             deploy(args.environment, remote_host)
 
     elif args.command == 'deploy_node':
+        select_build_environment(args.environment)
         config_file = args.args[0] if args.args else None
         print()
         if not config_file:
@@ -496,9 +498,12 @@ uwsgi_group: *user
         with open(config_file, 'r') as f:
             cfg = yaml.load(f)
 
+        cfg['pause'] = False  # do not pause during installation
+
         # 0.0- create vps instance
         if cfg.get('host'):
             # do not create an instance, use the one on the given ip address
+            log.info('Not creating new instance, using given host: {}'.format(cfg['host']))
             pass
 
         elif cfg['vps'].get('provider', '').lower() == 'vultr':
@@ -534,8 +539,19 @@ uwsgi_group: *user
         with open(join(build_dir, 'config.yaml'), 'w') as config_yaml_file:
             config_yaml_file.write(yaml.dump(config_yaml, indent=4, Dumper=yaml.RoundTripDumper))
 
-        # 0.3- generate api_access.json
+        # 0.3- generate api_access.json and config.ini
+        cfg['witness_api_access_user'] = cfg['witness_api_access']['user']
+        pw_bytes = cfg['witness_api_access']['password'].encode('utf-8')
+        salt_bytes = os.urandom(8)
+        salt_b64 = base64.b64encode(salt_bytes)
+        pw_hash = hashlib.sha256(pw_bytes + salt_bytes).digest()
+        pw_hash_b64 = base64.b64encode(pw_hash)
 
+        cfg['witness_api_access_hash'] = pw_hash_b64.decode('utf-8')
+        cfg['witness_api_access_salt'] = salt_b64.decode('utf-8')
+        render_template('api_access.json')
+
+        render_template('config.ini')
 
         # 0.4- nginx
         nginx = join(build_dir, 'etc', 'nginx')

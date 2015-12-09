@@ -53,9 +53,6 @@ def monitor(node, ctx, cfg):
         maximum = cfg.get('maximum_number_of_connections', 400)
         log.info('Seed node just came online, setting connections to desired: %d, maximum: %d' %
                  (desired, maximum))
-        if node.is_graphene_based():
-            log.warning('network_set_advanced_node_parameters not implemented for graphene yet...')
-        else:
-            node.network_set_advanced_node_parameters({'desired_number_of_connections': desired,
-                                                       'maximum_number_of_connections': maximum})
+        node.network_set_advanced_node_parameters({'desired_number_of_connections': desired,
+                                                   'maximum_number_of_connections': maximum})
 

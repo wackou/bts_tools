@@ -42,6 +42,9 @@ workon bts_tools
 git stash && git pull && git stash apply
 rm -fr dist; python setup.py sdist && (pip uninstall -y bts_tools; pip install dist/bts_tools-*.tar.gz)
 
+# FIXME: temporary fix, see: http://stackoverflow.com/questions/34157314/autobahn-websocket-issue-while-running-with-twistd-using-tac-file
+pip install https://github.com/crossbario/autobahn-python/archive/master.zip
+
 if [ -f /tmp/config.yaml ]; then
     # ensure we have a ~/.bts_tools folder
     bts2 list >/dev/null 2>&1
@@ -60,6 +63,11 @@ if [ -f /tmp/config.yaml ]; then
     echo "------------------------------------"
 else
     echo "no config.yaml file given"
+fi
+
+# copy bts client config.ini, if given
+if [ -f /tmp/config.ini ]; then
+    cp /tmp/config.ini ~/
 fi
 
 # install dependencies for monitoring of graphene clients

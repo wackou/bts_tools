@@ -61,7 +61,7 @@ class VultrAPI(object):
                       DCID=self.datacenters[location.lower()],
                       VPSPLANID=vps_plan_id,
                       OSID=os_id,
-                      LABEL=label,
+                      label=label,
                       SSHKEYID=ssh_key_id)
         sub_id = r['SUBID']
 
