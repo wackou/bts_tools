@@ -260,7 +260,7 @@ def view_info():
     else:
         feeds = {}
 
-    if rpc.main_node.is_graphene_based():
+    if rpc.main_node.type == 'delegate' and rpc.main_node.is_graphene_based():
         info_items2 = sorted(rpc.main_node.get_witness(rpc.main_node.name).items())
         attrs2 = defaultdict(list)
         attrs2['bold'] = [(i, 0) for i in range(len(info_items))]

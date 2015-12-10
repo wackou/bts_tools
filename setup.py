@@ -30,7 +30,8 @@ VERSION = '0.3.1'
 
 
 install_requires = ['Flask', 'requests', 'psutil', 'arrow', 'pyyaml', 'dogpile.cache',
-                    'beautifulsoup4', 'maxminddb-geolite2', 'autobahn', 'ruamel.yaml'
+                    'beautifulsoup4', 'maxminddb-geolite2', 'autobahn', 'ruamel.yaml',
+                    'doit'
                     ]
 
 setup_requires = []
