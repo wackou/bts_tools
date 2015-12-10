@@ -56,7 +56,7 @@
                     {% endif %}
                     </td>
                     <td>{{ host }}</td>
-                    <td>{{ (backbone.get_ip_nofail() if node.rpc_host.is_localhost() and node.is_online() else '') | add_ip_flag | safe }}</td>
+                    <td>{{ (backbone.get_ip_nofail() if node.is_localhost() and node.is_online() else '') | add_ip_flag | safe }}</td>
                     <td>{{ backbone.get_p2p_port(node) if node.is_online() else '' }}</td>
                     <td>{{ node_names|join(', ') }}</td>
                     {% if node.is_online() %}
