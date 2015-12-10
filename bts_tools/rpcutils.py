@@ -467,7 +467,11 @@ class BTSProxy(object):
 
     def is_active(self, delegate):
         if self.is_graphene_based():
-            return self.get_witness(delegate)['id'] in self.info()['active_witnesses']
+            try:
+                return self.get_witness(delegate)['id'] in self.info()['active_witnesses']
+            except:
+                # if witness doesn't exist (eg: at block head = 0), return False instead of failing
+                return False
         else:
             active_delegates = [d['name'] for d in self.blockchain_list_delegates(0, 101)]
             return delegate in active_delegates
