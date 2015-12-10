@@ -600,7 +600,7 @@ uwsgi_group: *user
 
         # 4- reboot remote host
         log.info('Installation completed successfully, starting fresh node')
-        run('ssh root@{} reboot'.format(host))
+        #run('ssh root@{} reboot'.format(host))
 
     elif args.command == 'publish_slate':
         slate_file = args.args[0] if args.args else None

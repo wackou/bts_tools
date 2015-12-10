@@ -55,14 +55,16 @@ class VultrAPI(object):
             r = requests.get('{}/{}'.format(self.endpoint, method), params={'api_key': self.api_key})
         return r.json()
 
-    def create_server(self, location, vps_plan_id, os_id, label, ssh_key_id):
+    def create_server(self, location, vps_plan_id, os_id, label, ssh_key_ids):
         log.info('Creating Vultr instance {} in {}...'.format(label, location))
+        ssh_keys_list = self.call('sshkey/list').values()
+        ssh_keys = {key['name']: key['SSHKEYID'] for key in ssh_keys_list}
         r = self.call('server/create',
                       DCID=self.datacenters[location.lower()],
                       VPSPLANID=vps_plan_id,
                       OSID=os_id,
                       label=label,
-                      SSHKEYID=ssh_key_id)
+                      SSHKEYID=','.join(ssh_keys[k] for k in ssh_key_ids))
         sub_id = r['SUBID']
 
         # wait until server is properly created
@@ -76,7 +78,7 @@ class VultrAPI(object):
         ip_addr = r['main_ip']
         # should wait an additional (reasonable) time, eg: 1-2 minutes
         # from vultr API doc: "the API does not provide any way to determine if the initial installation has completed or not."
-        log.info('Waiting for installation to finish...')
+        log.info('Waiting for installation on {} to finish...'.format(ip_addr))
         time.sleep(180)
         log.info('Vultr instance successfully created on {}!!'.format(ip_addr))
         # make sure we can successfully connect to it via ssh
