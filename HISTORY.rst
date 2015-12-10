@@ -6,6 +6,21 @@
 History
 =======
 
+0.3.3 (2015-12-10)
+------------------
+
+* NOTE: requires the latest version (v2.0.151209) of the BitShares witness client
+* better integration with the websocket event loop
+* network views available again
+* overall lots of minor fixes and general stability improvements
+
+
+0.3.2 (2015-12-06)
+------------------
+
+* interim release that fixes feed for CNY markets
+
+
 0.3.1 (2015-11-01)
 ------------------
 
