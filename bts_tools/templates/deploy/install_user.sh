@@ -67,7 +67,13 @@ fi
 
 # copy bts client config.ini, if given
 if [ -f /tmp/config.ini ]; then
-    cp /tmp/config.ini ~/
+    mkdir ~/.BitShares2/
+    cp /tmp/config.ini ~/.BitShares2/
+fi
+
+# copy api_access.json, if given
+if [ -f /tmp/api_access.json ]; then
+    cp /tmp/api_access.json ~/
 fi
 
 # install dependencies for monitoring of graphene clients
