@@ -578,6 +578,8 @@ uwsgi_group: *user
         run('rm -fr {}'.format(join(build_dir, 'etc')))
 
 
+        host = cfg['host']
+
         def run_remote(cmd):
             run('ssh root@{} "{}"'.format(host, cmd))
 
@@ -586,8 +588,6 @@ uwsgi_group: *user
         def copy(filename, dest_dir):
             run('rsync -avzP "{}" root@{}:"{}"'.format(filename, host, dest_dir))
 
-
-        host = cfg['host']
 
         # 1- ssh to host and scp or rsync the installation scripts and tarballs
         log.info('Copying install scripts to remote host')

@@ -89,7 +89,7 @@ def ws_rpc_call(host, port, api, method, *args):
 
         loop.call_soon_threadsafe(functools.partial(protocol.rpc_call, api, method, *args, result=result))
         try:
-            return result.result(timeout=5)
+            return result.result(timeout=10)
         except TimeoutError:
             log.warning('timeout while calling {} {}({})'.format(api, method, ', '.join(args)))
             return None

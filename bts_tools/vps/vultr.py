@@ -42,6 +42,13 @@ class VultrAPI(object):
                    'silicon valley': 12,
                    'paris': 24}
 
+    plans = {'1g': 93,
+             '2g': 94,
+             '4g': 95,
+             '8g': 96,
+             '16g': 97,
+             '32g': 98}
+
     def __init__(self, api_key, endpoint='https://api.vultr.com/v1'):
         if endpoint.endswith('/'):
             endpoint = endpoint[:-1]
@@ -55,13 +62,13 @@ class VultrAPI(object):
             r = requests.get('{}/{}'.format(self.endpoint, method), params={'api_key': self.api_key})
         return r.json()
 
-    def create_server(self, location, vps_plan_id, os_id, label, ssh_key_ids):
+    def create_server(self, location, vps_plan, os_id, label, ssh_key_ids):
         log.info('Creating Vultr instance {} in {}...'.format(label, location))
         ssh_keys_list = self.call('sshkey/list').values()
         ssh_keys = {key['name']: key['SSHKEYID'] for key in ssh_keys_list}
         r = self.call('server/create',
                       DCID=self.datacenters[location.lower()],
-                      VPSPLANID=vps_plan_id,
+                      VPSPLANID=self.plans[vps_plan.lower()],
                       OSID=os_id,
                       label=label,
                       SSHKEYID=','.join(ssh_keys[k] for k in ssh_key_ids))
