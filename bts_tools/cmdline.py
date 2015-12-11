@@ -561,13 +561,6 @@ uwsgi_group: *user
         run('cd {}; ln -s ../sites-available/default'.format(join(nginx, 'sites-enabled')))
         run('cd {}; tar cvzf {} etc/nginx'.format(build_dir, join(build_dir, 'etcNginx.tgz')))
 
-        def run_remote(cmd):
-            run('ssh root@{} "{}"'.format(host, cmd))
-
-        def copy(filename, dest_dir):
-            run('scp "{}" root@"{}:{}"/'.format(filename, dest_dir))
-
-
         # 0.5- uwsgi
         uwsgi = join(build_dir, 'etc', 'uwsgi')
         run('mkdir -p {} {}'.format(join(uwsgi, 'apps-available'),
@@ -584,15 +577,33 @@ uwsgi_group: *user
 
         run('rm -fr {}'.format(join(build_dir, 'etc')))
 
+
+        def run_remote(cmd):
+            run('ssh root@{} "{}"'.format(host, cmd))
+
+        run_remote('apt-get install -yfV rsync')
+
+        def copy(filename, dest_dir):
+            run('rsync -avzP "{}" root@{}:"{}"'.format(filename, host, dest_dir))
+
+
         host = cfg['host']
+
         # 1- ssh to host and scp or rsync the installation scripts and tarballs
         log.info('Copying install scripts to remote host')
-        run('ssh root@{} "apt-get install -yfV rsync"'.format(host))
-        run('rsync -avzP {}/* root@{}:/tmp/'.format(build_dir, host))
+        copy('{}/*'.format(build_dir), '/tmp/')
+        #run('ssh root@{} "apt-get install -yfV rsync"'.format(host))
+        #run('rsync -avzP {}/* root@{}:/tmp/'.format(build_dir, host))
 
         # 2- run the installation script remotely
         log.info('Installing remote host')
-        run('ssh root@{} "cd /tmp; bash install_new_graphene_node.sh"'.format(host))
+        run_remote('cd /tmp; bash install_new_graphene_node.sh')
+        #run('ssh root@{} "cd /tmp; bash install_new_graphene_node.sh"'.format(host))
+
+        # 2.1- install supervisord conf
+        run_remote('apt-get install supervisor')
+        render_template('supervisord.conf')
+        copy(join(build_dir, 'supervisord.conf'), '/etc/supervisor/conf.d/bts_tools.conf')
 
         # 3- copy prebuilt binaries
         log.info('Deploying prebuilt binaries')
@@ -600,6 +611,7 @@ uwsgi_group: *user
 
         # 4- reboot remote host
         log.info('Installation completed successfully, starting fresh node')
+        run_remote('reboot')
         #run('ssh root@{} reboot'.format(host))
 
     elif args.command == 'publish_slate':
