@@ -6,6 +6,8 @@ This is the day-to-day todo list. For a more high-level overview, see the `roadm
 Main
 ----
 
+* rename bts2 to bts
+* implement feed for tcny
 * feed script should get all markets at once from a single feed provider (when possible)
   in order to avoid spamming the service
 * fix blocks missed / produced

@@ -601,7 +601,7 @@ uwsgi_group: *user
         #run('ssh root@{} "cd /tmp; bash install_new_graphene_node.sh"'.format(host))
 
         # 2.1- install supervisord conf
-        run_remote('apt-get install supervisor')
+        run_remote('apt-get install -yfV supervisor')
         render_template('supervisord.conf')
         copy(join(build_dir, 'supervisord.conf'), '/etc/supervisor/conf.d/bts_tools.conf')
 
