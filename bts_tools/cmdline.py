@@ -589,16 +589,16 @@ uwsgi_group: *user
 
         host = cfg['host']
 
-        def run_remote(cmd):
-            run('ssh root@{} "{}"'.format(host, cmd))
+        def run_remote(cmd, user='root'):
+            run('ssh {}@{} "{}"'.format(user, host, cmd))
 
         # make sure we can successfully connect to it via ssh without confirmation
         run('ssh -o "StrictHostKeyChecking no" root@{} ls'.format(host))
 
         run_remote('apt-get install -yfV rsync')
 
-        def copy(filename, dest_dir):
-            run('rsync -avzP {} root@{}:"{}"'.format(filename, host, dest_dir))
+        def copy(filename, dest_dir, user='root'):
+            run('rsync -avzP {} {}@{}:"{}"'.format(filename, user, host, dest_dir))
 
 
         # 1- ssh to host and scp or rsync the installation scripts and tarballs
@@ -622,10 +622,17 @@ uwsgi_group: *user
         log.info('Deploying prebuilt binaries')
         deploy(args.environment, '{}@{}'.format(cfg['unix_user'], host))
 
-        # 4- reboot remote host
+        # 4- copy snapshot of the blockchain, if available
+        snapshot = cfg.get('blockchain_snapshot')
+        if snapshot:
+            run_remote('mkdir -p ~/.BitShares2', user=cfg['unix_user'])
+            copy(snapshot, '~/.BitShares2/blockchain')
+
+
+        # 5- reboot remote host
         log.info('Installation completed successfully, starting fresh node')
-        run_remote('reboot')
-        #run('ssh root@{} reboot'.format(host))
+        log.warning('The script will now hang, sorry... Please stop it using ctrl-c')
+        run_remote('reboot')  # FIXME: we hang here on reboot
 
     elif args.command == 'publish_slate':
         slate_file = args.args[0] if args.args else None
