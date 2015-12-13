@@ -27,7 +27,7 @@ from ruamel import yaml
 from .core import platform, run, get_data_dir, get_bin_name, get_gui_bin_name, get_all_bin_names, is_graphene_based, join_shell_cmd
 from . import core, init
 from .rpcutils import rpc_call, BTSProxy
-from .vps.vultr import VultrAPI
+from .vps import VultrAPI, GandiAPI
 import argparse
 import os
 import sys
@@ -515,6 +515,15 @@ uwsgi_group: *user
             ip_addr = vultr.create_server(**params)
             cfg['host'] = ip_addr
 
+        elif cfg['vps'].get('provider', '').lower() == 'gandi':
+            v = cfg['vps']['gandi']
+            gandi = GandiAPI(v['api_key'])
+            params = dict(v)
+            params.pop('api_key')
+            params['label'] = cfg['unix_hostname']
+            ip_addr = gandi.create_server(**params)
+            cfg['host'] = ip_addr
+
         else:
             log.warning('No host and no valid vps provider given. Exiting...')
             return
@@ -583,10 +592,13 @@ uwsgi_group: *user
         def run_remote(cmd):
             run('ssh root@{} "{}"'.format(host, cmd))
 
+        # make sure we can successfully connect to it via ssh without confirmation
+        run('ssh -o "StrictHostKeyChecking no" root@{} ls'.format(host))
+
         run_remote('apt-get install -yfV rsync')
 
         def copy(filename, dest_dir):
-            run('rsync -avzP "{}" root@{}:"{}"'.format(filename, host, dest_dir))
+            run('rsync -avzP {} root@{}:"{}"'.format(filename, host, dest_dir))
 
 
         # 1- ssh to host and scp or rsync the installation scripts and tarballs
@@ -601,6 +613,7 @@ uwsgi_group: *user
         #run('ssh root@{} "cd /tmp; bash install_new_graphene_node.sh"'.format(host))
 
         # 2.1- install supervisord conf
+        log.info('Installing supervisord config')
         run_remote('apt-get install -yfV supervisor')
         render_template('supervisord.conf')
         copy(join(build_dir, 'supervisord.conf'), '/etc/supervisor/conf.d/bts_tools.conf')

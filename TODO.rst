@@ -6,6 +6,8 @@ This is the day-to-day todo list. For a more high-level overview, see the `roadm
 Main
 ----
 
+* use pid to detect when a node goes offline and comes back up immediately
+* when witness is online, but cli offline, we should still be able to monitor cpu/ram usage
 * rename bts2 to bts
 * implement feed for tcny
 * feed script should get all markets at once from a single feed provider (when possible)

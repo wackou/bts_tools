@@ -84,7 +84,7 @@ def ws_rpc_call(host, port, api, method, *args):
         try:
             loop = _event_loops[(host, port)]
         except KeyError:
-            raise RuntimeError('Websocket event loop for {}:{} not available yet')
+            raise RuntimeError('Websocket event loop for {}:{} not available yet'.format(host, port))
         protocol = _monitoring_protocols[(host, port)]
 
         loop.call_soon_threadsafe(functools.partial(protocol.rpc_call, api, method, *args, result=result))

@@ -36,15 +36,15 @@ def bts_process(node):
     #host = node.witness_host if node.is_graphene_based() else node.rpc_host
     port = node.witness_port if node.is_graphene_based() else node.rpc_port
 
-    #log.debug('find bts binary on {}:{}'.format(host, port))
-    # find bitshares process
-    procs = [p for p in psutil.process_iter()
-             if node.bin_name in p.name()]
-
     # find the process corresponding to our node by looking at the rpc port
-    for p in procs:
-        if port in [c.laddr[1] for c in p.connections()]:
-            return p
+    #log.debug('find bts binary on {}:{}'.format(host, port))
+    procs = [p for p in psutil.process_iter()
+             if node.bin_name in p.name() and port in [c.laddr[1] for c in p.connections()]]
+
+    if procs:
+        if len(procs) > 1:
+            log.warning('More than 1 potential bts process: {}'.format(','.join(p.name for p in procs)))
+        return procs[0]
 
     return None
 

@@ -62,16 +62,16 @@ class VultrAPI(object):
             r = requests.get('{}/{}'.format(self.endpoint, method), params={'api_key': self.api_key})
         return r.json()
 
-    def create_server(self, location, vps_plan, os_id, label, ssh_key_ids):
+    def create_server(self, location, vps_plan, os_id, label, ssh_keys):
         log.info('Creating Vultr instance {} in {}...'.format(label, location))
         ssh_keys_list = self.call('sshkey/list').values()
-        ssh_keys = {key['name']: key['SSHKEYID'] for key in ssh_keys_list}
+        ssh_key_id = {key['name']: key['SSHKEYID'] for key in ssh_keys_list}
         r = self.call('server/create',
                       DCID=self.datacenters[location.lower()],
                       VPSPLANID=self.plans[vps_plan.lower()],
                       OSID=os_id,
                       label=label,
-                      SSHKEYID=','.join(ssh_keys[k] for k in ssh_key_ids))
+                      SSHKEYID=','.join(ssh_key_id[k] for k in ssh_keys))
         sub_id = r['SUBID']
 
         # wait until server is properly created
@@ -88,6 +88,5 @@ class VultrAPI(object):
         log.info('Waiting for installation on {} to finish...'.format(ip_addr))
         time.sleep(180)
         log.info('Vultr instance successfully created on {}!!'.format(ip_addr))
-        # make sure we can successfully connect to it via ssh
-        run('ssh -o "StrictHostKeyChecking no" root@{} ls'.format(ip_addr))
+
         return ip_addr
