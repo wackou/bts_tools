@@ -625,8 +625,10 @@ uwsgi_group: *user
         # 4- copy snapshot of the blockchain, if available
         snapshot = cfg.get('blockchain_snapshot')
         if snapshot:
-            run_remote('mkdir -p ~/.BitShares2', user=cfg['unix_user'])
-            copy(snapshot, '~/.BitShares2/blockchain', user=cfg['unix_user'])
+            run_remote('mkdir -p ~/.BitShares2/blockchain', user=cfg['unix_user'])
+            if not snapshot.endswith('/'): # play nice with rsync idiosyncrasy about trailing slashes and dirs
+                snapshot = snapshot + '/'
+            copy(snapshot, '~/.BitShares2/blockchain/', user=cfg['unix_user'])
 
 
         # 5- reboot remote host
