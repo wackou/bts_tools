@@ -626,7 +626,7 @@ uwsgi_group: *user
         snapshot = cfg.get('blockchain_snapshot')
         if snapshot:
             run_remote('mkdir -p ~/.BitShares2', user=cfg['unix_user'])
-            copy(snapshot, '~/.BitShares2/blockchain')
+            copy(snapshot, '~/.BitShares2/blockchain', user=cfg['unix_user'])
 
 
         # 5- reboot remote host
