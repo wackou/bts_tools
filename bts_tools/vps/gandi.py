@@ -53,7 +53,7 @@ class GandiAPI(object):
                    'hostname': label,
                    'memory': memory,
                    'cores': cores,
-                   'disk_size': disk_size,
+                   'size': disk_size,
                    'keys': [ssh_key_id[k] for k in ssh_keys],
                    }
 
