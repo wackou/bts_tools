@@ -47,13 +47,13 @@ class GandiAPI(object):
         dc_id = self.datacenters[location.lower()]
 
         disk_spec = {'datacenter_id': dc_id,
-                     'name': label}
+                     'name': label,
+                     'size': disk_size}
 
         vm_spec = {'datacenter_id':dc_id,
                    'hostname': label,
                    'memory': memory,
                    'cores': cores,
-                   'size': disk_size,
                    'keys': [ssh_key_id[k] for k in ssh_keys],
                    }
 
