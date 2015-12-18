@@ -40,7 +40,7 @@ class GandiAPI(object):
             a = getattr(a, m)
         return a(self.api_key, *args)
 
-    def create_server(self, location, src_disk_id, label, ssh_keys, cores=1, memory=1024):
+    def create_server(self, location, src_disk_id, label, ssh_keys, cores=1, memory=1024, disk_size=20480):
         log.info('Creating Gandi instance {} in {}...'.format(label, location))
         ssh_key_id = {key['name']: key['id'] for key in self.call('hosting.ssh.list')}
 
@@ -53,6 +53,7 @@ class GandiAPI(object):
                    'hostname': label,
                    'memory': memory,
                    'cores': cores,
+                   'disk_size': disk_size,
                    'keys': [ssh_key_id[k] for k in ssh_keys],
                    }
 
