@@ -692,6 +692,10 @@ slate:
 
 
 def main_bts():
+    return main(flavor='bts2')
+
+
+def main_bts1():
     return main(flavor='bts')
 
 

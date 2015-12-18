@@ -314,12 +314,13 @@ def _run(cmd, capture_io=False, verbose=False):
         return IOStream(p.returncode, None, None)
 
 
-def run(cmd, capture_io=False, verbose=True):
+def run(cmd, capture_io=False, verbose=True, log_on_fail=True):
     r = _run(cmd, capture_io, verbose)
     if r.status != 0:
-        log.warning('Failed running: %s' % cmd)
-        if capture_io:
-            log.warning('\nSTDOUT:\n{}\nSTDERR:\n:{}'.format(r.stdout, r.stderr))
+        if log_on_fail:
+            log.warning('Failed running: %s' % cmd)
+            if capture_io:
+                log.warning('\nSTDOUT:\n{}\nSTDERR:\n:{}'.format(r.stdout, r.stderr))
         raise RuntimeError('Failed running: %s' % cmd)
     return r
 
@@ -330,7 +331,7 @@ def get_version():
         with open(version_file) as f:
             return f.read().strip()
     try:
-        return run('git describe --tags', capture_io=True, verbose=False).stdout.strip()
+        return run('git describe --tags', capture_io=True, verbose=False, log_on_fail=False).stdout.strip()
     except Exception:
         return 'unknown'
 

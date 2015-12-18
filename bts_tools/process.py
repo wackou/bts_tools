@@ -26,10 +26,6 @@ log = logging.getLogger(__name__)
 # TODO: should move all these functions inside of BTSProxy
 
 def bts_process(node):
-    if node is None:
-        log.error('DEPRECATED: call to process.bts_process() without specifying a node...')
-        return None
-
     if not node.is_witness_localhost():
         return None
 
