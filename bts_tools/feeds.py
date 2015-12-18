@@ -36,14 +36,16 @@ import logging
 log = logging.getLogger(__name__)
 
 """BitAssets for which we check and publish feeds."""
-BIT_ASSETS = {'USD', 'CNY', 'BTC', 'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN',
+BIT_ASSETS = {'USD', 'CNY', 'TCNY', 'BTC', 'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN',
               'RUB', 'SEK', 'SGD', 'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD'}
 
-BIT_ASSETS_INDICES = {'SHENZHEN': 'CNY',
-                      'SHANGHAI': 'CNY',
-                      'NASDAQC': 'USD',
-                      'NIKKEI': 'JPY',
-                      'HANGSENG': 'HKD'}
+# BIT_ASSETS_INDICES = {'SHENZHEN': 'CNY',
+#                       'SHANGHAI': 'CNY',
+#                       'NASDAQC': 'USD',
+#                       'NIKKEI': 'JPY',
+#                       'HANGSENG': 'HKD'}
+# deactivate those indices for now
+BIT_ASSETS_INDICES = {}
 
 """List of feeds that should be shown on the UI and in the logs. Note that we
 always check and publish all feeds, regardless of this variable."""
@@ -129,7 +131,7 @@ def get_feed_prices():
     # - BTC as we don't get it from yahoo
     # - USD as it is our base currency
     yahoo = YahooFeedProvider()
-    yahoo_curs = BIT_ASSETS - {'BTC', 'USD', 'CNY'}
+    yahoo_curs = BIT_ASSETS - {'BTC', 'USD', 'CNY', 'TCNY'}
     yahoo_prices = yahoo.get(yahoo_curs, 'USD')
 
     # 1- get the BitShares price in major markets: BTC, USD and CNY
@@ -189,6 +191,7 @@ def get_feed_prices():
     feeds['BTC'] = btc_price
     feeds['USD'] = usd_price
     feeds['CNY'] = cny_price
+    feeds['TCNY'] = cny_price
 
     log.debug('Got btc/usd price: {}'.format(btc_usd))
     log.debug('Got usd price: {}'.format(usd_price))
@@ -288,8 +291,6 @@ def check_feeds(nodes):
                         log.info('Node %s publishing feeds: %s' % (node.name, fmt(median_feeds)))
                         if node.is_graphene_based():
                             for asset, price in median_feeds.items():
-                                if asset in BIT_ASSETS_INDICES:
-                                    continue
                                 if asset in ['RUB', 'SEK']:
                                     # markets temporarily disabled because they are in a black swan state
                                     continue
@@ -309,6 +310,7 @@ def check_feeds(nodes):
                                         numerator = int(price * 10**(asset_precision+multiplier))
                                         denominator = 10**(base_precision+multiplier)
 
+                                    c = cfg['asset_params'].get(asset) or cfg['asset_params']['default']
                                     price = {
                                         'settlement_price': {
                                             'quote': {
@@ -320,12 +322,12 @@ def check_feeds(nodes):
                                                 'amount': numerator
                                             }
                                         },
-                                        'maintenance_collateral_ratio': cfg['maintenance_collateral_ratio'],
-                                        'maximum_short_squeeze_ratio': cfg['maximum_short_squeeze_ratio'],
+                                        'maintenance_collateral_ratio': c['maintenance_collateral_ratio'],
+                                        'maximum_short_squeeze_ratio': c['maximum_short_squeeze_ratio'],
                                         'core_exchange_rate': {
                                             'quote': {
                                                 'asset_id': '1.3.0',
-                                                'amount': int(denominator * cfg['core_exchange_factor'])
+                                                'amount': int(denominator * c['core_exchange_factor'])
                                             },
                                             'base': {
                                                 'asset_id': asset_id,

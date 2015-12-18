@@ -119,16 +119,25 @@ def load_config(loglevels=None):
         log.warning('You did not specify the monitoring.feeds.feed_providers variable')
         log.warning('Using default value of [Yahoo, Bter, Btc38, Poloniex]')
         log.warning('You might want to add [Google, Bloomberg] to that list')
-        m['feeds']['feed_providers'] = ['Yahoo', 'Bter', 'Btc38', 'Poloniex']
+        m['feeds']['feed_providers'] = ['Yahoo', 'Bter', 'Btc38', 'Yunbi', 'Poloniex', 'CCEDK']
 
-    def check_feed_option(name, default_value):
-        if name not in m['feeds']:
-            log.warning("{} not in config['monitoring']['feeds']. Setting to default value: {}".format(name, default_value))
-            m['feeds'][name] = default_value
+    def check_feed_option(section, name, default_value):
+        if 'asset_params' not in m['feeds']:
+            log.warning("No 'asset_params' section in config['monitoring']['feeds']")
+            m['feeds']['asset_params'] = {}
+        if section not in m['feeds']['asset_params']:
+            log.warning("No '{}' section in config['monitoring']['feeds']['asset_params']".format(section))
+            m['feeds']['asset_params'][section] = {}
+        if name not in m['feeds']['asset_params'][section]:
+            log.warning("'{}' not in config['monitoring']['feeds']['asset_params']['{}']. Setting to default value: {}".format(name, section, default_value))
+            m['feeds']['asset_params'][section][name] = default_value
 
-    check_feed_option('core_exchange_factor', 0.95)
-    check_feed_option('maintenance_collateral_ratio', 1750)
-    check_feed_option('maximum_short_squeeze_ratio', 1100)
+    check_feed_option('default', 'core_exchange_factor', 0.95)
+    check_feed_option('default', 'maintenance_collateral_ratio', 1750)
+    check_feed_option('default', 'maximum_short_squeeze_ratio', 1100)
+    check_feed_option('TCNY', 'core_exchange_factor', 0.95)
+    check_feed_option('TCNY', 'maintenance_collateral_ratio', 1750)
+    check_feed_option('TCNY', 'maximum_short_squeeze_ratio', 1001)
 
     if (m['feeds'].get('publish_time_interval') is None and
         m['feeds'].get('publish_time_slot') is None):
