@@ -21,7 +21,8 @@
 from . import core
 from bs4 import BeautifulSoup
 from datetime import datetime
-import json
+from retrying import retry
+from requests.exceptions import Timeout
 import requests
 import functools
 import logging
@@ -280,6 +281,9 @@ class Btc38FeedProvider(FeedProvider):
     AVAILABLE_MARKETS = [('BTS', 'BTC'), ('BTS', 'CNY'), ('BTC', 'CNY')]
 
     @check_online_status
+    @retry(retry_on_exception=lambda e: isinstance(e, requests.exceptions.Timeout),
+           wait_exponential_multiplier=5000,
+           stop_max_attempt_number=3)
     @check_market
     def get(self, cur, base):
         log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
@@ -306,6 +310,9 @@ class YunbiFeedProvider(FeedProvider):
     AVAILABLE_MARKETS = [('BTS', 'BTC'), ('BTS', 'CNY'), ('BTC', 'CNY')]
 
     @check_online_status
+    @retry(retry_on_exception=lambda e: isinstance(e, requests.exceptions.Timeout),
+           wait_exponential_multiplier=5000,
+           stop_max_attempt_number=3)
     @check_market
     def get(self, cur, base):
         log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
