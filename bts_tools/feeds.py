@@ -184,7 +184,15 @@ def get_feed_prices():
     # compute valuations once we have everything
     #all_feeds.append(get_multi_feeds('get', [('BTS', 'CNY')], providers_bts_cny))
     feeds_bts_cny = get_multi_feeds('get', [('BTS', 'CNY')], providers_bts_cny)
-    bts_cny = weighted_mean(feeds_bts_cny)
+    if not feeds_bts_cny:
+        # if we couldn't get the feeds for cny, try picking up our last value
+        if price_history.get('cny'):
+            log.warning('Could not get any BTS/CNY feeds, using last feed price')
+            bts_cny = price_history['cny'][-1]
+        else:
+            raise core.NoFeedData('Could not get any BTS/CNY feeds')
+    else:
+        bts_cny = weighted_mean(feeds_bts_cny)
 
     cny_price = bts_cny
 
