@@ -59,6 +59,33 @@ def check_market(f):
     return wrapper
 
 
+def reuse_last_value_on_fail(f):
+    @functools.wraps(f)
+    def wrapper(self, cur, base):
+        MAX_FAILS = 5
+        f.last_value = getattr(f, 'last_value', {})
+        f.n_consecutive_fails = getattr(f, 'n_consecutive_fails', 0)
+        try:
+            result = f(self, cur, base)
+            f.last_value[(cur, base)] = result
+            f.n_consecutive_fails = 0
+            return result
+        except Timeout:
+            f.n_consecutive_fails += 1
+            if f.n_consecutive_fails > MAX_FAILS:
+                log.debug('Could not get feed price for {}/{} for {} times, failing with exception...'
+                          .format(cur, base, f.n_consecutive_fails))
+                raise
+            v = f.last_value.get((cur, base))
+            if v:
+                log.debug('Could not get feed price for {}/{}, reusing last value: {}'.format(cur, base, v))
+                return v
+            else:
+                log.debug('Could not get feed price for {}/{}, no last value...'.format(cur, base))
+                raise
+    return wrapper
+
+
 class FeedProvider(object):
     """need to implement a get(cur, base) method. It returns price and volume.
     The volume is expressed in <cur> units."""
@@ -281,6 +308,7 @@ class Btc38FeedProvider(FeedProvider):
     AVAILABLE_MARKETS = [('BTS', 'BTC'), ('BTS', 'CNY'), ('BTC', 'CNY')]
 
     @check_online_status
+    @reuse_last_value_on_fail
     @retry(retry_on_exception=lambda e: isinstance(e, requests.exceptions.Timeout),
            wait_exponential_multiplier=5000,
            stop_max_attempt_number=3)
@@ -310,6 +338,7 @@ class YunbiFeedProvider(FeedProvider):
     AVAILABLE_MARKETS = [('BTS', 'BTC'), ('BTS', 'CNY'), ('BTC', 'CNY')]
 
     @check_online_status
+    @reuse_last_value_on_fail
     @retry(retry_on_exception=lambda e: isinstance(e, requests.exceptions.Timeout),
            wait_exponential_multiplier=5000,
            stop_max_attempt_number=3)

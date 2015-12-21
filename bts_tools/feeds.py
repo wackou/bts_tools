@@ -141,7 +141,7 @@ def get_feed_prices():
         BitstampFeedProvider(), YunbiFeedProvider())
 
     # 1.1- first get the bts/btc valuation
-    providers_bts_btc = {bter, btc38, poloniex, ccedk, yunbi} & active_providers
+    providers_bts_btc = {poloniex, ccedk, yunbi} & active_providers
     if not providers_bts_btc:
         log.warning('No feed providers for BTS/BTC feed price')
     all_feeds = get_multi_feeds('get', [('BTS', 'BTC')], providers_bts_btc)
