@@ -6,6 +6,15 @@
 History
 =======
 
+0.3.4 (2015-12-21)
+------------------
+
+* added support for publishing TCNY feed; generally more robust feeds fetching/publishing
+* renamed 'bts2' commandline tool to 'bts'. 'bts2' still working for convenience,
+  old 'bts' is still available as 'bts1'.
+* change in the config.yaml format: https://github.com/wackou/bts_tools/commit/24e962820775a8a23e0b45d26c501aa7e723ff64
+
+
 0.3.3 (2015-12-10)
 ------------------
 
