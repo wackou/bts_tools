@@ -62,15 +62,15 @@ class VultrAPI(object):
             r = requests.get('{}/{}'.format(self.endpoint, method), params={'api_key': self.api_key})
         return r.json()
 
-    def create_server(self, location, vps_plan, os_id, label, ssh_keys):
-        log.info('Creating Vultr instance {} in {}...'.format(label, location))
+    def create_server(self, name, location, vps_plan, os_id, ssh_keys):
+        log.info('Creating Vultr instance {} in {}...'.format(name, location))
         ssh_keys_list = self.call('sshkey/list').values()
         ssh_key_id = {key['name']: key['SSHKEYID'] for key in ssh_keys_list}
         r = self.call('server/create',
                       DCID=self.datacenters[location.lower()],
                       VPSPLANID=self.plans[vps_plan.lower()],
                       OSID=os_id,
-                      label=label,
+                      label=name,
                       SSHKEYID=','.join(ssh_key_id[k] for k in ssh_keys))
         sub_id = r['SUBID']
 

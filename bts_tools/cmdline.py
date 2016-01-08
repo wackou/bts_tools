@@ -202,30 +202,6 @@ def install_last_built_bin():
     for bname in get_all_bin_names(BUILD_ENV['name']):
         install_and_symlink(bname)
 
-def deploy(build_env, remote_host):
-    select_build_environment(build_env)
-
-    log.info('Deploying built binaries to {}'.format(remote_host))
-    remote_bin_dir = core.config['build_environments'][build_env]['bin_dir']
-
-    # strip binaries before sending, saves up to 10x space
-    for bin_name in get_all_bin_names(BUILD_ENV['name']):
-        bin_name = os.path.basename(bin_name)
-        latest = os.path.basename(os.path.realpath(join(BTS_BIN_DIR, bin_name)))
-        run('strip "{}/{}"'.format(BTS_BIN_DIR, latest))
-
-    # sync all
-    run('rsync -avzP "{}/" {}:"{}/"'.format(BTS_BIN_DIR, remote_host, remote_bin_dir))
-
-    # also symlink properly latest built binaries)
-    for bin_name in get_all_bin_names(BUILD_ENV['name']):
-        bin_name = os.path.basename(bin_name)
-        latest = os.path.basename(os.path.realpath(join(BTS_BIN_DIR, bin_name)))
-        run('ssh {} "ln -fs {}/{} {}/{}"'.format(remote_host,
-                                                 remote_bin_dir, latest,
-                                                 remote_bin_dir, bin_name))
-
-
 
 def main(flavor='bts'):
     # parse commandline args
@@ -464,6 +440,8 @@ Examples:
             log.error('You need to specify a remote host to deploy to')
             sys.exit(1)
 
+        from .deploy import deploy  # can only import now due to potential circular import
+
         for remote_host in args.args:
             deploy(args.environment, remote_host)
 
@@ -473,168 +451,12 @@ Examples:
         print()
         if not config_file:
             log.error('You need to specify a deployment config file as argument')
-            log.info('It should be a YAML file with the following format')
-            config_example = """
-host: 192.168.0.1  # ip or name of host to deploy to, needs ssh access
-pause: true  # pause between installation steps
-is_debian: true
-install_compile_dependencies: false
-
-unix_hostname: seed01
-unix_user: &user myuser
-unix_password: changeme!
-git_name: John Doe
-git_email: johndoe@example.com
-nginx_server_name: seed01.bitsharesnodes.com
-uwsgi_user: *user
-uwsgi_group: *user
-"""
-            print(config_example)
-            #default_config = join(dirname(__file__), 'deploy_config.yaml')
-            #log.info('You can find an example config at: %s' % default_config)
+            log.info('You can find an example file at {}'.format(join(dirname(__file__), 'deploy_config.yaml')))
             sys.exit(1)
 
-        log.info('Reading config from file: %s' % config_file)
-        with open(config_file, 'r') as f:
-            cfg = yaml.load(f)
+        from .deploy import deploy_node  # can only import now due to potential circular import
 
-        cfg['pause'] = False  # do not pause during installation
-
-        # 0.0- create vps instance
-        if cfg.get('host'):
-            # do not create an instance, use the one on the given ip address
-            log.info('Not creating new instance, using given host: {}'.format(cfg['host']))
-            pass
-
-        elif cfg['vps'].get('provider', '').lower() == 'vultr':
-            v = cfg['vps']['vultr']
-            vultr = VultrAPI(v['api_key'])
-            params = dict(v)
-            params.pop('api_key')
-            params['label'] = cfg['unix_hostname']
-            ip_addr = vultr.create_server(**params)
-            cfg['host'] = ip_addr
-
-        elif cfg['vps'].get('provider', '').lower() == 'gandi':
-            v = cfg['vps']['gandi']
-            gandi = GandiAPI(v['api_key'])
-            params = dict(v)
-            params.pop('api_key')
-            params['label'] = cfg['unix_hostname']
-            ip_addr = gandi.create_server(**params)
-            cfg['host'] = ip_addr
-
-        else:
-            log.warning('No host and no valid vps provider given. Exiting...')
-            return
-
-        # 0- prepare the bundle of files to be copied on the remote host
-        build_dir = '/tmp/bts_deploy'
-        run('rm -fr {d}; mkdir {d}'.format(d=build_dir))
-        env = Environment(loader=PackageLoader('bts_tools', 'templates/deploy'))
-
-        def render_template(template_name, output_name=None):
-            template = env.get_template(template_name)
-            with open(join(build_dir, output_name or template_name), 'w') as output_file:
-                output_file.write(template.render(**cfg))
-
-        # 0.1- generate the install script
-        render_template('install_new_graphene_node.sh')
-        render_template('install_user.sh')
-
-        # 0.2- generate config.yaml file
-        config_yaml = yaml.load(env.get_template('config.yaml').render(), Loader=yaml.RoundTripLoader)
-        config_yaml.update(cfg['config_yaml'])
-        with open(join(build_dir, 'config.yaml'), 'w') as config_yaml_file:
-            config_yaml_file.write(yaml.dump(config_yaml, indent=4, Dumper=yaml.RoundTripDumper))
-
-        # 0.3- generate api_access.json and config.ini
-        cfg['witness_api_access_user'] = cfg['witness_api_access']['user']
-        pw_bytes = cfg['witness_api_access']['password'].encode('utf-8')
-        salt_bytes = os.urandom(8)
-        salt_b64 = base64.b64encode(salt_bytes)
-        pw_hash = hashlib.sha256(pw_bytes + salt_bytes).digest()
-        pw_hash_b64 = base64.b64encode(pw_hash)
-
-        cfg['witness_api_access_hash'] = pw_hash_b64.decode('utf-8')
-        cfg['witness_api_access_salt'] = salt_b64.decode('utf-8')
-        render_template('api_access.json')
-
-        render_template('config.ini')
-
-        # 0.4- nginx
-        nginx = join(build_dir, 'etc', 'nginx')
-        run('mkdir -p {} {}'.format(join(nginx, 'sites-available'),
-                                    join(nginx, 'sites-enabled')))
-        render_template('nginx_sites_available', join(nginx, 'sites-available', 'default'))
-        run('cd {}; ln -s ../sites-available/default'.format(join(nginx, 'sites-enabled')))
-        run('cd {}; tar cvzf {} etc/nginx'.format(build_dir, join(build_dir, 'etcNginx.tgz')))
-
-        # 0.5- uwsgi
-        uwsgi = join(build_dir, 'etc', 'uwsgi')
-        run('mkdir -p {} {}'.format(join(uwsgi, 'apps-available'),
-                                    join(uwsgi, 'apps-enabled')))
-        render_template('uwsgi_apps_available', join(uwsgi, 'apps-available', 'bts_tools.ini'))
-        run('cd {}; ln -s ../apps-available/bts_tools.ini'.format(join(uwsgi, 'apps-enabled')))
-        run('cd {}; tar cvzf {} etc/uwsgi'.format(build_dir, join(build_dir, 'etcUwsgi.tgz')))
-
-        # 0.6- get authorized_keys if any
-        if cfg.get('ssh_keys'):
-            with open(join(build_dir, 'authorized_keys'), 'w') as key_file:
-                for key in cfg['ssh_keys']:
-                    key_file.write('{}\n'.format(key))
-
-        run('rm -fr {}'.format(join(build_dir, 'etc')))
-
-
-        host = cfg['host']
-
-        def run_remote(cmd, user='root'):
-            run('ssh {}@{} "{}"'.format(user, host, cmd))
-
-        # make sure we can successfully connect to it via ssh without confirmation
-        run('ssh -o "StrictHostKeyChecking no" root@{} ls'.format(host))
-
-        run_remote('apt-get install -yfV rsync')
-
-        def copy(filename, dest_dir, user='root'):
-            run('rsync -avzP {} {}@{}:"{}"'.format(filename, user, host, dest_dir))
-
-
-        # 1- ssh to host and scp or rsync the installation scripts and tarballs
-        log.info('Copying install scripts to remote host')
-        copy('{}/*'.format(build_dir), '/tmp/')
-        #run('ssh root@{} "apt-get install -yfV rsync"'.format(host))
-        #run('rsync -avzP {}/* root@{}:/tmp/'.format(build_dir, host))
-
-        # 2- run the installation script remotely
-        log.info('Installing remote host')
-        run_remote('cd /tmp; bash install_new_graphene_node.sh')
-        #run('ssh root@{} "cd /tmp; bash install_new_graphene_node.sh"'.format(host))
-
-        # 2.1- install supervisord conf
-        log.info('Installing supervisord config')
-        run_remote('apt-get install -yfV supervisor')
-        render_template('supervisord.conf')
-        copy(join(build_dir, 'supervisord.conf'), '/etc/supervisor/conf.d/bts_tools.conf')
-
-        # 3- copy prebuilt binaries
-        log.info('Deploying prebuilt binaries')
-        deploy(args.environment, '{}@{}'.format(cfg['unix_user'], host))
-
-        # 4- copy snapshot of the blockchain, if available
-        snapshot = cfg.get('blockchain_snapshot')
-        if snapshot:
-            run_remote('mkdir -p ~/.BitShares2/blockchain', user=cfg['unix_user'])
-            if not snapshot.endswith('/'): # play nice with rsync idiosyncrasy about trailing slashes and dirs
-                snapshot = snapshot + '/'
-            copy(snapshot, '~/.BitShares2/blockchain/', user=cfg['unix_user'])
-
-
-        # 5- reboot remote host
-        log.info('Installation completed successfully, starting fresh node')
-        log.warning('The script will now hang, sorry... Please stop it using ctrl-c')
-        run_remote('reboot')  # FIXME: we hang here on reboot
+        deploy_node(args.environment, config_file)
 
     elif args.command == 'publish_slate':
         slate_file = args.args[0] if args.args else None
