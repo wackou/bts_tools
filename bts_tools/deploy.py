@@ -115,6 +115,7 @@ def prepare_installation_bundle(cfg, build_dir):
 
     cfg['witness_api_access_hash'] = pw_hash_b64.decode('utf-8')
     cfg['witness_api_access_salt'] = salt_b64.decode('utf-8')
+
     render_template('api_access.json')
 
     render_template('config.ini')
@@ -206,6 +207,7 @@ def deploy_node(build_env, config_file):
         cfg = yaml.load(f)
 
     cfg['pause'] = False  # do not pause during installation
+    cfg['is_debian'] = True
     cfg['nginx_server_name'] = '{}.{}'.format(cfg['hostname'], cfg['domain'])
 
     # 1- create vps instance if needed
@@ -228,4 +230,4 @@ def deploy_node(build_env, config_file):
     log.info('Installation completed successfully, starting fresh node')
     log.warning('The script will now hang, sorry... Please stop it using ctrl-c')
     run_remote_cmd(cfg['host'], 'root', 'reboot &')  # FIXME: we hang here on reboot
-
+    # see: http://unix.stackexchange.com/questions/58271/closing-connection-after-executing-reboot-using-ssh-command
