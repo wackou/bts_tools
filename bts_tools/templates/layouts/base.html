@@ -77,9 +77,11 @@
                             <td>{{ green_if_true(not node.is_new()) }}</td>
                             <td>{{ green_if_true(not node.is_locked()) }}</td>
                             <td>
-                                {% if node.type == 'delegate' and node.is_localhost() and node.is_synced() -%}
-                                {{ green_if_true(node.witness_signing_key == node.get_witness(node.name)['signing_key']) }}</td>
-                                {%- endif %}
+                                {% if node.type == 'delegate' and node.is_localhost() %}{% if node.is_synced() -%}
+                                    {{ green_if_true(node.witness_signing_key == node.get_witness(node.name)['signing_key']) }}</td>
+                                {%- else -%}
+                                    <div class="btn btn-xs btn-warning">Waiting for sync</div>
+                                {%- endif %}{% endif %}
                         {% else %}
                             {% set info = node.get_info() %}
                             <td>{{ green_if_true(not node.is_new()) }}</td>

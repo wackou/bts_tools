@@ -222,12 +222,17 @@ def deploy_node(build_env, config_file):
     # 2- prepare the bundle of files to be copied on the remote host
     prepare_installation_bundle(cfg, build_dir)
 
-    # 4- peform the remote install
+    # 4- perform the remote install
+    log.info('To view the log of the current installation, run the following command in another terminal:')
+    print()
+    print('ssh root@{} "tail -f /tmp/setupVPS.log"'.format(cfg['host']))
+    print()
     deploy_base_node(cfg, build_dir, build_env)
 
 
     # 4- reboot remote host
     log.info('Installation completed successfully, starting fresh node')
+    log.info('Please wait a minute or two to let it start fully')
     log.warning('The script will now hang, sorry... Please stop it using ctrl-c')
     run_remote_cmd(cfg['host'], 'root', 'reboot &')  # FIXME: we hang here on reboot
     # see: http://unix.stackexchange.com/questions/58271/closing-connection-after-executing-reboot-using-ssh-command

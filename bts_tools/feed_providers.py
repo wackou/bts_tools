@@ -85,7 +85,7 @@ def reuse_last_value_on_fail(f):
                 raise
     return wrapper
 
-
+# TODO: make use of this: https://pymotw.com/3/abc/index.html
 class FeedProvider(object):
     """need to implement a get(cur, base) method. It returns price and volume.
     The volume is expressed in <cur> units."""
