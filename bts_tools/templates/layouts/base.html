@@ -12,6 +12,23 @@
     {% block stylesheet %}{% endblock %}
 </head>
 
+
+{% macro blue(text) -%}
+    <div class="btn btn-xs btn-info">{{ text }}</div>
+{%- endmacro %}
+
+{% macro green(text) -%}
+    <div class="btn btn-xs btn-success">{{ text }}</div>
+{%- endmacro %}
+
+{% macro orange(text) -%}
+    <div class="btn btn-xs btn-warning">{{ text }}</div>
+{%- endmacro %}
+
+{% macro red(text) -%}
+    <div class="btn btn-xs btn-danger">{{ text }}</div>
+{%- endmacro %}
+
 {% macro green_if_true(cond) -%}
     {% if cond %}
         <div class="btn btn-xs btn-success">{{ cond }}</div>
@@ -65,23 +82,26 @@
                         </td>
                         <td>
                         {% if node.is_synced() %}
-                            <div class="btn btn-xs btn-success">
+                            {{ green(node.get_head_block_num()) }}
                         {% else %}
-                            <div class="btn btn-xs btn-info">
+                            {{ blue(node.get_head_block_num()) }}
                         {% endif %}
-                                {{ node.get_head_block_num() }}
-                            </div>
                         </td>
 
                         {% if node.is_graphene_based() %}
                             <td>{{ green_if_true(not node.is_new()) }}</td>
                             <td>{{ green_if_true(not node.is_locked()) }}</td>
                             <td>
-                                {% if node.type == 'delegate' and node.is_localhost() %}{% if node.is_synced() -%}
-                                    {{ green_if_true(node.witness_signing_key == node.get_witness(node.name)['signing_key']) }}</td>
-                                {%- else -%}
-                                    <div class="btn btn-xs btn-warning">Waiting for sync</div>
-                                {%- endif %}{% endif %}
+                                {% if node.type == 'delegate'  %}
+                                    {% set is_active = node.is_signing_key_active() %}
+                                    {% if is_active == 'not synced' -%}
+                                        {{ orange('waiting for sync') }}
+                                    {%- elif is_active == 'unknown' -%}
+                                        {{ blue('unknown') }}
+                                    {%- else -%}
+                                        {{ green_if_true(is_active) }}</td>
+                                    {%- endif %}
+                                {% endif %}
                         {% else %}
                             {% set info = node.get_info() %}
                             <td>{{ green_if_true(not node.is_new()) }}</td>

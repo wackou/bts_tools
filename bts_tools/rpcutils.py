@@ -19,7 +19,7 @@
 #
 
 from .core import UnauthorizedError, RPCError, run, get_data_dir, get_bin_name, is_graphene_based,\
-    hashabledict, to_list, FeedPrice
+    hashabledict, to_list, FeedPrice, trace
 from .process import bts_binary_running, bts_process
 from .feeds import BIT_ASSETS, BIT_ASSETS_INDICES
 from . import graphene  # needed to access DATABASE_API, NETWORK_API dynamically, can't import them directly
@@ -31,6 +31,7 @@ from dogpile.cache import make_region
 import bts_tools.core  # needed to be able to exec('raise bts.core.Exception')
 import builtins        # needed to be able to reraise builtin exceptions
 import importlib
+import functools
 import requests
 import itertools
 import configparser
@@ -50,7 +51,7 @@ _rpc_cache = defaultdict(dict)
 _rpc_call_id = defaultdict(int)
 
 def rpc_call(host, port, user, password,
-             funcname, *args, __graphene=False):
+             funcname, *args, __graphene=False, raw_response=False, rpc_args={}):
     url = 'http://%s:%d/rpc' % (host, port)
     headers = {'content-type': 'application/json'}
     _rpc_call_id[(host, port)] += 1
@@ -70,6 +71,8 @@ def rpc_call(host, port, user, password,
             'id': _rpc_call_id[(host, port)]
         }
 
+    payload.update(rpc_args or {})
+
     response = requests.post(url,
                              auth=(user, password),
                              data=json.dumps(payload),
@@ -81,6 +84,9 @@ def rpc_call(host, port, user, password,
         raise UnauthorizedError()
 
     r = response.json()
+
+    if raw_response:
+        return r
 
     if 'error' in r:
         if 'detail' in r['error']:
@@ -99,11 +105,13 @@ class BTSProxy(object):
                  rpc_port=None, rpc_user=None, rpc_password=None, rpc_host=None, venv_path=None,
                  # graphene fields
                  witness_host=None, witness_port=None, witness_user=None, witness_password=None,
-                 wallet_host=None, wallet_port=None, wallet_user=None, wallet_password=None):
+                 wallet_host=None, wallet_port=None, wallet_user=None, wallet_password=None,
+                 proxy_host=None, proxy_port=None, proxy_user=None, proxy_password=None):
         self.type = type
         if bts_type is not None:
             self._bts_type = bts_type
         self.name = name
+        self.witness_signing_key = None
         self.monitoring = to_list(monitoring)
         self.notification = to_list(notification)
         self.client = client
@@ -155,6 +163,10 @@ class BTSProxy(object):
         self.wallet_port      = wallet_port
         self.wallet_user      = wallet_user
         self.wallet_password  = wallet_password
+        self.proxy_host       = proxy_host
+        self.proxy_port       = proxy_port
+        self.proxy_user       = proxy_user
+        self.proxy_password   = proxy_password
 
         self.bin_name = get_bin_name(client or 'bts')
 
@@ -166,9 +178,17 @@ class BTSProxy(object):
                 if self.is_localhost() and not bts_binary_running(self):
                     raise RPCError('Connection aborted: BTS binary does not seem to be running')
 
+                if self.proxy_host is not None and self.proxy_port is not None:
+                    return rpc_call(self.proxy_host, self.proxy_port,
+                                    None, None,
+                                    funcname, *args, __graphene=True,
+                                    rpc_args=dict(proxy_user=self.proxy_user,
+                                                  proxy_password=self.proxy_password,
+                                                  wallet_port=self.wallet_port))
+
                 return rpc_call(self.wallet_host, self.wallet_port,
                                 self.wallet_user, self.wallet_password,
-                                funcname, *args, __graphene=self.is_graphene_based())
+                                funcname, *args, __graphene=True)
             self._rpc_call = direct_call
 
         elif self.rpc_host == 'localhost':
@@ -232,7 +252,7 @@ class BTSProxy(object):
         self._committee_member_names = {}
 
     def __str__(self):
-        return self.name
+        return '{} ({} / {}:{})'.format(self.name, self.bts_type(), self.rpc_host, self.rpc_port)
 
     def __repr__(self):
         return 'BTSProxy(%s, %s)' % (self.client, self.name)
@@ -247,7 +267,10 @@ class BTSProxy(object):
     def rpc_call(self, funcname, *args, cached=True):
         log.debug(('RPC call @ %s: %s(%s)' % (self.rpc_cache_key, funcname, ', '.join(repr(arg) for arg in args))
                   + (' (cached = False)' if not cached else '')))
-        args = tuple(hashabledict(arg) if isinstance(arg, dict) else arg for arg in args)
+        args = tuple(hashabledict(arg) if isinstance(arg, dict) else
+                     tuple(arg) if isinstance(arg, list) else
+                     arg
+                     for arg in args)
 
         if cached and funcname not in NON_CACHEABLE_METHODS:
             if (funcname, args) in _rpc_cache[self.rpc_cache_key]:
@@ -357,6 +380,14 @@ class BTSProxy(object):
     def is_witness_localhost(self):
         host = self.witness_host if self.is_graphene_based() else self.rpc_host
         return host in ['localhost', '127.0.0.1']
+
+    @trace
+    def is_signing_key_active(self):
+        if self.witness_signing_key is None:
+            return 'unknown'
+        if not self.is_synced():
+            return 'not synced'
+        return self.witness_signing_key == self.get_witness(self.name)['signing_key']
 
     def get_witness_name(self, witness_id):
         try:

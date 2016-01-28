@@ -399,6 +399,28 @@ def profile(f):
     return wrapper
 
 
+def trace(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        obj = args[0]
+        args = args[1:]
+        args_str = ', '.join(str(arg) for arg in args)
+        if kwargs:
+            args_str += ', ' + ', '.join('{}={}'.format(k, v) for k, v in kwargs)
+        print('Calling function: {}({}) on {}'.format(f.__name__, args_str, obj))
+
+        try:
+            result = f(obj, *args, **kwargs)
+            print('Returning {}: {}'.format(type(result).__name__, result))
+        except Exception as e:
+            print('Exception: {}'.format(str(e)))
+            log.exception(e)
+            raise e
+        return result
+    return wrapper
+
+
+
 class FeedPrice(object):
     """Represent a feed price value. Contains additional metadata such as volume, etc.
 

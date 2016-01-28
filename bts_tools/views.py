@@ -18,13 +18,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from flask import Blueprint, render_template, request, redirect, send_from_directory
+from flask import Blueprint, Response, render_template, request, redirect, send_from_directory, jsonify
 from functools import wraps
 from collections import defaultdict
 from datetime import datetime
 from . import rpcutils as rpc
 from . import core, monitor, slogging, backbone
 import bts_tools
+import json
 import requests.exceptions
 import logging
 
@@ -159,6 +160,76 @@ def split_columns(items, attrs):
     return items, attrs
 
 
+def find_node(bts_type, host, name):
+    for node in rpc.nodes:
+        if node.bts_type() == bts_type and '{}:{}'.format(node.rpc_host, node.rpc_port) == host and node.name == name:
+            return node
+    raise ValueError('Node not found: {}/{}/{}'.format(bts_type, host, name))
+
+def find_local_node(port):
+    for node in rpc.nodes:
+        if node.is_localhost() and node.rpc_port == port:
+            return node
+    raise ValueError('Node not found: localhost:{}'.format(port))
+
+
+def authenticate():
+    """Sends a 401 response that enables basic auth"""
+    return Response(
+    'Could not verify your access level for that URL.\n'
+    'You have to login with proper credentials', 401,
+    {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
+def requires_auth(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        auth = request.authorization
+        log.info('Authentication: {}'.format(auth))
+        #if not auth or not check_auth(auth.username, auth.password):
+        #    return authenticate()
+        return f(*args, **kwargs)
+    return wrapper
+
+
+# FIXME: get auth params (user, password) like this: http://flask.pocoo.org/snippets/8/
+#        instead of passing them as additional params
+#        we also need to make sure that nginx forwards the auth params to the flask app
+@bp.route('/rpc', methods=['POST'])
+@requires_auth
+def json_rpc_call():
+    c = json.loads(next(request.form.keys()))
+    log.info('json rpc call: {}'.format(c))
+
+    method, params = c['method'], c['params']
+    port = c.pop('wallet_port', None)
+    proxy_user = c.pop('proxy_user', '')
+    proxy_password = c.pop('proxy_password', '')
+    # FIXME SECURITY: check credentials before forwarding call to cli wallet
+
+    try:
+        node = find_local_node(port)
+        user = node.rpc_user
+        password = node.rpc_password
+
+        # Intercept api calls meant for the bts_tools and do not forward them to the cli wallet
+        if method == 'is_signing_key_active':
+            result = {'result': node.is_signing_key_active()}
+        elif method == 'other':
+            pass
+        else:
+            result = rpc.rpc_call('localhost', port, user, password, method, *params,
+                                  __graphene=True, raw_response=True)
+
+        result['id'] = c['id']  # need to set back the original request id
+
+    except ValueError as e:
+        result = {'id': c['id'], 'error': {'message': 'Could not find active node on port {}'.format(port)}}
+
+    except core.RPCError as e:
+        result = {'id': c['id'], 'error': {'message': str(e)}}
+
+    return jsonify(result)
+
 @bp.route('/info')
 @clear_rpc_cache
 @catch_error
@@ -268,8 +339,6 @@ def view_info():
         info_items2 = None
         attrs2 = None
 
-
-
     return render_template('info.html', #title='BTS Client - Info',
                            title='Global info', data=info_items, attrs=attrs,
                            title2='Witness info', data2=info_items2, attrs2=attrs2,
@@ -279,12 +348,10 @@ def view_info():
 @bp.route('/rpchost/<bts_type>/<host>/<name>/<url>')
 @catch_error
 def set_rpchost(bts_type, host, name, url):
-    for node in rpc.nodes:
-        if node.bts_type() == bts_type and '{}:{}'.format(node.rpc_host, node.rpc_port) == host and node.name == name:
-            log.debug('Setting main rpc node to %s %s on %s' % (bts_type, name, host))
-            rpc.main_node = node
-            break
-    else:
+    try:
+        rpc.main_node = find_node(bts_type, host, name)
+        log.debug('Setting main rpc node to %s %s on %s' % (bts_type, name, host))
+    except ValueError:
         # invalid host name
         log.debug('Invalid node name: %s on %s' % (name, host))
         pass
