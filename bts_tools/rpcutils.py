@@ -147,10 +147,10 @@ class BTSProxy(object):
         else:
             rpc = {}
             cfg_port = None
-        self.rpc_port = wallet_port or rpc_port or cfg_port or 0
+        self.rpc_port = proxy_port or wallet_port or rpc_port or cfg_port or 0
         self.rpc_user = wallet_user or rpc_user or rpc.get('rpc_user') or ''
         self.rpc_password = wallet_password or rpc_password or rpc.get('rpc_password') or ''
-        self.rpc_host = wallet_host or rpc_host or 'localhost'
+        self.rpc_host = wallet_host or rpc_host or proxy_host or 'localhost'
         self.rpc_cache_key = (self.rpc_host, self.rpc_port)
         self.ws_rpc_cache_key = (self.witness_host, self.witness_port)
         self.venv_path = venv_path
@@ -381,8 +381,9 @@ class BTSProxy(object):
         host = self.witness_host if self.is_graphene_based() else self.rpc_host
         return host in ['localhost', '127.0.0.1']
 
-    @trace
     def is_signing_key_active(self):
+        if self.proxy_host:
+            return self.rpc_call('is_signing_key_active')
         if self.witness_signing_key is None:
             return 'unknown'
         if not self.is_synced():
@@ -412,31 +413,37 @@ class BTSProxy(object):
         return result
 
     def network_get_info(self):
-        if self.is_graphene_based():
+        if self.is_graphene_based() and not self.proxy_host:
             return self.ws_rpc_call(graphene.NETWORK_API, 'get_info')
         else:
             return self.rpc_call('network_get_info')
 
     def network_get_connected_peers(self):
         if self.is_graphene_based():
-            return [p['info'] for p in self.ws_rpc_call(graphene.NETWORK_API, 'get_connected_peers')]
+            if not self.proxy_host:
+                return [p['info'] for p in self.ws_rpc_call(graphene.NETWORK_API, 'get_connected_peers')]
+            else:
+                return self.rpc_call('network_get_connected_peers')
         else:
             return self.rpc_call('network_get_peer_info')
 
     def network_get_potential_peers(self):
         if self.is_graphene_based():
-            return self.ws_rpc_call(graphene.NETWORK_API, 'get_potential_peers')
+            if not self.proxy_host:
+                return self.ws_rpc_call(graphene.NETWORK_API, 'get_potential_peers')
+            else:
+                return self.rpc_call('network_get_potential_peers')
         else:
             return self.rpc_call('network_list_potential_peers')
 
     def network_set_advanced_node_parameters(self, params):
-        if self.is_graphene_based():
+        if self.is_graphene_based() and not self.proxy_host:
             return self.ws_rpc_call(graphene.NETWORK_API, 'set_advanced_node_parameters', params)
         else:
-            return self.rpc_call('network_get_advanced_node_parameters')
+            return self.rpc_call('network_set_advanced_node_parameters', params)
 
     def network_get_advanced_node_parameters(self):
-        if self.is_graphene_based():
+        if self.is_graphene_based() and not self.proxy_host:
             return self.ws_rpc_call(graphene.NETWORK_API, 'get_advanced_node_parameters')
         else:
             return self.rpc_call('network_get_advanced_node_parameters')

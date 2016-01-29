@@ -184,7 +184,7 @@ def requires_auth(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         auth = request.authorization
-        log.info('Authentication: {}'.format(auth))
+        log.debug('Authentication: {}'.format(auth))
         #if not auth or not check_auth(auth.username, auth.password):
         #    return authenticate()
         return f(*args, **kwargs)
@@ -197,10 +197,14 @@ def requires_auth(f):
 @bp.route('/rpc', methods=['POST'])
 @requires_auth
 def json_rpc_call():
-    c = json.loads(next(request.form.keys()))
+    try:
+        c = json.loads(next(request.form.keys()))
+    except StopIteration:
+        c = json.loads(request.data.decode('utf-8'))
+
     log.info('json rpc call: {}'.format(c))
 
-    method, params = c['method'], c['params']
+    method, params = c['params'][1], c['params'][2]  # NOTE: this works only for graphene clients
     port = c.pop('wallet_port', None)
     proxy_user = c.pop('proxy_user', '')
     proxy_password = c.pop('proxy_password', '')
@@ -212,10 +216,11 @@ def json_rpc_call():
         password = node.rpc_password
 
         # Intercept api calls meant for the bts_tools and do not forward them to the cli wallet
-        if method == 'is_signing_key_active':
-            result = {'result': node.is_signing_key_active()}
-        elif method == 'other':
-            pass
+        if method in ['is_signing_key_active', 'network_get_info', 'network_get_connected_peers',
+                        'network_get_potential_peers', 'network_get_advanced_parameters',
+                        'network_set_advanced_parameters']:
+
+            result = {'result': getattr(node, method)(*params)}
         else:
             result = rpc.rpc_call('localhost', port, user, password, method, *params,
                                   __graphene=True, raw_response=True)
@@ -229,6 +234,7 @@ def json_rpc_call():
         result = {'id': c['id'], 'error': {'message': str(e)}}
 
     return jsonify(result)
+
 
 @bp.route('/info')
 @clear_rpc_cache
