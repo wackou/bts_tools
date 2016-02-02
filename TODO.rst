@@ -6,19 +6,23 @@ This is the day-to-day todo list. For a more high-level overview, see the `roadm
 Main
 ----
 
+* better error logging: https://pymotw.com/3/cgitb/index.html
+* deploy to witness using given wallet or private active (not owner) keys from deploy_config file
+* monitoring plugin that checks feed publishing and warns on old feeds
+* feed script should work in 2 steps:
+  1- first get all the feeds that we can. Don't wait to be pulled for it, get all markets. It's also easier to parallelize efficiently
+  2- then, publish what we can from what we have. This way, if all chinese exchanges time out, for instance, then we don't try to publish a wrong feed
 * feed script should get all markets at once from a single feed provider (when possible)
   in order to avoid spamming the service
-* fix blocks missed / produced
 * "bts deploy_seed <ip_addr>" completely sets up a new instance. Should also communicate with
   dns provider to update the dns entry of the new seed node
-* bts_tools uwsgi instance should also expose a json-rpc interface. This would allow to
-  communicate between instances directly and implement needed apis in the tools instead of
-  in the witness node
-  * then, fix "signing key active" display in view header (need bts_tools json-rpc for that)
 * remove deprecated bts-rpc tool, was unusably slow anyway (and we can do better in graphene anyway)
 * update doc / screenshots
 * write detailed doc about how the feed script works
 * fix all FIXMEs left in the code and finalize port to graphene
+* new node type: the librarian / the snapshotting node: every now and then, stops itself, makes a copy of the blockchain data
+  and restart again. the snapshots are made available for quickly deploying a new node without synchronizing
+  the entire blockchain from scratch. Should also prove useful in case of forks, too, for getting back on the main one
 
 
 Misc / Minor

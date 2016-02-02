@@ -202,7 +202,7 @@ def json_rpc_call():
     except StopIteration:
         c = json.loads(request.data.decode('utf-8'))
 
-    log.info('json rpc call: {}'.format(c))
+    log.debug('json rpc call: {}'.format(c))
 
     method, params = c['params'][1], c['params'][2]  # NOTE: this works only for graphene clients
     port = c.pop('wallet_port', None)

@@ -147,11 +147,12 @@ class BTSProxy(object):
         else:
             rpc = {}
             cfg_port = None
-        self.rpc_port = proxy_port or wallet_port or rpc_port or cfg_port or 0
+        self.wallet_port = wallet_port or rpc_port or cfg_port or 0
+        self.rpc_port = proxy_port or self.wallet_port
         self.rpc_user = wallet_user or rpc_user or rpc.get('rpc_user') or ''
         self.rpc_password = wallet_password or rpc_password or rpc.get('rpc_password') or ''
         self.rpc_host = wallet_host or rpc_host or proxy_host or 'localhost'
-        self.rpc_cache_key = (self.rpc_host, self.rpc_port)
+        self.rpc_cache_key = (self.rpc_host, self.wallet_port)
         self.ws_rpc_cache_key = (self.witness_host, self.witness_port)
         self.venv_path = venv_path
 
@@ -160,7 +161,6 @@ class BTSProxy(object):
         self.witness_user     = witness_user
         self.witness_password = witness_password
         self.wallet_host      = wallet_host
-        self.wallet_port      = wallet_port
         self.wallet_user      = wallet_user
         self.wallet_password  = wallet_password
         self.proxy_host       = proxy_host

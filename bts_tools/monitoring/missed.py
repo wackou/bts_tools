@@ -26,31 +26,38 @@ log = logging.getLogger(__name__)
 
 
 def init_ctx(node, ctx, cfg):
-    ctx.producing_state = StableStateMonitor(3)
-    ctx.last_n_notified = 0
+    if node.is_graphene_based():
+        ctx.total_missed = node.get_witness(node.name)['total_missed']
+    else:
+        ctx.producing_state = StableStateMonitor(3)
+        ctx.last_n_notified = 0
 
 
 def is_valid_node(node):
+    # FIXME: revisit block_age < 60 (node.is_synced()), this was meant when syncing at the beginning, but
+    #        during network crisis this might happen but we still want to monitor for missed blocks
     return node.type == 'delegate' and node.is_synced()  # only monitor if synced
 
 
 def monitor(node, ctx, cfg):
     # monitor for missed blocks, only for delegate nodes
-    # FIXME: revisit block_age < 60 (node.is_synced()), this was meant when syncing at the beginning, but
-    #        during network crisis this might happen but we still want to monitor for missed blocks
-    # TODO: blocks_produced = get_streak()
-    #       if blocks_produced < last_blocks_produced:
-    #           # missed block somehow
-    #       last_blocks_produced = blocks_produced
-    producing, n = node.get_streak()
-    ctx.producing_state.push(producing)
+    if node.is_graphene_based():
+        total_missed = node.get_witness(node.name)['total_missed']
+        if total_missed > ctx.total_missed:
+            log.warning('Delegate %s missed another block! (%d missed total)' % (node.name, total_missed))
+            send_notification([node], 'missed another block! (%d missed total)' % total_missed, alert=True)
+        ctx.total_missed = total_missed
 
-    if not producing and ctx.producing_state.just_changed():
-        log.warning('Delegate %s just missed a block!' % node.name)
-        send_notification([node], 'just missed a block!', alert=True)
-        ctx.last_n_notified = 1
+    else:
+        producing, n = node.get_streak()
+        ctx.producing_state.push(producing)
 
-    elif ctx.producing_state.stable_state() == False and n > ctx.last_n_notified:
-        log.warning('Delegate %s missed another block! (%d missed total)' % (node.name, n))
-        send_notification([node], 'missed another block! (%d missed total)' % n, alert=True)
-        ctx.last_n_notified = n
+        if not producing and ctx.producing_state.just_changed():
+            log.warning('Delegate %s just missed a block!' % node.name)
+            send_notification([node], 'just missed a block!', alert=True)
+            ctx.last_n_notified = 1
+
+        elif ctx.producing_state.stable_state() == False and n > ctx.last_n_notified:
+            log.warning('Delegate %s missed another block! (%d missed total)' % (node.name, n))
+            send_notification([node], 'missed another block! (%d missed total)' % n, alert=True)
+            ctx.last_n_notified = n
