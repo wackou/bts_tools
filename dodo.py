@@ -87,6 +87,7 @@ def task_set_version():
 
 def task_upload_pypi():
     """Build and upload the package on PyPI"""
+    # FIXME: only apply "git stash apply" if "git stash" did stash something.
     #git stash && rm -fr dist/ && python setup.py sdist upload && git stash apply && python setup.py develop
     return {'actions': ['git stash && (python setup.py register sdist upload; git stash apply)'],
             'verbosity': 2}

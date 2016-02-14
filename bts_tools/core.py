@@ -79,6 +79,11 @@ def load_config(loglevels=None):
         raise
 
     # setup given logging levels, otherwise from config file
+    DETAILED_LOG = True
+    if DETAILED_LOG:
+        # https://pymotw.com/3/cgitb/index.html
+        import cgitb
+        cgitb.enable(format='text')
     loglevels = loglevels or config.get('logging', {})
     for name, level in loglevels.items():
         logging.getLogger(name).setLevel(getattr(logging, level))

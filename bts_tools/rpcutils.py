@@ -206,40 +206,7 @@ class BTSProxy(object):
             self._rpc_call = local_call
 
         else:
-            # do it over ssh using bts-rpc
-            # FIXME: make sure the password doesn't come out in an ssh log or bash history
-            #        for instance, if command fails, we end up with sth like that in the logs:
-            # 2015-08-31 00:43:48,520 WARNING  [bts_tools.core:run:190] -- Failed running: ssh myhost "source ~/.virtualenvs/bts_tools/bin/activate; bts-rpc 1234 rpcuser XXXrpcpasswordXXX get_info
-            def remote_call(funcname, *args):
-                cmd = 'ssh %s "' % self.rpc_host
-                if self.venv_path:
-                    cmd += 'source %s/bin/activate; ' % self.venv_path
-                #cmd += 'bts-rpc %s %s"' % (funcname, '"%s"' % '" "'.join(str(arg) for arg in args))
-                cmd += 'bts-rpc %d %s %s %s %s 2>/dev/null"' % (self.rpc_port, self.rpc_user, self.rpc_password,
-                                                    funcname, ' '.join(str(arg) for arg in args))
-
-                result = run(cmd, capture_io=True, verbose=False).stdout
-                try:
-                    result = json.loads(result)
-                except:
-                    log.error('Error while parsing JSON:')
-                    log.error(result)
-                    raise
-
-                if 'error' in result:
-                    # re-raise original exception
-                    log.debug('Received error in RPC result: %s(%s)'
-                              % (result['type'], result['error']))
-                    try:
-                        exc_module, exc_class = result['type'].rsplit('.', 1)
-                    except ValueError:
-                        exc_module, exc_class = 'builtins', result['type']
-
-                    exc_class = getattr(importlib.import_module(exc_module), exc_class)
-                    raise exc_class(result['error'])
-
-                return result
-            self._rpc_call = remote_call
+            raise RuntimeError('Cannot connect to remote host for non-graphene nodes')
 
         if core.config.get('profile', False):
             self._rpc_call = core.profile(self._rpc_call)

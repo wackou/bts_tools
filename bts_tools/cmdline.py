@@ -541,34 +541,3 @@ def main_pls():
     return main(flavor='pls')
 
 
-def main_rpc_call():
-    # parse commandline args
-    DESC="""Run the given command using JSON-RPC."""
-    EPILOG="""You should look into config.yaml to configure the rpc user and password."""
-
-    parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
-                                     formatter_class=RawTextHelpFormatter)
-    parser.add_argument('rpc_port',
-                        help='the rpc port')
-    parser.add_argument('rpc_user',
-                        help='the rpc user')
-    parser.add_argument('rpc_password',
-                        help='the rpc password')
-    parser.add_argument('method',
-                        help='the method to call')
-    parser.add_argument('args',
-                        help='the args to pass to the rpc method call', nargs='*')
-    args = parser.parse_args()
-
-    init(loglevels={'bts_tools': 'WARNING'})
-
-    try:
-        result = rpc_call('localhost', int(args.rpc_port), args.rpc_user,
-                          args.rpc_password, args.method, *args.args)
-    except Exception as e:
-        log.exception(e)
-        result = { 'error': str(e), 'type': '%s.%s' % (e.__class__.__module__,
-                                                       e.__class__.__name__) }
-
-    print(json.dumps(result))
-

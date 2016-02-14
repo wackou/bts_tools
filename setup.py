@@ -44,8 +44,7 @@ entry_points = {
         'muse = bts_tools.cmdline:main_muse',
         'dvs = bts_tools.cmdline:main_dvs',
         'pts = bts_tools.cmdline:main_pts',
-        'pls = bts_tools.cmdline:main_pls',
-        'bts-rpc = bts_tools.cmdline:main_rpc_call'
+        'pls = bts_tools.cmdline:main_pls'
     ],
 }
 
