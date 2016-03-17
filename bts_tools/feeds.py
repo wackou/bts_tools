@@ -36,7 +36,7 @@ import logging
 log = logging.getLogger(__name__)
 
 """BitAssets for which we check and publish feeds."""
-BIT_ASSETS = {'USD', 'CNY', 'TCNY', 'BTC', 'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN',
+BIT_ASSETS = {'USD', 'TUSD', 'CNY', 'TCNY', 'BTC', 'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN',
               'RUB', 'SEK', 'SGD', 'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD'}
 
 # BIT_ASSETS_INDICES = {'SHENZHEN': 'CNY',
@@ -131,7 +131,7 @@ def get_feed_prices():
     # - BTC as we don't get it from yahoo
     # - USD as it is our base currency
     yahoo = YahooFeedProvider()
-    yahoo_curs = BIT_ASSETS - {'BTC', 'USD', 'CNY', 'TCNY'}
+    yahoo_curs = BIT_ASSETS - {'BTC', 'USD', 'TUSD', 'CNY', 'TCNY'}
     yahoo_prices = yahoo.get(yahoo_curs, 'USD')
 
     # 1- get the BitShares price in major markets: BTC, USD and CNY
@@ -198,6 +198,7 @@ def get_feed_prices():
 
     feeds['BTC'] = btc_price
     feeds['USD'] = usd_price
+    feeds['TUSD'] = usd_price
     feeds['CNY'] = cny_price
     feeds['TCNY'] = cny_price
 
