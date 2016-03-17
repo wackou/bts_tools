@@ -115,7 +115,7 @@ install_user () {
     echo "$USER:$PASSWORD" | chpasswd
   fi
 
-  su -c "/bin/bash /tmp/install_user.sh $USER $GIT_NAME $GIT_EMAIL" $USER >> /tmp/setupVPS.log 2>&1
+  su -c "/bin/bash /tmp/install_user.sh $USER '$GIT_NAME' '$GIT_EMAIL' $INSTALL_COMPILE_DEPENDENCIES" $USER >> /tmp/setupVPS.log 2>&1
 }
 
 install_user $UNIX_USER $UNIX_PASSWORD

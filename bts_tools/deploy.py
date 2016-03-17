@@ -182,8 +182,11 @@ def deploy_base_node(cfg, build_dir, build_env):
     copy(join(build_dir, 'supervisord.conf'), '/etc/supervisor/conf.d/bts_tools.conf')
 
     # 3- copy prebuilt binaries
-    log.info('Deploying prebuilt binaries')
-    deploy(build_env, '{}@{}'.format(cfg['unix_user'], host))
+    if cfg.get('install_compile_dependencies', False):
+        log.info('Not deploying any binaries, they have been compiled locally')
+    else:
+        log.info('Deploying prebuilt binaries')
+        deploy(build_env, '{}@{}'.format(cfg['unix_user'], host))
 
     # 4- copy snapshot of the blockchain, if available
     snapshot = cfg.get('blockchain_snapshot')

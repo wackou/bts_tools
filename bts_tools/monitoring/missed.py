@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 
 def init_ctx(node, ctx, cfg):
     if node.is_graphene_based():
-        ctx.total_missed = node.get_witness(node.name)['total_missed']
+        ctx.total_missed = None
     else:
         ctx.producing_state = StableStateMonitor(3)
         ctx.last_n_notified = 0
@@ -43,7 +43,7 @@ def monitor(node, ctx, cfg):
     # monitor for missed blocks, only for delegate nodes
     if node.is_graphene_based():
         total_missed = node.get_witness(node.name)['total_missed']
-        if total_missed > ctx.total_missed:
+        if ctx.total_missed and total_missed > ctx.total_missed:
             log.warning('Delegate %s missed another block! (%d missed total)' % (node.name, total_missed))
             send_notification([node], 'missed another block! (%d missed total)' % total_missed, alert=True)
         ctx.total_missed = total_missed

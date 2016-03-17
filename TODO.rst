@@ -6,6 +6,8 @@ This is the day-to-day todo list. For a more high-level overview, see the `roadm
 Main
 ----
 
+* log output to file with all log levels set to debug. rotate them.
+* check core_exchange_factor value in config.yaml (see xeroc)
 * deploy to witness using given wallet or private active (not owner) keys from deploy_config file
 * "bts deploy_seed <ip_addr>" completely sets up a new instance. Should also communicate with
   dns provider to update the dns entry of the new seed node
@@ -66,7 +68,7 @@ Smart Coin products (e.g. bitUSD) and BitShares system can offer a paid position
   n feed fetchers (various IPs) get feed price and publish it to the overmind
   1 active wallet publishes the feed price at a given time
   1 active signing node + n backup nodes ready to kick in
-  1 librarian taking snapshots of the blockchain, available to the overmind and other nodes
+  1 librarian taking snapshots of the blockchain, available to the overmind and other nodes (see also: https://github.com/cryptonomex/graphene/issues/499)
   1 continous deployment compiles and makes bin images of the clien available (can be same as librarian)
   n seed nodes
   n backbone nodes / relay nodes

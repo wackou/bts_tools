@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 
+echo "CALLING install_user.sh WITH ARGS: $@"
+
 set -o nounset
 USER=$1
 GIT_NAME=$2
 GIT_EMAIL=$3
+INSTALL_COMPILE_DEPENDENCIES=$4
 set +o nounset
 
 cd ~
@@ -43,7 +46,8 @@ git stash && git pull && git stash apply
 rm -fr dist; python setup.py sdist && (pip uninstall -y bts_tools; pip install dist/bts_tools-*.tar.gz)
 
 # FIXME: temporary fix, see: http://stackoverflow.com/questions/34157314/autobahn-websocket-issue-while-running-with-twistd-using-tac-file
-pip install https://github.com/crossbario/autobahn-python/archive/master.zip
+#pip install https://github.com/crossbario/autobahn-python/archive/master.zip
+#pip install autobahn
 
 if [ -f /tmp/config.yaml ]; then
     # ensure we have a ~/.bts_tools folder
@@ -63,6 +67,15 @@ if [ -f /tmp/config.yaml ]; then
     echo "------------------------------------"
 else
     echo "no config.yaml file given"
+fi
+
+# compile client locally
+echo "INSTALL COMPILE DEPS  ${INSTALL_COMPILE_DEPENDENCIES}"
+if [ $INSTALL_COMPILE_DEPENDENCIES == "1" ]; then
+    echo "Building bts client"
+    bts build
+else
+    echo "Not building bts client locally"
 fi
 
 # copy bts client config.ini, if given

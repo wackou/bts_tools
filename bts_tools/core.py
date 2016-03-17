@@ -79,7 +79,7 @@ def load_config(loglevels=None):
         raise
 
     # setup given logging levels, otherwise from config file
-    DETAILED_LOG = True
+    DETAILED_LOG = False
     if DETAILED_LOG:
         # https://pymotw.com/3/cgitb/index.html
         import cgitb
