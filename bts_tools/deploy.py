@@ -146,7 +146,7 @@ def prepare_installation_bundle(cfg, build_dir):
 
 
 def run_remote_cmd(host, user, cmd):
-    run('ssh {}@{} "{}"'.format(user, host, cmd))
+    run('ssh -o "ControlMaster=no" {}@{} "{}"'.format(user, host, cmd))
 
 
 def deploy_base_node(cfg, build_dir, build_env):
@@ -156,8 +156,8 @@ def deploy_base_node(cfg, build_dir, build_env):
     render_template = partial(render_template_file, cfg, build_dir, env)
     run_remote = partial(run_remote_cmd, host, 'root')
 
-    def copy(filename, dest_dir, user='root'):
-        run('rsync -avzP {} {}@{}:"{}"'.format(filename, user, host, dest_dir))
+    def copy(filename, dest_dir, user='root', compress=True):
+        run('rsync -av{}P {} {}@{}:"{}"'.format('z' if compress else '', filename, user, host, dest_dir))
 
     # make sure we can successfully connect to it via ssh without confirmation
     run('ssh -o "StrictHostKeyChecking no" root@{} ls'.format(host))
@@ -194,7 +194,7 @@ def deploy_base_node(cfg, build_dir, build_env):
         run_remote_cmd(host, cfg['unix_user'], 'mkdir -p ~/.BitShares2/blockchain')
         if not snapshot.endswith('/'): # play nice with rsync idiosyncrasy about trailing slashes and dirs
             snapshot = snapshot + '/'
-        copy(snapshot, '~/.BitShares2/blockchain/', user=cfg['unix_user'])
+        copy(snapshot, '~/.BitShares2/blockchain/', user=cfg['unix_user'], compress=False)
 
 
 def deploy_seed_node(cfg):
@@ -239,3 +239,4 @@ def deploy_node(build_env, config_file):
     log.warning('The script will now hang, sorry... Please stop it using ctrl-c')
     run_remote_cmd(cfg['host'], 'root', 'reboot &')  # FIXME: we hang here on reboot
     # see: http://unix.stackexchange.com/questions/58271/closing-connection-after-executing-reboot-using-ssh-command
+    # maybe use nohup: https://en.wikipedia.org/wiki/Nohup

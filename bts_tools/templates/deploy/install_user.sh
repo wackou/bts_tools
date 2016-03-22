@@ -41,7 +41,12 @@ mkvirtualenv -p /usr/bin/python3 bts_tools
 
 echo "install git version of the bts_tools"
 pushd ~/bts_tools
+
 workon bts_tools
+
+# upgrade pip and setuptools to ensure a modern installation (and no problem when installing dependencies)
+pip install -U pip setuptools
+
 git stash && git pull && git stash apply
 rm -fr dist; python setup.py sdist && (pip uninstall -y bts_tools; pip install dist/bts_tools-*.tar.gz)
 
@@ -51,7 +56,7 @@ rm -fr dist; python setup.py sdist && (pip uninstall -y bts_tools; pip install d
 
 if [ -f /tmp/config.yaml ]; then
     # ensure we have a ~/.bts_tools folder
-    bts2 list >/dev/null 2>&1
+    bts list >/dev/null 2>&1
     echo "----------------------- HERE"
     if [ -f ~/.bts_tools/config.yaml ]; then
         echo "config yaml found in .bts_tools"
@@ -88,12 +93,6 @@ fi
 if [ -f /tmp/api_access.json ]; then
     cp /tmp/api_access.json ~/
 fi
-
-# install dependencies for monitoring of graphene clients
-#if [ -f /tmp/graphene-0.1.tar.gz ]; then
-#    pip install /tmp/graphene-0.1.tar.gz autobahn
-#fi
-
 
 # try copying any genesis file in the home directory
 cp /tmp/*.json ~/

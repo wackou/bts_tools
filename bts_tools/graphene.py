@@ -189,7 +189,7 @@ def run_monitoring(host, port, user, passwd):
         log.debug('new event loop: {}'.format(loop))
         log.debug('in thread {}'.format(threading.current_thread().name))
 
-        factory = WebSocketClientFactory("ws://{}:{:d}".format(host, port), debug=True)
+        factory = WebSocketClientFactory("ws://{}:{:d}".format(host, port))
         factory.protocol = partial(MonitoringProtocol, host, port, user, passwd)
 
         try:
