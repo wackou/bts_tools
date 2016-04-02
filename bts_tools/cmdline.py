@@ -199,7 +199,7 @@ def install_last_built_bin():
     if not exists(BTS_BIN_DIR):
         os.makedirs(BTS_BIN_DIR)
 
-    for bname in get_all_bin_names(BUILD_ENV['name']):
+    for bname in get_all_bin_names(build_env=BUILD_ENV['name']):
         install_and_symlink(bname)
 
 
@@ -527,6 +527,10 @@ def main_bts2():
 
 def main_muse():
     return main(flavor='muse')
+
+
+def main_steem():
+    return main(flavor='steem')
 
 
 def main_dvs():
