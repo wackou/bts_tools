@@ -210,7 +210,7 @@ def is_graphene_based(n):
             n = config['run_environments'][n]['type']
         except KeyError:
             pass
-        return n == 'bts2' or n == 'muse'
+        return n == 'bts2' or n == 'muse' or n == 'steem'
 
 
 DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',
@@ -233,7 +233,7 @@ DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',
 
 DEFAULT_BIN_FILENAMES = {'bts2': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
                          'muse': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
-                         'steem': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
+                         'steem': ['steemd/steemd', 'cli_wallet/cli_wallet'],
                          'bts': ['client/bitshares_client'],
                          'dvs': ['client/devshares_client'],
                          'pts': ['client/pts_client'],

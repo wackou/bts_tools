@@ -135,6 +135,13 @@ run_environments:
         witness_port: 8390
         cli_port: 8393
 
+    steem:
+        type: steem
+        data_dir: ~/.Steem
+        p2p_port: 2001
+        witness_port: 8490
+        cli_port: 8493
+
     debug:
         type: bts
         debug: true
