@@ -23,10 +23,11 @@ from collections import namedtuple
 from subprocess import Popen, PIPE
 from functools import wraps
 from contextlib import suppress
+from jinja2 import Environment, PackageLoader
 import sys
 import os
 import shutil
-import yaml
+from ruamel import yaml
 import time
 import logging
 
@@ -62,6 +63,7 @@ def load_config(loglevels=None):
         shutil.copyfile(join(dirname(__file__), 'config.yaml'),
                         BTS_TOOLS_CONFIG_FILE)
 
+    # load config file
     try:
         log.info('Loading config file: %s' % BTS_TOOLS_CONFIG_FILE)
         config_contents = open(BTS_TOOLS_CONFIG_FILE).read()
@@ -69,8 +71,18 @@ def load_config(loglevels=None):
         log.error('Could not read config file: %s' % BTS_TOOLS_CONFIG_FILE)
         raise
 
+    env = Environment(loader=PackageLoader('bts_tools', 'templates/config'))
+
+    # render config from template
     try:
-        config = yaml.load(config_contents)
+        config_contents = env.from_string(config_contents).render()
+    except:
+        log.error('Could not render config file as a valid jinja2 template')
+        raise
+
+    # load yaml config
+    try:
+        config = yaml.load(config_contents, Loader=yaml.RoundTripLoader)
     except:
         log.error('-'*100)
         log.error('Config file contents is not a valid YAML object:')
@@ -78,9 +90,37 @@ def load_config(loglevels=None):
         log.error('-'*100)
         raise
 
+    # load default config and merge
+    try:
+        default = env.get_template('default.yaml').render()
+        default = yaml.load(default, Loader=yaml.RoundTripLoader)
+    except:
+        log.error('Could not load defaults for config.yaml file...')
+        raise
+
+    with open(join(BTS_TOOLS_HOMEDIR, 'default_config.yaml'), 'w') as cfg:
+        cfg.write(yaml.dump(default, indent=4, Dumper=yaml.RoundTripDumper))
+
+    def recursive_update(a, b):
+        for k, v in b.items():
+            if k in a:
+                if isinstance(v, dict):
+                    recursive_update(a[k], v)
+                else:
+                    a[k] = v
+            else:
+                a[k] = v
+
+    recursive_update(default, config)
+    config = default
+
+    # write full_config.yaml in ~/.bts_tools
+    with open(join(BTS_TOOLS_HOMEDIR, 'full_config.yaml'), 'w') as cfg:
+        cfg.write(yaml.dump(config, indent=4, Dumper=yaml.RoundTripDumper))
+
+
     # setup given logging levels, otherwise from config file
-    DETAILED_LOG = False
-    if DETAILED_LOG:
+    if config.get('detailed_log', False):
         # https://pymotw.com/3/cgitb/index.html
         import cgitb
         cgitb.enable(format='text')
@@ -122,9 +162,9 @@ def load_config(loglevels=None):
     # warn about parameters that should be set, and potentially adjust config with default values
     if 'feed_providers' not in m['feeds']:
         log.warning('You did not specify the monitoring.feeds.feed_providers variable')
-        log.warning('Using default value of [Yahoo, Bter, Btc38, Poloniex]')
+        log.warning('Using default value of [Yahoo, Btc38, Poloniex]')
         log.warning('You might want to add [Google, Bloomberg] to that list')
-        m['feeds']['feed_providers'] = ['Yahoo', 'Bter', 'Btc38', 'Yunbi', 'Poloniex', 'CCEDK']
+        m['feeds']['feed_providers'] = ['Yahoo', 'Btc38', 'Yunbi', 'Poloniex', 'CCEDK']
 
     def check_feed_option(section, name, default_value):
         if 'asset_params' not in m['feeds']:
@@ -137,6 +177,7 @@ def load_config(loglevels=None):
             log.warning("'{}' not in config['monitoring']['feeds']['asset_params']['{}']. Setting to default value: {}".format(name, section, default_value))
             m['feeds']['asset_params'][section][name] = default_value
 
+    # FIXME: deprecate once we have proper templates
     check_feed_option('default', 'core_exchange_factor', 0.95)
     check_feed_option('default', 'maintenance_collateral_ratio', 1750)
     check_feed_option('default', 'maximum_short_squeeze_ratio', 1100)
@@ -309,18 +350,23 @@ def _run(cmd, capture_io=False, verbose=False):
 
     (log.info if verbose else log.debug)('SHELL: running command: %s' % cmd)
 
-    if capture_io:
-        p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = p.communicate()
-        if sys.version_info[0] >= 3:
-            stdout, stderr = (str(stdout, encoding='utf-8'),
-                              str(stderr, encoding='utf-8'))
-        return IOStream(p.returncode, stdout, stderr)
+    try:
+        if capture_io:
+            p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
+            stdout, stderr = p.communicate()
+            if sys.version_info[0] >= 3:
+                stdout, stderr = (str(stdout, encoding='utf-8'),
+                                  str(stderr, encoding='utf-8'))
+            return IOStream(p.returncode, stdout, stderr)
 
-    else:
-        p = Popen(cmd, shell=True)
-        p.communicate()
-        return IOStream(p.returncode, None, None)
+        else:
+            p = Popen(cmd, shell=True)
+            p.communicate()
+            return IOStream(p.returncode, None, None)
+
+    except KeyboardInterrupt:
+        log.warning('Caught Ctrl+C, exiting...')
+        sys.exit(0)
 
 
 def run(cmd, capture_io=False, verbose=True, log_on_fail=True):

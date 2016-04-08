@@ -1,0 +1,65 @@
+#
+# list of configurations for building the bitshares client
+#
+# by default, if you don't specify a build env on the cmdline, the tools will
+# use the 'bts' environment
+#
+build_environments:
+    bts2:
+        debug: false
+        git_repo: https://github.com/bitshares/bitshares-2.git
+        git_branch: bitshares
+        build_dir: ~/.BitShares2_build
+        bin_dir: ~/.BitShares2_bin
+        make_args: [witness_node, cli_wallet]
+
+    muse:
+        debug: false
+        git_repo: https://github.com/peertracksinc/muse.git
+        git_branch: muse
+        build_dir: ~/.Muse_build
+        bin_dir: ~/.Muse_bin
+        make_args: [witness_node, cli_wallet]
+
+    steem:
+        debug: false
+        git_repo: https://github.com/steemit/steem.git
+        git_branch: master
+        build_dir: ~/.Steem_build
+        bin_dir: ~/.Steem_bin
+
+    bts:
+        git_repo: https://github.com/BitShares/bitshares.git
+        git_branch: master
+        build_dir: ~/.BitShares_build
+        bin_dir: ~/.BitShares_bin
+
+    bts-dev:
+        git_repo: https://github.com/BitShares/bitshares.git
+        git_branch: develop
+        build_dir: ~/.BitSharesDev_build
+        bin_dir: ~/.BitSharesDev_bin
+
+    dvs:
+        git_repo: https://github.com/BitShares/bitshares.git
+        git_branch: devshares
+        build_dir: ~/.DevShares_build
+        bin_dir: ~/.DevShares_bin
+
+    pts:
+        git_repo: https://github.com/PTS-DPOS/PTS.git
+        git_branch: master
+        build_dir: ~/.PTS_build
+        bin_dir: ~/.PTS_bin
+
+    pts-dev:
+        git_repo: https://github.com/PTS-DPOS/PTS.git
+        git_branch: develop
+        build_dir: ~/.PTSdev_build
+        bin_dir: ~/.PTSdev_bin
+
+    pls:
+        git_repo: https://github.com/dacsunlimited/dac_play.git
+        git_branch: master
+        build_dir: ~/.Play_build
+        bin_dir: ~/.Play_bin

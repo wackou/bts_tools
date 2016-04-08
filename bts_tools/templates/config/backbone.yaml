@@ -1,0 +1,10 @@
+#
+# list of ip:port for the backbone nodes
+#
+backbone:
+    - backbone01.digitalgaia.io:1777
+    - backbone02.digitalgaia.io:1777
+    - seed01.bitsharesnodes.com:1776
+    - seed02.bitsharesnodes.com:1776
+    - seed03.bitsharesnodes.com:1776
+    - 71.197.2.119:1776
