@@ -302,54 +302,87 @@ def check_feeds(nodes):
                         median_feeds = {c: statistics.median(price_history[c]) for c in feeds}
                         log.info('Node %s publishing feeds: %s' % (node.name, fmt(median_feeds)))
                         if node.is_graphene_based():
-                            for asset, price in median_feeds.items():
-                                if asset in ['RUB', 'SEK']:
-                                    # markets temporarily disabled because they are in a black swan state
-                                    continue
-                                # publish all feeds even if a single one fails
-                                try:
-                                    asset_id = node.asset_data(asset)['id']
-                                    asset_precision = node.asset_data(asset)['precision']
-                                    base_precision  = node.asset_data('BTS')['precision']
+                            DISABLED_ASSETS = ['RUB', 'SEK']
 
-                                    # find nice fraction with at least N significant digits
-                                    N = 4
-                                    numerator = int(price * 10**asset_precision)
-                                    denominator = 10**base_precision
-                                    multiplier = 0
-                                    while len(str(numerator)) < N:
-                                        multiplier += 1
-                                        numerator = int(price * 10**(asset_precision+multiplier))
-                                        denominator = 10**(base_precision+multiplier)
 
-                                    c = cfg['asset_params'].get(asset) or cfg['asset_params']['default']
-                                    price = {
-                                        'settlement_price': {
-                                            'quote': {
-                                                'asset_id': '1.3.0',
-                                                'amount': denominator
-                                            },
-                                            'base': {
-                                                'asset_id': asset_id,
-                                                'amount': numerator
-                                            }
+                            def get_price_for_publishing(asset, price):
+                                asset_id = node.asset_data(asset)['id']
+                                asset_precision = node.asset_data(asset)['precision']
+                                base_precision = node.asset_data('BTS')['precision']
+
+                                # find nice fraction with at least N significant digits
+                                N = 4
+                                numerator = int(price * 10 ** asset_precision)
+                                denominator = 10 ** base_precision
+                                multiplier = 0
+                                while len(str(numerator)) < N:
+                                    multiplier += 1
+                                    numerator = int(price * 10 ** (asset_precision + multiplier))
+                                    denominator = 10 ** (base_precision + multiplier)
+
+                                c = cfg['asset_params'].get(asset) or cfg['asset_params']['default']
+                                price = {
+                                    'settlement_price': {
+                                        'quote': {
+                                            'asset_id': '1.3.0',
+                                            'amount': denominator
                                         },
-                                        'maintenance_collateral_ratio': c['maintenance_collateral_ratio'],
-                                        'maximum_short_squeeze_ratio': c['maximum_short_squeeze_ratio'],
-                                        'core_exchange_rate': {
-                                            'quote': {
-                                                'asset_id': '1.3.0',
-                                                'amount': int(denominator * c['core_exchange_factor'])
-                                            },
-                                            'base': {
-                                                'asset_id': asset_id,
-                                                'amount': numerator
-                                            }
+                                        'base': {
+                                            'asset_id': asset_id,
+                                            'amount': numerator
+                                        }
+                                    },
+                                    'maintenance_collateral_ratio': c['maintenance_collateral_ratio'],
+                                    'maximum_short_squeeze_ratio': c['maximum_short_squeeze_ratio'],
+                                    'core_exchange_rate': {
+                                        'quote': {
+                                            'asset_id': '1.3.0',
+                                            'amount': int(denominator * c['core_exchange_factor'])
+                                        },
+                                        'base': {
+                                            'asset_id': asset_id,
+                                            'amount': numerator
                                         }
                                     }
-                                    node.publish_asset_feed(node.name, asset, hashabledict(price), True)  # True: sign+broadcast
-                                except Exception as e:
-                                    log.exception(e)
+                                }
+                                return price
+
+                            # first, try to publish all of them in a single transaction
+                            try:
+                                handle = node.begin_builder_transaction()
+                                for asset, price in median_feeds.items():
+                                    if asset in DISABLED_ASSETS:
+                                        # markets temporarily disabled because they are in a black swan state
+                                        continue
+                                    op = [19,  # id 19 corresponds to price feed update operation
+                                          hashabledict({"asset_id": node.asset_data(asset)['id'],
+                                                        "feed": get_price_for_publishing(asset, price),
+                                                        "publisher": node.get_account(node.name)["id"]})
+                                          ]
+                                    node.add_operation_to_builder_transaction(handle, op)
+
+                                # set fee
+                                node.set_fees_on_builder_transaction(handle, '1.3.0')
+
+                                # sign and broadcast
+                                node.sign_builder_transaction(handle, True)
+
+                            except Exception as e:
+                                log.error('tried single transaction for all feeds, failed because:')
+                                log.exception(e)
+
+                                # if an error happened, publish feeds individually to make sure that
+                                # at least the ones that work can get published
+                                for asset, price in median_feeds.items():
+                                    if asset in DISABLED_ASSETS:
+                                        # markets temporarily disabled because they are in a black swan state
+                                        continue
+                                    # publish all feeds even if a single one fails
+                                    try:
+                                        price = hashabledict(get_price_for_publishing(asset, price))
+                                        node.publish_asset_feed(node.name, asset, price, True)  # True: sign+broadcast
+                                    except Exception as e:
+                                        log.exception(e)
 
                         else:
                             feeds_as_string = [(cur, '{:.10f}'.format(price)) for cur, price in median_feeds.items()]
