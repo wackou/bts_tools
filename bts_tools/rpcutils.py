@@ -579,7 +579,7 @@ class BTSProxy(object):
             all_data = self._all_bitassets_data
         except AttributeError:
             all_data = {}
-            for asset_name in BIT_ASSETS:
+            for asset_name in BIT_ASSETS | {'BTS'}:
                 asset_data = self.get_asset(asset_name)
                 all_data[asset_name] = asset_data        # resolve SYMBOL
                 all_data[asset_data['id']] = asset_data  # resolve id
