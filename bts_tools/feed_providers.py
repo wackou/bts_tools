@@ -356,6 +356,49 @@ class YunbiFeedProvider(FeedProvider):
                                volume=float(r['ticker']['vol']),
                                last_updated=datetime.utcfromtimestamp(r['at']))
 
+
+class CoinCapFeedProvider(FeedProvider):
+    NAME = 'CoinCap'
+    AVAILABLE_MARKETS = [('ALTCAP', 'BTC')]
+
+    @check_online_status
+    @check_market
+    def get(self, cur, base):
+        log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
+        r = requests.get('http://www.coincap.io/page/BTS', timeout=self.TIMEOUT).json()
+
+        log.debug('{} - btc: {}'.format(self.NAME, r['btcCap']))
+        log.debug('{} - total: {}'.format(self.NAME, r['btcCap'] + r['altCap']))
+        log.debug('{} - alt: {}'.format(self.NAME, r['altCap']))
+
+        price = r['btcCap'] / r['altCap']
+        return self.feed_price(cur, base, price=price)
+
+
+class CoinMarketCapFeedProvider(FeedProvider):
+    NAME = 'CoinMarketCap'
+    AVAILABLE_MARKETS = [('ALTCAP', 'BTC')]
+
+    @check_online_status
+    @check_market
+    def get(self, cur, base):
+        log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
+        r = requests.get('http://coinmarketcap.com', timeout=self.TIMEOUT)
+        soup = BeautifulSoup(r.text, 'html.parser')
+
+        total_market_cap = float(soup.find(id='total-marketcap')['data-usd'].replace(',', ''))
+        btc_market_cap = float(soup.find(id='id-bitcoin').find(class_='market-cap')['data-usd'])
+        alt_market_cap = total_market_cap - btc_market_cap
+
+        log.debug('{} - btc: {}'.format(self.NAME, btc_market_cap))
+        log.debug('{} - total: {}'.format(self.NAME, total_market_cap))
+        log.debug('{} - alt: {}'.format(self.NAME, alt_market_cap))
+
+        price = btc_market_cap / alt_market_cap
+        return self.feed_price(cur, base, price=price)
+
+
+
 _suffix = 'FeedProvider'
 ALL_FEED_PROVIDERS = {name[:-len(_suffix)].lower(): cls
                       for (name, cls) in globals().items()

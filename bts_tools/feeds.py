@@ -23,7 +23,7 @@ from .core import hashabledict
 from .feed_providers import YahooFeedProvider, BterFeedProvider, Btc38FeedProvider,\
     PoloniexFeedProvider, GoogleFeedProvider, BloombergFeedProvider, BitcoinAverageFeedProvider,\
     CCEDKFeedProvider, BitfinexFeedProvider, BitstampFeedProvider, YunbiFeedProvider,\
-    ALL_FEED_PROVIDERS
+    CoinCapFeedProvider, CoinMarketCapFeedProvider, ALL_FEED_PROVIDERS
 from collections import deque, defaultdict
 from contextlib import suppress
 from concurrent.futures import ThreadPoolExecutor
@@ -36,9 +36,10 @@ import logging
 log = logging.getLogger(__name__)
 
 """BitAssets for which we check and publish feeds."""
-BIT_ASSETS = {'USD', 'TUSD', 'CASH.USD', 'CNY', 'TCNY', 'BTC', 'CASH.BTC', 'GOLD', 'EUR',
-              'GBP', 'CAD', 'CHF', 'HKD', 'MXN', 'RUB', 'SEK', 'SGD', 'AUD', 'SILVER',
-              'TRY', 'KRW', 'JPY', 'NZD'}
+YAHOO_ASSETS = {'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN', 'RUB', 'SEK', 'SGD',
+                'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD'}
+
+OTHER_ASSETS = {'TUSD', 'CASH.USD', 'TCNY', 'CASH.BTC', 'ALTCAP'}
 
 # BIT_ASSETS_INDICES = {'SHENZHEN': 'CNY',
 #                       'SHANGHAI': 'CNY',
@@ -47,6 +48,8 @@ BIT_ASSETS = {'USD', 'TUSD', 'CASH.USD', 'CNY', 'TCNY', 'BTC', 'CASH.BTC', 'GOLD
 #                       'HANGSENG': 'HKD'}
 # deactivate those indices for now
 BIT_ASSETS_INDICES = {}
+
+BIT_ASSETS = {'BTC', 'USD', 'CNY'} | YAHOO_ASSETS | OTHER_ASSETS | BIT_ASSETS_INDICES.keys()
 
 """List of feeds that should be shown on the UI and in the logs. Note that we
 always check and publish all feeds, regardless of this variable."""
@@ -64,7 +67,7 @@ def load_feeds():
     global cfg, history_len, price_history, visible_feeds
     cfg = core.config['monitoring']['feeds']
     history_len = int(cfg['median_time_span'] / cfg['check_time_interval'])
-    price_history = {cur: deque(maxlen=history_len) for cur in BIT_ASSETS | set(BIT_ASSETS_INDICES.keys())}
+    price_history = {cur: deque(maxlen=history_len) for cur in BIT_ASSETS}
     visible_feeds = cfg.get('visible_feeds', DEFAULT_VISIBLE_FEEDS)
 
 
@@ -108,8 +111,7 @@ def get_multi_feeds(func, args, providers, stddev_tolerance=None):
             stddev = statistics.stdev(price_list, price) / price  # relative stddev
             if stddev > stddev_tolerance:
                 log.warning('Feeds for {asset} are not consistent amongst providers: {feeds} (stddev = {stddev:.7f})'.format(
-                    asset=market, stddev=stddev,
-                    feeds=' - '.join('{}: {}'.format(p.NAME, q) for p, q in zip(provider_list[market], feed_list))
+                    asset=market, stddev=stddev, feeds=str(feed_list)
                 ))
 
     return result
@@ -132,8 +134,7 @@ def get_feed_prices():
     # - BTC as we don't get it from yahoo
     # - USD as it is our base currency
     yahoo = YahooFeedProvider()
-    yahoo_curs = BIT_ASSETS - {'BTC', 'CASH.BTC', 'USD', 'TUSD', 'CASH.USD', 'CNY', 'TCNY'}
-    yahoo_prices = yahoo.get(yahoo_curs, 'USD')
+    yahoo_prices = yahoo.get(YAHOO_ASSETS, 'USD')
 
     # 1- get the BitShares price in major markets: BTC, USD and CNY
     bter, btc38, poloniex, ccedk, bitcoinavg, bitfinex, bitstamp, yunbi = (
@@ -223,7 +224,13 @@ def get_feed_prices():
     for asset, cur in BIT_ASSETS_INDICES.items():
         feeds[asset] = 1 / statistics.mean(f.price for f in filter_market(all_quotes, (asset, cur)))
 
-    # 4- update price history for all feeds
+    # 4- get other assets
+    altcap = get_multi_feeds('get', [('ALTCAP', 'BTC')], {CoinCapFeedProvider(), CoinMarketCapFeedProvider()},
+                             stddev_tolerance=0.03)
+    altcap = statistics.mean(f.price for f in altcap)
+    feeds['ALTCAP'] = altcap
+
+    # 5- update price history for all feeds
     for cur, price in feeds.items():
         price_history[cur].append(price)
 
@@ -238,6 +245,19 @@ def format_qualifier(c):
     if c in {'BTC', 'GOLD', 'SILVER'} | set(BIT_ASSETS_INDICES.keys()):
         return '%g'
     return '%f'
+
+
+def get_fraction(price, asset_precision, base_precision, N=8):
+    """Find nice fraction with at least N significant digits in
+    both the numerator and denominator."""
+    numerator = int(price * 10 ** asset_precision)
+    denominator = 10 ** base_precision
+    multiplier = 0
+    while len(str(numerator)) < N and len(str(denominator)) < N:
+        multiplier += 1
+        numerator = int(price * 10 ** (asset_precision + multiplier))
+        denominator = 10 ** (base_precision + multiplier)
+    return numerator, denominator
 
 
 def check_feeds(nodes):
@@ -306,25 +326,33 @@ def check_feeds(nodes):
 
 
                             def get_price_for_publishing(asset, price):
+                                c = cfg['asset_params'].get(asset) or cfg['asset_params']['default']
                                 asset_id = node.asset_data(asset)['id']
                                 asset_precision = node.asset_data(asset)['precision']
-                                base_precision = node.asset_data('BTS')['precision']
 
-                                # find nice fraction with at least N significant digits
-                                N = 4
-                                numerator = int(price * 10 ** asset_precision)
-                                denominator = 10 ** base_precision
-                                multiplier = 0
-                                while len(str(numerator)) < N:
-                                    multiplier += 1
-                                    numerator = int(price * 10 ** (asset_precision + multiplier))
-                                    denominator = 10 ** (base_precision + multiplier)
+                                base = 'BTS'
+                                if asset == 'ALTCAP':
+                                    base = 'BTC'
+                                base_id = node.asset_data(base)['id']
+                                base_precision = node.asset_data(base_id)['precision']
+                                bts_precision = node.asset_data('BTS')['precision']
 
-                                c = cfg['asset_params'].get(asset) or cfg['asset_params']['default']
+                                numerator, denominator = get_fraction(price, asset_precision, base_precision)
+
+                                # CER price needs to be priced in BTS always. Get conversion rate
+                                # from the base currency to BTS, and use it to scale the CER price
+
+                                if base != 'BTS':
+                                    base_bts_price = median_feeds[base]
+                                    cer_price = price * base_bts_price / c['core_exchange_factor']
+                                    cer_numerator, cer_denominator = get_fraction(cer_price, base_precision, bts_precision)
+                                else:
+                                    cer_numerator, cer_denominator = numerator, int(denominator*c['core_exchange_factor'])
+
                                 price = {
                                     'settlement_price': {
                                         'quote': {
-                                            'asset_id': '1.3.0',
+                                            'asset_id': base_id,
                                             'amount': denominator
                                         },
                                         'base': {
@@ -337,11 +365,11 @@ def check_feeds(nodes):
                                     'core_exchange_rate': {
                                         'quote': {
                                             'asset_id': '1.3.0',
-                                            'amount': int(denominator * c['core_exchange_factor'])
+                                            'amount': cer_denominator
                                         },
                                         'base': {
                                             'asset_id': asset_id,
-                                            'amount': numerator
+                                            'amount': cer_numerator
                                         }
                                     }
                                 }

@@ -415,6 +415,9 @@ class BTSProxy(object):
         else:
             return self.rpc_call('network_get_advanced_node_parameters')
 
+    def get_object(self, oid):
+        return self.ws_rpc_call(graphene.DATABASE_API, 'get_objects', [oid])
+
     def process(self):
         return bts_process(self)
 
@@ -576,8 +579,7 @@ class BTSProxy(object):
             all_data = self._all_bitassets_data
         except AttributeError:
             all_data = {}
-            p = BIT_ASSETS | BIT_ASSETS_INDICES.keys() | {'BTS'}
-            for asset_name in BIT_ASSETS | BIT_ASSETS_INDICES.keys() | {'BTS'}:
+            for asset_name in BIT_ASSETS:
                 asset_data = self.get_asset(asset_name)
                 all_data[asset_name] = asset_data        # resolve SYMBOL
                 all_data[asset_data['id']] = asset_data  # resolve id
@@ -607,10 +609,8 @@ class BTSProxy(object):
         return result
 
     def get_witness_feeds(self, witness_name, asset_list=None):
-        p = BIT_ASSETS | BIT_ASSETS_INDICES.keys()
-
         witness_id = self.get_witness(witness_name)['witness_account']
-        asset_list = asset_list or BIT_ASSETS | BIT_ASSETS_INDICES.keys()
+        asset_list = asset_list or BIT_ASSETS
         result = []
         for asset in asset_list:
             asset_data = self.get_bitasset_data(asset)
