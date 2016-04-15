@@ -173,35 +173,11 @@ def load_config(loglevels=None):
 
 
     # check whether config.yaml has a correct format
-    errors = []
     m = config['monitoring']
-
-    if 'email' in m:
-        errors.append("'email' subsection of 'monitoring' should be moved to a 'notification' section instead")
-
-    if 'boxcar' in m:
-        errors.append("'boxcar' subsection of 'monitoring' should be moved to a 'notification' section instead")
-
-    if 'cpu_ram_usage' not in m:
-        errors.append("the 'monitoring' section should have a 'cpu_ram_usage' configuration entry")
-
-    if errors:
-        log.error('Invalid config.yaml file. The following errors have been found:')
-        for err in errors:
-            log.error('* %s' % err)
-        log.error('File is located at: %s' % BTS_TOOLS_CONFIG_FILE)
-        log.error('Please edit this file or delete it and let the tools create a new default one (run "bts list", for instance).')
-        log.error('Note that some monitoring functionality now needs to be specified explicitly (seed, missed, network_connections)')
-        log.error('Visit http://bts-tools.readthedocs.org/en/latest/config_format.html#nodes-list for more information).')
-        sys.exit(1)
-
-
-    # warn about parameters that should be set, and potentially adjust config with default values
-    if 'feed_providers' not in m['feeds']:
-        log.warning('You did not specify the monitoring.feeds.feed_providers variable')
-        log.warning('Using default value of [Yahoo, Btc38, Poloniex]')
-        log.warning('You might want to add [Google, Bloomberg] to that list')
-        m['feeds']['feed_providers'] = ['Yahoo', 'Btc38', 'Yunbi', 'Poloniex', 'CCEDK']
+    if (m['feeds'].get('publish_time_interval') is None and
+        m['feeds'].get('publish_time_slot') is None):
+        log.warning('Will not be able to publish feeds. You need to specify '
+                    'either publish_time_interval or publish_time_slot')
 
     check_time_interval = m['feeds']['check_time_interval']
     publish_time_interval = m['feeds'].get('publish_time_interval')
@@ -209,30 +185,6 @@ def load_config(loglevels=None):
         if publish_time_interval < check_time_interval:
             log.error('Feed publish time interval ({}) is smaller than check time interval ({})'.format(publish_time_interval, check_time_interval))
             log.error('Cannot compute proper period for publishing feeds...')
-
-    def check_feed_option(section, name, default_value):
-        if 'asset_params' not in m['feeds']:
-            log.warning("No 'asset_params' section in config['monitoring']['feeds']")
-            m['feeds']['asset_params'] = {}
-        if section not in m['feeds']['asset_params']:
-            log.warning("No '{}' section in config['monitoring']['feeds']['asset_params']".format(section))
-            m['feeds']['asset_params'][section] = {}
-        if name not in m['feeds']['asset_params'][section]:
-            log.warning("'{}' not in config['monitoring']['feeds']['asset_params']['{}']. Setting to default value: {}".format(name, section, default_value))
-            m['feeds']['asset_params'][section][name] = default_value
-
-    # FIXME: deprecate once we have proper templates
-    check_feed_option('default', 'core_exchange_factor', 0.95)
-    check_feed_option('default', 'maintenance_collateral_ratio', 1750)
-    check_feed_option('default', 'maximum_short_squeeze_ratio', 1100)
-    check_feed_option('TCNY', 'core_exchange_factor', 0.95)
-    check_feed_option('TCNY', 'maintenance_collateral_ratio', 1750)
-    check_feed_option('TCNY', 'maximum_short_squeeze_ratio', 1001)
-
-    if (m['feeds'].get('publish_time_interval') is None and
-        m['feeds'].get('publish_time_slot') is None):
-        log.warning('Will not be able to publish feeds. You need to specify '
-                    'either publish_time_interval or publish_time_slot')
 
     # expand wildcards for monitoring plugins
     for client_name, client in config['clients'].items():

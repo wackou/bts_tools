@@ -18,8 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import deque
+from logging.handlers import TimedRotatingFileHandler
+from os.path import expanduser
 import logging
 import sys
 import os
@@ -94,3 +95,7 @@ def setupLogging(colored=True, with_time=False, with_thread=False, filename=None
             log_records.append(record)
 
     logging.getLogger().addHandler(LogsCopy())
+
+    file_log = TimedRotatingFileHandler(expanduser('~/.bts_tools/bts_tools.log'), when='D', backupCount=10, utc=True)
+    file_log.setFormatter(SimpleFormatter(with_time, with_thread))
+    logging.getLogger().addHandler(file_log)
