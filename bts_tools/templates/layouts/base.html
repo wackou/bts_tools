@@ -92,7 +92,7 @@
                             <td>{{ green_if_true(not node.is_new()) }}</td>
                             <td>{{ green_if_true(not node.is_locked()) }}</td>
                             <td>
-                                {% if node.type == 'delegate'  %}
+                                {% if node.is_witness() %}
                                     {% set is_active = node.is_signing_key_active() %}
                                     {% if is_active == 'not synced' -%}
                                         {{ orange('waiting for sync') }}

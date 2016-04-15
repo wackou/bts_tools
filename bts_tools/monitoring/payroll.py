@@ -34,7 +34,7 @@ def parse_date(date):
 
 
 def is_valid_node(node):
-    return node.type == 'delegate'
+    return node.is_witness()
 
 
 def monitor(node, ctx, cfg):

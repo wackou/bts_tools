@@ -265,7 +265,7 @@ def view_info():
         if prop in {'wallet_open',
                     'wallet_unlocked',
                     'wallet_block_production_enabled'}:
-            if rpc.main_node.type == 'delegate':
+            if rpc.main_node.is_witness():
                 green_if_true(value)
 
         elif prop == 'network_num_connections':
@@ -297,7 +297,7 @@ def view_info():
     if not rpc.main_node.is_graphene_based():
         info_items, attrs = split_columns(info_items, attrs)
 
-    if rpc.main_node.type == 'delegate' and rpc.main_node.bts_type() in ['bts2']:
+    if rpc.main_node.is_witness() and rpc.main_node.bts_type() in ['bts', 'bts1']:
         from . import feeds
 
         if rpc.main_node.is_graphene_based():
@@ -337,7 +337,7 @@ def view_info():
     else:
         feeds = {}
 
-    if rpc.main_node.type == 'delegate' and rpc.main_node.is_graphene_based():
+    if rpc.main_node.is_witness() and rpc.main_node.is_graphene_based():
         info_items2 = sorted(rpc.main_node.get_witness(rpc.main_node.name).items())
         attrs2 = defaultdict(list)
         attrs2['bold'] = [(i, 0) for i in range(len(info_items))]

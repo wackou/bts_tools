@@ -51,6 +51,49 @@ def append_unique(l1, l2):
             l1.append(obj)
 
 
+def profile(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        plog = logging.getLogger('bts_tools.profile')
+
+        args_str = ', '.join(str(arg) for arg in args)
+        if kwargs:
+            args_str + ', ' + ', '.join('%s=%s' % (k, v) for k, v in kwargs.items())
+
+        try:
+            start_time = time.time()
+            result = f(*args, **kwargs)
+            stop_time = time.time()
+            plog.debug('Function %s(%s): returned in %0.3f ms' % (f.__name__, args_str, (stop_time-start_time)*1000))
+            return result
+        except Exception:
+            stop_time = time.time()
+            plog.debug('Function %s(%s): exception in %0.3f ms' % (f.__name__, args_str, (stop_time-start_time)*1000))
+            raise
+    return wrapper
+
+
+def trace(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        obj = args[0]
+        args = args[1:]
+        args_str = ', '.join(str(arg) for arg in args)
+        if kwargs:
+            args_str += ', ' + ', '.join('{}={}'.format(k, v) for k, v in kwargs)
+        print('Calling function: {}({}) on {}'.format(f.__name__, args_str, obj))
+
+        try:
+            result = f(obj, *args, **kwargs)
+            print('Returning {}: {}'.format(type(result).__name__, result))
+        except Exception as e:
+            print('Exception: {}'.format(str(e)))
+            log.exception(e)
+            raise e
+        return result
+    return wrapper
+
+
 def load_config(loglevels=None):
     log.info('Using home dir for BTS tools: %s' % BTS_TOOLS_HOMEDIR)
     global config
@@ -142,12 +185,6 @@ def load_config(loglevels=None):
     if 'cpu_ram_usage' not in m:
         errors.append("the 'monitoring' section should have a 'cpu_ram_usage' configuration entry")
 
-    for node in config['nodes']:
-        for notification_type in ['email', 'boxcar']:
-            if notification_type in node.get('monitoring', []):
-                errors.append("node '%s' has '%s' in its 'monitoring' section, it should be moved to a 'notification' property instead" %
-                              (node['name'], notification_type))
-
     if errors:
         log.error('Invalid config.yaml file. The following errors have been found:')
         for err in errors:
@@ -165,6 +202,13 @@ def load_config(loglevels=None):
         log.warning('Using default value of [Yahoo, Btc38, Poloniex]')
         log.warning('You might want to add [Google, Bloomberg] to that list')
         m['feeds']['feed_providers'] = ['Yahoo', 'Btc38', 'Yunbi', 'Poloniex', 'CCEDK']
+
+    check_time_interval = m['feeds']['check_time_interval']
+    publish_time_interval = m['feeds'].get('publish_time_interval')
+    if publish_time_interval:
+        if publish_time_interval < check_time_interval:
+            log.error('Feed publish time interval ({}) is smaller than check time interval ({})'.format(publish_time_interval, check_time_interval))
+            log.error('Cannot compute proper period for publishing feeds...')
 
     def check_feed_option(section, name, default_value):
         if 'asset_params' not in m['feeds']:
@@ -191,44 +235,43 @@ def load_config(loglevels=None):
                     'either publish_time_interval or publish_time_slot')
 
     # expand wildcards for monitoring plugins
-    for n in config['nodes']:
-        n.setdefault('monitoring', [])
-        if not isinstance(n['monitoring'], list):
-            n['monitoring'] = [n['monitoring']]
+    for client_name, client in config['clients'].items():
+        for n in client.get('roles', []):
+            n.setdefault('monitoring', [])
+            if not isinstance(n['monitoring'], list):
+                n['monitoring'] = [n['monitoring']]
 
-        def add_cmdline_args(args):
-            # only do this for delegates running on localhost (for which we have a 'client' field defined)
-            if 'client' in n:
-                client = config['run_environments'][n['client']]
+            def add_cmdline_args(args):
+                # only do this for delegates running on localhost (for which we have a 'client' field defined)
                 # --statistics-enabled not available for PTS yet
                 if client['type'] == 'pts':
                     with suppress(ValueError):
                         args.remove('--statistics-enabled')
                 append_unique(client.setdefault('run_args', []), args)
 
-        def add_monitoring(l2):
-            append_unique(n['monitoring'], l2)
+            def add_monitoring(l2):
+                append_unique(n['monitoring'], l2)
 
-        # options for 'delegate' node types
-        if n['type'] == 'delegate' and not is_graphene_based(n):
-            add_cmdline_args(['--min-delegate-connection-count=0', '--statistics-enabled'])
-        if 'delegate' in n['monitoring']:
-            # TODO: add 'prefer_backbone_exclusively' when implemented; in this case we also need:
+            # options for 'delegate' node types
+            if n['role'] == 'delegate' and not is_graphene_based(n):
+                add_cmdline_args(['--min-delegate-connection-count=0', '--statistics-enabled'])
 
-            # TODO: "--accept-incoming-connections 0" (or limit list of allowed peers from within the client)
-            add_monitoring(['missed', 'network_connections', 'voted_in', 'wallet_state', 'fork', 'version', 'feeds'])
-        if 'watcher_delegate' in n['monitoring']:
-            # for monitoring a delegate but not publishing feeds or anything official
-            add_monitoring(['missed', 'network_connections', 'voted_in', 'wallet_state', 'fork'])
+            m = n['monitoring']
+            if n['role'] in ['watcher_delegate', 'delegate', 'witness']:
+                # TODO: add 'prefer_backbone_exclusively' when implemented; in this case we also need:
+                # TODO: "--accept-incoming-connections 0" (or limit list of allowed peers from within the client)
+                add_monitoring(['missed', 'network_connections', 'voted_in', 'wallet_state', 'fork', 'version'])
+            if n['role'] in ['feed_publisher', 'delegate']:
+                add_monitoring(['feeds'])
 
-        # options for seed node types
-        if n['type'] == 'seed':
-            add_monitoring(['seed', 'network_connections', 'fork'])
+            # options for seed node types
+            if n['role'] == 'seed':
+                add_monitoring(['seed', 'network_connections', 'fork'])
 
-        # options for backbone node types
-        if n['type'] == 'backbone':
-            add_cmdline_args(['--disable-peer-advertising'])
-            add_monitoring(['backbone', 'network_connections', 'fork'])
+            # options for backbone node types
+            if n['role'] == 'backbone':
+                add_cmdline_args(['--disable-peer-advertising'])
+                add_monitoring(['backbone', 'network_connections', 'fork'])
 
     return config
 
@@ -248,43 +291,25 @@ def is_graphene_based(n):
         # if we're a string, we might be a build env or a run env
         try:
             # if we're a run env, get the associated build env
-            n = config['run_environments'][n]['type']
+            n = config['clients'][n]['type']
         except KeyError:
             pass
-        return n == 'bts2' or n == 'muse' or n == 'steem'
+        return n == 'bts' or n == 'muse' or n == 'steem'
 
 
-DEFAULT_HOMEDIRS = {'development': {'linux': '~/.BitSharesXTS',
-                                    'darwin': '~/Library/Application Support/BitShares XTS'},
-                    'bts':         {'linux': '~/.BitShares',
-                                    'darwin': '~/Library/Application Support/BitShares'},
-                    'bts2':        {'linux': '~/.BitShares2',
-                                    'darwin': '~/Library/Application Support/BitShares2'},
-                    'muse':        {'linux': '~/.Muse',
-                                    'darwin': '~/Library/Application Support/Muse'},
-                    'steem':       {'linux': '~/.Steem',
-                                    'darwin': '~/Library/Application Support/Steem'},
-                    'dvs':         {'linux': '~/.DevShares',
-                                    'darwin': '~/Library/Application Support/DevShares'},
-                    'pts':         {'linux': '~/.PTS',
-                                    'darwin': '~/Library/Application Support/PTS'},
-                    'pls':         {'linux': '~/.DACPLAY',
-                                    'darwin': '~/Library/Application Support/DAC PLAY'}
-                    }
-
-DEFAULT_BIN_FILENAMES = {'bts2': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
+DEFAULT_BIN_FILENAMES = {'bts': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
                          'muse': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
                          'steem': ['steemd/steemd', 'cli_wallet/cli_wallet'],
-                         'bts': ['client/bitshares_client'],
+                         'bts1': ['client/bitshares_client'],
                          'dvs': ['client/devshares_client'],
                          'pts': ['client/pts_client'],
                          'pls': ['client/play_client']
                          }
 
-DEFAULT_GUI_BIN_FILENAMES = {'bts2': '',
+DEFAULT_GUI_BIN_FILENAMES = {'bts': '',
                              'muse': '',
                              'steem': '',
-                             'bts': 'BitShares',
+                             'bts1': 'BitShares',
                              'dvs': 'DevShares',
                              'pts': 'PTS',
                              'pls': 'PLAY'
@@ -293,12 +318,12 @@ DEFAULT_GUI_BIN_FILENAMES = {'bts2': '',
 
 def get_data_dir(env):
     try:
-        env = config['run_environments'][env]
+        env = config['clients'][env]
     except KeyError:
-        log.error('Unknown run environment: %s' % env)
+        log.error('Unknown client: %s' % env)
         sys.exit(1)
 
-    data_dir = env.get('data_dir') or DEFAULT_HOMEDIRS.get(env['type'], {}).get(platform)
+    data_dir = env.get('data_dir')
     return expanduser(data_dir) if data_dir else None
 
 
@@ -306,12 +331,12 @@ def get_gui_bin_name(build_env):
     return DEFAULT_GUI_BIN_FILENAMES[build_env]
 
 
-def get_all_bin_names(run_env=None, build_env=None):
-    if run_env is not None:
+def get_all_bin_names(client=None, build_env=None):
+    if client is not None:
         try:
-            env = config['run_environments'][run_env]
+            env = config['clients'][client]
         except KeyError:
-            log.error('Unknown run environment: %s' % env)
+            log.error('Unknown client: %s' % env)
             sys.exit(1)
 
         return get_all_bin_names(build_env=env['type'])
@@ -320,7 +345,7 @@ def get_all_bin_names(run_env=None, build_env=None):
         return DEFAULT_BIN_FILENAMES[build_env]
 
     else:
-        raise ValueError('You need to specify either a build env or run env')
+        raise ValueError('You need to specify either a build env or a client name')
 
 
 def get_full_bin_name(run_env=None, build_env=None):
@@ -430,50 +455,6 @@ def to_list(obj):
         return obj
     else:
         return [obj]
-
-
-def profile(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        plog = logging.getLogger('bts_tools.profile')
-
-        args_str = ', '.join(str(arg) for arg in args)
-        if kwargs:
-            args_str + ', ' + ', '.join('%s=%s' % (k, v) for k, v in kwargs.items())
-
-        try:
-            start_time = time.time()
-            result = f(*args, **kwargs)
-            stop_time = time.time()
-            plog.debug('Function %s(%s): returned in %0.3f ms' % (f.__name__, args_str, (stop_time-start_time)*1000))
-            return result
-        except Exception:
-            stop_time = time.time()
-            plog.debug('Function %s(%s): exception in %0.3f ms' % (f.__name__, args_str, (stop_time-start_time)*1000))
-            raise
-    return wrapper
-
-
-def trace(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        obj = args[0]
-        args = args[1:]
-        args_str = ', '.join(str(arg) for arg in args)
-        if kwargs:
-            args_str += ', ' + ', '.join('{}={}'.format(k, v) for k, v in kwargs)
-        print('Calling function: {}({}) on {}'.format(f.__name__, args_str, obj))
-
-        try:
-            result = f(obj, *args, **kwargs)
-            print('Returning {}: {}'.format(type(result).__name__, result))
-        except Exception as e:
-            print('Exception: {}'.format(str(e)))
-            log.exception(e)
-            raise e
-        return result
-    return wrapper
-
 
 
 class FeedPrice(object):

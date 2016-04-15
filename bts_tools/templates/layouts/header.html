@@ -1,5 +1,5 @@
 {% macro node_desc(node) -%}
-    {%- if node.type == 'delegate' -%}
+    {%- if node.is_witness() -%}
         {%- if node.is_graphene_based() -%}
             <b>Witness name: </b>
         {%- else -%}
@@ -83,7 +83,7 @@
                     {%- endif -%}
                     </a></li>
 
-                    {% if is_synced and rpc.main_node.type == 'delegate' %}
+                    {% if is_synced and rpc.main_node.is_witness() %}
                         {% if not rpc.main_node.is_active(rpc.main_node.name) %}
                             <li><a href="#"><div class="btn btn-xs btn-warning">STANDBY</div></a></li>
                         {% else %}

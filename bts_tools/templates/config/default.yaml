@@ -1,6 +1,6 @@
 {% include 'logging.yaml' %}
 {% include 'build_environments.yaml' %}
-{% include 'run_environments.yaml' %}
+{% include 'clients.yaml' %}
 
 # activate the debug flag on the wsgi app
 wsgi_debug: false

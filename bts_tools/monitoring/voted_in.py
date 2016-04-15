@@ -30,7 +30,7 @@ def init_ctx(node, ctx, cfg):
 
 
 def is_valid_node(node):
-    return node.type == 'delegate'
+    return node.is_witness()
 
 
 def monitor(node, ctx, cfg):

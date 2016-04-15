@@ -88,7 +88,7 @@ def create_app(settings_override=None):
                                  monitor=bts_tools.monitor,
                                  process=bts_tools.process)
 
-    for (host, port), nodes in rpc.unique_node_clients():
+    for (host, port), nodes in rpc.graphene_clients():
         # launch only 1 monitoring thread for each running instance of the client
         t = threading.Thread(target=bts_tools.monitor.monitoring_thread, args=nodes)
         t.daemon = True

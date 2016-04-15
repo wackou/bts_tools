@@ -77,19 +77,19 @@ def select_build_environment(env_name):
     return env
 
 
-def select_run_environment(env_name):
-    log.info("Running '%s' client" % env_name)
+def select_client(client):
+    log.info("Running '%s' client" % client)
     try:
-        env = core.config['run_environments'][env_name]
-        env['name'] = env_name
+        env = core.config['clients'][client]
+        env['name'] = client
     except KeyError:
-        log.error('Unknown run environment: %s' % env_name)
+        log.error('Unknown client: %s' % client)
         sys.exit(1)
 
     select_build_environment(env['type'])
 
     global BTS_HOME_DIR, RUN_ENV
-    BTS_HOME_DIR = get_data_dir(env_name)
+    BTS_HOME_DIR = get_data_dir(client)
     RUN_ENV = env
 
     return env
@@ -97,7 +97,7 @@ def select_run_environment(env_name):
 
 def is_valid_environment(env):
     return (env in core.config['build_environments'] or
-            env in core.config['run_environments'])
+            env in core.config['clients'])
 
 
 def clone():
@@ -317,8 +317,8 @@ Examples:
         log.info(msg)
 
     elif args.command in ['run', 'run_cli']:
-        run_env = select_run_environment(args.environment)
-        run_args = core.config.get('run_args', []) + run_env.get('run_args', [])
+        client = select_client(args.environment)
+        run_args = core.config.get('run_args', []) + client.get('run_args', [])
         tag = args.args[0] if args.args else None
 
         if args.command == 'run':
@@ -340,43 +340,43 @@ Examples:
             run_args += args.args
 
         if args.command == 'run':
-            data_dir = run_env.get('data_dir')
+            data_dir = client.get('data_dir')
             if data_dir:
                 run_args = ['--data-dir', expanduser(data_dir)] + run_args
 
-            genesis_file = run_env.get('genesis_file')
+            genesis_file = client.get('genesis_file')
             if genesis_file:
                 run_args += ['--genesis-json', expanduser(genesis_file)]
 
-            witness_port = run_env.get('witness_port')
+            witness_port = client.get('witness_port')
             if witness_port:
                 run_args += ['--rpc-endpoint', '0.0.0.0:{}'.format(witness_port)]
 
-            p2p_port = run_env.get('p2p_port')
+            p2p_port = client.get('p2p_port')
             if p2p_port:
                 run_args += ['--p2p-endpoint', '0.0.0.0:{}'.format(p2p_port)]
 
-            seed_nodes = run_env.get('seed_nodes', [])
+            seed_nodes = client.get('seed_nodes', [])
             for node in seed_nodes:
                 run_args += ['--seed-node', node]
 
         elif args.command == 'run_cli':
-            witness_port = run_env.get('witness_port')
+            witness_port = client.get('witness_port')
             if witness_port:
                 run_args += ['--server-rpc-endpoint', 'ws://127.0.0.1:{}'.format(witness_port)]
 
-            cli_port = run_env.get('cli_port')
+            cli_port = client.get('cli_port')
             if cli_port:
                 run_args += ['--rpc-http-endpoint', '0.0.0.0:{}'.format(cli_port)]
 
-            chain_id = run_env.get('chain_id')
+            chain_id = client.get('chain_id')
             if chain_id:
                 run_args += ['--chain-id', chain_id]
 
-        if not args.norpc and not is_graphene_based(run_env):
+        if not args.norpc and not is_graphene_based(client):
             run_args = ['--server'] + run_args
 
-        if run_env.get('debug', False):
+        if client.get('debug', False):
             if platform == 'linux':
                 cmd = ' '.join(['gdb', '-ex', 'run', '--args', bin_name] + run_args)
             else:
@@ -386,10 +386,10 @@ Examples:
         else:
             cmd = [bin_name] + run_args
 
-        if is_graphene_based(run_env):
+        if is_graphene_based(client):
             # for graphene clients, always cd to data dir first (if defined), this ensures the wallet file
             # and everything else doesn't get scattered all over the place
-            data_dir = get_data_dir(run_env['name'])
+            data_dir = get_data_dir(client['name'])
             if data_dir:
                 # ensure it exists to be able to cd into it
                 with suppress(FileExistsError):
@@ -411,7 +411,7 @@ Examples:
         run('rm -fr "%s"' % BTS_BUILD_DIR, verbose=True)
 
     elif args.command == 'clean_homedir':
-        select_run_environment(args.environment)
+        select_client(args.environment)
         print('\nCleaning home directory...')
         if not BTS_HOME_DIR:
             print('ERROR: The home/data dir has not been specified in the build environment...')
@@ -514,15 +514,15 @@ slate:
 
 
 def main_bts():
-    return main(flavor='bts2')
-
-
-def main_bts1():
     return main(flavor='bts')
 
 
+def main_bts1():
+    return main(flavor='bts1')
+
+
 def main_bts2():
-    return main(flavor='bts2')
+    return main(flavor='bts')
 
 
 def main_muse():

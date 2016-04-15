@@ -101,12 +101,8 @@ ALL_SLOTS = {}
 
 
 class BTSProxy(object):
-    def __init__(self, type, name, client=None, bts_type=None, monitoring=None, notification=None,
-                 rpc_port=None, rpc_user=None, rpc_password=None, rpc_host=None, venv_path=None,
-                 # graphene fields
-                 witness_host=None, witness_port=None, witness_user=None, witness_password=None,
-                 wallet_host=None, wallet_port=None, wallet_user=None, wallet_password=None,
-                 proxy_host=None, proxy_port=None, proxy_user=None, proxy_password=None):
+    def __init__(self, type, name, client_name, client, bts_type=None,
+                 monitoring=None, notification=None, venv_path=None):
         self.type = type
         if bts_type is not None:
             self._bts_type = bts_type
@@ -114,13 +110,14 @@ class BTSProxy(object):
         self.witness_signing_key = None
         self.monitoring = to_list(monitoring)
         self.notification = to_list(notification)
-        self.client = client
-        if client:
-            data_dir = get_data_dir(client)
+        self.client_name = client_name
+        data_dir = client.get('data_dir')
+        if data_dir:
+            data_dir = expanduser(data_dir)
 
             try:
-                log.info('Loading RPC config for %s from %s (run_env = %s)' % (self.name, data_dir, client))
-                if is_graphene_based(client):
+                log.info('Loading RPC config for %s from %s (run_env = %s)' % (self.name, data_dir, client_name))
+                if is_graphene_based(client_name):
                     config = configparser.ConfigParser()
                     config_str = '[bts]\n' + open(expanduser(join(data_dir, 'config.ini'))).read()
                     # config parser can't handle duplicate values, and we don't need seed nodes
@@ -147,28 +144,28 @@ class BTSProxy(object):
         else:
             rpc = {}
             cfg_port = None
-        self.wallet_port = wallet_port or rpc_port or cfg_port or 0
-        self.rpc_port = proxy_port or self.wallet_port
-        self.rpc_user = wallet_user or rpc_user or rpc.get('rpc_user') or ''
-        self.rpc_password = wallet_password or rpc_password or rpc.get('rpc_password') or ''
-        self.rpc_host = wallet_host or rpc_host or proxy_host or 'localhost'
+
+        self.witness_host     = client.get('witness_host')
+        self.witness_port     = client.get('witness_port')
+        self.witness_user     = client.get('witness_user')
+        self.witness_password = client.get('witness_password')
+        self.wallet_host      = client.get('wallet_host')
+        self.wallet_port      = client.get('wallet_port') or client.get('rpc_port') or cfg_port or 0
+        self.wallet_user      = client.get('wallet_user')
+        self.wallet_password  = client.get('wallet_password')
+        self.proxy_host       = client.get('proxy_host')
+        self.proxy_port       = client.get('proxy_port')
+        self.proxy_user       = client.get('proxy_user')
+        self.proxy_password   = client.get('proxy_password')
+
+        self.rpc_port = self.proxy_port or self.wallet_port
+        self.rpc_user = self.wallet_user or client.get('rpc_user') or rpc.get('rpc_user') or ''
+        self.rpc_password = self.wallet_password or client.get('rpc_password') or rpc.get('rpc_password') or ''
+        self.rpc_host = self.wallet_host or client.get('rpc_host') or self.proxy_host or 'localhost'
         self.rpc_cache_key = (self.rpc_host, self.wallet_port)
         self.ws_rpc_cache_key = (self.witness_host, self.witness_port)
         self.venv_path = venv_path
-
-        self.witness_host     = witness_host
-        self.witness_port     = witness_port
-        self.witness_user     = witness_user
-        self.witness_password = witness_password
-        self.wallet_host      = wallet_host
-        self.wallet_user      = wallet_user
-        self.wallet_password  = wallet_password
-        self.proxy_host       = proxy_host
-        self.proxy_port       = proxy_port
-        self.proxy_user       = proxy_user
-        self.proxy_password   = proxy_password
-
-        self.bin_name = get_bin_name(client or 'bts')
+        self.bin_name = get_bin_name(client_name or 'bts')
 
         if self.is_graphene_based():
             # direct json-rpc call
@@ -222,7 +219,7 @@ class BTSProxy(object):
         return '{} ({} / {}:{})'.format(self.name, self.bts_type(), self.rpc_host, self.rpc_port)
 
     def __repr__(self):
-        return 'BTSProxy(%s, %s)' % (self.client, self.name)
+        return 'BTSProxy(%s, %s)' % (self.client_name, self.name)
 
     def __getattr__(self, funcname):
         if funcname.startswith('_'):
@@ -348,6 +345,9 @@ class BTSProxy(object):
         host = self.witness_host if self.is_graphene_based() else self.rpc_host
         return host in ['localhost', '127.0.0.1']
 
+    def is_witness(self):
+        return self.type == 'delegate' or self.type == 'witness' or self.type == 'feed_publisher'
+
     def is_signing_key_active(self):
         if self.proxy_host:
             return self.rpc_call('is_signing_key_active')
@@ -422,13 +422,13 @@ class BTSProxy(object):
         return bts_process(self)
 
     def run_env(self):
-        name = self.client
+        name = self.client_name
         if not name:
             raise ValueError('No run environment defined for node %s. Maybe a remote node?' % self.name)
         try:
-            return core.config['run_environments'][name]
+            return core.config['clients'][name]
         except KeyError:
-            raise ValueError('Unknown run environment: %s' % name)
+            raise ValueError('Unknown client: %s' % name)
 
     def build_env(self):
         name = self.run_env()['type']
@@ -456,11 +456,11 @@ class BTSProxy(object):
         # directly. This works only when the client is running.
         try:
             blockchain_name = self.about()['blockchain_name']
-        except Exception:
+        except Exception as e:
             log.warning('Could not find blockchain name for {}:{}'.format(self.rpc_host, self.rpc_port))
             return ''
         if blockchain_name == 'BitShares':
-            self._bts_type = 'bts'
+            self._bts_type = 'bts1'
         elif blockchain_name == 'DevShares':
             self._bts_type = 'dvs'
         elif blockchain_name == 'PTS':
@@ -516,14 +516,14 @@ class BTSProxy(object):
         return re.search(r'[\d.]+', self.get_info()['client_version']).group()
 
     def delegate_slot_records_new_api(self):
-        return ((self.bts_type() in {'bts', 'dvs'} and self.api_version() >= '0.6') or
+        return ((self.bts_type() in {'bts1', 'dvs'} and self.api_version() >= '0.6') or
                 (self.bts_type() == 'pls'))
 
     def get_streak(self, cached=True):
         # FIXME: support graphene
         if self.is_graphene_based():
             return True, 0
-        if self.type != 'delegate':
+        if not self.is_witness():
             # only makes sense to call get_streak on delegate nodes
             return False, 1
 
@@ -641,13 +641,25 @@ nodes = []
 main_node = None
 
 
-def load_nodes():
+def load_graphene_clients():
     global nodes, main_node
-    nodes = [BTSProxy(**node) for node in core.config['nodes']]
-    main_node = nodes[0]
+    nodes = []
+    for client_name, client in core.config['clients'].items():
+        for role in client.get('roles', []):
+            type = role.pop('role')
+            nodes.append(BTSProxy(type=type,
+                                  client_name=client_name,
+                                  client=client,
+                                  bts_type=client.get('bts_type'),
+                                  **role))
+
+    try:
+        main_node = nodes[0]
+    except IndexError:
+        log.error('No clients defined in config.yaml, or clients defined without any role')
 
 
-def unique_node_clients():
+def graphene_clients():
     result = OrderedDict()
     for n in nodes:
         try:
@@ -659,7 +671,7 @@ def unique_node_clients():
 
 def client_instances():
     """return a list of triples (hostname, [node names], node_instance)"""
-    for (host, port), gnodes in unique_node_clients():
+    for (host, port), gnodes in graphene_clients():
         yield ('%s:%d' % (host, port), [n.name for n in gnodes], gnodes[0])
 
 

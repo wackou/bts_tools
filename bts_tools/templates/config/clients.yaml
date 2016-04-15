@@ -4,26 +4,23 @@
 # by default, if you don't specify a client on the cmdline, the tools will
 # run the client using the 'bts' run environment
 #
-run_environments:
+clients:
     bts:
         type: bts
-
-    bts2:
-        type: bts2
         data_dir: ~/.BitShares2
         p2p_port: 1779
         witness_port: 8090
         cli_port: 8093
 
     seed:
-        type: bts2
+        type: bts
         data_dir: ~/.BitShares2_seed
         p2p_port: 1776
         witness_port: 8190
         cli_port: 8193
 
     backbone:
-        type: bts2
+        type: bts
         data_dir: ~/.BitShares2_backbone
         p2p_port: 1777
         witness_port: 8290

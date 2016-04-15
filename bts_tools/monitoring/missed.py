@@ -36,7 +36,7 @@ def init_ctx(node, ctx, cfg):
 def is_valid_node(node):
     # FIXME: revisit block_age < 60 (node.is_synced()), this was meant when syncing at the beginning, but
     #        during network crisis this might happen but we still want to monitor for missed blocks
-    return node.type == 'delegate' and node.is_synced()  # only monitor if synced
+    return node.is_witness() and node.is_synced()  # only monitor if synced
 
 
 def monitor(node, ctx, cfg):

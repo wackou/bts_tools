@@ -5,7 +5,7 @@
 # use the 'bts' environment
 #
 build_environments:
-    bts2:
+    bts:
         debug: false
         git_repo: https://github.com/bitshares/bitshares-2.git
         git_branch: bitshares
@@ -28,7 +28,7 @@ build_environments:
         build_dir: ~/.Steem_build
         bin_dir: ~/.Steem_bin
 
-    bts:
+    bts1:
         git_repo: https://github.com/BitShares/bitshares.git
         git_branch: master
         build_dir: ~/.BitShares_build

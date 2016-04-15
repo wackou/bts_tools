@@ -1,13 +1,4 @@
 ---
-# Config file containing the build, run and monitor environments and
-# other configuration variables
-#
-# This file should contain sensible default values in as many places as
-# possible, but you will have to at least specify your own values in the
-# following categories:
-#  - run_environments [for the cmdline tool]
-#  - nodes            [for the monitoring webapp]
-#
 # For a more detailed description of the format of this file, visit:
 # https://bts-tools.readthedocs.org/en/latest/config_format.html
 #
@@ -21,21 +12,44 @@ make_args: ['-j4']
 #
 # list of nodes (delegate accounts / seed nodes) that are being monitored
 #
-nodes:
-    -
-        client: bts2
-        type: delegate
-        name: my_witness_name
-        #monitoring: [feeds]
+clients:
+    bts:
+        type: bts
+        data_dir: ~/.BitShares2
         witness_host: localhost
         witness_port: 8090
+        # FIXME: add link to doc on how to generate api_access.json
         witness_user: myuser          # defined in api_access.json
         witness_password: mypassword  # defined in api_access.json
         wallet_host: localhost
         wallet_port: 8093
+        wallet_password: changeme!    # needed only for feed publishing
+        notification: email
+        roles:
+        -
+            role: witness
+            name: wackou
+        -
+            role: feed_publisher
+            name: wackou
+
+    muse_seed:
+        type: muse
+        data_dir: ~/.Muse_seed
+        witness_host: localhost
+        witness_port: 8390
+        witness_user: myuser          # defined in api_access.json
+        witness_password: mypassword  # defined in api_access.json
+        wallet_host: localhost
+        wallet_port: 8393
+        roles:
+        -
+            role: witness
+            name: seed01muse
 
 #
 # configuration of the monitoring plugins
+# global default when not overriden by a role's specific params
 #
 monitoring:
     seed:
@@ -45,13 +59,14 @@ monitoring:
     feeds:
         check_time_interval: 300
         median_time_span: 1800
+        # NOTE: uncomment one of the next 2 lines to configure when feeds should be published
         #publish_time_interval: 2400         # use this to publish feeds at fixed time intervals (in seconds)
-        publish_time_slot: 0                # use this to publish every hour at a fixed number of minutes (in minutes)
+        #publish_time_slot: 0                # use this to publish every hour at a fixed number of minutes (in minutes)
         feed_providers: [Poloniex, CCEDK, Btc38, Yunbi,  # BTS valuation
                          Yahoo, Google, Bloomberg]       # market indices
 
 #
-# configuration of the notification types
+# configuration of the notification channels
 #
 notification:
     email:

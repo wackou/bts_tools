@@ -27,8 +27,8 @@ log = logging.getLogger(__name__)
 
 
 def init_ctx(node, ctx, cfg):
-    ctx.wallet_open = StableStateMonitor(3)
-    ctx.wallet_locked = StableStateMonitor(3)
+    ctx.wallet_open = StableStateMonitor(1)
+    ctx.wallet_locked = StableStateMonitor(1)
 
 
 def is_valid_node(node):

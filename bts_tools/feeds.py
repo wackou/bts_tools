@@ -268,10 +268,7 @@ def check_feeds(nodes):
         feed_period = int(cfg['publish_time_interval'] / cfg['check_time_interval'])
     except KeyError:
         feed_period = None
-    try:
-        feed_slot = cfg['publish_time_slot']
-    except KeyError:
-        feed_slot = None
+    feed_slot = cfg.get('publish_time_slot', None)
 
     # FIXME: seems like updating or checking last_updated doesn't work...
     last_updated = datetime.utcnow() - timedelta(days=1)
@@ -303,14 +300,20 @@ def check_feeds(nodes):
             msg = fmt % tuple(feeds[c] for c in visible_feeds)
             return msg
 
-        log.debug('Got feeds: %s  [%d/%s]' % (fmt(feeds), nfeed_checked, feed_period or 'min={:02d}'.format(feed_slot)))
+        publish_status = ''
+        if feed_period:
+            publish_status += ' [%d/%d]' % (nfeed_checked, feed_period)
+        if feed_slot:
+            publish_status += ' [min={:02d}]'.format(feed_slot)
+
+        log.debug('Got feeds: %s %s' % (fmt(feeds), publish_status))
 
         for node in nodes:
             # if an exception occurs during publishing feeds for a delegate (eg: standby delegate),
             # then we should still go on for the other nodes (and not let exceptions propagate)
             try:
                 # only publish feeds if we're running a delegate node
-                if node.type == 'delegate' and 'feeds' in node.monitoring:
+                if node.type == 'feed_publisher': # and 'feeds' in node.monitoring:
                     if should_publish():
                         if not node.is_online():
                             log.warning('Cannot publish feeds for delegate %s: client is not running' % node.name)
