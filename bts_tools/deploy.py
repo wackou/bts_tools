@@ -187,7 +187,10 @@ def deploy_base_node(cfg, build_dir, build_env):
         log.info('Not deploying any binaries, they have been compiled locally')
     else:
         log.info('Deploying prebuilt binaries')
-        deploy(build_env, '{}@{}'.format(cfg['unix_user'], host))
+        # deploy for all clients required
+        clients_to_deploy = {c['type'] for c in cfg['config_yaml']['clients'].values()}
+        for build_env in clients_to_deploy:
+            deploy(build_env, '{}@{}'.format(cfg['unix_user'], host))
 
     # 4- copy snapshot of the blockchain, if available
     snapshot = cfg.get('blockchain_snapshot')
