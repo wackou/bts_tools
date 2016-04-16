@@ -45,10 +45,9 @@ def to_int(s):
 
 
 def free_disk_space(filename):
-    lines = run('df "{}"'.format(filename), capture_io=True).stdout.split('\n')
+    lines = run('df "{}"'.format(filename), capture_io=True, verbose=False).stdout.split('\n')
     block_size = to_int(lines[0].split()[1].split('-')[0])
     device, size, used, available, *other = lines[1].split()
-    log.error(int(available) * block_size)
     return int(available) * block_size
 
 
@@ -65,7 +64,6 @@ def monitor(node, ctx, cfg):
     node_names = ', '.join(n.name for n in ctx.nodes)
     free_space = free_disk_space(BTS_TOOLS_CONFIG_FILE)
     required = to_int(cfg['min_required_space'])
-    log.info('free space: {} - required: {}'.format(free_space, required))
 
     if free_space < required:
         ctx.enough_space.push(False)
