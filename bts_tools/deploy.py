@@ -27,6 +27,7 @@ from .cmdline import select_build_environment
 from . import core, cmdline
 from .vps import VultrAPI, GandiAPI
 import os
+import re
 import base64
 import hashlib
 import logging
@@ -202,7 +203,10 @@ def deploy_seed_node(cfg):
     deploy_base_node(cfg)
 
 
-def deploy_node(build_env, config_file):
+def is_ip(host):
+    return re.fullmatch('[0-9]{1,3}(\.[0-9]{1,3}){3}', host) is not None
+
+def deploy_node(build_env, config_file, host):
     select_build_environment(build_env)
 
     log.info('Reading config from file: %s' % config_file)
@@ -215,6 +219,11 @@ def deploy_node(build_env, config_file):
 
     # 1- create vps instance if needed
     try:
+        if is_ip(host):
+            cfg['host'] = host
+        else:
+            cfg['vps']['provider'] = host
+
         create_vps_instance(cfg)
     except ValueError as e:
         log.exception(e)

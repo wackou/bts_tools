@@ -1,14 +1,8 @@
-# if host is specified, then the install will proceed using this host
-# otherwise, a new instance will be created and used for the install
-#host: xx.xx.xx.xx   # ip or name of host to deploy to, needs ssh access
-
 hostname: &hostname xxxxxxxx
 domain: xxxxxxxx
 
 # the vps instance to create if no host is given
 vps:
-    provider: vultr  # the vps instance to create if no host is given, eg: vultr, gandi
-
     # config for vultr provider
     vultr:
         api_key: xxxxxxxx
@@ -79,6 +73,19 @@ config_yaml:
             witness_password: *witness_password
             wallet_host: localhost
             wallet_port: 8093
+            roles:
+            -
+                role: seed
+                name: *hostname
+        steem:
+            type: steem
+            data_dir: ~/.Steem_seed
+            witness_host: localhost
+            witness_port: 8490
+            witness_user: *witness_user
+            witness_password: *witness_password
+            wallet_host: localhost
+            wallet_port: 8493
             roles:
             -
                 role: seed

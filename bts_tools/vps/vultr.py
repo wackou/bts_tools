@@ -60,7 +60,12 @@ class VultrAPI(object):
             r = requests.post('{}/{}'.format(self.endpoint, method), params={'api_key': self.api_key}, data=kwargs)
         else:
             r = requests.get('{}/{}'.format(self.endpoint, method), params={'api_key': self.api_key})
-        return r.json()
+        try:
+            result = r.json()
+        except:
+            log.warning('Could not parse JSON response: {}'.format(r.text))
+            raise
+        return result
 
     def create_server(self, name, location, vps_plan, os_id, ssh_keys):
         log.info('Creating Vultr instance {} in {}...'.format(name, location))

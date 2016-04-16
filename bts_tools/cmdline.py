@@ -447,16 +447,20 @@ Examples:
 
     elif args.command == 'deploy_node':
         select_build_environment(args.environment)
-        config_file = args.args[0] if args.args else None
         print()
-        if not config_file:
-            log.error('You need to specify a deployment config file as argument')
-            log.info('You can find an example file at {}'.format(join(dirname(__file__), 'deploy_config.yaml')))
+        if len(args.args) != 2:
+            log.error('You need to specify a deployment config file as argument and a host ip or vps provider')
+            log.error('eg: bts deploy_node deploy_config.yaml 123.123.123.123  # use given host for install')
+            log.error('eg: bts deploy_node deploy_config.yaml vultr            # create a new vps instance')
+            log.info('You can find an example config file at {}'.format(join(dirname(__file__), 'deploy_config.yaml')))
             sys.exit(1)
+
+        config_file = args.args[0]
+        host = args.args[1]
 
         from .deploy import deploy_node  # can only import now due to potential circular import
 
-        deploy_node(args.environment, config_file)
+        deploy_node(args.environment, config_file, host)
 
     elif args.command == 'publish_slate':
         slate_file = args.args[0] if args.args else None
