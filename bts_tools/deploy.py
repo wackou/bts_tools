@@ -182,7 +182,7 @@ def deploy_base_node(cfg, build_dir, build_env):
     copy(join(build_dir, 'supervisord.conf'), '/etc/supervisor/conf.d/bts_tools.conf')
 
     # 3- copy prebuilt binaries
-    if cfg.get('install_compile_dependencies', False):
+    if cfg.get('compile_on_new_host', False):
         log.info('Not deploying any binaries, they have been compiled locally')
     else:
         log.info('Deploying prebuilt binaries')
@@ -217,6 +217,7 @@ def deploy_node(build_env, config_file):
     try:
         create_vps_instance(cfg)
     except ValueError as e:
+        log.exception(e)
         log.warning('No host and no valid vps provider given. Exiting...')
         return
 

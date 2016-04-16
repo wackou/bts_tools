@@ -8,7 +8,7 @@
 # config variables
 export PAUSE={{ 1 if pause else 0 }}  # Pause between installation steps
 export IS_DEBIAN={{ 1 if is_debian else 0 }}
-export INSTALL_COMPILE_DEPENDENCIES={{ 1 if install_compile_dependencies else 0 }}
+export INSTALL_COMPILE_DEPENDENCIES={{ 1 if compile_on_new_host else 0 }}
 
 export UNIX_HOSTNAME="{{ unix_hostname }}"
 export UNIX_USER="{{ unix_user }}"

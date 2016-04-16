@@ -1,0 +1,95 @@
+# if host is specified, then the install will proceed using this host
+# otherwise, a new instance will be created and used for the install
+#host: xx.xx.xx.xx   # ip or name of host to deploy to, needs ssh access
+
+hostname: &hostname xxxxxxxx
+domain: xxxxxxxx
+
+# the vps instance to create if no host is given
+vps:
+    provider: vultr  # the vps instance to create if no host is given, eg: vultr, gandi
+
+    # config for vultr provider
+    vultr:
+        api_key: xxxxxxxx
+        name: *hostname
+        location: amsterdam
+        vps_plan: 4G     # can be: 1G, 2G, 4G, etc.
+        os_id: 193       # Debian 8 x64 (Jessie)
+        ssh_keys: [xxxxxxxx, xxxxxxxx]  # need to have at least the ssh key from the host performing the installation
+
+    # config for gandi provider
+    gandi:
+        # api_key, name, location, src_disk_id, label, ssh_keys, cores=1, memory=1024, disk_size=20480
+        api_key: xxxxxxxx
+        name: *hostname
+        location: paris
+        cores: 2
+        memory: 3072  # 3 GB
+        src_disk_id: 3315704 # Debian 8 64 bits (HVM)
+        ssh_keys: [xxxxxxxx, xxxxxxxx]
+
+# if true, the graphene client will be built directly on the new node,
+# otherwise it gets deployed from the host currently running the install
+compile_on_new_host: false
+
+unix_hostname: *hostname
+unix_user: xxxxxxxx
+unix_password: xxxxxxxx
+
+# additional keys to be installed in .ssh/authorized_keys for both root and normal user
+ssh_keys:
+- ssh-rsa xxxxxxxx
+- ssh-rsa xxxxxxxx
+
+# TODO: make this optional
+git_name: xxxxxxxx
+git_email: xxxxxxxx
+
+# if specified, rsync the blockchain folder to the new node instead of letting it resync from scratch
+# this is faster and less prone to ending up on a fork while doing the initial sync
+#blockchain_snapshot: ~/.BitShares2/blockchain
+
+node:
+    type: seed
+
+    seed: null
+    witness:
+        signing_key: ["BTS8xxxxxxx", "5xxxxxx"]
+        witness_id: xxxxxxxx
+    feed_publisher:
+        wallet_file: /tmp/wallet.dat
+        wallet_password: xxxxxxxxx
+
+# access to witness restricted APIs, used to create api_access.json
+witness_api_access:
+    user: &witness_user xxxxxxxx
+    password: &witness_password xxxxxxxx
+
+# config.yaml variables
+config_yaml:
+    clients:
+        bts:
+            type: bts
+            data_dir: ~/.BitShares2_seed
+            witness_host: localhost
+            witness_port: 8090
+            witness_user: *witness_user
+            witness_password: *witness_password
+            wallet_host: localhost
+            wallet_port: 8093
+            roles:
+            -
+                role: seed
+                name: *hostname
+
+    notification:
+        email:
+            smtp_server: smtp.example.com
+            smtp_user: user
+            smtp_password: secret-password
+            identity: "BTS Monitor <bts_monitor@example.com>"
+            recipient: me@example.com
+
+        boxcar:
+            tokens: []
