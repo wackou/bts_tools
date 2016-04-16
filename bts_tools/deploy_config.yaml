@@ -68,6 +68,7 @@ witness_api_access:
 
 # config.yaml variables
 config_yaml:
+    make_args: ['-j2']
     clients:
         bts:
             type: bts

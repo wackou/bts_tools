@@ -21,6 +21,9 @@ monitoring:
     prefer_backbone_exclusively:
         minimum_required_connections: 2
 
+    free_disk_space:
+        min_required_space: 5G
+
     feeds:
         asset_params:
             default:

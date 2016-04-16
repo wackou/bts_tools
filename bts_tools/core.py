@@ -208,7 +208,6 @@ def load_config(loglevels=None):
             if n['role'] == 'delegate' and not is_graphene_based(n):
                 add_cmdline_args(['--min-delegate-connection-count=0', '--statistics-enabled'])
 
-            m = n['monitoring']
             if n['role'] in ['watcher_delegate', 'delegate', 'witness']:
                 # TODO: add 'prefer_backbone_exclusively' when implemented; in this case we also need:
                 # TODO: "--accept-incoming-connections 0" (or limit list of allowed peers from within the client)
@@ -224,6 +223,9 @@ def load_config(loglevels=None):
             if n['role'] == 'backbone':
                 add_cmdline_args(['--disable-peer-advertising'])
                 add_monitoring(['backbone', 'network_connections', 'fork'])
+
+            # always check for free disk space
+            add_monitoring(['free_disk_space'])
 
     return config
 
