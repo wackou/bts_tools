@@ -190,6 +190,7 @@ def deploy_base_node(cfg, build_dir, build_env):
         # deploy for all clients required
         clients_to_deploy = {c['type'] for c in cfg['config_yaml']['clients'].values()}
         for build_env in clients_to_deploy:
+            log.info('-- deploying {} client'.format(build_env))
             deploy(build_env, '{}@{}'.format(cfg['unix_user'], host))
 
     # 4- copy snapshot of the blockchain, if available

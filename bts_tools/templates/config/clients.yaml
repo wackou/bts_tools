@@ -9,36 +9,46 @@ clients:
         type: bts
         data_dir: ~/.BitShares2
         p2p_port: 1779
+        witness_host: localhost
         witness_port: 8090
-        cli_port: 8093
+        wallet_host: localhost
+        wallet_port: 8093
 
     seed:
         type: bts
         data_dir: ~/.BitShares2_seed
         p2p_port: 1776
+        witness_host: localhost
         witness_port: 8190
-        cli_port: 8193
+        wallet_host: localhost
+        wallet_port: 8193
 
     backbone:
         type: bts
         data_dir: ~/.BitShares2_backbone
         p2p_port: 1777
+        witness_host: localhost
         witness_port: 8290
-        cli_port: 8293
+        wallet_host: localhost
+        wallet_port: 8293
 
     muse:
         type: muse
         data_dir: ~/.Muse
         p2p_port: 1781
+        witness_host: localhost
         witness_port: 8390
-        cli_port: 8393
+        wallet_host: localhost
+        wallet_port: 8393
 
     steem:
         type: steem
         data_dir: ~/.Steem
         p2p_port: 2001
+        witness_host: localhost
         witness_port: 8490
-        cli_port: 8493
+        wallet_host: localhost
+        wallet_port: 8493
 
     debug:
         type: bts

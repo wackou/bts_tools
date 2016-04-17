@@ -365,9 +365,9 @@ Examples:
             if witness_port:
                 run_args += ['--server-rpc-endpoint', 'ws://127.0.0.1:{}'.format(witness_port)]
 
-            cli_port = client.get('cli_port')
-            if cli_port:
-                run_args += ['--rpc-http-endpoint', '0.0.0.0:{}'.format(cli_port)]
+            wallet_port = client.get('wallet_port')
+            if wallet_port:
+                run_args += ['--rpc-http-endpoint', '0.0.0.0:{}'.format(wallet_port)]
 
             chain_id = client.get('chain_id')
             if chain_id:
