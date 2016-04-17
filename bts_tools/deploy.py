@@ -196,10 +196,17 @@ def deploy_base_node(cfg, build_dir, build_env):
     # 4- copy snapshot of the blockchain, if available
     snapshot = cfg.get('blockchain_snapshot')
     if snapshot:
-        run_remote_cmd(host, cfg['unix_user'], 'mkdir -p ~/.BitShares2/blockchain')
-        if not snapshot.endswith('/'): # play nice with rsync idiosyncrasy about trailing slashes and dirs
-            snapshot = snapshot + '/'
-        copy(snapshot, '~/.BitShares2/blockchain/', user=cfg['unix_user'], compress=False)
+        for client_name, client in cfg['config_yaml']['clients'].items():
+            try:
+                local_data_dir = snapshot[client_name]
+                remote_data_dir = client['data_dir']
+                run_remote_cmd(host, cfg['unix_user'], 'mkdir -p {}/blockchain'.format(remote_data_dir))
+                copy('{}/blockchain/'.format(local_data_dir),
+                     '{}/blockchain/'.format(remote_data_dir),
+                     user=cfg['unix_user'], compress=False)
+            except Exception as e:
+                log.warning('Could not deploy {} blockchain dir because:'.format(client_name))
+                log.exception(e)
 
 
 def deploy_seed_node(cfg):

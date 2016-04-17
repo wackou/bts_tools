@@ -42,7 +42,11 @@ git_email: xxxxxxxx
 
 # if specified, rsync the blockchain folder to the new node instead of letting it resync from scratch
 # this is faster and less prone to ending up on a fork while doing the initial sync
-#blockchain_snapshot: ~/.BitShares2/blockchain
+# keys in this dictionary correspond to the clients defined in the config_yaml section
+# values are the local data directories from which to copy the blockchain folder
+blockchain_snapshot:
+    bts: ~/.BitShares2
+    steem: ~/.Steem
 
 node:
     type: seed
