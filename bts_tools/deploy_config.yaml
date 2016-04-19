@@ -71,6 +71,8 @@ config_yaml:
         bts:
             type: bts
             data_dir: ~/.BitShares2_seed
+            witness_id: "1.6.xxx"                    # will be used during deploy for creating config.ini file
+            signing_key: ["BTS8xxxxxxx", "5xxxxxx"]  # will be used during deploy for creating config.ini file
             witness_host: localhost
             witness_port: 8090
             witness_user: *witness_user

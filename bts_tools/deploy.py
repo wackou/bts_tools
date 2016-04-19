@@ -193,13 +193,31 @@ def deploy_base_node(cfg, build_dir, build_env):
             log.info('-- deploying {} client'.format(build_env))
             deploy(build_env, '{}@{}'.format(cfg['unix_user'], host))
 
-    # 4- copy snapshot of the blockchain, if available
-    snapshot = cfg.get('blockchain_snapshot')
-    if snapshot:
-        for client_name, client in cfg['config_yaml']['clients'].items():
+    # 4- copy config.ini file and blockchain snapshots in their respective data dirs
+    for client_name, client in cfg['config_yaml']['clients'].items():
+        # create remote data folder if it doesn't exist yet
+        remote_data_dir = client['data_dir']
+        run_remote_cmd(host, cfg['unix_user'], 'mkdir -p {}'.format(remote_data_dir))
+
+        # copy config.ini file, including data about the witness if available
+        deploy_config = client.get('deploy', {})
+        witness_id, signing_key = (deploy_config.get('witness_id'),
+                                   deploy_config.get('private_key'))
+        if witness_id and signing_key:
+            cfg['witness_info'] = {'witness_id': witness_id,
+                                   'private_key': signing_key}
+        cfg['seed_nodes'] = client.get('seed_nodes')
+
+        render_template('config.ini')
+        copy(join(build_dir, 'config.ini'), '{}/config.ini'.format(remote_data_dir), user=cfg['unix_user'])
+
+        cfg.pop('witness_info', None)
+        cfg.pop('seed_nodes', None)
+
+        # copy snapshot of the blockchain, if available
+        local_data_dir = deploy_config.get('blockchain_snapshot')
+        if local_data_dir:
             try:
-                local_data_dir = snapshot[client_name]
-                remote_data_dir = client['data_dir']
                 run_remote_cmd(host, cfg['unix_user'], 'mkdir -p {}/blockchain'.format(remote_data_dir))
                 copy('{}/blockchain/'.format(local_data_dir),
                      '{}/blockchain/'.format(remote_data_dir),

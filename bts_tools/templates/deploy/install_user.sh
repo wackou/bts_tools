@@ -83,12 +83,6 @@ else
     echo "Not building bts client locally"
 fi
 
-# copy bts client config.ini, if given
-if [ -f /tmp/config.ini ]; then
-    mkdir ~/.BitShares2/
-    cp /tmp/config.ini ~/.BitShares2/
-fi
-
 # copy api_access.json, if given
 if [ -f /tmp/api_access.json ]; then
     cp /tmp/api_access.json ~/
