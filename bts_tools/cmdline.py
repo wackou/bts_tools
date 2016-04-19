@@ -318,7 +318,7 @@ Examples:
 
     elif args.command in ['run', 'run_cli']:
         client = select_client(args.environment)
-        run_args = core.config.get('run_args', []) + client.get('run_args', [])
+        run_args = core.config.get('run_args', [])
         tag = args.args[0] if args.args else None
 
         if args.command == 'run':
@@ -360,6 +360,8 @@ Examples:
             for node in seed_nodes:
                 run_args += ['--seed-node', node]
 
+            run_args += client.get('run_args', [])
+
         elif args.command == 'run_cli':
             witness_port = client.get('witness_port')
             if witness_port:
@@ -372,6 +374,8 @@ Examples:
             chain_id = client.get('chain_id')
             if chain_id:
                 run_args += ['--chain-id', chain_id]
+
+            run_args += client.get('run_cli_args', [])
 
         if not args.norpc and not is_graphene_based(client):
             run_args = ['--server'] + run_args

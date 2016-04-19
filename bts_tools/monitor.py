@@ -159,10 +159,7 @@ def monitoring_thread(*nodes):
                 continue
 
             # monitor at a client level
-            if client_node.is_graphene_based():
-                global_ctx.info = client_node.info()
-            else:
-                global_ctx.info = client_node.get_info()
+            global_ctx.info = client_node.info()
             for plugin_name in CLIENT_PLUGINS:
                 if plugin_name in all_monitoring:
                     try:

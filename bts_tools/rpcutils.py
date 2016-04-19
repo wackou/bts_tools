@@ -293,12 +293,16 @@ class BTSProxy(object):
                 return balance
         return 0
 
+
+    def info(self, cached=True):
+        if self.is_graphene_based():
+            return self.rpc_call('info', cached=cached)
+        else:
+            return self.rpc_call('get_info', cached=cached)
+
     def status(self, cached=True):
         try:
-            if self.is_graphene_based():
-                self.rpc_call('info', cached=cached)
-            else:
-                self.rpc_call('get_info', cached=cached)
+            _ = self.info()
             return 'online'
 
         except (requests.exceptions.ConnectionError, # http connection refused
@@ -357,6 +361,7 @@ class BTSProxy(object):
             return 'not synced'
         return self.witness_signing_key == self.get_witness(self.name)['signing_key']
 
+    # FIXME: use a decorator for this (forever) caching (also see bitasset_data)
     def get_witness_name(self, witness_id):
         try:
             return self._witness_names[witness_id]
@@ -368,6 +373,7 @@ class BTSProxy(object):
 
         return result
 
+    # FIXME: use a decorator for this (forever) caching (also see bitasset_data)
     def get_committee_member_name(self, committee_member_id):
         try:
             return self._committee_member_names[committee_member_id]
@@ -473,10 +479,17 @@ class BTSProxy(object):
     def is_graphene_based(self):
         return is_graphene_based(self)
 
+    def get_active_witnesses(self):
+        if self.bts_type() == 'steem':
+            return self.rpc_call('get_active_witnesses')
+        else:
+            return [self.get_witness_name(w)
+                    for w in self.info()['active_witnesses']]
+
     def is_active(self, delegate):
         if self.is_graphene_based():
             try:
-                return self.get_witness(delegate)['id'] in self.info()['active_witnesses']
+                return delegate in self.get_active_witnesses()
             except:
                 # if witness doesn't exist (eg: at block head = 0), return False instead of failing
                 return False
@@ -672,6 +685,6 @@ def graphene_clients():
 def client_instances():
     """return a list of triples (hostname, [node names], node_instance)"""
     for (host, port), gnodes in graphene_clients():
-        yield ('%s:%d' % (host, port), [n.name for n in gnodes], gnodes[0])
+        yield ('%s:%d' % (host, port), {n.name for n in gnodes}, gnodes[0])
 
 

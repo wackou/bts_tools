@@ -75,7 +75,7 @@ def catch_error(f):
     def wrapper(*args, **kwargs):
         try:
             return f(*args, **kwargs)
-        except (requests.exceptions.ConnectionError):
+        except requests.exceptions.ConnectionError:
             core.is_online = False
             return offline()
         except core.RPCError as e:
@@ -246,10 +246,10 @@ def view_info():
         n = rpc.main_node
         info = n.info()
         # TODO: we should cache the witness and committee member names, they never change
-        info['active_witnesses'] = [n.get_witness_name(w)
-                                    for w in info['active_witnesses']]
-        info['active_committee_members'] = [n.get_committee_member_name(cm)
-                                            for cm in info['active_committee_members']]
+        info['active_witnesses'] = n.get_active_witnesses()
+        if n.bts_type() in ['bts', 'muse']:
+            info['active_committee_members'] = [n.get_committee_member_name(cm)
+                                                for cm in info['active_committee_members']]
         info_items = sorted(info.items())
     else:
         info_items = sorted(rpc.main_node.get_info().items())
