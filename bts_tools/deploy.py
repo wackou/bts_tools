@@ -169,11 +169,11 @@ def deploy_base_node(cfg, build_dir, build_env):
     #       this would allow to create ad-hoc scripts very quickly with very little text editing required.
 
     # 1- ssh to host and scp or rsync the installation scripts and tarballs
-    log.info('Copying install scripts to remote host')
+    log.info('================ Copying install scripts to remote host ================')
     copy('{}/*'.format(build_dir), '/tmp/')
 
     # 2- run the installation script remotely
-    log.info('Installing remote host')
+    log.info('================ Installing remote host ================')
     run_remote('cd /tmp; bash install_new_graphene_node.sh')
 
     # 2.1- install supervisord conf
@@ -184,9 +184,9 @@ def deploy_base_node(cfg, build_dir, build_env):
 
     # 3- copy prebuilt binaries
     if cfg.get('compile_on_new_host', False):
-        log.info('Not deploying any binaries, they have been compiled locally')
+        log.info('================ Not deploying any binaries, they have been compiled locally ================')
     else:
-        log.info('Deploying prebuilt binaries')
+        log.info('================ Deploying prebuilt binaries ================')
         # deploy for all clients required
         clients_to_deploy = {c['type'] for c in cfg['config_yaml']['clients'].values()}
         for build_env in clients_to_deploy:
@@ -202,10 +202,10 @@ def deploy_base_node(cfg, build_dir, build_env):
         # copy config.ini file, including data about the witness if available
         deploy_config = client.get('deploy', {})
         witness_id, signing_key = (deploy_config.get('witness_id'),
-                                   deploy_config.get('private_key'))
+                                   deploy_config.get('signing_key'))
         if witness_id and signing_key:
             cfg['witness_info'] = {'witness_id': witness_id,
-                                   'private_key': signing_key}
+                                   'signing_key': signing_key}
         cfg['seed_nodes'] = client.get('seed_nodes')
 
         render_template('config.ini')
