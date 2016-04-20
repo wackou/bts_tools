@@ -61,10 +61,11 @@ def deploy(build_env, remote_host):
 def create_vps_instance(cfg):
     if cfg.get('host'):
         # do not create an instance, use the one on the given ip address
-        log.info('Not creating new instance, using given host: {}'.format(cfg['host']))
+        log.info('================ Installing graphene on given host: {} ================'.format(cfg['host']))
         return
 
     elif cfg['vps'].get('provider', '').lower() == 'vultr':
+        log.info('================ Creating new instance on Vultr ================')
         v = cfg['vps']['vultr']
         vultr = VultrAPI(v['api_key'])
         params = dict(v)
@@ -73,6 +74,7 @@ def create_vps_instance(cfg):
         cfg['host'] = ip_addr
 
     elif cfg['vps'].get('provider', '').lower() == 'gandi':
+        log.info('================ Creating new instance on Gandi ================')
         v = cfg['vps']['gandi']
         gandi = GandiAPI(v['api_key'])
         params = dict(v)
@@ -103,6 +105,8 @@ def prepare_installation_bundle(cfg, build_dir):
     # 0.2- generate config.yaml file
     config_yaml = yaml.load(env.get_template('config.yaml').render(), Loader=yaml.RoundTripLoader)
     config_yaml.update(cfg['config_yaml'])
+    for client_name, client in config_yaml['clients'].items():
+        client.pop('deploy', None)
     with open(join(build_dir, 'config.yaml'), 'w') as config_yaml_file:
         config_yaml_file.write(yaml.dump(config_yaml, indent=4, Dumper=yaml.RoundTripDumper))
 

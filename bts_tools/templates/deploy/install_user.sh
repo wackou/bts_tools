@@ -3,10 +3,9 @@
 echo "CALLING install_user.sh WITH ARGS: $@"
 
 set -o nounset
-USER=$1
-GIT_NAME=$2
-GIT_EMAIL=$3
-INSTALL_COMPILE_DEPENDENCIES=$4
+USER="{{ unix_user }}"
+GIT_NAME="{{ git_name }}"
+GIT_EMAIL="{{ git_email }}"
 set +o nounset
 
 cd ~
@@ -50,14 +49,10 @@ pip install -U pip setuptools
 git stash && git pull && git stash apply
 rm -fr dist; python setup.py sdist && (pip uninstall -y bts_tools; pip install dist/bts_tools-*.tar.gz)
 
-# FIXME: temporary fix, see: http://stackoverflow.com/questions/34157314/autobahn-websocket-issue-while-running-with-twistd-using-tac-file
-#pip install https://github.com/crossbario/autobahn-python/archive/master.zip
-#pip install autobahn
 
 if [ -f /tmp/config.yaml ]; then
     # ensure we have a ~/.bts_tools folder
     bts list >/dev/null 2>&1
-    echo "----------------------- HERE"
     if [ -f ~/.bts_tools/config.yaml ]; then
         echo "config yaml found in .bts_tools"
     else
@@ -74,14 +69,16 @@ else
     echo "no config.yaml file given"
 fi
 
-# compile client locally
-echo "INSTALL COMPILE DEPS  ${INSTALL_COMPILE_DEPENDENCIES}"
-if [ $INSTALL_COMPILE_DEPENDENCIES == "1" ]; then
-    echo "Building bts client"
-    bts build
-else
-    echo "Not building bts client locally"
-fi
+{% if compile_on_new_host %}
+    # compile client locally
+    {% for client in clients %}
+        echo "Building {{ client }} client"
+        {{ client }} build
+    {% endfor %}
+{% else %}
+    echo "Not building {{ client }} client locally"
+{% endif %}
+
 
 # copy api_access.json, if given
 if [ -f /tmp/api_access.json ]; then

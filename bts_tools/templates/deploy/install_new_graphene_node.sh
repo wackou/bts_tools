@@ -19,6 +19,10 @@ export NGINX_SERVER_NAME="{{ nginx_server_name }}"
 export UWSGI_USER="$UNIX_USER"
 export UWSGI_GROUP="$UNIX_USER"
 
+if [ ! -f /root/base_graphene_installed ]; then
+    echo "---- Base system already installed, skipping it"
+fi
+
 #if [ ! -f /tmp/newVPS.tgz ]; then
 #  echo "No newVPS.tgz file!"
 #  echo "This script needs to run as root. It should be copied to /tmp with scp"
@@ -115,7 +119,7 @@ install_user () {
     echo "$USER:$PASSWORD" | chpasswd
   fi
 
-  su -c "/bin/bash /tmp/install_user.sh $USER '$GIT_NAME' '$GIT_EMAIL' $INSTALL_COMPILE_DEPENDENCIES" $USER >> /tmp/setupVPS.log 2>&1
+  su -c "/bin/bash /tmp/install_user.sh" $USER >> /tmp/setupVPS.log 2>&1
 }
 
 install_user $UNIX_USER $UNIX_PASSWORD
@@ -217,5 +221,6 @@ if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to finish!"; fi
 echo ""
 echo "Please reboot in order for the hostname to take effect"
 
+touch /root/base_graphene_installed
 exit
 echo "not exited"
