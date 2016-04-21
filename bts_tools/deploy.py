@@ -209,7 +209,7 @@ def deploy_base_node(cfg, build_dir, build_env):
                                                  deploy_config.get('witness_id'),
                                                  deploy_config.get('signing_key'))
         if signing_key:
-            cfg['witness_info'] = {'witness_name':
+            cfg['witness_info'] = {'witness_name': witness_name,
                                     'witness_id': witness_id,
                                    'signing_key': signing_key}
         cfg['seed_nodes'] = client.get('seed_nodes')
