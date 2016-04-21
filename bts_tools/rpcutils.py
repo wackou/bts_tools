@@ -22,6 +22,7 @@ from .core import UnauthorizedError, RPCError, run, get_data_dir, get_bin_name, 
     hashabledict, to_list, FeedPrice, trace
 from .process import bts_binary_running, bts_process
 from .feeds import BIT_ASSETS, BIT_ASSETS_INDICES
+from .privatekey import PrivateKey
 from . import graphene  # needed to access DATABASE_API, NETWORK_API dynamically, can't import them directly
 from . import core
 from collections import defaultdict, deque, OrderedDict
@@ -129,7 +130,10 @@ class BTSProxy(object):
                     except KeyError:
                         cfg_port = 0
                     try:
-                        self.witness_signing_key = json.loads(config['bts']['private-key'])[0]
+                        if self.bts_type() == 'steem':
+                            self.witness_signing_key = config['bts']['private-key']
+                        else:
+                            self.witness_signing_key = json.loads(config['bts']['private-key'])[0]
                     except KeyError:
                         self.witness_signing_key = None
                     log.debug('signing key: {}'.format(self.witness_signing_key))
@@ -359,7 +363,13 @@ class BTSProxy(object):
             return 'unknown'
         if not self.is_synced():
             return 'not synced'
-        return self.witness_signing_key == self.get_witness(self.name)['signing_key']
+        if self.bts_type() == 'steem':
+            # the config file only specifies the private key, we need to derive the public key
+            private_key = PrivateKey(self.witness_signing_key)
+            public_key = 'STM%s' % format(private_key.pubkey, 'bts')[3:]
+        else:
+            public_key = self.witness_signing_key
+        return public_key == self.get_witness(self.name)['signing_key']
 
     # FIXME: use a decorator for this (forever) caching (also see bitasset_data)
     def get_witness_name(self, witness_id):

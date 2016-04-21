@@ -205,18 +205,22 @@ def deploy_base_node(cfg, build_dir, build_env):
 
         # copy config.ini file, including data about the witness if available
         deploy_config = client.get('deploy', {})
-        witness_id, signing_key = (deploy_config.get('witness_id'),
-                                   deploy_config.get('signing_key'))
-        if witness_id and signing_key:
-            cfg['witness_info'] = {'witness_id': witness_id,
+        witness_name, witness_id, signing_key = (deploy_config.get('witness_name'),
+                                                 deploy_config.get('witness_id'),
+                                                 deploy_config.get('signing_key'))
+        if signing_key:
+            cfg['witness_info'] = {'witness_name':
+                                    'witness_id': witness_id,
                                    'signing_key': signing_key}
         cfg['seed_nodes'] = client.get('seed_nodes')
+        cfg['client_type'] = client['type']
 
         render_template('config.ini')
         copy(join(build_dir, 'config.ini'), '{}/config.ini'.format(remote_data_dir), user=cfg['unix_user'])
 
         cfg.pop('witness_info', None)
         cfg.pop('seed_nodes', None)
+        cfg.pop('client_type', None)
 
         # copy snapshot of the blockchain, if available
         local_data_dir = deploy_config.get('blockchain_snapshot')

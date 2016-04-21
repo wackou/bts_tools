@@ -86,6 +86,8 @@ config_yaml:
         steem:
             type: steem
             data_dir: ~/.Steem_seed
+            run_cli_args: ['--rpc-http-allowip', '127.0.0.1']
+            seed_nodes: ['54.186.215.133:2001', '45.32.66.168:2001']
             witness_host: localhost
             witness_port: 8490
             witness_user: *witness_user

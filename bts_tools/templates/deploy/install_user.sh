@@ -71,7 +71,7 @@ fi
 
 {% if compile_on_new_host %}
     # compile client locally
-    {% for client in clients %}
+    {% for client in config_yaml['clients'] %}
         echo "Building {{ client }} client"
         {{ client }} build
     {% endfor %}
