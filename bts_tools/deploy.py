@@ -110,7 +110,7 @@ def prepare_installation_bundle(cfg, build_dir):
     with open(join(build_dir, 'config.yaml'), 'w') as config_yaml_file:
         config_yaml_file.write(yaml.dump(config_yaml, indent=4, Dumper=yaml.RoundTripDumper))
 
-    # 0.3- generate api_access.json and config.ini
+    # 0.3- generate api_access.json
     cfg['witness_api_access_user'] = cfg['witness_api_access']['user']
     pw_bytes = cfg['witness_api_access']['password'].encode('utf-8')
     salt_bytes = os.urandom(8)
@@ -122,8 +122,6 @@ def prepare_installation_bundle(cfg, build_dir):
     cfg['witness_api_access_salt'] = salt_b64.decode('utf-8')
 
     render_template('api_access.json')
-
-    render_template('config.ini')
 
     # 0.4- nginx
     nginx = join(build_dir, 'etc', 'nginx')
@@ -197,32 +195,14 @@ def deploy_base_node(cfg, build_dir, build_env):
             log.info('-- deploying {} client'.format(build_env))
             deploy(build_env, '{}@{}'.format(cfg['unix_user'], host))
 
-    # 4- copy config.ini file and blockchain snapshots in their respective data dirs
+    # 4- copy blockchain snapshots in their respective data dirs
     for client_name, client in cfg['config_yaml']['clients'].items():
         # create remote data folder if it doesn't exist yet
         remote_data_dir = client['data_dir']
         run_remote_cmd(host, cfg['unix_user'], 'mkdir -p {}'.format(remote_data_dir))
 
-        # copy config.ini file, including data about the witness if available
-        deploy_config = client.get('deploy', {})
-        witness_name, witness_id, signing_key = (deploy_config.get('witness_name'),
-                                                 deploy_config.get('witness_id'),
-                                                 deploy_config.get('signing_key'))
-        if signing_key:
-            cfg['witness_info'] = {'witness_name': witness_name,
-                                    'witness_id': witness_id,
-                                   'signing_key': signing_key}
-        cfg['seed_nodes'] = client.get('seed_nodes')
-        cfg['client_type'] = client['type']
-
-        render_template('config.ini')
-        copy(join(build_dir, 'config.ini'), '{}/config.ini'.format(remote_data_dir), user=cfg['unix_user'])
-
-        cfg.pop('witness_info', None)
-        cfg.pop('seed_nodes', None)
-        cfg.pop('client_type', None)
-
         # copy snapshot of the blockchain, if available
+        deploy_config = client.get('deploy', {})
         local_data_dir = deploy_config.get('blockchain_snapshot')
         if local_data_dir:
             try:

@@ -25,6 +25,7 @@ from pathlib import Path
 from jinja2 import Environment, PackageLoader
 from ruamel import yaml
 from .core import platform, run, get_data_dir, get_bin_name, get_gui_bin_name, get_all_bin_names, is_graphene_based, join_shell_cmd
+from .privatekey import PrivateKey
 from . import core, init
 from .rpcutils import rpc_call, BTSProxy
 from .vps import VultrAPI, GandiAPI
@@ -359,6 +360,26 @@ Examples:
             seed_nodes = client.get('seed_nodes', [])
             for node in seed_nodes:
                 run_args += ['--seed-node', node]
+
+            roles = client.get('roles', [])
+            for role in roles:
+                if role['role'] == 'witness':
+                    if client['type'] == 'steem':
+                        private_key = role.get('signing_key')
+                        if private_key:
+                            run_args += ['--witness', '\\"{}\\"'.format(role['name']),
+                                         '--private-key', '{}'.format(private_key)]
+                    else:
+                        witness_id = role.get('witness_id')
+                        private_key = role.get('signing_key')
+                        if witness_id and private_key:
+                            public_key = format(PrivateKey(private_key).pubkey, client['type'])
+                            run_args += ['--witness-id', '\\"{}\\"'.format(witness_id),
+                                         '--private-key', '[\\"{}\\", \\"{}\\"]'.format(public_key, private_key)]
+
+            api_access = client.get('api_access')
+            if api_access:
+                run_args += ['--api-access', expanduser(api_access)]
 
             run_args += client.get('run_args', [])
 

@@ -102,9 +102,10 @@ ALL_SLOTS = {}
 
 
 class BTSProxy(object):
-    def __init__(self, type, name, client_name, client, bts_type=None,
-                 monitoring=None, notification=None, venv_path=None):
-        self.type = type
+    def __init__(self, role, name, client_name, client, bts_type=None,
+                 monitoring=None, notification=None, venv_path=None,
+                 witness_id=None, signing_key=None):
+        self.type = role
         if bts_type is not None:
             self._bts_type = bts_type
         self.name = name
@@ -169,6 +170,8 @@ class BTSProxy(object):
         self.rpc_cache_key = (self.rpc_host, self.wallet_port)
         self.ws_rpc_cache_key = (self.witness_host, self.witness_port)
         self.venv_path = venv_path
+        self.witness_id = witness_id
+        self.witness_signing_key = signing_key or self.witness_signing_key
         self.bin_name = get_bin_name(client_name or 'bts')
 
         if self.is_graphene_based():
@@ -366,7 +369,7 @@ class BTSProxy(object):
         if self.bts_type() == 'steem':
             # the config file only specifies the private key, we need to derive the public key
             private_key = PrivateKey(self.witness_signing_key)
-            public_key = 'STM%s' % format(private_key.pubkey, 'bts')[3:]
+            public_key = format(private_key.pubkey, 'steem')
         else:
             public_key = self.witness_signing_key
         return public_key == self.get_witness(self.name)['signing_key']
@@ -669,9 +672,7 @@ def load_graphene_clients():
     nodes = []
     for client_name, client in core.config['clients'].items():
         for role in client.get('roles', []):
-            type = role.pop('role')
-            nodes.append(BTSProxy(type=type,
-                                  client_name=client_name,
+            nodes.append(BTSProxy(client_name=client_name,
                                   client=client,
                                   bts_type=client.get('bts_type'),
                                   **role))
