@@ -46,7 +46,6 @@ workon bts_tools
 # upgrade pip and setuptools to ensure a modern installation (and no problem when installing dependencies)
 pip install -U pip setuptools
 
-git stash && git pull && git stash apply
 rm -fr dist; python setup.py sdist && (pip uninstall -y bts_tools; pip install dist/bts_tools-*.tar.gz)
 
 
@@ -59,8 +58,8 @@ if [ -f /tmp/config.yaml ]; then
         echo "ERROR: still no config yaml in .bts_tools"
     fi
     mkdir -p /home/$USER/.bts_tools
-    cp /tmp/config.yaml bts_tools/config.yaml
-    cp bts_tools/config.yaml /home/$USER/.bts_tools/config.yaml
+    cp /tmp/config.yaml bts_tools/config.yaml                    # copy config.yaml to local dev dir
+    cp bts_tools/config.yaml /home/$USER/.bts_tools/config.yaml  # copy config.yaml to bts_tools config dir
     echo "------------------------------------"
     echo "installed config.yaml"
     cat /home/$USER/.bts_tools/config.yaml
@@ -80,12 +79,8 @@ fi
 {% endif %}
 
 
-# copy api_access.json, if given
-if [ -f /tmp/api_access.json ]; then
-    cp /tmp/api_access.json ~/
-fi
-
-# try copying any genesis file in the home directory
+# copy api_access.json files, if given
+# try copying any genesis file also in the home directory
 cp /tmp/*.json ~/
 
 popd

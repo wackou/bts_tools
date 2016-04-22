@@ -72,7 +72,7 @@ class GandiAPI(object):
 
         log.info('Update of dns entry for {}.{} successfully finished!'.format(host, domain))
 
-    def create_server(self, name, location, src_disk_id, ssh_keys, cores=1, memory=1024, disk_size=20480):
+    def create_server(self, name, location, src_disk_id, ssh_keys, cores=1, memory=1024, disk_size=40960):
         log.info('Creating Gandi instance {} in {}...'.format(name, location))
         ssh_key_id = {key['name']: key['id'] for key in self.call('hosting.ssh.list')}
 

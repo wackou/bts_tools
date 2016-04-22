@@ -122,6 +122,7 @@ def prepare_installation_bundle(cfg, build_dir):
     cfg['witness_api_access_salt'] = salt_b64.decode('utf-8')
 
     render_template('api_access.json')
+    render_template('api_access.steem.json')
 
     # 0.4- nginx
     nginx = join(build_dir, 'etc', 'nginx')

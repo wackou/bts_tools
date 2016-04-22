@@ -1,0 +1,17 @@
+{
+    "permission_map" :
+    {
+        "{{ witness_api_access_user}}":
+        {
+            "password_hash_b64": "{{ witness_api_access_hash }}",
+            "password_salt_b64": "{{ witness_api_access_salt }}",
+            "allowed_apis": ["database_api", "network_broadcast_api", "history_api", "network_node_api"]
+        },
+        "*":
+        {
+            "password_hash_b64": "*",
+            "password_salt_b64": "*",
+            "allowed_apis": ["database_api", "network_broadcast_api", "history_api"]
+        }
+    }
+}
