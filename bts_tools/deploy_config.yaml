@@ -1,7 +1,6 @@
 hostname: &hostname xxxxxxxx
-domain: xxxxxxxx
+domain: xxxxxxxx.xxx
 
-# the vps instance to create if no host is given
 vps:
     # config for vultr provider
     vultr:
@@ -14,50 +13,31 @@ vps:
 
     # config for gandi provider
     gandi:
-        # api_key, name, location, src_disk_id, label, ssh_keys, cores=1, memory=1024, disk_size=20480
         api_key: xxxxxxxx
         name: *hostname
         location: paris
-        cores: 2
-        memory: 3072  # 3 GB
+        cores: 4
+        memory: 8192  # in MB
+        disk_size: 81920  # in MB
         src_disk_id: 3315704 # Debian 8 64 bits (HVM)
-        ssh_keys: [xxxxxxxx, xxxxxxxx]
+        ssh_keys: [graphene, brannigan]
 
 # if true, the graphene client will be built directly on the new node,
 # otherwise it gets deployed from the host currently running the install
-compile_on_new_host: false
+compile_on_new_host: true
 
 unix_hostname: *hostname
 unix_user: xxxxxxxx
 unix_password: xxxxxxxx
 
 # additional keys to be installed in .ssh/authorized_keys for both root and normal user
-ssh_keys:
-- ssh-rsa xxxxxxxx
-- ssh-rsa xxxxxxxx
+#ssh_keys:
+#- ssh-rsa xxxxxxxx
+#- ssh-rsa xxxxxxxx
 
 # TODO: make this optional
 git_name: xxxxxxxx
 git_email: xxxxxxxx
-
-# if specified, rsync the blockchain folder to the new node instead of letting it resync from scratch
-# this is faster and less prone to ending up on a fork while doing the initial sync
-# keys in this dictionary correspond to the clients defined in the config_yaml section
-# values are the local data directories from which to copy the blockchain folder
-blockchain_snapshot:
-    bts: ~/.BitShares2
-    steem: ~/.Steem
-
-node:
-    type: seed
-
-    seed: null
-    witness:
-        signing_key: ["BTS8xxxxxxx", "5xxxxxx"]
-        witness_id: xxxxxxxx
-    feed_publisher:
-        wallet_file: /tmp/wallet.dat
-        wallet_password: xxxxxxxxx
 
 # access to witness restricted APIs, used to create api_access.json
 witness_api_access:
@@ -71,8 +51,7 @@ config_yaml:
         bts:
             type: bts
             data_dir: ~/.BitShares2_seed
-            witness_id: "1.6.xxx"                    # will be used during deploy for creating config.ini file
-            signing_key: ["BTS8xxxxxxx", "5xxxxxx"]  # will be used during deploy for creating config.ini file
+            api_access: ~/api_access.json
             witness_host: localhost
             witness_port: 8090
             witness_user: *witness_user
@@ -83,9 +62,26 @@ config_yaml:
             -
                 role: seed
                 name: *hostname
+            #deploy:  # params only needed when deploying a new instance, will not end up in the final config.yaml file
+            #    blockchain_snapshot: ~/.BitShares2
+
+        muse:
+            type: muse
+            data_dir: ~/.Muse_seed
+            api_access: ~/api_access.json
+            witness_user: *witness_user
+            witness_password: *witness_password
+            roles:
+            -
+                role: seed
+                name: *hostname
+            #deploy:  # params only needed when deploying a new instance, will not end up in the final config.yaml file
+            #    blockchain_snapshot: ~/.Muse
+
         steem:
             type: steem
             data_dir: ~/.Steem_seed
+            api_access: ~/api_access.steem.json
             run_cli_args: ['--rpc-http-allowip', '127.0.0.1']
             seed_nodes: ['54.186.215.133:2001', '45.32.66.168:2001']
             witness_host: localhost
@@ -98,6 +94,8 @@ config_yaml:
             -
                 role: seed
                 name: *hostname
+            #deploy:  # params only needed when deploying a new instance, will not end up in the final config.yaml file
+            #    blockchain_snapshot: ~/.Steem
 
     notification:
         email:

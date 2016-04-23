@@ -4,48 +4,67 @@
 #
 
 logging:
-    bts_tools.feeds: DEBUG
+    bts_tools.feeds: INFO
 
 # flags to be passed to make; shared among all build environments
 make_args: ['-j4']
 
 #
-# list of nodes (delegate accounts / seed nodes) that are being monitored
+# list of clients (witness accounts / seed nodes) that are being monitored
 #
 clients:
     bts:
-        type: bts
         data_dir: ~/.BitShares2
         witness_host: localhost
         witness_port: 8090
-        # FIXME: add link to doc on how to generate api_access.json
-        witness_user: myuser          # defined in api_access.json
-        witness_password: mypassword  # defined in api_access.json
+        # api_access.json should be created according to:
+        # https://github.com/BitShares/bitshares-2#accessing-restricted-apis
+        witness_user: xxxxxxxx      # as in api_access.json
+        witness_password: xxxxxxxx  # as in api_access.json
         wallet_host: localhost
         wallet_port: 8093
-        wallet_password: changeme!    # needed only for feed publishing
+        wallet_password: changeme!  # only needed for feed publishing
         notification: email
         roles:
         -
             role: witness
-            name: wackou
+            name: xxxxxxxxx
+            witness_id: 1.6.xxxx
+            signing_key: 5xxxxxxxx
         -
             role: feed_publisher
-            name: wackou
+            name: xxxxxxxx
 
-    muse_seed:
+    # most of the clients try to have sensible defaults as much as possible, but you
+    # need to specify at least: type, data_dir, api_access, witness_user, witness_password
+    muse:
         type: muse
         data_dir: ~/.Muse_seed
-        witness_host: localhost
-        witness_port: 8390
-        witness_user: myuser          # defined in api_access.json
-        witness_password: mypassword  # defined in api_access.json
-        wallet_host: localhost
-        wallet_port: 8393
+        api_access: ~/api_access.json
+        witness_user: xxxxxxxx       # defined in api_access.json
+        witness_password: xxxxxxxx   # defined in api_access.json
         roles:
         -
             role: witness
-            name: seed01muse
+            name: wackou
+
+    steem:
+        type: steem
+        data_dir: ~/.Steem_seed
+        run_cli_args: ['--rpc-http-allowip', '127.0.0.1']
+        seed_nodes: ["52.26.78.244:2001", "104.207.152.44:2201", "45.55.217.111:12150", "52.4.250.181:39705"]
+        # api_access.json should be created according to:
+        # https://github.com/BitShares/bitshares-2#accessing-restricted-apis
+        # WARNING: for steem, you need to change the arrays in api_access.json to dicts
+        api_access: ~/.Steem/api_access.steem.json
+        witness_user: xxxxxxxx
+        witness_password: xxxxxxxx
+        roles:
+        -
+            role: witness
+            name: xxxxxxxx
+            signing_key: 5xxxxxxxx
+
 
 #
 # configuration of the monitoring plugins
@@ -59,7 +78,6 @@ monitoring:
     feeds:
         check_time_interval: 300
         median_time_span: 1800
-        # NOTE: uncomment one of the next 2 lines to configure when feeds should be published
         #publish_time_interval: 2400         # use this to publish feeds at fixed time intervals (in seconds)
         #publish_time_slot: 0                # use this to publish every hour at a fixed number of minutes (in minutes)
         feed_providers: [Poloniex, CCEDK, Btc38, Yunbi,  # BTS valuation
@@ -78,3 +96,4 @@ notification:
 
     boxcar:
         tokens: []
+
