@@ -56,6 +56,16 @@ def get_country_for_ip(ip):
         return None
 
 
+def hide_private_key(args):
+    if not isinstance(args, list):
+        return args
+    for i in range(len(args)-1):
+        if args[i] == '--private-key':
+            args[i+1] = '5xxxxxxxx'
+        elif args[i] == '--api-user':
+            args[i+1] = 'xxxxxxxx'
+    return args
+
 def add_ip_flag(ip):
     country = get_country_for_ip(ip)
     if not country:
@@ -79,6 +89,7 @@ def create_app(settings_override=None):
 
     # custom filter for showing dates
     app.jinja_env.filters['datetime'] = format_datetime
+    app.jinja_env.filters['hide_private_key'] = hide_private_key
     app.jinja_env.filters['add_ip_flag'] = add_ip_flag
 
     # make bts_tools module available in all the templates

@@ -12,7 +12,7 @@
     {% if proc %}
         PID: <b>{{ proc.pid }}</b>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        Client invocation: <b>{{ proc.cmdline() }}</b>
+        Client invocation: <b>{{ proc.cmdline() | hide_private_key }}</b>
     {% else %}
         <b>offline</b>
     {% endif %}
