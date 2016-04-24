@@ -366,12 +366,9 @@ class BTSProxy(object):
             return 'unknown'
         if not self.is_synced():
             return 'not synced'
-        if self.bts_type() == 'steem':
-            # the config file only specifies the private key, we need to derive the public key
-            private_key = PrivateKey(self.witness_signing_key)
-            public_key = format(private_key.pubkey, 'steem')
-        else:
-            public_key = self.witness_signing_key
+        # the config file only specifies the private key, we need to derive the public key
+        private_key = PrivateKey(self.witness_signing_key)
+        public_key = format(private_key.pubkey, self.bts_type())
         return public_key == self.get_witness(self.name)['signing_key']
 
     # FIXME: use a decorator for this (forever) caching (also see bitasset_data)
