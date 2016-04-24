@@ -22,19 +22,17 @@ from os.path import join, dirname, exists, islink, expanduser
 from argparse import RawTextHelpFormatter
 from contextlib import suppress
 from pathlib import Path
-from jinja2 import Environment, PackageLoader
 from ruamel import yaml
-from .core import platform, run, get_data_dir, get_bin_name, get_gui_bin_name, get_all_bin_names, is_graphene_based, join_shell_cmd
+from .core import (platform, run, get_data_dir, get_bin_name, get_gui_bin_name,
+                   get_all_bin_names, is_graphene_based, join_shell_cmd,
+                   hash_salt_password)
 from .privatekey import PrivateKey
 from . import core, init
 from .rpcutils import rpc_call, BTSProxy
-from .vps import VultrAPI, GandiAPI
 import argparse
 import os
 import sys
 import shutil
-import base64
-import hashlib
 import arrow
 import json
 import logging
@@ -130,11 +128,15 @@ def configure(debug=False):
         cmake_opts += ['-DBOOST_ROOT="{}"'.format(boost_root)]
 
     if debug:
-        run('{} cmake -DCMAKE_BUILD_TYPE=Debug {} .'.format(' '.join(CONFIGURE_OPTS),
-                                                            ' '.join(cmake_opts)))
+        cmake_opts += ['-DCMAKE_BUILD_TYPE=Debug']
     else:
-        run('{} cmake -DCMAKE_BUILD_TYPE=Release {} .'.format(' '.join(CONFIGURE_OPTS),
-                                                              ' '.join(cmake_opts)))
+        cmake_opts += ['-DCMAKE_BUILD_TYPE=Release']
+
+    cmake_opts += core.config.get('cmake_args', []) + BUILD_ENV.get('cmake_args', [])
+
+    run('{} cmake {} .'.format(' '.join(CONFIGURE_OPTS),
+                               ' '.join(cmake_opts)))
+
 
 
 def configure_gui():
@@ -165,7 +167,7 @@ def install_last_built_bin():
     # find a nice filename representation
     def decorated_filename(filename):
         try:
-            r = run('git describe --tags %s' % commit, capture_io=True, verbose=False)
+            r = run('git describe --tags %s' % commit, capture_io=True, verbose=False, log_on_fail=False)
             if r.status == 0:
                 # we are on a tag, use it for naming binary
                 tag = r.stdout.strip().replace('/', '_')
@@ -377,9 +379,17 @@ Examples:
                             run_args += ['--witness-id', '\\"{}\\"'.format(witness_id),
                                          '--private-key', '[\\"{}\\", \\"{}\\"]'.format(public_key, private_key)]
 
-            api_access = client.get('api_access')
-            if api_access:
-                run_args += ['--api-access', expanduser(api_access)]
+            if client['type'] == 'steem':
+                pw_hash, salt = hash_salt_password(client['witness_password'])
+                api_user_str = '{"username":"%s", ' % client['witness_user']
+                api_user_str += '"password_hash_b64": "{}", '.format(pw_hash)
+                api_user_str += '"password_salt_b64": "{}", '.format(salt)
+                api_user_str += '"allowed_apis": ["database_api", "network_broadcast_api", "history_api", "network_node_api"]}'
+                run_args += ['--api-user', api_user_str.replace('"', '\\"')]
+            else:
+                api_access = client.get('api_access')
+                if api_access:
+                    run_args += ['--api-access', expanduser(api_access)]
 
             run_args += client.get('run_args', [])
 
@@ -387,6 +397,9 @@ Examples:
             witness_port = client.get('witness_port')
             if witness_port:
                 run_args += ['--server-rpc-endpoint', 'ws://127.0.0.1:{}'.format(witness_port)]
+
+            run_args += ['--server-rpc-user', client['witness_user']]
+            run_args += ['--server-rpc-password', client['witness_password'].replace('"', '\\"')]
 
             wallet_port = client.get('wallet_port')
             if wallet_port:

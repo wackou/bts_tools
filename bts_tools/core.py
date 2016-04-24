@@ -28,6 +28,8 @@ import sys
 import os
 import shutil
 from ruamel import yaml
+import hashlib
+import base64
 import time
 import logging
 
@@ -431,3 +433,12 @@ class FeedPrice(object):
 
     def __repr__(self):
         return '<{}>'.format(str(self))
+
+
+def hash_salt_password(password):
+    pw_bytes = password.encode('utf-8')
+    salt_bytes = os.urandom(8)
+    salt_b64 = base64.b64encode(salt_bytes)
+    pw_hash = hashlib.sha256(pw_bytes + salt_bytes).digest()
+    pw_hash_b64 = base64.b64encode(pw_hash)
+    return pw_hash_b64.decode('utf-8'), salt_b64.decode('utf-8')

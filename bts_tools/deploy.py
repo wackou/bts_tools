@@ -22,14 +22,12 @@ from os.path import join
 from functools import partial
 from jinja2 import Environment, PackageLoader
 from ruamel import yaml
-from .core import run, get_all_bin_names
+from .core import run, get_all_bin_names, hash_salt_password
 from .cmdline import select_build_environment
 from . import core, cmdline
 from .vps import VultrAPI, GandiAPI
 import os
 import re
-import base64
-import hashlib
 import logging
 
 log = logging.getLogger(__name__)
@@ -112,14 +110,9 @@ def prepare_installation_bundle(cfg, build_dir):
 
     # 0.3- generate api_access.json
     cfg['witness_api_access_user'] = cfg['witness_api_access']['user']
-    pw_bytes = cfg['witness_api_access']['password'].encode('utf-8')
-    salt_bytes = os.urandom(8)
-    salt_b64 = base64.b64encode(salt_bytes)
-    pw_hash = hashlib.sha256(pw_bytes + salt_bytes).digest()
-    pw_hash_b64 = base64.b64encode(pw_hash)
-
-    cfg['witness_api_access_hash'] = pw_hash_b64.decode('utf-8')
-    cfg['witness_api_access_salt'] = salt_b64.decode('utf-8')
+    pw_hash, pw_salt = hash_salt_password(cfg['witness_api_access']['password'])
+    cfg['witness_api_access_hash'] = pw_hash
+    cfg['witness_api_access_salt'] = pw_salt
 
     render_template('api_access.json')
     render_template('api_access.steem.json')

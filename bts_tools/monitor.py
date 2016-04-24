@@ -111,7 +111,8 @@ def monitoring_thread(*nodes):
 
     # launch async thread for communicating via websockets with a graphene witness client
     if client_node.is_graphene_based() and not client_node.proxy_host:
-        t = threading.Thread(target=graphene.run_monitoring, args=(client_node.witness_host,
+        t = threading.Thread(target=graphene.run_monitoring, args=(client_node.bts_type(),
+                                                                   client_node.witness_host,
                                                                    client_node.witness_port,
                                                                    client_node.witness_user,
                                                                    client_node.witness_password))

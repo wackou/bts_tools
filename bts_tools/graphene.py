@@ -54,16 +54,20 @@ def print_balances(n):
 DATABASE_API = 0
 LOGIN_API = 1
 NETWORK_API = 2
+NETWORK_BROADCAST_API = 3
 
 
 def api_name(api_id):
     if api_id == DATABASE_API:
-        return 'database'
+        return 'database_api'
     elif api_id == LOGIN_API:
-        return 'login'
+        return 'login_api'
     elif api_id == NETWORK_API:
-        return 'network'
+        return 'network_node_api'
+    elif api_id == NETWORK_BROADCAST_API:
+        return 'network_broadcast_api'
     else:
+        log.warning('unknown api id: {}'.format(api_id))
         return '??'
 
 
@@ -106,8 +110,9 @@ def ws_rpc_call(host, port, api, method, *args):
 
 
 class MonitoringProtocol(WebSocketClientProtocol):
-    def __init__(self, witness_host, witness_port, witness_user, witness_passwd):
+    def __init__(self, type, witness_host, witness_port, witness_user, witness_passwd):
         super().__init__()
+        self.type = type
         self.host = witness_host
         self.port = witness_port
         self.user = witness_user
@@ -115,24 +120,27 @@ class MonitoringProtocol(WebSocketClientProtocol):
         self.request_id = 0
         self.request_map = {}
         _monitoring_protocols[(witness_host, witness_port)] = self
+        if type == 'steem':
+            _ws_rpc_cache[(witness_host, witness_port)] = {'login_api': 1}
+        else:
+            _ws_rpc_cache[(witness_host, witness_port)] = {'database_api': 0, 'login_api': 1}
 
 
     def rpc_call(self, api, method, *args, result=None):
         """result should be a Future instance"""
         self.request_id += 1
         # TODO: convert args where required to hashable_dict (see: btsproxy.rpc_cache implementation)
-        if api == NETWORK_API:
-            # get actual api id
-            api = _ws_rpc_cache[(self.host, self.port)].get('NETWORK_API')
-            if api is None:
-                log.debug('Not calling network api: {} - unauthorized access to network_api'.format(method))
-                return
-        call_params = (api, method, args)
+        # get actual api id
+        real_api = _ws_rpc_cache[(self.host, self.port)].get(api_name(api))
+        if real_api is None:
+            log.debug('Not calling api: {} - unauthorized access to {} api'.format(method, api_name(api)))
+            return
+        call_params = (real_api, method, args)
         self.request_map[self.request_id] = (result, call_params)
         payload = {'jsonrpc': '2.0',
                    'id': self.request_id,
                    'method': 'call',
-                   'params': call_params} # TODO: use list(call_params)?? (if don't remember what this is for, then delete this comment)
+                   'params': call_params}
         log.debug('rpc call: {}'.format(payload))
         self.sendMessage(json.dumps(payload).encode('utf8'))
 
@@ -140,7 +148,12 @@ class MonitoringProtocol(WebSocketClientProtocol):
         log.debug("Server connected: {0}".format(response.peer))
         # login, authenticate
         self.rpc_call(LOGIN_API, 'login', self.user, self.passwd)
-        self.rpc_call(LOGIN_API, 'network_node')
+        if self.type == 'steem':
+            self.rpc_call(LOGIN_API, 'get_api_by_name', 'database_api')
+            self.rpc_call(LOGIN_API, 'get_api_by_name', 'network_node_api')
+            self.rpc_call(LOGIN_API, 'get_api_by_name', 'network_broadcast_api')
+        else:
+            self.rpc_call(LOGIN_API, 'network_node')
 
     def onMessage(self, payload, isBinary):
         res = json.loads(payload.decode('utf8'))
@@ -161,11 +174,19 @@ class MonitoringProtocol(WebSocketClientProtocol):
 
         if (api, method) == (LOGIN_API, 'network_node'):
             api_id = p['result']
-            cache['NETWORK_API'] = api_id
             if api_id is not None:
+                cache['network_node_api'] = api_id
                 log.info('Granted access to network api on {}:{}'.format(self.host, self.port))
             else:
                 log.warning('Refused access to network api. Make sure to set your user/password properly!')
+
+        if (api, method) == (LOGIN_API, 'get_api_by_name'):
+            api_id = p['result']
+            if api_id is not None:
+                log.info('Granted access to {} api on {}:{}'.format(args[0], self.host, self.port))
+                cache[args[0]] = api_id
+            else:
+                log.warning('Refused access to {} api on {}:{}. Make sure to set your user/password properly!'.format(args[0], self.host, self.port))
 
         if not self.request_map:
             log.debug('received all responses to pending requests')
@@ -179,7 +200,7 @@ class MonitoringProtocol(WebSocketClientProtocol):
         self.factory.loop.stop()
 
 
-def run_monitoring(host, port, user, passwd):
+def run_monitoring(type, host, port, user, passwd):
     log.info('Starting witness websocket monitoring on {}:{}'.format(host, port))
 
     while True:
@@ -190,7 +211,7 @@ def run_monitoring(host, port, user, passwd):
         log.debug('in thread {}'.format(threading.current_thread().name))
 
         factory = WebSocketClientFactory("ws://{}:{:d}".format(host, port))
-        factory.protocol = partial(MonitoringProtocol, host, port, user, passwd)
+        factory.protocol = partial(MonitoringProtocol, type, host, port, user, passwd)
 
         try:
             coro = loop.create_connection(factory, host, port)
