@@ -61,7 +61,7 @@ def hide_private_key(args):
         return args
     for i in range(len(args)-1):
         if args[i] == '--private-key':
-            args[i+1] = '5xxxxxxxx'
+            args[i+1] = '{}xxxxxxxx'.format(args[i+1][:8])
         elif args[i] == '--api-user':
             args[i+1] = 'xxxxxxxx'
     return args

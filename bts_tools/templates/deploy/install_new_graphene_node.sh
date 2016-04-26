@@ -51,7 +51,8 @@ echo "* Updating system..."
 apt-get -y update >> /tmp/setupVPS.log 2>&1
 apt-get -yfV dist-upgrade >> /tmp/setupVPS.log 2>&1
 echo "* Installing packages for running the client..."
-apt-get install -yfV git autoconf automake libtool doxygen zip virtualenvwrapper moreutils tmux rsync ntp python3-dev libyaml-dev>> /tmp/setupVPS.log 2>&1
+apt-get install -yfV git autoconf automake libtool doxygen zip virtualenvwrapper moreutils tmux rsync ntp\
+  python3-dev libyaml-dev qt5-default qttools5-dev-tools >> /tmp/setupVPS.log 2>&1
 
 if [ $INSTALL_COMPILE_DEPENDENCIES -eq 1 ]; then
   echo "* Installing packages for compiling the client..."
