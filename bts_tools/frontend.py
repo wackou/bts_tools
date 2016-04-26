@@ -27,6 +27,7 @@ from datetime import datetime
 import bts_tools
 import bts_tools.monitor
 import threading
+import json
 import logging
 
 log = logging.getLogger(__name__)
@@ -61,10 +62,23 @@ def hide_private_key(args):
         return args
     for i in range(len(args)-1):
         if args[i] == '--private-key':
-            args[i+1] = '{}xxxxxxxx'.format(args[i+1][:8])
+            pkey = args[i+1]
+            if pkey.startswith('5'):
+                # single private key, unquoted
+                args[i+1] = '{}xxxxxxxx'.format(pkey[:6])
+            else:
+                kp = json.loads(pkey)
+                if isinstance(kp, list):
+                    # pair [public_key, private_key]
+                    kp[1] = '{}xxxxxxxx'.format(kp[1][:4])
+                    args[i+1] = json.dumps(kp)
+                else:
+                    # single private key, quoted
+                    args[i+1] = json.dumps('{}xxxxxxxx'.format(kp[:6]))
         elif args[i] == '--api-user':
             args[i+1] = 'xxxxxxxx'
     return args
+
 
 def add_ip_flag(ip):
     country = get_country_for_ip(ip)
