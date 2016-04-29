@@ -23,7 +23,7 @@ from .core import hashabledict
 from .feed_providers import YahooFeedProvider, BterFeedProvider, Btc38FeedProvider,\
     PoloniexFeedProvider, GoogleFeedProvider, BloombergFeedProvider, BitcoinAverageFeedProvider,\
     CCEDKFeedProvider, BitfinexFeedProvider, BitstampFeedProvider, YunbiFeedProvider,\
-    CoinCapFeedProvider, CoinMarketCapFeedProvider, ALL_FEED_PROVIDERS
+    CoinCapFeedProvider, CoinMarketCapFeedProvider, BittrexFeedProvider, ALL_FEED_PROVIDERS
 from collections import deque, defaultdict
 from contextlib import suppress
 from concurrent.futures import ThreadPoolExecutor
@@ -39,7 +39,7 @@ log = logging.getLogger(__name__)
 YAHOO_ASSETS = {'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN', 'RUB', 'SEK', 'SGD',
                 'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD'}
 
-OTHER_ASSETS = {'TUSD', 'CASH.USD', 'TCNY', 'CASH.BTC', 'ALTCAP'}
+OTHER_ASSETS = {'TUSD', 'CASH.USD', 'TCNY', 'CASH.BTC', 'ALTCAP', 'STEEM'}
 
 # BIT_ASSETS_INDICES = {'SHENZHEN': 'CNY',
 #                       'SHANGHAI': 'CNY',
@@ -230,6 +230,9 @@ def get_feed_prices():
     altcap = statistics.mean(f.price for f in altcap)
     feeds['ALTCAP'] = altcap
 
+    steem_usd = BittrexFeedProvider().get('STEEM', 'BTC').price * btc_usd
+    feeds['STEEM'] = steem_usd
+
     # 5- update price history for all feeds
     for cur, price in feeds.items():
         price_history[cur].append(price)
@@ -309,6 +312,25 @@ def check_feeds(nodes):
         log.debug('Got feeds: %s %s' % (fmt(feeds), publish_status))
 
         for node in nodes:
+            # TODO: dealt with as an exceptional case for now, should be refactored
+            if node.bts_type() == 'steem':
+                price = statistics.median(price_history['STEEM'])
+                # check whether we need to publish again:
+                # - if published more than 12 hours ago, publish again
+                # - if published price different by more than 3%, publish again
+                if 'last_price' in node.opts:  # make sure we have already published once
+                    if not (datetime.utcnow() - node.opts['last_published'] > timedelta(hours=12) or
+                            (price - node.opts['last_price']) / node.opts['last_price'] >= 0.03):
+                        continue
+                # publish median value of the price, not latest one
+                price_obj = {'base': '{:.3} SBD'.format(price), 'quote': '1.000 STEEM'}
+                log.info('Node %s publishing feed price for steem: %s SBD' % (node.name, price))
+                node.publish_feed(node.name, price_obj, True)
+                node.opts['last_price'] = price
+                node.opts['last_published'] = datetime.utcnow()
+                continue
+
+
             # if an exception occurs during publishing feeds for a delegate (eg: standby delegate),
             # then we should still go on for the other nodes (and not let exceptions propagate)
             try:
@@ -325,7 +347,8 @@ def check_feeds(nodes):
                         median_feeds = {c: statistics.median(price_history[c]) for c in feeds}
                         log.info('Node %s publishing feeds: %s' % (node.name, fmt(median_feeds)))
                         if node.is_graphene_based():
-                            DISABLED_ASSETS = ['RUB', 'SEK']
+                            DISABLED_ASSETS = ['RUB', 'SEK',  # black swan
+                                               'STEEM']       # not on bitshares
 
 
                             def get_price_for_publishing(asset, price):

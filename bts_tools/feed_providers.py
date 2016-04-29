@@ -398,6 +398,22 @@ class CoinMarketCapFeedProvider(FeedProvider):
         return self.feed_price(cur, base, price=price)
 
 
+class BittrexFeedProvider(FeedProvider):
+    NAME = 'Bittrex'
+    AVAILABLE_MARKETS = [('STEEM', 'BTC')]
+
+    @check_online_status
+    @check_market
+    def get(self, cur, base):
+        log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
+        r = requests.get('https://bittrex.com/api/v1.1/public/getmarkethistory?market={}-{}'.format(base, cur),
+                         timeout=self.TIMEOUT).json()
+
+        last = r['result'][0]
+        return self.feed_price(cur, base,
+                               price=last['Price'],
+                               last_updated=datetime.strptime(last['TimeStamp'].split('.')[0], '%Y-%m-%dT%H:%M:%S'))
+
 
 _suffix = 'FeedProvider'
 ALL_FEED_PROVIDERS = {name[:-len(_suffix)].lower(): cls

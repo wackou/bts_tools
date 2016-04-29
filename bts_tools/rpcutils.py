@@ -104,7 +104,7 @@ ALL_SLOTS = {}
 class BTSProxy(object):
     def __init__(self, role, name, client_name, client, bts_type=None,
                  monitoring=None, notification=None, venv_path=None,
-                 witness_id=None, signing_key=None):
+                 witness_id=None, signing_key=None, **kwargs):
         self.type = role
         if bts_type is not None:
             self._bts_type = bts_type
@@ -180,7 +180,7 @@ class BTSProxy(object):
                 # we want to avoid connecting to the client and block because
                 # it is in a stopped state (eg: in gdb after having crashed)
                 if self.is_localhost() and not bts_binary_running(self):
-                    raise RPCError('Connection aborted: BTS binary does not seem to be running')
+                    raise RPCError('Connection aborted: {} binary does not seem to be running'.format(self.bts_type()))
 
                 if self.proxy_host is not None and self.proxy_port is not None:
                     return rpc_call(self.proxy_host, self.proxy_port,
@@ -201,7 +201,7 @@ class BTSProxy(object):
                 # we want to avoid connecting to the client and block because
                 # it is in a stopped state (eg: in gdb after having crashed)
                 if not bts_binary_running(self):
-                    raise RPCError('Connection aborted: BTS binary does not seem to be running')
+                    raise RPCError('Connection aborted: {} binary does not seem to be running'.format(self.bts_type()))
 
                 result = rpc_call('localhost', self.rpc_port,
                                   self.rpc_user, self.rpc_password,
@@ -214,6 +214,10 @@ class BTSProxy(object):
 
         if core.config.get('profile', False):
             self._rpc_call = core.profile(self._rpc_call)
+
+        self.opts = kwargs
+        if self.opts:
+            log.debug('Additional opts for node {} on {}:{} - {}'.format(self.name, self.rpc_host, self.rpc_port, self.opts))
 
         # get a special "smart" cache for slots as it is a very expensive call
         self._slot_cache = make_region().configure('dogpile.cache.memory')
