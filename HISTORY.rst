@@ -6,6 +6,18 @@
 History
 =======
 
+0.4 (2016-05-01)
+----------------
+
+* API CHANGE: complete rework of the configuration system, please delete
+  your old config.yaml file if you have any
+* added full support for Steem, including feed publishing
+* added feed publishing for BTS assets: TUSD, CASH.USD, CASH.BTC, ALTCAP
+* added monitoring plugin that checks on the amount of free disk space
+* fixed missed block notification for Graphene clients
+* logs are now also present as rotating logfiles in the ~/.bts_tools folder
+
+
 0.3.4 (2015-12-21)
 ------------------
 
