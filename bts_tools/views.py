@@ -27,6 +27,8 @@ from . import core, monitor, slogging, backbone
 import bts_tools
 import json
 import requests.exceptions
+import socket
+import threading
 import logging
 
 log = logging.getLogger(__name__)
@@ -451,6 +453,117 @@ def view_backbone_nodes():
                            title='Backbone nodes',
                            headers=headers,
                            data=data, attrs=attrs, order='[[ 1, "desc" ]]')
+
+
+def check_seed_status(seed):
+    host, port = seed.split(':')
+    s = socket.socket()
+    s.settimeout(3)
+    try:
+        s.connect((host, int(port)))
+    except (ConnectionError, socket.timeout):
+        return 'offline'
+    try:
+        # do we receive a hello message?
+        s.recv(256)
+    except socket.timeout:
+        return 'stuck'
+    s.close()
+    return 'online'
+
+
+@bp.route('/network/<chain>/seednodes')
+@clear_rpc_cache
+@catch_error
+@core.profile
+def view_seed_nodes(chain):
+    # TODO: get them from cmdline args and config.ini / config.yaml files
+    if chain == 'bts':
+        seed_nodes = ['faucet.bitshares.org:1776',
+                      'bitshares.openledger.info:1776',
+                      'bts-seed1.abit-more.com:62015',  # abit
+                      'seed.blocktrades.us:1776',
+                      'seed04.bitsharesnodes.com:1776',  # thom
+                      'seed05.bitsharesnodes.com:1776',  # thom
+                      'seed06.bitsharesnodes.com:1776',  # thom
+                      'seed07.bitsharesnodes.com:1776',  # thom
+                      'seed.cubeconnex.com:1777',  # cube
+                      '54.85.252.77:39705',  # lafona
+                      '104.236.144.84:1777',  # puppies
+                      '40.127.190.171:1777',  # betax
+                      '185.25.22.21:1776',  # liondani (greece)
+                      '212.47.249.84:50696',  # iHashFury (France)
+                      '104.168.154.160:50696',  # iHashFury (USA)
+                      '128.199.143.47:2015']  # Harvey
+    elif chain == 'muse':
+        seed_nodes = ['81.89.101.133:1777',
+                      '104.238.191.99:1781',
+                      '120.24.182.36:8091',
+                      '128.199.143.47:2017',
+                      '139.129.54.169:8091',
+                      '139.196.182.71:9091',
+                      '159.203.251.178:1776',
+                      '185.82.203.92:1974',
+                      '192.241.190.227:5197',
+                      '192.241.208.17:5197',
+                      '54.165.143.33:5197',  # official seed node
+                      '45.55.13.98:1776',  # puppies
+                      '81.89.101.133:1777']  # pc
+    elif chain == 'steem':
+        seed_nodes = ['212.117.213.186:2016',
+                      '185.82.203.92:2001',
+                      '52.74.152.79:2001',
+                      '52.63.172.229:2001',
+                      '104.236.82.250:2001',
+                      '104.199.157.70:2001',
+                      'steem.kushed.com:2001',
+                      'steemd.pharesim.me:2001',
+                      'seed.steemnodes.com:2001',
+                      'steemseed.dele-puppy.com:2001',
+                      'seed.steemwitness.com:2001']
+    else:
+        seed_nodes = []
+
+    seed_status = {}
+
+    threads = []
+    for seed in seed_nodes:
+        def set_seed_status(s):
+            log.debug('check seed status {}'.format(s))
+            seed_status[s] = check_seed_status(s)
+            log.debug('finished check seed status {}'.format(s))
+
+        t = threading.Thread(target=set_seed_status, args=(seed,))
+        threads.append(t)
+        t.start()
+
+    log.debug('created {} threads'.format(len(threads)))
+
+    for t in threads:
+        t.join(timeout=5)
+        if t.is_alive():
+            log.debug('thread did timeout')
+        else:
+            log.debug('thread exited normally')
+
+
+    headers = ['seed host', 'status'] * 2
+
+    data = [(seed, '<div class="btn btn-xs btn-success">online</div>')
+            if seed_status.get(seed) == 'online' else
+            (seed, '<div class="btn btn-xs btn-warning">stuck</div>')
+            if seed_status.get(seed) == 'stuck' else
+            (seed, '<div class="btn btn-xs btn-danger">{}</div>'.format(seed_status.get(seed, 'offline')))
+            for seed in seed_nodes]
+
+    attrs = {}
+
+    data, attrs = split_columns(data, attrs)
+
+    return render_template('tableview.html',
+                           title='{} seed nodes'.format(chain),
+                           headers=headers,
+                           data=data, order='[]')
 
 
 @bp.route('/peers')
