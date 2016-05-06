@@ -483,6 +483,7 @@ def view_seed_nodes(chain):
                       'bitshares.openledger.info:1776',
                       'bts-seed1.abit-more.com:62015',  # abit
                       'seed.blocktrades.us:1776',
+                      'seed.bitsharesnodes.com:1776',  # wackou
                       'seed04.bitsharesnodes.com:1776',  # thom
                       'seed05.bitsharesnodes.com:1776',  # thom
                       'seed06.bitsharesnodes.com:1776',  # thom
@@ -520,7 +521,8 @@ def view_seed_nodes(chain):
                       'steemd.pharesim.me:2001',
                       'seed.steemnodes.com:2001',
                       'steemseed.dele-puppy.com:2001',
-                      'seed.steemwitness.com:2001']
+                      'seed.steemwitness.com:2001',
+                      'seed.steemed.net:2001']
     else:
         seed_nodes = []
 
