@@ -73,7 +73,7 @@
 $(function() {
     $("#tableview").DataTable({
         "sorting": {{ (order or '[[ 1, "desc" ], [ 0, "asc" ]]') | safe }},
-        "displayLength": 10
+        "displayLength": {{ nrows or 10 }}
     });
 });
 

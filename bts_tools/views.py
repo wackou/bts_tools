@@ -578,7 +578,7 @@ def view_seed_nodes(chain):
     return render_template('tableview.html',
                            title='{} seed nodes'.format(chain),
                            headers=headers,
-                           data=data, order='[]')
+                           data=data, order='[]', nrows=100)
 
 
 @bp.route('/peers')
