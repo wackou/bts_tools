@@ -523,8 +523,8 @@ def view_seed_nodes(chain):
                       'steemseed.dele-puppy.com:2001',
                       'seed.steemwitness.com:2001',
                       'seed.steemed.net:2001',
-                      'steem-seed1.abit-more.com',
-                      'steem.clawmap.com:2001'
+                      'steem-seed1.abit-more.com:2001',
+                      'steem.clawmap.com:2001',
                       '52.62.24.225:2001',
                       'steem-id.altexplorer.xyz:2001',
                       '213.167.243.223:2001',
