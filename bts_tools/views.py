@@ -455,10 +455,12 @@ def view_backbone_nodes():
                            data=data, attrs=attrs, order='[[ 1, "desc" ]]')
 
 
+SEED_STATUS_TIMEOUT = 5  # in seconds
+
 def check_seed_status(seed):
     host, port = seed.split(':')
     s = socket.socket()
-    s.settimeout(5)
+    s.settimeout(SEED_STATUS_TIMEOUT)
     try:
         s.connect((host, int(port)))
     except (ConnectionError, socket.timeout):
@@ -555,7 +557,7 @@ def view_seed_nodes(chain):
     log.debug('created {} threads'.format(len(threads)))
 
     for t in threads:
-        t.join(timeout=10)
+        t.join(timeout=2*SEED_STATUS_TIMEOUT)
         if t.is_alive():
             log.debug('thread did timeout')
         else:

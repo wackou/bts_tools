@@ -23,7 +23,7 @@ from werkzeug.serving import run_simple
 from werkzeug.wsgi import DispatcherMiddleware
 from bts_tools import core, frontend, init
 from bts_tools.frontend import format_datetime, hide_private_key, add_ip_flag
-from bts_tools.views import check_seed_status, split_columns
+from bts_tools.views import check_seed_status, split_columns, SEED_STATUS_TIMEOUT
 import bts_tools
 import threading
 import logging
@@ -116,7 +116,7 @@ def view_seed_nodes():
     log.debug('created {} threads'.format(len(threads)))
 
     for t in threads:
-        t.join(timeout=5)
+        t.join(timeout=2*SEED_STATUS_TIMEOUT)
         if t.is_alive():
             log.debug('thread did timeout')
         else:
