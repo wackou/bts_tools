@@ -37,7 +37,7 @@ log = logging.getLogger(__name__)
 
 """BitAssets for which we check and publish feeds."""
 YAHOO_ASSETS = {'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN', 'RUB', 'SEK', 'SGD',
-                'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD'}
+                'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD', 'ARS'}
 
 OTHER_ASSETS = {'TUSD', 'CASH.USD', 'TCNY', 'CASH.BTC', 'ALTCAP', 'STEEM'}
 
