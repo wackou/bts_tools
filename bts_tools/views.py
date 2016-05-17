@@ -437,25 +437,6 @@ def view_backbone_nodes():
                            data=data, attrs=attrs, order='[[ 1, "desc" ]]')
 
 
-SEED_STATUS_TIMEOUT = 5  # in seconds
-
-def check_seed_status(seed):
-    host, port = seed.split(':')
-    s = socket.socket()
-    s.settimeout(SEED_STATUS_TIMEOUT)
-    try:
-        s.connect((host, int(port)))
-    except (ConnectionError, socket.timeout):
-        return 'offline'
-    try:
-        # do we receive a hello message?
-        s.recv(256)
-    except socket.timeout:
-        return 'stuck'
-    s.close()
-    return 'online'
-
-
 @bp.route('/network/<chain>/seednodes')
 @clear_rpc_cache
 @catch_error
@@ -463,6 +444,7 @@ def check_seed_status(seed):
 def view_seed_nodes(chain):
     headers = ['seed host', 'status'] * 2
     data = seednodes.get_seeds_view_data(chain)
+    headers *= (len(data[0]) // len(headers))
 
     return render_template('tableview.html',
                            title='{} seed nodes'.format(chain),

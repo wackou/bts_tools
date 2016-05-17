@@ -28,65 +28,65 @@ SEED_STATUS_TIMEOUT = 5  # in seconds
 
 SEED_NODES = {
     'bts': [
-        ('faucet.bitshares.org:1776',      '', ''),
-        ('bitshares.openledger.info:1776', '', 'openledger'),
-        ('bts-seed1.abit-more.com:62015',  '', 'abit'),
-        ('seed.blocktrades.us:1776',       '', 'blocktrades'),
-        ('seed.bitsharesnodes.com:1776',   '', 'wackou'),
-        ('seed04.bitsharesnodes.com:1776', '', 'thom'),
-        ('seed05.bitsharesnodes.com:1776', '', 'thom'),
-        ('seed06.bitsharesnodes.com:1776', '', 'thom'),
-        ('seed07.bitsharesnodes.com:1776', '', 'thom'),
-        ('seed.cubeconnex.com:1777',       '', 'cube'),
-        ('54.85.252.77:39705',             '', 'lafona'),
-        ('104.236.144.84:1777',            '', 'puppies'),
-        ('40.127.190.171:1777',            '', 'betax'),
-        ('185.25.22.21:1776',              '', 'liondani'),
-        ('212.47.249.84:50696',            '', 'ihashfury'),
-        ('104.168.154.160:50696',          '', 'ihashfury'),
-        ('128.199.143.47:2015'             '', 'harvey')
+        ('faucet.bitshares.org:1776',      'dk', ''),
+        ('bitshares.openledger.info:1776', 'de', 'openledger'),
+        ('bts-seed1.abit-more.com:62015',  'cn', 'abit'),
+        ('seed.blocktrades.us:1776',       'us', 'blocktrades'),
+        ('seed.bitsharesnodes.com:1776',   'nl', 'wackou'),
+        ('seed04.bitsharesnodes.com:1776', 'au', 'thom'),
+        ('seed05.bitsharesnodes.com:1776', 'de', 'thom'),
+        ('seed06.bitsharesnodes.com:1776', 'ca', 'thom'),
+        ('seed07.bitsharesnodes.com:1776', 'sg', 'thom'),
+        ('seed.cubeconnex.com:1777',       'us', 'cube'),
+        ('54.85.252.77:39705',             'us', 'lafona'),
+        ('104.236.144.84:1777',            'us', 'puppies'),
+        ('40.127.190.171:1777',            'ie', 'betax'),
+        ('185.25.22.21:1776',              'gr', 'liondani'),
+        ('212.47.249.84:50696',            'fr', 'ihashfury'),
+        ('104.168.154.160:50696',          'us', 'ihashfury'),
+        ('128.199.143.47:2015',            'sg', 'harvey')
     ],
     'muse': [
-        ('81.89.101.133:1777',   '', ''),
-        ('104.238.191.99:1781',  '', ''),
-        ('120.24.182.36:8091',   '', ''),
-        ('128.199.143.47:2017',  '', ''),
-        ('139.129.54.169:8091',  '', ''),
-        ('139.196.182.71:9091',  '', ''),
-        ('159.203.251.178:1776', '', ''),
-        ('185.82.203.92:1974',   '', ''),
-        ('192.241.190.227:5197', '', ''),
-        ('192.241.208.17:5197',  '', ''),
-        ('54.165.143.33:5197',   '', 'official seed node'),
-        ('45.55.13.98:1776',     '', 'puppies'),
-        ('81.89.101.133:1777'    '', 'pc')
+        ('81.89.101.133:1777',             'de', ''),
+        ('104.238.191.99:1781',            'fr', ''),
+        ('120.24.182.36:8091',             'cn', ''),
+        ('128.199.143.47:2017',            'sg', ''),
+        ('139.129.54.169:8091',            'cn', ''),
+        ('139.196.182.71:9091',            'cn', ''),
+        ('159.203.251.178:1776',           'us', ''),
+        ('185.82.203.92:1974',             'nl', ''),
+        ('192.241.190.227:5197',           'us', ''),
+        ('192.241.208.17:5197',            'us', ''),
+        ('54.165.143.33:5197',             'us', 'official seed node'),
+        ('45.55.13.98:1776',               'us', 'puppies'),
+        ('81.89.101.133:1777',             'de', 'pc')
     ],
     'steem': [
-        ('212.117.213.186:2016',           '', 'liondani'),
-        ('185.82.203.92:2001',             '', ''),
-        ('52.74.152.79:2001',              '', 'smooth'),
-        ('52.63.172.229:2001',             '', ''),
-        ('104.236.82.250:2001',            '', ''),
-        ('104.199.157.70:2001',            '', ''),
-        ('steem.kushed.com:2001',          '', 'kushed'),
-        ('steemd.pharesim.me:2001',        '', 'pharesim'),
-        ('seed.steemnodes.com:2001',       '', 'wackou'),
-        ('steemseed.dele-puppy.com:2001',  '', 'puppies'),
-        ('seed.steemwitness.com:2001',     '', ''),
-        ('seed.steemed.net:2001',          '', ''),
-        ('steem-seed1.abit-more.com:2001', '', 'abit'),
-        ('steem.clawmap.com:2001',         '', ''),
-        ('52.62.24.225:2001',              '', ''),
-        ('steem-id.altexplorer.xyz:2001',  '', ''),
-        ('213.167.243.223:2001',           '', ''),
-        ('162.213.199.171:34191',          '', ''),
-        ('45.55.217.111:12150',            '', ''),
-        ('212.47.249.84:40696',            '', ''),
-        ('52.4.250.181:39705',             '', ''),
-        ('81.89.101.133:2001',             '', ''),
-        ('109.74.206.93:2001',             '', ''),
-        ('192.99.4.226:2001',              '', ''),
-        ('46.252.27.1:1337',               '', '')
+        ('212.117.213.186:2016',           'ch', 'liondani'),
+        ('185.82.203.92:2001',             'nl', ''),
+        ('52.74.152.79:2001',              'sg', 'smooth'),
+        ('52.63.172.229:2001',             'au', ''),
+        ('104.236.82.250:2001',            'us', ''),
+        ('104.199.157.70:2001',            'us', ''),
+        ('steem.kushed.com:2001',          'us', 'kushed'),
+        ('steemd.pharesim.me:2001',        'de', 'pharesim'),
+        ('seed.steemnodes.com:2001',       'nl', 'wackou'),
+        ('steemseed.dele-puppy.com:2001',  'us', 'puppies'),
+        ('seed.steemwitness.com:2001',     'us', ''),
+        ('seed.steemed.net:2001',          'us', ''),
+        ('steem-seed1.abit-more.com:2001', 'au', 'abit'),
+        ('steem.clawmap.com:2001',         'gb', ''),
+        ('52.62.24.225:2001',              'au', ''),
+        ('steem-id.altexplorer.xyz:2001',  'id', ''),
+        ('213.167.243.223:2001',           'fr', ''),
+        ('162.213.199.171:34191',          'us', ''),
+        ('45.55.217.111:12150',            'us', ''),
+        ('212.47.249.84:40696',            'fr', ''),
+        ('52.4.250.181:39705',             'us', ''),
+        ('81.89.101.133:2001',             'de', ''),
+        ('109.74.206.93:2001',             'gb', ''),
+        ('192.99.4.226:2001',              'ca', ''),
+        ('46.252.27.1:1337',               'de', '')
     ]
 }
 
@@ -111,7 +111,7 @@ def check_seed_status(seed):
 def check_all_seeds(chain):
     seed_nodes = [s[0] for s in SEED_NODES[chain]]
     seed_status = {}
-    threads = []
+    threads = {}
     for seed in seed_nodes:
         def set_seed_status(s):
             log.debug('check seed status {}'.format(s))
@@ -120,17 +120,17 @@ def check_all_seeds(chain):
 
 
         t = threading.Thread(target=set_seed_status, args=(seed,))
-        threads.append(t)
+        threads[seed] = t
         t.start()
 
     log.debug('created {} threads'.format(len(threads)))
 
-    for t in threads:
+    for seed, t in threads.items():
         t.join(timeout=2 * SEED_STATUS_TIMEOUT)
         if t.is_alive():
-            log.debug('thread did timeout')
+            log.debug('thread for {} did timeout'.format(seed))
         else:
-            log.debug('thread exited normally')
+            log.debug('thread for {} exited normally'.format(seed))
 
     return seed_status
 
@@ -138,36 +138,43 @@ def check_all_seeds(chain):
 def split_columns(items, attrs):
     # split into 2 columns, more readable on a laptop
     n = len(items)
+    ncols = len(items[0]) if items else 0
     if n % 2 == 1:
-        items.append(('', ''))
+        items.append(('',)*ncols)
         n += 1
     offset = int(n/2)
 
-    items = [(a,b,c,d) for (a,b),(c,d) in zip(items[:offset],
+    items = [left+right for left, right in zip(items[:offset],
                                               items[offset:])]
     for a, l in attrs.items():
         for i, v in enumerate(l):
             l[i] = ((l[i][0], l[i][1])
                     if l[i][0] < offset
-                    else (l[i][0] - offset, l[i][1] + 2))
+                    else (l[i][0] - offset, l[i][1] + ncols))
 
     return items, attrs
 
 
 def get_seeds_view_data(chain):
-    seed_nodes = [s[0] for s in SEED_NODES[chain]]
+    seed_nodes = [(s[0], s[1], s[2]) for s in SEED_NODES[chain]]
     seed_status = check_all_seeds(chain)
 
-    data = [(seed, '<div class="btn btn-xs btn-success">online</div>')
+    success = lambda s: '<div class="btn btn-xs btn-success">{}</div>'.format(s)
+    warning = lambda s: '<div class="btn btn-xs btn-warning">{}</div>'.format(s)
+    error = lambda s: '<div class="btn btn-xs btn-danger">{}</div>'.format(s)
+
+    get_flag = lambda country: '<i class="famfamfam-flag-%s" style="margin:0 8px 0 0;"></i>' % country
+    add_flag = lambda country, ip: '<span>%s %s</span>' % (get_flag(country), ip)
+
+    data = [(add_flag(location, seed), success('online'), provider)
             if seed_status.get(seed) == 'online' else
-            (seed, '<div class="btn btn-xs btn-warning">stuck</div>')
+            (add_flag(location, seed), warning('stuck'), provider)
             if seed_status.get(seed) == 'stuck' else
-            (seed, '<div class="btn btn-xs btn-danger">{}</div>'.format(seed_status.get(seed, 'offline')))
-            for seed in seed_nodes]
+            (add_flag(location, seed), error(seed_status.get(seed, 'offline')), provider)
+            for seed, location, provider in seed_nodes]
 
 
-    attrs = {}
-
-    data, attrs = split_columns(data, attrs)
+    #attrs = {}
+    #data, attrs = split_columns(data, attrs)
 
     return data

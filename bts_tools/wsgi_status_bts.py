@@ -36,8 +36,9 @@ chain = 'bts'
 
 @bp.route('/')
 def view_seed_nodes():
-    headers = ['seed host', 'status'] * 2
+    headers = ['seed host', 'status', 'provided by']
     data = seednodes.get_seeds_view_data(chain)
+    headers *= (len(data[0]) // len(headers))
 
     return render_template('tableview_naked.html',
                            title='{} seed nodes'.format(chain),

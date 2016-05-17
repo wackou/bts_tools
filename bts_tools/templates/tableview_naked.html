@@ -109,6 +109,7 @@
 
 $(function() {
     $("#tableview").DataTable({
+        "ordering": {{ 'true' if sortable else 'false' }},
         "sorting": {{ (order or '[[ 1, "desc" ], [ 0, "asc" ]]') | safe }},
         "displayLength": {{ nrows or 10 }}
     });
