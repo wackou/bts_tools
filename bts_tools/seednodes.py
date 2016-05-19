@@ -63,7 +63,7 @@ SEED_NODES = {
     ],
     'steem': [
         ('212.117.213.186:2016',           'ch', 'liondani'),
-        ('185.82.203.92:2001',             'nl', ''),
+        ('185.82.203.92:2001',             'nl', 'riverhead'),
         ('52.74.152.79:2001',              'sg', 'smooth'),
         ('52.63.172.229:2001',             'au', 'rossco99'),
         ('104.236.82.250:2001',            'us', 'svk'),
@@ -72,7 +72,7 @@ SEED_NODES = {
         ('steemd.pharesim.me:2001',        'de', 'pharesim'),
         ('seed.steemnodes.com:2001',       'nl', 'wackou'),
         ('steemseed.dele-puppy.com:2001',  'us', 'puppies'),
-        ('seed.steemwitness.com:2001',     'us', ''),
+        ('seed.steemwitness.com:2001',     'us', 'nextgencrypto'),
         ('seed.steemed.net:2001',          'us', 'steemed'),
         ('steem-seed1.abit-more.com:2001', 'au', 'abit'),
         ('steem.clawmap.com:2001',         'gb', 'steempty'),
@@ -82,7 +82,7 @@ SEED_NODES = {
         ('162.213.199.171:34191',          'us', ''),
         ('45.55.217.111:12150',            'us', ''),
         ('212.47.249.84:40696',            'fr', ''),
-        ('52.4.250.181:39705',             'us', ''),
+        ('52.4.250.181:39705',             'us', 'lafona'),
         ('81.89.101.133:2001',             'de', ''),
         ('192.99.4.226:2001',              'ca', ''),
         ('46.252.27.1:1337',               'de', 'jabbasteem')
