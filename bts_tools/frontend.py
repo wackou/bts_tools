@@ -19,7 +19,7 @@
 #
 
 from flask import render_template, Flask
-from bts_tools import views
+from bts_tools import views, core
 from bts_tools import rpcutils as rpc
 from geolite2 import geolite2
 from functools import lru_cache
@@ -112,6 +112,9 @@ def create_app(settings_override=None):
                                  rpc=bts_tools.rpcutils,
                                  monitor=bts_tools.monitor,
                                  process=bts_tools.process)
+
+
+    core.load_db()
 
     for (host, port), nodes in rpc.graphene_clients():
         # launch only 1 monitoring thread for each running instance of the client

@@ -19,7 +19,7 @@
 #
 from datetime import datetime
 from os.path import join, dirname, expanduser, exists, abspath
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from subprocess import Popen, PIPE
 from functools import wraps
 from contextlib import suppress
@@ -43,6 +43,7 @@ HERE = abspath(dirname(__file__))
 BTS_TOOLS_HOMEDIR = '~/.bts_tools'
 BTS_TOOLS_HOMEDIR = expanduser(BTS_TOOLS_HOMEDIR)
 BTS_TOOLS_CONFIG_FILE = join(BTS_TOOLS_HOMEDIR, 'config.yaml')
+BTS_TOOLS_DB_FILE = join(BTS_TOOLS_HOMEDIR, 'db.yaml')
 
 
 class AttributeDict(dict):
@@ -52,6 +53,7 @@ class AttributeDict(dict):
 
 
 config = None
+db = {}
 
 
 def append_unique(l1, l2):
@@ -101,6 +103,25 @@ def trace(f):
             raise e
         return result
     return wrapper
+
+
+def save_db():
+    global db
+    log.info('Saving database file {}'.format(BTS_TOOLS_DB_FILE))
+    with open(BTS_TOOLS_DB_FILE, 'w') as f:
+        yaml.dump(db, f)
+
+def load_db():
+    global db
+    log.info('Loading database file {}'.format(BTS_TOOLS_DB_FILE))
+    try:
+        with open(BTS_TOOLS_DB_FILE) as f:
+            db = yaml.load(f)
+    except Exception:
+        db = defaultdict(dict)
+
+    import atexit
+    atexit.register(save_db)
 
 
 def load_config(loglevels=None):
