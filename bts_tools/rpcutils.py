@@ -101,7 +101,7 @@ def rpc_call(host, port, user, password,
 ALL_SLOTS = {}
 
 
-class BTSProxy(object):
+class GrapheneClient(object):
     def __init__(self, role, name, client_name, client, bts_type=None,
                  monitoring=None, notification=None, venv_path=None,
                  witness_id=None, signing_key=None, **kwargs):
@@ -167,8 +167,8 @@ class BTSProxy(object):
         self.rpc_user = self.wallet_user or client.get('rpc_user') or rpc.get('rpc_user') or ''
         self.rpc_password = self.wallet_password or client.get('rpc_password') or rpc.get('rpc_password') or ''
         self.rpc_host = self.wallet_host or client.get('rpc_host') or self.proxy_host or 'localhost'
-        self.rpc_cache_key = (self.rpc_host, self.wallet_port)
-        self.ws_rpc_cache_key = (self.witness_host, self.witness_port)
+        self.rpc_id = (self.rpc_host, self.wallet_port)
+        self.ws_rpc_id = (self.witness_host, self.witness_port)
         self.venv_path = venv_path
         self.witness_id = witness_id
         self.witness_signing_key = signing_key or self.witness_signing_key
@@ -230,7 +230,7 @@ class BTSProxy(object):
         return '{} ({} / {}:{})'.format(self.name, self.bts_type(), self.rpc_host, self.rpc_port)
 
     def __repr__(self):
-        return 'BTSProxy(%s, %s)' % (self.client_name, self.name)
+        return 'GrapheneClient(%s, %s)' % (self.client_name, self.name)
 
     def __getattr__(self, funcname):
         if funcname.startswith('_'):
@@ -240,7 +240,7 @@ class BTSProxy(object):
         return call
 
     def rpc_call(self, funcname, *args, cached=True):
-        log.debug(('RPC call @ %s: %s(%s)' % (self.rpc_cache_key, funcname, ', '.join(repr(arg) for arg in args))
+        log.debug(('RPC call @ %s: %s(%s)' % (self.rpc_id, funcname, ', '.join(repr(arg) for arg in args))
                   + (' (cached = False)' if not cached else '')))
         args = tuple(hashabledict(arg) if isinstance(arg, dict) else
                      tuple(arg) if isinstance(arg, list) else
@@ -248,8 +248,8 @@ class BTSProxy(object):
                      for arg in args)
 
         if cached and funcname not in NON_CACHEABLE_METHODS:
-            if (funcname, args) in _rpc_cache[self.rpc_cache_key]:
-                result = _rpc_cache[self.rpc_cache_key][(funcname, args)]
+            if (funcname, args) in _rpc_cache[self.rpc_id]:
+                result = _rpc_cache[self.rpc_id][(funcname, args)]
                 if isinstance(result, Exception):
                     log.debug('  using cached exception %s' % result.__class__)
                     raise result
@@ -262,25 +262,25 @@ class BTSProxy(object):
         except Exception as e:
             # also cache when exceptions are raised
             if funcname not in NON_CACHEABLE_METHODS:
-                _rpc_cache[self.rpc_cache_key][(funcname, args)] = e
+                _rpc_cache[self.rpc_id][(funcname, args)] = e
                 log.debug('  added exception %s in cache: %s' % (e.__class__, str(e)))
             raise
 
         if funcname not in NON_CACHEABLE_METHODS:
-            _rpc_cache[self.rpc_cache_key][(funcname, args)] = result
+            _rpc_cache[self.rpc_id][(funcname, args)] = result
             log.debug('  added result in cache')
 
         return copy.copy(result)
 
     def clear_rpc_cache(self):
         try:
-            log.debug('Clearing RPC cache for host: %s:%d' % self.rpc_cache_key)
-            del _rpc_cache[self.rpc_cache_key]
+            log.debug('Clearing RPC cache for host: %s:%d' % self.rpc_id)
+            del _rpc_cache[self.rpc_id]
         except KeyError:
             pass
 
     def ws_rpc_call(self, api, method, *args):
-        log.debug('WebSocket RPC call @ %s: %s::%s(%s)' % (self.ws_rpc_cache_key,
+        log.debug('WebSocket RPC call @ %s: %s::%s(%s)' % (self.ws_rpc_id,
                                                  graphene.api_name(api),
                                                  method,
                                                  ', '.join(repr(arg) for arg in args)))
@@ -673,10 +673,10 @@ def load_graphene_clients():
     nodes = []
     for client_name, client in core.config['clients'].items():
         for role in client.get('roles', []):
-            nodes.append(BTSProxy(client_name=client_name,
-                                  client=client,
-                                  bts_type=client.get('bts_type'),
-                                  **role))
+            nodes.append(GrapheneClient(client_name=client_name,
+                                        client=client,
+                                        bts_type=client.get('bts_type'),
+                                        **role))
 
     try:
         main_node = nodes[0]
@@ -688,9 +688,9 @@ def graphene_clients():
     result = OrderedDict()
     for n in nodes:
         try:
-            result[n.rpc_cache_key].append(n)
+            result[n.rpc_id].append(n)
         except KeyError:
-            result[n.rpc_cache_key] = [n]
+            result[n.rpc_id] = [n]
     return list(result.items())
 
 

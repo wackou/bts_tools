@@ -44,6 +44,13 @@ BTS_TOOLS_HOMEDIR = '~/.bts_tools'
 BTS_TOOLS_HOMEDIR = expanduser(BTS_TOOLS_HOMEDIR)
 BTS_TOOLS_CONFIG_FILE = join(BTS_TOOLS_HOMEDIR, 'config.yaml')
 
+
+class AttributeDict(dict):
+    def __init__(self, *args, **kwargs):
+        super(AttributeDict, self).__init__(*args, **kwargs)
+        self.__dict__ = self
+
+
 config = None
 
 
@@ -234,8 +241,8 @@ def load_config(loglevels=None):
 
 def is_graphene_based(n):
     # TODO: this function really can't get any uglier... Would benefit from a facelift
-    from .rpcutils import BTSProxy
-    if isinstance(n, BTSProxy):
+    from .rpcutils import GrapheneClient
+    if isinstance(n, GrapheneClient):
         return is_graphene_based(n.bts_type())
     elif 'type' in n and 'client' in n:
         # if we're a node desc, get it from the run_env

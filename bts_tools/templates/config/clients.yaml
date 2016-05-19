@@ -8,20 +8,11 @@ clients:
     bts:
         type: bts
         data_dir: ~/.BitShares2
-        p2p_port: 1779
+        p2p_port: 1776
         witness_host: localhost
         witness_port: 8090
         wallet_host: localhost
         wallet_port: 8093
-
-    seed:
-        type: bts
-        data_dir: ~/.BitShares2_seed
-        p2p_port: 1776
-        witness_host: localhost
-        witness_port: 8190
-        wallet_host: localhost
-        wallet_port: 8193
 
     backbone:
         type: bts

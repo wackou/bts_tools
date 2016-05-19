@@ -28,7 +28,7 @@ from .core import (platform, run, get_data_dir, get_bin_name, get_gui_bin_name,
                    hash_salt_password)
 from .privatekey import PrivateKey
 from . import core, init
-from .rpcutils import rpc_call, BTSProxy
+from .rpcutils import rpc_call, GrapheneClient
 import argparse
 import os
 import sys
@@ -394,9 +394,10 @@ Examples:
             run_args += client.get('run_args', [])
 
         elif args.command == 'run_cli':
+            witness_host = client.get('witness_host', '127.0.0.1')
             witness_port = client.get('witness_port')
             if witness_port:
-                run_args += ['--server-rpc-endpoint', 'ws://127.0.0.1:{}'.format(witness_port)]
+                run_args += ['--server-rpc-endpoint', 'ws://{}:{}'.format(witness_host, witness_port)]
 
             run_args += ['--server-rpc-user', client['witness_user']]
             run_args += ['--server-rpc-password', client['witness_password'].replace('"', '\\"')]
@@ -528,7 +529,7 @@ slate:
         payee = slate_config.get('payee', delegate)
         slate = slate_config['slate']
 
-        client = BTSProxy(type='delegate', name=delegate, client=args.environment)
+        client = GrapheneClient(type='delegate', name=delegate, client=args.environment)
 
         if client.is_locked():
             log.error('Cannot publish slate: wallet locked...')

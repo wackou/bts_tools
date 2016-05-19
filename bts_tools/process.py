@@ -23,7 +23,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
-# TODO: should move all these functions inside of BTSProxy
+# TODO: should move all these functions inside of GrapheneClient
 
 def bts_process(node):
     if not node.is_witness_localhost():

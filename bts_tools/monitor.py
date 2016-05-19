@@ -22,6 +22,7 @@ from collections import deque
 from itertools import chain, islice
 from contextlib import suppress
 from .feeds import check_feeds
+from .core import AttributeDict
 from . import core, graphene
 import time
 import threading
@@ -32,12 +33,6 @@ log = logging.getLogger(__name__)
 # needs to be accessible at a module level (at least for now) so views can access it easily
 stats_frames = {}  # dict of {rpc_key: stats_list}
 global_stats_frames = []
-
-
-class AttributeDict(dict):
-    def __init__(self, *args, **kwargs):
-        super(AttributeDict, self).__init__(*args, **kwargs)
-        self.__dict__ = self
 
 
 class StableStateMonitor(object):
@@ -141,7 +136,7 @@ def monitoring_thread(*nodes):
         contexts[node.name] = ctx
 
     # make the stats values available to the outside
-    stats_frames[client_node.rpc_cache_key] = global_ctx.stats
+    stats_frames[client_node.rpc_id] = global_ctx.stats
     if monitoring.cpu_ram_usage.cpu_total_ctx == global_ctx:
         global_stats_frames = global_ctx.global_stats
 

@@ -65,6 +65,13 @@ On Debian-derived systems, install them with::
     # apt-get install build-essential git cmake libssl-dev libdb++-dev libncurses5-dev \
                       libreadline-dev libffi-dev libboost-all-dev
 
+For Steem, you will also need the qt5 libs:
+
+    # apt-get install build-essential git cmake libssl-dev libdb++-dev libncurses5-dev \
+                      libreadline-dev libffi-dev libboost-all-dev qt5-default qttools5-dev-tools
+
+
+
 Mac OSX
 ~~~~~~~
 

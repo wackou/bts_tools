@@ -41,7 +41,7 @@ def is_valid_node(node):
 
 def monitor(node, ctx, cfg):
     # published_version needs to be client specific
-    published_version = published_version_region[node.rpc_cache_key]
+    published_version = published_version_region[node.rpc_id]
 
     if ctx.online_state.just_changed():
         published_version.invalidate()

@@ -21,7 +21,7 @@
 from datetime import datetime, timedelta
 from os.path import join
 from .. import core
-from .. rpcutils import BTSProxy
+from .. rpcutils import GrapheneClient
 import dateutil
 from dateutil import parser
 import logging
