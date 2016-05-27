@@ -323,7 +323,7 @@ def check_feeds(nodes):
                 # - if published price different by more than 3%, publish again
                 if 'last_price' in node.opts:  # make sure we have already published once
                     if not (datetime.utcnow() - node.opts['last_published'] > timedelta(hours=12) or
-                            (price - node.opts['last_price']) / node.opts['last_price'] >= 0.03):
+                            abs(price - node.opts['last_price']) / node.opts['last_price'] >= 0.03):
                         continue
                 # publish median value of the price, not latest one
                 price_obj = {'base': '{:.3} SBD'.format(price), 'quote': '1.000 STEEM'}
