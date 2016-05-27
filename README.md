@@ -1,21 +1,27 @@
 BitShares delegate tools
 ------------------------
 
-there are 2 tools currently provided:
- - command line util allowing to quickly build and run the BitShares client
- - web app allowing to monitor a running instance of the client
-   and send an email or push notification on failure
-   
-If you like these tools, please vote for [my delegate](http://digitalgaia.io/btstools.html) to
-support further development, and feel free to visit my page for other delegate
-proposals at [digitalgaia.io](http://digitalgaia.io). Thanks!
+The BTS Tools will help you build, run and monitor any graphene-based client
+(currently BitShares, Steem, Muse). There is still support for older clients
+(DACPlay, DPoS-PTS), however this functionality is deprecated and will be removed
+in a future version.
+
+There are 2 tools currently provided:
+
+- command line utility allowing to quickly build and run any graphene-based client
+- web application allowing to monitor a running instance of the client and send
+  an email or push notification on failure
+
+If you like these tools, please vote for
+[witness wackou](https://steemit.com/witness-category/@wackou/wackou-witness-post)
+on the Steem, BitShares and Muse networks. Thanks!
 
 
 Documentation
 =============
 
 The main documentation for the tools, as well as a tutorial, can be found
-on [ReadTheDocs](http://bts-tools.readthedocs.org/).
+on [ReadTheDocs](http://bts-tools.readthedocs.io/).
 
 
 Command-line client
@@ -86,15 +92,6 @@ Do not forget to edit the ``~/.bts_tools/config.yaml`` file to configure it to s
 
 ### Screenshots ###
 
-Monitoring the status of your running bts client binary
-
-![Status screenshot](bts_tools_screenshot.png)
-
-You can host multiple delegates accounts in the same wallet, and check feed info
-
-![Info screenshot](bts_tools_screenshot2.png)
-
-Monitoring multiple instances (ie: running on different hosts) at the same time,
-to have an overview while running backup nodes and re-compiling your main node.
-
-![Info screenshot](bts_tools_screenshot3.png)
+You can see a live instance of the bts tools monitoring the state of the
+seed nodes I am making available for the BitShares, Muse and Steem networks
+here: http://seed.steemnodes.com

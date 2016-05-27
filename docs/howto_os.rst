@@ -5,12 +5,9 @@ Setup the base OS and build environment
 Linux
 -----
 
-We will do the install on Debian Jessie (testing, currently unreleased but
-frozen, meaning the packages only accept bugfixes and so will be very similar
-to the ones in the final release).
-
-It should be very similar on Ubuntu, however some packages might have slightly
-different names. Adapting it for Ubuntu is left as an exercise to the reader.
+We will do the install on Debian Jessie. It should be very similar on Ubuntu,
+however some packages might have slightly different names. Adapting it for Ubuntu
+is left as an exercise to the reader.
 
 Note about the text editor: there are countless wars about which editor is the
 best, but ultimately it is up to you to pick the one you like best, so no details
@@ -38,8 +35,8 @@ tools and for compiling the BitShares client (still as root)::
                       python3-dev python3-pip libyaml-dev libboost-all-dev ntp
 
 Note that we also install the ``ntp`` client here, this is needed to keep your
-server's time correctly adjusted, which is a requirement for a delegate wanting
-to sign blocks (given that the time slot for a block is 10 seconds, you need
+server's time correctly adjusted, which is a requirement for a witness wanting
+to sign blocks (given that the time slot for a block is 3 seconds, you need
 to be pretty much spot on when it's your turn to sign a block)
 
 Mac OSX

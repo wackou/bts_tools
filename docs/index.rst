@@ -6,16 +6,25 @@
 Welcome to the BTS Tools documentation!
 =======================================
 
+The BTS Tools will help you build, run and monitor any graphene-based client
+(currently BitShares, Steem, Muse). There is still support for older clients
+(DACPlay, DPoS-PTS), however this functionality is deprecated and will be removed
+in a future version.
+
+.. note:: these tools were originally developed for the BitShares network, and
+          later expanded to support any graphene-based network. This means that everywhere
+          you will see BitShares mentioned in this documentation, it should be understood
+          as BitShares, Steem or Muse. Similarly, ``bts`` can be interchanged with ``steem``
+          and ``muse``.
+
 There are 2 tools currently provided:
 
-- command line util allowing to quickly build and run the BitShares client
-- web app allowing to monitor a running instance of the client and send
+- command line utility allowing to quickly build and run any graphene-based client
+- web application allowing to monitor a running instance of the client and send
   an email or push notification on failure
 
-If you like these tools, please vote for `my delegate`_
-(web page: `http://digitalgaia.io/btstools.html <http://digitalgaia.io/btstools.html>`_)
-to support further development, and feel free to visit my page for other
-delegate proposals at `digitalgaia.io <http://digitalgaia.io>`_. Thanks!
+If you like these tools, please vote for `witness wackou`_ on the Steem, BitShares
+and Muse networks. Thanks!
 
 To get started, just type the following in a shell::
 
@@ -44,7 +53,8 @@ Documentation contents
    howto
    config_format
    virtualenv
+   tips_and_tricks
 
 
 
-.. _my delegate: bts://delegate.verbaltech/approve
+.. _witness wackou: https://steemit.com/witness-category/@wackou/wackou-witness-post

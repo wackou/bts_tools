@@ -1,22 +1,31 @@
 BitShares delegate tools
 ========================
 
+The BTS Tools will help you build, run and monitor any graphene-based client
+(currently BitShares, Steem, Muse). There is still support for older clients
+(DACPlay, DPoS-PTS), however this functionality is deprecated and will be removed
+in a future version.
+
+.. note:: these tools were originally developed for the BitShares network, and
+          later expanded to support any graphene-based network. This means that everywhere
+          you will see BitShares mentioned in this documentation, it should be understood
+          as BitShares, Steem or Muse. Similarly, ``bts`` can be interchanged with ``steem``
+          and ``muse``.
+
 There are 2 tools currently provided:
 
-- command line util allowing to quickly build and run the BitShares client
-- web app allowing to monitor a running instance of the client and send
+- command line utility allowing to quickly build and run any graphene-based client
+- web application allowing to monitor a running instance of the client and send
   an email or push notification on failure
 
-If you like these tools, please vote for `my
-delegate <http://digitalgaia.io/btstools.html>`_ to support further
-development, and feel free to visit my page for other delegate proposals
-at `digitalgaia.io <http://digitalgaia.io>`_. Thanks!
+If you like these tools, please vote for `witness wackou`_ on the Steem, BitShares
+and Muse networks. Thanks!
 
 Documentation
 -------------
 
 The main documentation for the tools, as well as a tutorial, can be found
-on `ReadTheDocs <http://bts-tools.readthedocs.org/>`_.
+on `ReadTheDocs <https://bts-tools.readthedocs.io/>`_.
 
 Command-line client
 -------------------
@@ -91,21 +100,9 @@ it to suit your needs.
 Screenshots
 ~~~~~~~~~~~
 
-Monitoring the status of your running bts client binary
+You can see a live instance of the bts tools monitoring the state of the
+seed nodes I am making available for the BitShares, Muse and Steem networks
+here: http://seed.steemnodes.com
 
-.. figure:: https://github.com/wackou/bts_tools/raw/master/bts_tools_screenshot.png
-   :width: 800
-   :alt: Status screenshot
 
-You can host multiple delegates accounts in the same wallet, and check feed info
-
-.. figure:: https://github.com/wackou/bts_tools/raw/master/bts_tools_screenshot2.png
-   :width: 800
-   :alt: Info screenshot
-
-Monitoring multiple instances (ie: running on different hosts) at the same time,
-to have an overview while running backup nodes and re-compiling your main node.
-
-.. figure:: https://github.com/wackou/bts_tools/raw/master/bts_tools_screenshot3.png
-   :width: 800
-   :alt: Info screenshot
+.. _witness wackou: https://steemit.com/witness-category/@wackou/wackou-witness-post
