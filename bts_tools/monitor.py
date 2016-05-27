@@ -126,14 +126,24 @@ def monitoring_thread(*nodes):
         with suppress(AttributeError):
             getattr(monitoring, plugin_name).init_ctx(client_node, global_ctx, get_config(plugin_name))
 
+    # note: we can use node.name as a key here, as they are all from a same client. However
+    #       it is to be noted that 2 nodes with the same name (eg: witness monitoring and
+    #       feed publisher) will share the same context
     contexts = {}
     for node in nodes:
-        ctx = AttributeDict()
+        ctx = contexts.get(node.name, AttributeDict())
         for plugin_name in NODE_PLUGINS:
             with suppress(AttributeError):
                 getattr(monitoring, plugin_name).init_ctx(node, ctx, get_config(plugin_name))
 
         contexts[node.name] = ctx
+
+    # reindex the db if any plugin notified us to do so
+    static_values = core.db[client_node.rpc_id].get('static', {})
+    if static_values.get('need_reindex'):
+        static_values['need_reindex'] = False
+        core.db[client_node.rpc_id] = {'static': static_values}
+    monitoring.indexing.init_ctx(client_node, global_ctx, get_config(plugin_name))
 
     # make the stats values available to the outside
     stats_frames[client_node.rpc_id] = global_ctx.stats
@@ -154,6 +164,9 @@ def monitoring_thread(*nodes):
                 monitoring.cpu_ram_usage.monitor(client_node, global_ctx, get_config('cpu_ram_usage'))
                 continue
 
+            # start by indexing new blocks for given client
+            monitoring.indexing.monitor(client_node, global_ctx, get_config(plugin_name))
+
             # monitor at a client level
             global_ctx.info = client_node.info()
             for plugin_name in CLIENT_PLUGINS:
@@ -166,7 +179,7 @@ def monitoring_thread(*nodes):
                         log.error('An exception happened in monitoring plugin: %s' % plugin_name)
                         log.exception(e)
 
-            # monitor each node individually
+            # monitor each node/role individually
             for node in nodes:
                 ctx = contexts[node.name]
                 ctx.info = global_ctx.info

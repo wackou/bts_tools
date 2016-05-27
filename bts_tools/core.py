@@ -54,6 +54,7 @@ class AttributeDict(dict):
 
 config = None
 db = {}
+DB_VERSION = 1
 
 
 def append_unique(l1, l2):
@@ -117,8 +118,12 @@ def load_db():
     try:
         with open(BTS_TOOLS_DB_FILE) as f:
             db = yaml.load(f)
+        if db['version'] != DB_VERSION:
+            log.info('Database version upgrade, need to reindex...')
+            raise ValueError('need to reindex')
     except Exception:
         db = defaultdict(dict)
+        db['version'] = DB_VERSION
 
     import atexit
     atexit.register(save_db)

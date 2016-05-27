@@ -21,9 +21,7 @@
 from ..notification import send_notification
 from ..monitor import StableStateMonitor
 from .. import core
-from os.path import expanduser
-from collections import defaultdict
-import json
+from datetime import datetime
 import logging
 
 log = logging.getLogger(__name__)
@@ -31,18 +29,20 @@ log = logging.getLogger(__name__)
 
 def init_ctx(node, ctx, cfg):
     if node.is_graphene_based():
-        ctx.total_missed = None
         db = core.db[node.rpc_id]
+        if node.name not in db.setdefault('static', {}).setdefault('monitor_witnesses', []):
+            log.debug('Adding witness {} to monitor list for {}'.format(node.name, node.rpc_id))
+            db['static']['monitor_witnesses'].append(node.name)
+            db['static']['need_reindex'] = True
 
-        db.setdefault('last_block', 1)
-        db.setdefault('monitor_witnesses', [])
-        if node.name not in db['monitor_witnesses']:
-            db['monitor_witnesses'].append(node.name)
+        try:
+            ctx.total_produced = db['total_produced'][node.name]
+        except KeyError:
+            ctx.total_produced = 0
 
-        db.setdefault('total_produced', {}) # indexed by node.name
-        db['total_produced'].setdefault(node.name, 0)
-        db.setdefault('total_missed', {})   # indexed by node.name
-        db['total_missed'].setdefault(node.name, 0)
+        # start with a streak of 0 when we start the tools, as there's no way (currently)
+        # to know when was the last block missed
+        ctx.streak = 0
 
     else:
         ctx.producing_state = StableStateMonitor(3)
@@ -61,24 +61,19 @@ def monitor(node, ctx, cfg):
         db = core.db[node.rpc_id]
         total_missed = node.get_witness(node.name)['total_missed']
         if total_missed > db['total_missed'][node.name]:
-            log.warning('Witness %s missed another block! (%d missed total)' % (node.name, total_missed))
-            send_notification([node], 'missed another block! (%d missed total)' % total_missed, alert=True)
+            db['last_missed'][node.name] = datetime.utcnow()
+            ctx.streak = min(ctx.streak, 0) - 1
+            msg = 'missed another block! {} last missed ({} total)'.format(-ctx.streak, total_missed)
+            log.warning('Witness {} {}'.format(node.name, msg))
+            send_notification([node], msg, alert=True)
         db['total_missed'][node.name] = total_missed
 
-        # Get block number
-        block_number = node.get_head_block_num()
-
-        # We loop through all blocks we may have missed since the last
-        # block defined above
-        while block_number - db['last_block'] > 0:
-            if db['last_block'] % 1000 == 0:
-                log.debug('getting block number {}'.format(db['last_block']))
-            block = node.get_block(db['last_block'])
-            for witness_name in db['monitor_witnesses']:
-                if block['witness'] == witness_name:
-                    log.info('Witness {} produced block number {}'.format(witness_name, db['last_block']))
-                    db['total_produced'][witness_name] += 1
-            db['last_block'] += 1
+        if db['total_produced'][node.name] > ctx.total_produced:
+            ctx.streak = max(ctx.streak, 0) + 1
+            db['streak'][node.name] = max(db['streak'], 0) + 1
+            msg = 'produced block number {}. {} last produced'.format(db['last_indexed_block'], ctx.streak)
+            log.info('Witness {} {}'.format(node.name, msg))
+        ctx.total_produced = db['total_produced'][node.name]
 
 
     else:
