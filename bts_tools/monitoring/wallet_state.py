@@ -61,23 +61,23 @@ def monitor(node, ctx, cfg):
         ctx.wallet_open.push('open')
 
         if ctx.wallet_open.just_changed():
-            send_notification(ctx.nodes, 'opened {} wallet'.format(ctx.nodes[0].bts_type()))
+            send_notification(ctx.nodes, 'opened {} wallet'.format(ctx.nodes[0].type()))
 
     else:
         ctx.wallet_open.push('closed')
 
         if ctx.wallet_open.just_changed():
-            send_notification(ctx.nodes, 'closed {} wallet'.format(ctx.nodes[0].bts_type()))
+            send_notification(ctx.nodes, 'closed {} wallet'.format(ctx.nodes[0].type()))
 
     # check whether wallet is unlocked
     if not node.is_locked():
         ctx.wallet_locked.push('unlocked')
 
         if ctx.wallet_locked.just_changed():
-            send_notification(ctx.nodes, 'unlocked {} wallet'.format(ctx.nodes[0].bts_type()))
+            send_notification(ctx.nodes, 'unlocked {} wallet'.format(ctx.nodes[0].type()))
 
     else:
         ctx.wallet_locked.push('locked')
 
         if ctx.wallet_locked.just_changed():
-            send_notification(ctx.nodes, 'locked {} wallet'.format(ctx.nodes[0].bts_type()))
+            send_notification(ctx.nodes, 'locked {} wallet'.format(ctx.nodes[0].type()))

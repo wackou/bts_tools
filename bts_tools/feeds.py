@@ -316,7 +316,7 @@ def check_feeds(nodes):
                 continue
 
             # TODO: dealt with as an exceptional case for now, should be refactored
-            if node.bts_type() == 'steem':
+            if node.type() == 'steem':
                 price = statistics.median(price_history['STEEM'])
                 # check whether we need to publish again:
                 # - if published more than 12 hours ago, publish again

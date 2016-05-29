@@ -277,7 +277,7 @@ def is_graphene_based(n):
     # TODO: this function really can't get any uglier... Would benefit from a facelift
     from .rpcutils import GrapheneClient
     if isinstance(n, GrapheneClient):
-        return is_graphene_based(n.bts_type())
+        return is_graphene_based(n.type())
     elif 'type' in n and 'client' in n:
         # if we're a node desc, get it from the run_env
         return is_graphene_based(n['client'])

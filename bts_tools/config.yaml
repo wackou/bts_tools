@@ -14,6 +14,7 @@ make_args: ['-j4']
 #
 clients:
     bts:
+        type: bts
         data_dir: ~/.BitShares2
         witness_host: localhost
         witness_port: 8090

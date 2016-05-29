@@ -102,12 +102,12 @@ ALL_SLOTS = {}
 
 
 class GrapheneClient(object):
-    def __init__(self, role, name, client_name, client, bts_type=None,
+    def __init__(self, role, name, client_name, client, type=None,
                  monitoring=None, notification=None, venv_path=None,
                  witness_id=None, signing_key=None, **kwargs):
         self.role = role
-        if bts_type is not None:
-            self._bts_type = bts_type
+        if type is not None:
+            self._type = type
         self.name = name
         self.witness_signing_key = None
         self.monitoring = to_list(monitoring)
@@ -131,7 +131,7 @@ class GrapheneClient(object):
                     except KeyError:
                         cfg_port = 0
                     try:
-                        if self.bts_type() == 'steem':
+                        if self.type() == 'steem':
                             self.witness_signing_key = config['bts']['private-key']
                         else:
                             self.witness_signing_key = json.loads(config['bts']['private-key'])[0]
@@ -180,7 +180,7 @@ class GrapheneClient(object):
                 # we want to avoid connecting to the client and block because
                 # it is in a stopped state (eg: in gdb after having crashed)
                 if self.is_localhost() and not bts_binary_running(self):
-                    raise RPCError('Connection aborted: {} binary does not seem to be running'.format(self.bts_type()))
+                    raise RPCError('Connection aborted: {} binary does not seem to be running'.format(self.type()))
 
                 if self.proxy_host is not None and self.proxy_port is not None:
                     return rpc_call(self.proxy_host, self.proxy_port,
@@ -201,7 +201,7 @@ class GrapheneClient(object):
                 # we want to avoid connecting to the client and block because
                 # it is in a stopped state (eg: in gdb after having crashed)
                 if not bts_binary_running(self):
-                    raise RPCError('Connection aborted: {} binary does not seem to be running'.format(self.bts_type()))
+                    raise RPCError('Connection aborted: {} binary does not seem to be running'.format(self.type()))
 
                 result = rpc_call('localhost', self.rpc_port,
                                   self.rpc_user, self.rpc_password,
@@ -227,7 +227,7 @@ class GrapheneClient(object):
         self._committee_member_names = {}
 
     def __str__(self):
-        return '{} ({} / {}:{})'.format(self.name, self.bts_type(), self.rpc_host, self.rpc_port)
+        return '{} ({} / {}:{})'.format(self.name, self.type(), self.rpc_host, self.rpc_port)
 
     def __repr__(self):
         return 'GrapheneClient(%s, %s)' % (self.client_name, self.name)
@@ -372,7 +372,7 @@ class GrapheneClient(object):
             return 'not synced'
         # the config file only specifies the private key, we need to derive the public key
         private_key = PrivateKey(self.witness_signing_key)
-        public_key = format(private_key.pubkey, self.bts_type())
+        public_key = format(private_key.pubkey, self.type())
         return public_key == self.get_witness(self.name)['signing_key']
 
     # FIXME: use a decorator for this (forever) caching (also see bitasset_data)
@@ -457,18 +457,18 @@ class GrapheneClient(object):
         except KeyError:
             raise ValueError('Unknown build environment: %s' % name)
 
-    def bts_type(self):
+    def type(self):
         # try to get the cached value first
         try:
-            return self._bts_type
+            return self._type
         except AttributeError:
             # not cached yet. fall through so we can compute it
             pass
 
         # if no cached value, try to get the client type from the config file
         try:
-            self._bts_type = self.run_env()['type']
-            return self._bts_type
+            self._type = self.run_env()['type']
+            return self._type
         except ValueError:
             pass
 
@@ -480,21 +480,21 @@ class GrapheneClient(object):
             log.warning('Could not find blockchain name for {}:{}'.format(self.rpc_host, self.rpc_port))
             return ''
         if blockchain_name == 'BitShares':
-            self._bts_type = 'bts1'
+            self._type = 'bts1'
         elif blockchain_name == 'DevShares':
-            self._bts_type = 'dvs'
+            self._type = 'dvs'
         elif blockchain_name == 'PTS':
-            self._bts_type = 'pts'
+            self._type = 'pts'
         else:
             return 'unknown'
 
-        return self._bts_type
+        return self._type
 
     def is_graphene_based(self):
         return is_graphene_based(self)
 
     def get_active_witnesses(self):
-        if self.bts_type() == 'steem':
+        if self.type() == 'steem':
             return self.rpc_call('get_active_witnesses')
         else:
             return [self.get_witness_name(w)
@@ -543,8 +543,8 @@ class GrapheneClient(object):
         return re.search(r'[\d.]+', self.get_info()['client_version']).group()
 
     def delegate_slot_records_new_api(self):
-        return ((self.bts_type() in {'bts1', 'dvs'} and self.api_version() >= '0.6') or
-                (self.bts_type() == 'pls'))
+        return ((self.type() in {'bts1', 'dvs'} and self.api_version() >= '0.6') or
+                (self.type() == 'pls'))
 
     def get_streak(self, cached=True):
         if self.is_graphene_based():
@@ -562,7 +562,7 @@ class GrapheneClient(object):
 
         try:
             global ALL_SLOTS
-            key = (self.bts_type(), self.name)
+            key = (self.type(), self.name)
             if key not in ALL_SLOTS:
                 # first time, get all slots from the delegate and cache them
                 if new_api:
@@ -679,7 +679,7 @@ def load_graphene_clients():
         for role in client.get('roles', []):
             nodes.append(GrapheneClient(client_name=client_name,
                                         client=client,
-                                        bts_type=client.get('bts_type'),
+                                        type=client.get('type'),
                                         **role))
 
     try:

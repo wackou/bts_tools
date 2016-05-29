@@ -61,14 +61,14 @@
             {% for host, node_names, node in rpc.client_instances() %}
                 <tr>
                     <td>
-                    {% set node_type = node.bts_type() %}
+                    {% set node_type = node.type() %}
                     {% if node_type %}
                         {% if node.is_online() %}
                             <div class="btn btn-xs btn-success">
                         {% else %}
                             <div class="btn btn-xs btn-danger">
                         {% endif %}
-                                {{ node.bts_type() }}
+                                {{ node.type() }}
                             </div>
                     {% endif %}
                     </td>

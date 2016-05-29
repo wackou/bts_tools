@@ -144,11 +144,11 @@ def view_status():
     return render_template('status.html', title='BTS Client - Status', points=points, gpoints=gpoints)
 
 
-def find_node(bts_type, host, name):
+def find_node(type, host, name):
     for node in rpc.nodes:
-        if node.bts_type() == bts_type and '{}:{}'.format(node.rpc_host, node.rpc_port) == host and node.name == name:
+        if node.type() == type and '{}:{}'.format(node.rpc_host, node.rpc_port) == host and node.name == name:
             return node
-    raise ValueError('Node not found: {}/{}/{}'.format(bts_type, host, name))
+    raise ValueError('Node not found: {}/{}/{}'.format(type, host, name))
 
 def find_local_node(port):
     for node in rpc.nodes:
@@ -231,7 +231,7 @@ def view_info():
         info = n.info()
         # TODO: we should cache the witness and committee member names, they never change
         info['active_witnesses'] = n.get_active_witnesses()
-        if n.bts_type() in ['bts', 'muse']:
+        if n.type() in ['bts', 'muse']:
             info['active_committee_members'] = [n.get_committee_member_name(cm)
                                                 for cm in info['active_committee_members']]
         info_items = sorted(info.items())
@@ -281,7 +281,7 @@ def view_info():
     if not rpc.main_node.is_graphene_based():
         info_items, attrs = split_columns(info_items, attrs)
 
-    if rpc.main_node.is_witness() and rpc.main_node.bts_type() in ['bts', 'bts1']:
+    if rpc.main_node.is_witness() and rpc.main_node.type() in ['bts', 'bts1']:
         from . import feeds
 
         if rpc.main_node.is_graphene_based():
@@ -335,12 +335,12 @@ def view_info():
                            **feeds)
 
 
-@bp.route('/rpchost/<bts_type>/<host>/<name>/<url>')
+@bp.route('/rpchost/<type>/<host>/<name>/<url>')
 @catch_error
-def set_rpchost(bts_type, host, name, url):
+def set_rpchost(type, host, name, url):
     try:
-        rpc.main_node = find_node(bts_type, host, name)
-        log.debug('Setting main rpc node to %s %s on %s' % (bts_type, name, host))
+        rpc.main_node = find_node(type, host, name)
+        log.debug('Setting main rpc node to %s %s on %s' % (type, name, host))
     except ValueError:
         # invalid host name
         log.debug('Invalid node name: %s on %s' % (name, host))

@@ -3,7 +3,7 @@
 {################################ HTML CONTENT ################################}
 {% block content %}
 
-{% if rpc.main_node.is_witness() and rpc.main_node.bts_type() in ['bts', 'bts1'] %}
+{% if rpc.main_node.is_witness() and rpc.main_node.type() in ['bts', 'bts1'] %}
 <pre>
 <b>Price feeds:</b>  published: {% for asset in assets %}{{pfeeds[asset]}} <b>{{asset}}</b> {% endfor %}     <b>Last update:</b> {% if last_update %}{{last_update | datetime}}{% else %}N/A{% endif %}
             last median: {% for asset in assets %}{{mfeeds[asset]}} <b>{{asset}}</b> {% endfor %}

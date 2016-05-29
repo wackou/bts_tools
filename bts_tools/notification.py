@@ -74,7 +74,7 @@ def send_notification_boxcar(msg, alert=False):
 
 
 def send_notification(nodes, node_msg, alert=False):
-    msg = '%s - %s: %s' % (nodes[0].bts_type(), ', '.join(n.name for n in nodes), node_msg)
+    msg = '%s - %s: %s' % (nodes[0].type(), ', '.join(n.name for n in nodes), node_msg)
     if alert:
         log.warning(msg)
     else:
@@ -85,7 +85,7 @@ def send_notification(nodes, node_msg, alert=False):
         notify_nodes = [node for node in nodes if ntype in node.notification]
         if notify_nodes:
             node_names = ', '.join(n.name for n in notify_nodes)
-            msg = '%s - %s: %s' % (notify_nodes[0].bts_type(), node_names, node_msg)
+            msg = '%s - %s: %s' % (notify_nodes[0].type(), node_names, node_msg)
             try:
                 notify(msg, alert)
             except Exception as e:
