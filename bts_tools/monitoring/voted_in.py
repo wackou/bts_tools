@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 
 
 def init_ctx(node, ctx, cfg):
-    ctx.active_state = StableStateMonitor(3)
+    ctx.active_state = StableStateMonitor(1)
 
 
 def is_valid_node(node):
@@ -39,12 +39,16 @@ def monitor(node, ctx, cfg):
         ctx.active_state.push('active')
 
         if ctx.active_state.just_changed():
-            log.info('Delegate %s got voted in!' % node.name)
-            send_notification([node], 'delegate got voted in!')
+            block_num = node.get_head_block_num()
+            block = node.get_block(block_num)
+            msg = 'witness got voted in! (block {} / {})'.format(block_num, block['timestamp'])
+            send_notification([node], msg)
 
     else:
         ctx.active_state.push('standby')
 
         if ctx.active_state.just_changed():
-            log.warning('Delegate %s got voted out...' % node.name)
-            send_notification([node], 'delegate got voted out...', alert=True)
+            block_num = node.get_head_block_num()
+            block = node.get_block(block_num)
+            msg = 'witness got voted out... (block {} / {})'.format(block_num, block['timestamp'])
+            send_notification([node], msg, alert=True)

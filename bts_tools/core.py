@@ -114,6 +114,14 @@ def save_db():
 
 def load_db():
     global db
+
+    if not config['index_full_blockchain']:
+        # in this case, we'll just index what happens while the tools are online
+        # this also means there's no need to persist the DB
+        db = defaultdict(dict)
+        db['version'] = DB_VERSION
+        return
+
     log.info('Loading database file {}'.format(BTS_TOOLS_DB_FILE))
     try:
         with open(BTS_TOOLS_DB_FILE) as f:

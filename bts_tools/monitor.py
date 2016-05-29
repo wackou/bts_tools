@@ -165,7 +165,8 @@ def monitoring_thread(*nodes):
                 continue
 
             # start by indexing new blocks for given client
-            monitoring.indexing.monitor(client_node, global_ctx, get_config(plugin_name))
+            if monitoring.indexing.is_valid_node(client_node):
+                monitoring.indexing.monitor(client_node, global_ctx, get_config(plugin_name))
 
             # monitor at a client level
             global_ctx.info = client_node.info()

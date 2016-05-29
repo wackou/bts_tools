@@ -25,10 +25,11 @@ import logging
 
 log = logging.getLogger(__name__)
 
+N = 1
 
 def init_ctx(node, ctx, cfg):
-    ctx.wallet_open = StableStateMonitor(1)
-    ctx.wallet_locked = StableStateMonitor(1)
+    ctx.wallet_open = StableStateMonitor(N)
+    ctx.wallet_locked = StableStateMonitor(N)
 
 
 def is_valid_node(node):
@@ -51,7 +52,7 @@ def monitor(node, ctx, cfg):
     # if we just came online, then our wallet is closed and locked. Force state update
     # (state was not updated before because node was offline, so plugin wasn't called)
     if ctx.online_state.just_changed():
-        for _ in range(3):
+        for _ in range(N):
             ctx.wallet_open.push('closed')
             ctx.wallet_locked.push('locked')
 
@@ -60,31 +61,23 @@ def monitor(node, ctx, cfg):
         ctx.wallet_open.push('open')
 
         if ctx.wallet_open.just_changed():
-            msg = 'Opened wallet for %s at time: %s' % (node_names, datetime.now().isoformat())
-            log.info(msg)
-            send_notification(ctx.nodes, 'opened wallet at time: %s' % datetime.now().isoformat())
+            send_notification(ctx.nodes, 'opened {} wallet'.format(ctx.nodes[0].bts_type()))
 
     else:
         ctx.wallet_open.push('closed')
 
         if ctx.wallet_open.just_changed():
-            msg = 'Closed wallet for %s at time: %s' % (node_names, datetime.now().isoformat())
-            log.info(msg)
-            send_notification(ctx.nodes, 'closed wallet at time: %s' % datetime.now().isoformat())
+            send_notification(ctx.nodes, 'closed {} wallet'.format(ctx.nodes[0].bts_type()))
 
     # check whether wallet is unlocked
     if not node.is_locked():
         ctx.wallet_locked.push('unlocked')
 
         if ctx.wallet_locked.just_changed():
-            msg = 'Unlocked wallet for %s at time: %s' % (node_names, datetime.now().isoformat())
-            log.info(msg)
-            send_notification(ctx.nodes, 'unlocked wallet at time: %s' % datetime.now().isoformat())
+            send_notification(ctx.nodes, 'unlocked {} wallet'.format(ctx.nodes[0].bts_type()))
 
     else:
         ctx.wallet_locked.push('locked')
 
         if ctx.wallet_locked.just_changed():
-            msg = 'Locked wallet for %s at time: %s' % (node_names, datetime.now().isoformat())
-            log.info(msg)
-            send_notification(ctx.nodes, 'locked wallet at time: %s' % datetime.now().isoformat())
+            send_notification(ctx.nodes, 'locked {} wallet'.format(ctx.nodes[0].bts_type()))

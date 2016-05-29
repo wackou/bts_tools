@@ -40,10 +40,8 @@ def monitor(node, ctx, cfg):
     if num_connections <= min_connections:
         ctx.connection_state.push('starved')
         if ctx.connection_state.just_changed():
-            log.warning('Nodes %s: fewer than %d network connections...' % (', '.join(n.name for n in ctx.nodes), min_connections))
             send_notification(ctx.nodes, 'fewer than %d network connections...' % min_connections, alert=True)
     else:
         ctx.connection_state.push('connected')
         if ctx.connection_state.just_changed():
-            log.info('Nodes %s: got more than %d connections now' % (', '.join(n.name for n in ctx.nodes), min_connections))
             send_notification(ctx.nodes, 'got more than %d connections now' % min_connections)

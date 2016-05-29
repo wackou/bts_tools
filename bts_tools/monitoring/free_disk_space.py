@@ -61,7 +61,6 @@ def is_valid_node(node):
 
 
 def monitor(node, ctx, cfg):
-    node_names = ', '.join(n.name for n in ctx.nodes)
     free_space = free_disk_space(BTS_TOOLS_CONFIG_FILE)
     required = to_int(cfg['min_required_space'])
 
@@ -69,13 +68,11 @@ def monitor(node, ctx, cfg):
         ctx.enough_space.push(False)
         if ctx.enough_space.just_changed():
             msg = 'there are now fewer than {} bytes free on the hard drive'.format(cfg['min_required_space'])
-            log.warning('For nodes {}: {}'.format(node_names, msg))
             send_notification(ctx.nodes, msg, alert=True)
 
     else:
         ctx.enough_space.push(True)
         if ctx.enough_space.just_changed():
             msg = 'there are now more than {} bytes free on the hard drive'.format(cfg['min_required_space'])
-            log.info('For nodes {}: {}'.format(node_names, msg))
             send_notification(ctx.nodes, msg)
 

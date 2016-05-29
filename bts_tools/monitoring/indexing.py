@@ -34,16 +34,18 @@ def init_ctx(node, ctx, cfg):
     db.setdefault('last_produced', {})   # indexed by node_name
     db.setdefault('total_missed', {})    # indexed by node_name
     db.setdefault('last_missed', {})     # indexed by node_name
+    db.setdefault('streak', {})          # indexed by node_name
 
     for node_name in db['static']['monitor_witnesses']:
-        db['total_produced'].setdefault(node_name, 0)
-        db['total_missed'].setdefault(node_name, 0)
+        db['total_produced'].setdefault(node_name, -1)
+        db['total_missed'].setdefault(node_name, -1)
+        db['streak'].setdefault(node_name, 0)
 
     ctx.first_reindex = True
 
 
 def is_valid_node(node):
-    return True
+    return node.is_synced()
 
 
 def monitor(node, ctx, cfg):
@@ -52,6 +54,10 @@ def monitor(node, ctx, cfg):
     # Get block number
     head_block_num = node.get_head_block_num()
     period = head_block_num // 100 + 1
+
+    if not core.config['index_full_blockchain'] and db['last_indexed_block'] == 0:
+        db['last_indexed_block'] = head_block_num - 1
+        ctx.first_reindex = False
 
     if ctx.first_reindex:
         log.info('Reindexing database on {}...'.format(node.rpc_id))
@@ -68,7 +74,6 @@ def monitor(node, ctx, cfg):
         block = node.get_block(current_block_num)
         for witness_name in db['static']['monitor_witnesses']:
             if block['witness'] == witness_name:
-                log.info('Witness {} produced block number {}'.format(witness_name, current_block_num))
                 db['total_produced'][witness_name] += 1
                 db['last_produced'][witness_name] = datetime.strptime(block['timestamp'], '%Y-%m-%dT%H:%M:%S')
 

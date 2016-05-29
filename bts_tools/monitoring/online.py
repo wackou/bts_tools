@@ -41,8 +41,7 @@ def monitor(node, ctx, cfg):
         ctx.online_state.push('offline')
 
         if ctx.online_state.just_changed():
-            log.warning('Nodes %s just went offline...' % node_names)
-            send_notification(ctx.nodes, 'node just went offline...', alert=True)
+            send_notification(ctx.nodes, 'client just went offline...', alert=True)
 
         return False
 
@@ -50,7 +49,6 @@ def monitor(node, ctx, cfg):
     ctx.online_state.push('online')
 
     if ctx.online_state.just_changed():
-        log.info('Nodes %s just came online!' % node_names)
-        send_notification(ctx.nodes, 'node just came online!')
+        send_notification(ctx.nodes, 'client just came online!')
 
     return True

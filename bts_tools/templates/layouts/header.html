@@ -90,22 +90,17 @@
                         {% if not rpc.main_node.is_active(rpc.main_node.name) %}
                             <li><a href="#"><div class="btn btn-xs btn-warning">STANDBY</div></a></li>
                         {% else %}
-                            <li><a href="#">
-                                {%- if rpc.main_node.is_graphene_based() -%}
-                                    <b>Blocks missed:</b>
-                                    <div class="btn btn-xs btn-info">{{ rpc.main_node.get_witness(rpc.main_node.name)['total_missed'] }}</div>
-                                {%- else -%}
-                                    <b>Blocks:</b>
-                                    {% set producing, n = rpc.main_node.get_streak() %}
-                                    {% if n >= 0 %}
-                                        {% if producing %}
-                                            <div class="btn btn-xs btn-success">Last {{ n }} produced</div>
-                                        {% else %}
-                                            <div class="btn btn-xs btn-danger">Last {{ n }} missed </div>
-                                        {% endif %}
+                            <li><a href="https://steemd.com/witnesses">
+                                <b>Blocks:</b>
+                                {%- set producing, n = rpc.main_node.get_streak() -%}
+                                {%- if n >= 0 -%}
+                                    {% if producing %}
+                                        <div class="btn btn-xs btn-success">Last {{ n }} produced</div>
                                     {% else %}
-                                        <div class="btn btn-xs btn-danger">NO DATA / ERROR</div>
+                                        <div class="btn btn-xs btn-danger">Last {{ n }} missed </div>
                                     {% endif %}
+                                {%- else -%}
+                                    <div class="btn btn-xs btn-danger">NO DATA / ERROR</div>
                                 {%- endif -%}
                             </a></li>
                         {% endif %}

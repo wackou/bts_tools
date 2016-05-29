@@ -10,6 +10,8 @@ profile: false
 
 detailed_log: false
 
+index_full_blockchain: false
+
 {% include 'monitoring.yaml' %}
 
 #

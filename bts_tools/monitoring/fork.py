@@ -35,7 +35,6 @@ def is_valid_node(node):
 
 def monitor(node, ctx, cfg):
     # TODO: also check delegate participation is low (github #17)
-    node_names = ', '.join(n.name for n in ctx.nodes)
 
     # if we just came online, force state to not in sync so we get the notification when we're up-to-date
     if ctx.online_state.just_changed():
@@ -46,12 +45,10 @@ def monitor(node, ctx, cfg):
         ctx.blockchain_uptodate.push('up-to-date')
 
         if ctx.blockchain_uptodate.just_changed():
-            log.info('Blockchain synced and up-to-date for nodes %s' % node_names)
             send_notification(ctx.nodes, 'blockchain synced and up-to-date')
 
     else:
         ctx.blockchain_uptodate.push('stale')
 
         if ctx.blockchain_uptodate.just_changed():
-            log.warning('Blockchain not in sync anymore for nodes %s' % node_names)
-            send_notification(ctx.nodes, 'blockchain not in sync anymore')
+            send_notification(ctx.nodes, 'blockchain not in sync anymore', alert=True)

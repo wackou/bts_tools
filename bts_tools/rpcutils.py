@@ -547,9 +547,13 @@ class GrapheneClient(object):
                 (self.bts_type() == 'pls'))
 
     def get_streak(self, cached=True):
-        # FIXME: support graphene
         if self.is_graphene_based():
-            return True, 0
+            streak = core.db[self.rpc_id]['streak'][self.name]
+            if streak >= 0:
+                return True, streak
+            else:
+                return False, -streak
+
         if not self.is_witness():
             # only makes sense to call get_streak on delegate nodes
             return False, 1
