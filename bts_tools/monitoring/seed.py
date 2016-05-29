@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 
 
 def is_valid_node(node):
-    return node.type == 'seed'
+    return node.role == 'seed'
 
 
 def sublist_index(l1, l2):

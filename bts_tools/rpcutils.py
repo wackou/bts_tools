@@ -105,7 +105,7 @@ class GrapheneClient(object):
     def __init__(self, role, name, client_name, client, bts_type=None,
                  monitoring=None, notification=None, venv_path=None,
                  witness_id=None, signing_key=None, **kwargs):
-        self.type = role
+        self.role = role
         if bts_type is not None:
             self._bts_type = bts_type
         self.name = name
@@ -361,7 +361,7 @@ class GrapheneClient(object):
         return host in ['localhost', '127.0.0.1']
 
     def is_witness(self):
-        return self.type == 'delegate' or self.type == 'witness' or self.type == 'feed_publisher'
+        return self.role == 'delegate' or self.role == 'witness' or self.role == 'feed_publisher'
 
     def is_signing_key_active(self):
         if self.proxy_host:

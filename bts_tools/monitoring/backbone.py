@@ -43,7 +43,7 @@ def reconnect_backbone(node, ctx):
 
 
 def is_valid_node(node):
-    return node.type == 'backbone'
+    return node.role == 'backbone'
 
 
 def monitor(node, ctx, cfg):

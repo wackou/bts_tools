@@ -312,7 +312,7 @@ def check_feeds(nodes):
         log.debug('Got feeds: %s %s' % (fmt(feeds), publish_status))
 
         for node in nodes:
-            if node.type != 'feed_publisher':
+            if node.role != 'feed_publisher':
                 continue
 
             # TODO: dealt with as an exceptional case for now, should be refactored
