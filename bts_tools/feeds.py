@@ -226,7 +226,7 @@ def get_feed_prices():
 
     # 4- get other assets
     altcap = get_multi_feeds('get', [('ALTCAP', 'BTC')], {CoinCapFeedProvider(), CoinMarketCapFeedProvider()},
-                             stddev_tolerance=0.03)
+                             stddev_tolerance=0.05)
     altcap = statistics.mean(f.price for f in altcap)
     feeds['ALTCAP'] = altcap
 

@@ -367,11 +367,14 @@ class CoinCapFeedProvider(FeedProvider):
         log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
         r = requests.get('http://www.coincap.io/page/BTS', timeout=self.TIMEOUT).json()
 
-        log.debug('{} - btc: {}'.format(self.NAME, r['btcCap']))
-        log.debug('{} - total: {}'.format(self.NAME, r['btcCap'] + r['altCap']))
-        log.debug('{} - alt: {}'.format(self.NAME, r['altCap']))
+        btcCap = float(r['btcCap'])
+        altCap = float(r['altCap'])
 
-        price = r['btcCap'] / r['altCap']
+        log.debug('{} - btc: {}'.format(self.NAME, btcCap))
+        log.debug('{} - total: {}'.format(self.NAME, btcCap + altCap))
+        log.debug('{} - alt: {}'.format(self.NAME, altCap))
+
+        price = btcCap / altCap
         return self.feed_price(cur, base, price=price)
 
 
