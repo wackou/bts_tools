@@ -30,18 +30,19 @@ def init_ctx(node, ctx, cfg):
 
     db.setdefault('static', {}).setdefault('monitor_witnesses', [])
     db.setdefault('last_indexed_block', 0)
-    db.setdefault('total_produced', {})  # indexed by node_name
-    db.setdefault('last_produced', {})   # indexed by node_name
-    db.setdefault('total_missed', {})    # indexed by node_name
-    db.setdefault('last_missed', {})     # indexed by node_name
-    db.setdefault('streak', {})          # indexed by node_name
+    db.setdefault('total_produced', {})  # indexed by witness_name
+    db.setdefault('last_produced', {})   # indexed by witness_name
+    db.setdefault('total_missed', {})    # indexed by witness_name
+    db.setdefault('last_missed', {})     # indexed by witness_name
+    db.setdefault('streak', {})          # indexed by witness_name
 
-    for node_name in db['static']['monitor_witnesses']:
-        db['total_produced'].setdefault(node_name, -1)
-        db['total_missed'].setdefault(node_name, -1)
-        db['streak'].setdefault(node_name, 0)
+    for witness_name in db['static']['monitor_witnesses']:
+        db['total_produced'].setdefault(witness_name, -1)
+        db['total_missed'].setdefault(witness_name, -1)
+        db['streak'].setdefault(witness_name, 0)
 
     ctx.first_reindex = True
+    ctx.to_name = {}  # maps witness id -> name
 
 
 def is_valid_node(node):
@@ -50,6 +51,13 @@ def is_valid_node(node):
 
 def monitor(node, ctx, cfg):
     db = core.db[node.rpc_id]
+
+    # get mapping from witness id -> name
+    # ideally, we'd like to do this in init_ctx, but we're not sure the wallet
+    # is running yet, hence the reason we're doing it here...
+    if not ctx.to_name:
+        for witness_name in db['static']['monitor_witnesses']:
+            ctx.to_name[node.get_witness(witness_name)['id']] = witness_name
 
     # Get block number
     head_block_num = node.get_head_block_num()
@@ -72,10 +80,10 @@ def monitor(node, ctx, cfg):
             log.info('[{:2d}%] Indexing block number {} on {}'.format(progress, current_block_num, node.rpc_id))
 
         block = node.get_block(current_block_num)
-        for witness_name in db['static']['monitor_witnesses']:
-            if block['witness'] == witness_name:
-                db['total_produced'][witness_name] += 1
-                db['last_produced'][witness_name] = datetime.strptime(block['timestamp'], '%Y-%m-%dT%H:%M:%S')
+        witness_name = ctx.to_name.get(block['witness'], block['witness'])
+        if witness_name in db['static']['monitor_witnesses']:
+            db['total_produced'][witness_name] += 1
+            db['last_produced'][witness_name] = datetime.strptime(block['timestamp'], '%Y-%m-%dT%H:%M:%S')
 
         db['last_indexed_block'] = current_block_num
 

@@ -112,6 +112,7 @@ def save_db():
     with open(BTS_TOOLS_DB_FILE, 'w') as f:
         yaml.dump(db, f)
 
+
 def load_db():
     global db
 
@@ -133,6 +134,7 @@ def load_db():
         db = defaultdict(dict)
         db['version'] = DB_VERSION
 
+    # FIXME: see http://grodola.blogspot.com/2016/02/how-to-always-execute-exit-functions-in-py.html
     import atexit
     atexit.register(save_db)
 
