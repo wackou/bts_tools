@@ -457,7 +457,10 @@ def view_seed_nodes(chain):
 @catch_error
 @core.profile
 def view_connected_peers():
-    peers = rpc.main_node.network_get_connected_peers()
+    try:
+        peers = rpc.main_node.network_get_connected_peers()
+    except KeyError:
+        raise requests.exceptions.ConnectionError  # (ab)use this to set the status to offline
 
     headers = ['Address', 'Connected since', 'Platform', 'BitShares git time', 'fc git time']
 
@@ -485,7 +488,10 @@ def view_connected_peers():
 @catch_error
 @core.profile
 def view_potential_peers():
-    peers = rpc.main_node.network_get_potential_peers()
+    try:
+        peers = rpc.main_node.network_get_potential_peers()
+    except KeyError:
+        raise requests.exceptions.ConnectionError  # (ab)use this to set the status to offline
 
     # TODO: find a better way to do this, see https://github.com/BitShares/bitshares/issues/908
     peers = peers[:300]

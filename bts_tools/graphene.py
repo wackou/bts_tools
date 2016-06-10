@@ -87,8 +87,8 @@ def ws_rpc_call(host, port, api, method, *args):
         result = Future()
         try:
             loop = _event_loops[(host, port)]
-        except KeyError:
-            raise RuntimeError('Websocket event loop for {}:{} not available yet'.format(host, port))
+        except KeyError as e:
+            raise core.RPCError('Connection aborted: Websocket event loop for {}:{} not available yet'.format(host, port)) from e
         protocol = _monitoring_protocols[(host, port)]
 
         loop.call_soon_threadsafe(functools.partial(protocol.rpc_call, api, method, *args, result=result))
@@ -106,7 +106,7 @@ def ws_rpc_call(host, port, api, method, *args):
     except KeyError:
         # FIXME: distinguish when key is not in or when 'result' is not in
         #        (ie: deserialize exception if any)
-        raise RuntimeError('{}: {}({}) not in websocket cache'.format(api, method, ', '.join(args)))
+        raise core.RPCError('{}: {}({}) not in websocket cache'.format(api, method, ', '.join(args)))
 
 
 class MonitoringProtocol(WebSocketClientProtocol):

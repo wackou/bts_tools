@@ -57,7 +57,11 @@ def monitor(node, ctx, cfg):
     # is running yet, hence the reason we're doing it here...
     if not ctx.to_name:
         for witness_name in db['static']['monitor_witnesses']:
-            ctx.to_name[node.get_witness(witness_name)['id']] = witness_name
+            try:
+                ctx.to_name[node.get_witness(witness_name)['id']] = witness_name
+            except TypeError:
+                # no witness with this name
+                pass
 
     # Get block number
     head_block_num = node.get_head_block_num()
