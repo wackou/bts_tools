@@ -28,8 +28,6 @@ SEED_STATUS_TIMEOUT = 5  # in seconds
 
 SEED_NODES = {
     'bts': [
-        ('faucet.bitshares.org:1776',      'dk', ''),
-        ('bitshares.openledger.info:1776', 'de', 'openledger'),
         ('bts-seed1.abit-more.com:62015',  'cn', 'abit'),
         ('seed.blocktrades.us:1776',       'us', 'blocktrades'),
         ('seed.bitsharesnodes.com:1776',   'nl', 'wackou'),
@@ -40,10 +38,7 @@ SEED_NODES = {
         ('seed.cubeconnex.com:1777',       'us', 'cube'),
         ('54.85.252.77:39705',             'us', 'lafona'),
         ('104.236.144.84:1777',            'us', 'puppies'),
-        ('40.127.190.171:1777',            'ie', 'betax'),
-        ('185.25.22.21:1776',              'gr', 'liondani'),
         ('212.47.249.84:50696',            'fr', 'ihashfury'),
-        ('104.168.154.160:50696',          'us', 'ihashfury'),
         ('128.199.143.47:2015',            'sg', 'harvey')
     ],
     'muse': [
