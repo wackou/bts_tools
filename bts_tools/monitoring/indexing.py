@@ -59,7 +59,7 @@ def monitor(node, ctx, cfg):
         for witness_name in db['static']['monitor_witnesses']:
             try:
                 ctx.to_name[node.get_witness(witness_name)['id']] = witness_name
-            except TypeError:
+            except (TypeError, core.RPCError):
                 # no witness with this name
                 pass
 
