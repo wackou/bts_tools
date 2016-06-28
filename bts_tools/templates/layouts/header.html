@@ -5,12 +5,12 @@
         {%- else -%}
             <b>Delegate name: </b>
         {%- endif -%}
-    {%- elif node.type() == 'seed' -%}
+    {%- elif node.role == 'seed' -%}
         <b>Seed node: </b>
-    {%- elif node.type() == 'backbone' -%}
+    {%- elif node.role == 'backbone' -%}
         <b>Backbone node: </b>
     {%- else -%}
-        <b>Node (type={{ node.type() }}): </b>
+        <b>Node (type={{ node.role }}): </b>
     {%- endif -%}
 
     {{ node.name }}
