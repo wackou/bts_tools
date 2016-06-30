@@ -6,6 +6,12 @@
 History
 =======
 
+0.4.1 (2016-06-30)
+------------------
+
+* deactivated GOLD and SILVER feed publishing (issue with Yahoo)
+
+
 0.4 (2016-05-01)
 ----------------
 
