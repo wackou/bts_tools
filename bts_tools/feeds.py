@@ -349,7 +349,6 @@ def check_feeds(nodes):
                     log.info('Node %s publishing feeds: %s' % (node.name, fmt(median_feeds)))
                     if node.is_graphene_based():
                         DISABLED_ASSETS = ['RUB', 'SEK',  # black swan
-                                           'GOLD', 'SILVER',  # bug in yahoo API, returning wrong values
                                            'STEEM']       # not on bitshares
 
 
