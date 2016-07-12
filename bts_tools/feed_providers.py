@@ -413,6 +413,7 @@ class BittrexFeedProvider(FeedProvider):
                          timeout=self.TIMEOUT).json()
 
         last = r['result'][0]
+        log.debug('Got feed price for steem: {} (from bittrex)'.format(last['Price']))
         return self.feed_price(cur, base,
                                price=last['Price'],
                                last_updated=datetime.strptime(last['TimeStamp'].split('.')[0], '%Y-%m-%dT%H:%M:%S'))
