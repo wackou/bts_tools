@@ -326,7 +326,7 @@ def check_feeds(nodes):
                             abs(price - node.opts['last_price']) / node.opts['last_price'] >= 0.03):
                         continue
                 # publish median value of the price, not latest one
-                price_obj = {'base': '{:.3} SBD'.format(price), 'quote': '1.000 STEEM'}
+                price_obj = {'base': '{:.3f} SBD'.format(price), 'quote': '1.000 STEEM'}
                 log.info('Node %s publishing feed price for steem: %s SBD' % (node.name, price))
                 node.publish_feed(node.name, price_obj, True)
                 node.opts['last_price'] = price
