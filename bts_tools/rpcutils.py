@@ -91,9 +91,9 @@ def rpc_call(host, port, user, password,
 
     if 'error' in r:
         if 'detail' in r['error']:
-            raise RPCError(r['error']['detail'])
+            raise RPCError(r['error']['detail'] + '\n\nFor RPC call:\n{}'.format(json.dumps(payload, indent=4)))
         else:
-            raise RPCError(r['error']['message'])
+            raise RPCError(r['error']['message'] + '\n\nFor RPC call:\n{}'.format(json.dumps(payload, indent=4)))
 
     return r['result']
 
