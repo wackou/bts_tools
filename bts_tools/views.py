@@ -480,22 +480,9 @@ def view_connected_peers():
               p.get('fc_git_revision_unix_timestamp', 'unknown'))
              for p in peers ]
 
-    points = []
     countries = defaultdict(int)
 
-    try:
-        points = []
-        for p in peers:
-            ip_addr = p['addr'].split(':')[0]
-            pt = network_utils.get_geoip_info(ip_addr)
-            pt.update({'addr': p['addr'],
-                       'platform': p['platform'],
-                       'version': p['fc_git_revision_age']
-                       })
-            points.append(pt)
-
-    except Exception as e:
-        log.exception(e)
+    points = network_utils.get_world_map_points_from_peers(peers)
 
     for pt in points:
         countries[pt['country_iso'].lower()] += 1

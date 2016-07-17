@@ -80,7 +80,8 @@ SEED_NODES = {
         ('52.4.250.181:39705',             'us', 'lafona'),
         ('81.89.101.133:2001',             'de', ''),
         ('192.99.4.226:2001',              'ca', ''),
-        ('46.252.27.1:1337',               'de', 'jabbasteem')
+        ('46.252.27.1:1337',               'de', 'jabbasteem'),
+        ('anyx.co:2001',                  '', 'anyx')
     ]
 }
 
@@ -147,6 +148,10 @@ def split_columns(items, attrs):
                     else (l[i][0] - offset, l[i][1] + ncols))
 
     return items, attrs
+
+
+def get_seeds_as_peers(chain):
+    return [{'addr': d[0], 'provided_by': d[2]} for d in SEED_NODES[chain]]
 
 
 def get_seeds_view_data(chain):

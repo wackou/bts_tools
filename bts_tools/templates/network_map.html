@@ -113,6 +113,7 @@ $(function () {
 
 <div>
 
+{% if points %}
   <!-- Nav tabs -->
   <ul class="nav nav-tabs" role="tablist">
     <li role="presentation" class="active"><a href="#map" aria-controls="maps" role="tab" data-toggle="tab">Map</a></li>
@@ -122,16 +123,16 @@ $(function () {
   <!-- Tab panes -->
   <div class="tab-content">
     <div role="tabpanel" class="tab-pane active" id="map">
-      {% if points %}
         <div id="map_container"></div>
-      {% endif %}
     </div>
 
     <div role="tabpanel" class="tab-pane" id="detail">
         {{ super() }}
-
     </div>
   </div>
+{% else %}
+    {{ super() }}
+{% endif %}
 
 </div>
 

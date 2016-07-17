@@ -21,8 +21,9 @@
 from flask import render_template, Flask, Blueprint
 from werkzeug.serving import run_simple
 from werkzeug.wsgi import DispatcherMiddleware
-from bts_tools import core, init, seednodes
+from bts_tools import core, init, seednodes, network_utils
 from bts_tools.frontend import format_datetime, hide_private_key, add_ip_flag
+from collections import defaultdict
 import bts_tools
 import logging
 log = logging.getLogger(__name__)
@@ -40,9 +41,17 @@ def view_seed_nodes():
     data = seednodes.get_seeds_view_data(chain)
     headers *= (len(data[0]) // len(headers))
 
+    peers = seednodes.get_seeds_as_peers(chain)
+    points = network_utils.get_world_map_points_from_peers(peers)
+    countries = defaultdict(int)
+    for pt in points:
+        countries[pt['country_iso'].lower()] += 1
+
     return render_template('tableview_naked.html',
                            title='{} seed nodes'.format(chain),
                            headers=headers,
+                           points=points,
+                           countries=countries,
                            data=data, order='[]', nrows=100, sortable=False)
 
 

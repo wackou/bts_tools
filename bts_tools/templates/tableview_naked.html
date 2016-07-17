@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="/static/css/dataTables.bootstrap.css">
     <link rel="stylesheet" href="/static/css/famfamfam-flags.css">
     <link rel="stylesheet" href="/static/css/application.css">
+
+    <link rel="stylesheet" href="/static/css/network_map.css">
+
     {% block stylesheet %}{% endblock %}
 </head>
 
@@ -21,6 +24,22 @@
 {% macro make_table(data, attrs, headers, title='') -%}
     <h3 align="center">{{ title }}</h3>
 
+        <div>
+{% if points %}
+  <!-- Nav tabs -->
+  <ul class="nav nav-tabs" role="tablist">
+    <li role="presentation"><a href="#map" aria-controls="maps" role="tab" data-toggle="tab">Map</a></li>
+    <li role="presentation" class="active"><a href="#detail" aria-controls="detail" role="tab" data-toggle="tab">Detail</a></li>
+  </ul>
+
+  <!-- Tab panes -->
+  <div class="tab-content">
+    <div role="tabpanel" class="tab-pane" id="map">
+        <div id="map_container"></div>
+    </div>
+
+    <div role="tabpanel" class="tab-pane active" id="detail">
+{% endif %}
     <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="tableview">
         {% if headers %}
             <thead><tr>
@@ -66,6 +85,10 @@
         </tbody>
 
     </table>
+{% if points %}
+        </div></div>
+{% endif %}
+    </div>
 {%- endmacro %}
 
 
@@ -112,6 +135,88 @@ $(function() {
         "ordering": {{ 'true' if sortable else 'false' }},
         "sorting": {{ (order or '[[ 1, "desc" ], [ 0, "asc" ]]') | safe }},
         "displayLength": {{ nrows or 10 }}
+    });
+});
+
+</script>
+
+<script src="/static/js/proj4_2.3.14.js"></script>
+<script src="https://code.highcharts.com/maps/highmaps.js"></script>
+<script src="https://code.highcharts.com/maps/modules/data.js"></script>
+<script src="https://code.highcharts.com/maps/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/mapdata/custom/world.js"></script>
+
+<script type="text/javascript">
+
+ $(function () {
+
+    var data_countries = [
+        {%- for name, nseeds in countries.items() -%}
+        {
+            "hc-key": "{{ name }}",
+            "value": {{ nseeds }}
+        },
+        {%- endfor -%}
+    ];
+
+
+    // Initiate the chart
+    $('#map_container').highcharts('Map', {
+
+        title : {
+            text : 'Connected peers'
+        },
+
+        mapNavigation: {
+            enabled: true,
+            buttonOptions: {
+                verticalAlign: 'bottom'
+            }
+        },
+
+        colorAxis: {
+        },
+
+        tooltip: {
+            headerFormat: '',
+            pointFormat: '<b>{point.addr}</b><br>Country: {point.country}<br>Platform: {point.platform}<br>Version: {point.version}'
+        },
+
+        series : [{
+            data : data_countries,
+            mapData: Highcharts.maps['custom/world'],
+            joinBy: 'hc-key',
+            name: 'Random data',
+            states: {
+                hover: {
+                    color: '#BADA55'
+                }
+            },
+            dataLabels: {
+                enabled: false,
+                format: '{point.name}'
+            },
+            tooltip: {
+                headerFormat: '',
+                pointFormat: '{point.name} - <b>{point.value}</b>'
+            }
+        },
+        {
+            // Specify points using lat/lon
+            type: 'mappoint',
+            name: 'Nodes per country',
+            color: Highcharts.getOptions().colors[1],
+            data:[
+            {%- for p in points -%}
+            {
+                {%- for k, v in p.items() -%}
+                    {%- set vstr = v.__repr__() -%}
+                    {{ k }}: {{ vstr | safe }},
+                {%- endfor -%}
+            },
+            {%- endfor -%}
+            ]
+        }]
     });
 });
 

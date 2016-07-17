@@ -61,6 +61,8 @@ def get_ip_nofail():
         return 'N/A'
 
 
+# FIXME: need to use a better caching strategy using time, we want to react
+#        to node operators changing their dns settings
 @functools.lru_cache()
 def resolve_dns(host):
     if ':' in host:
@@ -102,3 +104,26 @@ def get_geoip_info(ip_addr):
 
     geoip_cache[ip_addr] = pt
     return copy.copy(pt)
+
+
+def get_world_map_points_from_peers(peers):
+    if 'geoip2' not in core.config:
+        log.warning("Missing 'geoip' property in config.yaml with user and password. No world map display...")
+        return []
+
+    points = []
+    try:
+        for p in peers:
+            ip_host = p['addr'].split(':')[0]
+            ip_addr = resolve_dns(ip_host)
+            pt = get_geoip_info(ip_addr)
+            pt.update({'addr': p['addr'],
+                       'platform': p.get('platform', ''),
+                       'version': p.get('fc_git_revision_age', '')
+                       })
+            points.append(pt)
+
+    except Exception as e:
+        log.exception(e)
+
+    return points
