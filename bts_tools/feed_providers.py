@@ -23,6 +23,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from retrying import retry
 from requests.exceptions import Timeout
+import json
 import requests
 import functools
 import logging
@@ -168,6 +169,7 @@ class YahooFeedProvider(FeedProvider):
         r = requests.get('http://download.finance.yahoo.com/d/quotes.csv',
                          timeout=self.TIMEOUT,
                          params={'s': query_string, 'f': 'l1', 'e': 'csv'})
+        log.debug('Received from yahoo: {}'.format(r.text))
 
         try:
             asset_prices = map(float, r.text.split())
@@ -350,6 +352,7 @@ class YunbiFeedProvider(FeedProvider):
         r = requests.get('https://yunbi.com/api/v2/tickers.json',
                          timeout=10,
                          headers=headers).json()
+        log.debug('received: {}'.format(json.dumps(r, indent=4)))
         r = r['{}{}'.format(cur.lower(), base.lower())]
         return self.feed_price(cur, base,
                                price=float(r['ticker']['last']),
