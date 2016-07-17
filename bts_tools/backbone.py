@@ -19,59 +19,17 @@
 #
 
 from . import core
+from .network_utils import resolve_dns, get_ip
 from contextlib import suppress
-import socket
-import fcntl
-import struct
-import sys
-import functools
 import logging
 
 log = logging.getLogger(__name__)
-
-
-def get_ip_address(ifname):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(
-        s.fileno(),
-        0x8915,  # SIOCGIFADDR
-        struct.pack('256s', ifname[:15])
-    )[20:24])
-
-
-def get_ip():
-    if sys.platform == 'darwin':
-        return socket.gethostbyname(socket.gethostname())
-    else:
-        for iface in [b'eth0', b'en1']:
-            #with suppress(Exception):
-            try:
-                return get_ip_address(iface)
-            except Exception as e:
-                log.warning('iface : %s' % iface)
-                log.exception(e)
-    raise OSError('Could not get IP address')
-
-
-def get_ip_nofail():
-    try:
-        return get_ip()
-    except Exception:
-        return 'N/A'
 
 
 def get_p2p_port(node):
     # NOTE: this returns 0 while the client is starting (ie: already responds
     #       to JSON-RPC but hasn't started the p2p code yet)
     return int(node.network_get_info()['listening_on'].split(':')[1])
-
-
-@functools.lru_cache()
-def resolve_dns(host):
-    if ':' in host:
-        ip, port = host.split(':')
-        return '%s:%s' % (resolve_dns(ip), port)
-    return socket.gethostbyname(host)
 
 
 def node_list(node):

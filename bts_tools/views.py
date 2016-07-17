@@ -23,7 +23,7 @@ from functools import wraps
 from collections import defaultdict
 from datetime import datetime
 from . import rpcutils as rpc
-from . import core, monitor, slogging, backbone, seednodes
+from . import core, monitor, slogging, backbone, seednodes, network_utils
 from .seednodes import split_columns
 import bts_tools
 import json
@@ -452,6 +452,9 @@ def view_seed_nodes(chain):
                            data=data, order='[]', nrows=100, sortable=False)
 
 
+
+
+
 @bp.route('/peers')
 @clear_rpc_cache
 @catch_error
@@ -477,9 +480,33 @@ def view_connected_peers():
               p.get('fc_git_revision_unix_timestamp', 'unknown'))
              for p in peers ]
 
-    return render_template('network.html',
+    points = []
+    countries = defaultdict(int)
+
+    try:
+        points = []
+        for p in peers:
+            ip_addr = p['addr'].split(':')[0]
+            pt = network_utils.get_geoip_info(ip_addr)
+            pt.update({'addr': p['addr'],
+                       'platform': p['platform'],
+                       'version': p['fc_git_revision_age']
+                       })
+            points.append(pt)
+
+    except Exception as e:
+        log.exception(e)
+
+    for pt in points:
+        countries[pt['country_iso'].lower()] += 1
+
+    #print(json.dumps(countries, indent=4))
+
+    return render_template('network_map.html',
                            title='Connected peers',
                            headers=headers,
+                           points=points,
+                           countries=countries,
                            data=data, attrs=attrs, order='[[ 1, "desc" ]]')
 
 

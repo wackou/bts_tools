@@ -110,6 +110,7 @@ def create_app(settings_override=None):
     app.jinja_env.globals.update(core=bts_tools.core,
                                  backbone=bts_tools.backbone,
                                  rpc=bts_tools.rpcutils,
+                                 network_utils=bts_tools.network_utils,
                                  monitor=bts_tools.monitor,
                                  process=bts_tools.process)
 

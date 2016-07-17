@@ -31,7 +31,8 @@ VERSION = '0.4'
 
 install_requires = ['Flask', 'requests', 'psutil', 'arrow', 'pyyaml', 'dogpile.cache',
                     'beautifulsoup4', 'maxminddb-geolite2', 'autobahn', 'ruamel.yaml',
-                    'doit', 'retrying', 'ecdsa'
+                    'doit', 'retrying', 'ecdsa',
+                    'geoip2' # for ip addr -> lat, lon  (need account on maxmind)
                     ]
 
 setup_requires = []
