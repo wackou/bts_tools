@@ -59,7 +59,7 @@ SEED_NODES = {
     ],
     'steem': [
         ('212.117.213.186:2016',           'ch', 'liondani'),
-        ('185.82.203.92:2001',             'nl', 'riverhead'),
+        ('seed.riversteem.com:2001',       'nl', 'riverhead'),
         ('52.74.152.79:2001',              'sg', 'smooth'),
         ('52.63.172.229:2001',             'au', 'rossco99'),
         ('104.236.82.250:2001',            'us', 'svk'),

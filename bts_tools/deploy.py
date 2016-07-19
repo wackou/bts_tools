@@ -225,8 +225,6 @@ def deploy_node(build_env, config_file, host):
         cfg = yaml.load(f)
 
     cfg['pause'] = False  # do not pause during installation
-    cfg['is_debian'] = False  #True
-    cfg['is_ubuntu'] = True
     cfg['nginx_server_name'] = '{}.{}'.format(cfg['hostname'], cfg['domain'])
 
     # 1- create vps instance if needed

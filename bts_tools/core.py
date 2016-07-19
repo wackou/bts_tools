@@ -24,6 +24,7 @@ from subprocess import Popen, PIPE
 from functools import wraps
 from contextlib import suppress
 from jinja2 import Environment, PackageLoader
+import pwd
 import sys
 import os
 import shutil
@@ -39,7 +40,21 @@ platform = sys.platform
 if platform.startswith('linux'):
     platform = 'linux'
 
+
 HERE = abspath(dirname(__file__))
+
+# FIXME: bug with supervisor in ubuntu 16.04?
+# weird, seems like supervisord on ubuntu doesn't set the HOME var
+# properly, even though we're running as a separate user, so do it ourself
+# (otherwise, all calls to expanduser use /root for ~ and fail)
+username = pwd.getpwuid(os.getuid())[0]
+if os.environ.get('HOME') == '/root' and username != 'root':
+    log.warning('Seems like $HOME is not properly set...')
+    os.environ['HOME'] = ('/Users/{}'
+                          if sys.platform == 'darwin' else
+                          '/home/{}').format(username)
+    log.warning('Forcing to: {}'.format(os.environ['HOME']))
+
 BTS_TOOLS_HOMEDIR = '~/.bts_tools'
 BTS_TOOLS_HOMEDIR = expanduser(BTS_TOOLS_HOMEDIR)
 BTS_TOOLS_CONFIG_FILE = join(BTS_TOOLS_HOMEDIR, 'config.yaml')

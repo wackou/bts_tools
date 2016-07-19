@@ -114,26 +114,6 @@ install_user () {
 install_user $UNIX_USER $UNIX_PASSWORD
 if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to continue..."; fi
 
-# Lockdown ssh so only public key access is allowed
-if [ ! -f /tmp/etcSsh.tgz ]; then
-  echo "You forgot the etcSsh.tgz file!"
-else
-  if [ ! -d /etc/ssh-original ]; then
-    echo "Locking down ssh..."
-    tar xzf /tmp/etcSsh.tgz
-    pushd /etc
-    mv ssh ssh-original
-    mv /tmp/etc/ssh ssh
-    chown -R root ssh
-    chgrp -R root ssh
-    service ssh restart
-    popd
-    rm -rf /tmp/etcSsh.tgz
-    rm -rf /tmp/etc
-  fi
-fi
-if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to continue..."; fi
-
 
 # Install and configure nginx web server for use with python monitor
 if [ ! -d /etc/nginx-original ]; then
