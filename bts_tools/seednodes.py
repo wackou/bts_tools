@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from bts_tools import network_utils
+from bts_tools.network_utils import get_geoip_info, resolve_dns
 import socket
 import threading
 import logging
@@ -164,16 +164,12 @@ def get_seeds_view_data(chain):
     warning = lambda s: '<div class="btn btn-xs btn-warning">{}</div>'.format(s)
     error = lambda s: '<div class="btn btn-xs btn-danger">{}</div>'.format(s)
 
-    #get_flag = lambda country: '<i class="famfamfam-flag-%s" style="margin:0 8px 0 0;"></i>' % country
-    #add_flag = lambda country, ip: '<span>%s %s</span>' % (get_flag(country), ip)
-
     def get_flag(country):
         return '<i class="famfamfam-flag-%s" style="margin:0 8px 0 0;"></i>' % country
 
     def add_flag(country, ip):
         try:
-            ip = network_utils.resolve_dns(ip)
-            geo = network_utils.get_geoip_info(ip.split(':')[0])
+            geo = get_geoip_info(resolve_dns(ip).split(':')[0])
             country = geo['country_iso'].lower()
         except ValueError:
             pass
