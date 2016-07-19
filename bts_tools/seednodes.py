@@ -18,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from bts_tools import network_utils
 import socket
 import threading
 import logging
@@ -62,7 +63,6 @@ SEED_NODES = {
         ('52.74.152.79:2001',              'sg', 'smooth'),
         ('52.63.172.229:2001',             'au', 'rossco99'),
         ('104.236.82.250:2001',            'us', 'svk'),
-        ('104.199.157.70:2001',            'us', ''),
         ('steem.kushed.com:2001',          'us', 'kushed'),
         ('steemd.pharesim.me:2001',        'de', 'pharesim'),
         ('seed.steemnodes.com:2001',       'nl', 'wackou'),
@@ -75,13 +75,15 @@ SEED_NODES = {
         ('steem-id.altexplorer.xyz:2001',  'id', 'steem-id'),
         ('213.167.243.223:2001',           'fr', 'bhuz'),
         ('seed.steemd.com:34191',          'us', 'roadscape'),
+        ('52.4.250.181:39705',             'us', 'lafona'),
+        ('46.252.27.1:1337',               'de', 'jabbasteem'),
+        ('anyx.co:2001',                   '',   'anyx'),
+        ('seed.cubeconnex.com:2001',       '',   'bitcube'),
+        ('104.199.157.70:2001',            'us', ''),
         ('45.55.217.111:12150',            'us', ''),
         ('212.47.249.84:40696',            'fr', ''),
-        ('52.4.250.181:39705',             'us', 'lafona'),
         ('81.89.101.133:2001',             'de', ''),
         ('192.99.4.226:2001',              'ca', ''),
-        ('46.252.27.1:1337',               'de', 'jabbasteem'),
-        ('anyx.co:2001',                  '', 'anyx')
     ]
 }
 
@@ -162,8 +164,21 @@ def get_seeds_view_data(chain):
     warning = lambda s: '<div class="btn btn-xs btn-warning">{}</div>'.format(s)
     error = lambda s: '<div class="btn btn-xs btn-danger">{}</div>'.format(s)
 
-    get_flag = lambda country: '<i class="famfamfam-flag-%s" style="margin:0 8px 0 0;"></i>' % country
-    add_flag = lambda country, ip: '<span>%s %s</span>' % (get_flag(country), ip)
+    #get_flag = lambda country: '<i class="famfamfam-flag-%s" style="margin:0 8px 0 0;"></i>' % country
+    #add_flag = lambda country, ip: '<span>%s %s</span>' % (get_flag(country), ip)
+
+    def get_flag(country):
+        return '<i class="famfamfam-flag-%s" style="margin:0 8px 0 0;"></i>' % country
+
+    def add_flag(country, ip):
+        try:
+            ip = network_utils.resolve_dns(ip)
+            geo = network_utils.get_geoip_info(ip.split(':')[0])
+            country = geo['country_iso'].lower()
+        except ValueError:
+            pass
+
+        return '<span>%s %s</span>' % (get_flag(country), ip)
 
     data = [(add_flag(location, seed), success('online'), provider)
             if seed_status.get(seed) == 'online' else
