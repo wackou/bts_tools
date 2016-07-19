@@ -8,6 +8,7 @@
 # config variables
 export PAUSE={{ 1 if pause else 0 }}  # Pause between installation steps
 export IS_DEBIAN={{ 1 if is_debian else 0 }}
+export IS_UBUNTU={{ 1 if is_ubuntu else 0 }}
 export INSTALL_COMPILE_DEPENDENCIES={{ 1 if compile_on_new_host else 0 }}
 
 export UNIX_HOSTNAME="{{ unix_hostname }}"
@@ -89,25 +90,12 @@ if [ $IS_DEBIAN -eq 1 ]; then
     apt-get update >> /tmp/setupVPS.log 2>&1
     if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to continue..."; fi
   #fi
-else
-  if [ ! -f /tmp/boost.tgz ]; then
-    echo "You forgot the boost library tgz file!"
-  else
-    if [ ! -f /usr/local/lib/libboost_atomic.so.1.57.0 ]; then
-      echo "Uncompressing boost..."
-      tar xzf boost.tgz
-      echo "Installing boost..."
-      pushd /tmp/boost/boost_1_57_0/
-      ./b2 install > /tmp/boost.log
-      popd
-      rm -rf /tmp/boost.tgz
-      rm -rf /tmp/boost
-    else
-      echo "Looks like boost is already installed"
-    fi
-  fi
-  if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to continue..."; fi
+elif [ $IS_UBUNTU -eq 1]; then
+    apt-get install cmake libboost-all-dev >> /tmp/setupVPS.log 2>&1
 fi
+
+if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to continue..."; fi
+
 
 
 install_user () {
@@ -146,22 +134,9 @@ else
 fi
 if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to continue..."; fi
 
-# Adjust swapiness and inode caching
-#if [[ -n $(swapon -s | grep -e [0-9]) && $(cat /proc/sys/vm/swappiness) -gt 30 ]]; then
-#  echo "Adjusting swapiness and inode caching..."
-#  echo " "  >> /etc/sysctl.conf
-#  echo "vm.swappiness = 10" >> /etc/sysctl.conf
-#  echo "vm.vfs_cache_pressure = 50" >> /etc/sysctl.conf
-#else
-#  echo "No swap found or already optimized. Is this a KVM VPS?"
-#fi
-#if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to continue..."; fi
 
 # Install and configure nginx web server for use with python monitor
-if [ ! -f /tmp/etcNginx.tgz ]; then
-  echo "You forgot the etcNginx.tgz file!"
-else
-  if [ ! -d /etc/nginx-original ]; then
+if [ ! -d /etc/nginx-original ]; then
     # Install nginx
     echo "* Installing nginx..."
     apt-get install -yfV nginx >> /tmp/setupVPS.log 2>&1
@@ -181,17 +156,11 @@ else
     chgrp -R root nginx
     service nginx restart
     popd
-    #rm -rf /tmp/etcNginx.tgz
-    #rm -rf /tmp/etc
-  fi
 fi
 if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to continue..."; fi
 
 # Install and configure uwsgi
-if [ ! -f /tmp/etcUwsgi.tgz ]; then
-  echo "You forgot the etcUwsgi.tgz file!"
-else
-  if [ ! -d /etc/uwsgi-original ]; then
+if [ ! -d /etc/uwsgi-original ]; then
     # Install uwsgi
     echo "* Installing uwsgi..."
     apt-get install -yfV uwsgi uwsgi-plugin-python3 >> /tmp/setupVPS.log 2>&1
@@ -213,9 +182,6 @@ else
     chgrp -R root uwsgi
     service uwsgi restart
     popd
-    #rm -rf /tmp/etcUwsgi.tgz
-    #rm -rf /tmp/etc
-  fi
 fi
 if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to finish!"; fi
 

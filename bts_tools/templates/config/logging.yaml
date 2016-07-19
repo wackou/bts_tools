@@ -12,4 +12,6 @@ logging:
     bts_tools.profile: INFO
     bts_tools.views: INFO
     bts_tools.seednodes: INFO
+    bts_tools.network_utils: INFO
+
 
