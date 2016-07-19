@@ -90,7 +90,7 @@ if [ $IS_DEBIAN -eq 1 ]; then
     apt-get update >> /tmp/setupVPS.log 2>&1
     if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to continue..."; fi
   #fi
-elif [ $IS_UBUNTU -eq 1]; then
+elif [ $IS_UBUNTU -eq 1 ]; then
     apt-get install cmake libboost-all-dev >> /tmp/setupVPS.log 2>&1
 fi
 
