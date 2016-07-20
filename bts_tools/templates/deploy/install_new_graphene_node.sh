@@ -84,6 +84,11 @@ if [ $IS_DEBIAN -eq 1 ]; then
     mv /etc/apt/sources.list /etc/apt/sources.list.orig
     (echo "deb http://debian.mirror.constant.com/ testing main"; cat /etc/apt/sources.list.orig) > /etc/apt/sources.list
     apt-get update >> /tmp/setupVPS.log 2>&1
+
+    echo " installing libc first"
+    apt-get install -t testing -yfV libc-bin >> /tmp/setupVPS.log 2>&1
+    echo " installing boost-dev"
+
     apt-get install -t testing -yfV cmake libboost-all-dev >> /tmp/setupVPS.log 2>&1
     # reset to stable apt sources
     cp /etc/apt/sources.list.orig /etc/apt/sources.list
@@ -169,5 +174,6 @@ echo ""
 echo "Please reboot in order for the hostname to take effect"
 
 touch /root/base_graphene_installed
+cp /tmp/setupVPS.log /root/
 exit
 echo "not exited"
