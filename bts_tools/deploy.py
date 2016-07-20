@@ -175,6 +175,7 @@ def deploy_base_node(cfg, build_dir, build_env):
     # 2.1- install supervisord conf
     log.info('Installing supervisord config')
     run_remote('apt-get install -yfV supervisor')
+    run_remote('systemctl enable supervisor')   # not enabled by default, at least on ubuntu 16.04 (bug?)
     render_template('supervisord.conf')
     copy(join(build_dir, 'supervisord.conf'), '/etc/supervisor/conf.d/bts_tools.conf')
 
@@ -198,6 +199,7 @@ def deploy_base_node(cfg, build_dir, build_env):
         # copy snapshot of the blockchain, if available
         deploy_config = client.get('deploy', {})
         local_data_dir = deploy_config.get('blockchain_snapshot')
+        log.info('blockchain dir to deploy for {}: {}'.format(client_name, local_data_dir))
         if local_data_dir:
             try:
                 run_remote_cmd(host, cfg['unix_user'], 'mkdir -p {}/blockchain'.format(remote_data_dir))
