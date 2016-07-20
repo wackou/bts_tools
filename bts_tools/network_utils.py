@@ -18,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from contextlib import suppress
 from . import core
 import geoip2
 import geoip2.webservice
@@ -44,14 +45,13 @@ def get_ip():
     if sys.platform == 'darwin':
         return socket.gethostbyname(socket.gethostname())
     else:
-        for iface in [b'eth0', b'en1']:
-            #with suppress(Exception):
-            try:
+        ifaces = [b'eth0', b'en1']
+        cfg = core.run('/sbin/ifconfig', capture_io=True).stdout.strip()
+        ifaces += [l.strip().encode('utf-8') for l in cfg.split() if l == l.lstrip()]
+        for iface in ifaces:
+            with suppress(Exception):
                 return get_ip_address(iface)
-            except Exception as e:
-                log.warning('iface : %s' % iface)
-                log.exception(e)
-    raise OSError('Could not get IP address')
+        raise OSError('Could not get IP address for any of the interfaces: {}'.format(ifaces))
 
 
 def get_ip_nofail():
