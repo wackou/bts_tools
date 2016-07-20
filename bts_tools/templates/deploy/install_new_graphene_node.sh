@@ -20,9 +20,12 @@ export NGINX_SERVER_NAME="{{ nginx_server_name }}"
 export UWSGI_USER="$UNIX_USER"
 export UWSGI_GROUP="$UNIX_USER"
 
-if [ ! -f /root/base_graphene_installed ]; then
+if [ -f /root/base_graphene_installed ]; then
     echo "---- Base system already installed, skipping it"
+    exit
 fi
+
+echo "---- Installing base system"
 
 #if [ ! -f /tmp/newVPS.tgz ]; then
 #  echo "No newVPS.tgz file!"

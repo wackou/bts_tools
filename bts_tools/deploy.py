@@ -26,6 +26,7 @@ from .core import run, get_all_bin_names, hash_salt_password
 from .cmdline import select_build_environment
 from . import core, cmdline
 from .vps import VultrAPI, GandiAPI
+import copy
 import os
 import re
 import logging
@@ -102,7 +103,7 @@ def prepare_installation_bundle(cfg, build_dir):
 
     # 0.2- generate config.yaml file
     config_yaml = yaml.load(env.get_template('config.yaml').render(), Loader=yaml.RoundTripLoader)
-    config_yaml.update(cfg['config_yaml'])
+    config_yaml.update(copy.deepcopy(cfg['config_yaml']))
     for client_name, client in config_yaml['clients'].items():
         client.pop('deploy', None)
     with open(join(build_dir, 'config.yaml'), 'w') as config_yaml_file:
@@ -199,8 +200,8 @@ def deploy_base_node(cfg, build_dir, build_env):
         # copy snapshot of the blockchain, if available
         deploy_config = client.get('deploy', {})
         local_data_dir = deploy_config.get('blockchain_snapshot')
-        log.info('blockchain dir to deploy for {}: {}'.format(client_name, local_data_dir))
         if local_data_dir:
+            log.info('Deploying {} chain snapshot from {}'.format(client_name, local_data_dir))
             try:
                 run_remote_cmd(host, cfg['unix_user'], 'mkdir -p {}/blockchain'.format(remote_data_dir))
                 copy('{}/blockchain/'.format(local_data_dir),
