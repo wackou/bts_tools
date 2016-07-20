@@ -227,8 +227,20 @@ def deploy_node(build_env, config_file, host):
     with open(config_file, 'r') as f:
         cfg = yaml.load(f)
 
+    # auto adjustements of settings in the config
     cfg['pause'] = False  # do not pause during installation
     cfg['nginx_server_name'] = '{}.{}'.format(cfg['hostname'], cfg['domain'])
+
+    if cfg['os'] == 'debian':
+        cfg['is_debian'] = True
+        cfg['is_ubuntu'] = False
+        cfg['python_version'] = '3.4'
+    elif cfg['os'] == 'ubuntu':
+        cfg['is_debian'] = False
+        cfg['is_ubuntu'] = True
+        cfg['python_version'] = '3.5'
+    else:
+        raise ValueError('unknown OS: {}'.format(cfg['os']))
 
     # 1- create vps instance if needed
     try:

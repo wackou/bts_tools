@@ -379,6 +379,7 @@ Examples:
                             run_args += ['--witness-id', '\\"{}\\"'.format(witness_id),
                                          '--private-key', '[\\"{}\\", \\"{}\\"]'.format(public_key, private_key)]
 
+            # FIXME: check if this also works with bts and muse
             if client['type'] == 'steem':
                 pw_hash, salt = hash_salt_password(client['witness_password'])
                 api_user_str = '{"username":"%s", ' % client['witness_user']
