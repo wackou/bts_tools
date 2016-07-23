@@ -74,7 +74,7 @@ def send_notification_boxcar(msg, alert=False):
 
 
 def send_notification(nodes, node_msg, alert=False):
-    msg = '%s - %s: %s' % (nodes[0].type(), ', '.join({n.name for n in nodes}), node_msg)
+    msg = '[%s] %s: %s' % (nodes[0].type(), ', '.join({n.name for n in nodes}), node_msg)
     if alert:
         log.warning(msg)
     else:

@@ -8,4 +8,4 @@ enable-threads = true
 lazy-apps = true
 workers = 1
 module = bts_tools.wsgi
-callable: application
+callable = application

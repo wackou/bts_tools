@@ -46,7 +46,7 @@ def get_ip():
         return socket.gethostbyname(socket.gethostname())
     else:
         ifaces = [b'eth0', b'en1']
-        cfg = core.run('/sbin/ifconfig', capture_io=True).stdout.strip()
+        cfg = core.run('/sbin/ifconfig', capture_io=True, verbose=False).stdout.strip()
         ifaces += [l.strip().encode('utf-8') for l in cfg.split() if l == l.lstrip()]
         for iface in ifaces:
             with suppress(Exception):
