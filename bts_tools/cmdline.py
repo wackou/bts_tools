@@ -363,14 +363,22 @@ Examples:
             for node in seed_nodes:
                 run_args += ['--seed-node', node]
 
+
+            plugins = set()
+            apis = set()
+            public_apis = set()
+
             roles = client.get('roles', [])
             for role in roles:
                 if role['role'] == 'witness':
+                    plugins.add('witness')
+
                     if client['type'] == 'steem':
                         private_key = role.get('signing_key')
                         if private_key:
                             run_args += ['--witness', '\\"{}\\"'.format(role['name']),
                                          '--private-key', '{}'.format(private_key)]
+
                     else:
                         witness_id = role.get('witness_id')
                         private_key = role.get('signing_key')
@@ -379,13 +387,44 @@ Examples:
                             run_args += ['--witness-id', '\\"{}\\"'.format(witness_id),
                                          '--private-key', '[\\"{}\\", \\"{}\\"]'.format(public_key, private_key)]
 
-            # FIXME: check if this also works with bts and muse
+                elif role['role'] == 'seed':
+                    apis |= {'network_node_api'}
+
+                elif role['role'] == 'api':
+                    if client['type'] == 'steem':
+                        plugins |= {'account_history', 'follow', 'market_history', 'private_message', 'tags'}
+                        public_apis |= {'database_api', 'login_api', 'market_history_api', 'tags_api', 'follow_api'}
+
+            plugins = set(client.get('plugins', plugins))
+            apis = set(client.get('apis', apis))
+            public_apis = set(client.get('public_apis', public_apis))
+
+            # always required for working with bts_tools
+            apis |= {'database_api', 'login_api', 'network_node_api'}
+
+            log.debug('Running with plugins: {}'.format(plugins))
+            log.debug('Running with apis: {}'.format(apis))
+            log.debug('Running with public apis: {}'.format(public_apis))
+
+
+            # enabling plugins
             if client['type'] == 'steem':
+                for plugin in plugins:
+                    run_args += ['--enable-plugin', plugin]
+
+            # enabling api access
+            if client['type'] == 'steem':
+                # FIXME: check if this also works with bts and muse
+                for api in public_apis:
+                    run_args += ['--public-api', api]
+
                 pw_hash, salt = hash_salt_password(client['witness_password'])
                 api_user_str = '{"username":"%s", ' % client['witness_user']
                 api_user_str += '"password_hash_b64": "{}", '.format(pw_hash)
                 api_user_str += '"password_salt_b64": "{}", '.format(salt)
-                api_user_str += '"allowed_apis": ["database_api", "network_broadcast_api", "history_api", "network_node_api"]}'
+                allowed_apis_str = ', '.join('"{}"'.format(api) for api in (apis | public_apis))
+                api_user_str += '"allowed_apis": [{}]'.format(allowed_apis_str)
+                api_user_str += '}'
                 run_args += ['--api-user', api_user_str.replace('"', '\\"')]
             else:
                 api_access = client.get('api_access')
