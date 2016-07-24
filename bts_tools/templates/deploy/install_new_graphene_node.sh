@@ -88,9 +88,10 @@ if [ $IS_DEBIAN -eq 1 ]; then
     (echo "deb http://debian.mirror.constant.com/ testing main"; cat /etc/apt/sources.list.orig) > /etc/apt/sources.list
     apt-get update >> /tmp/setupVPS.log 2>&1
 
-    echo " installing libc first"
+    #echo " installing libc first"
+    export DEBIAN_FRONTEND=noninteractive    # required, "apt-get -y" is not sufficient
     apt-get install -t testing -yfV libc-bin >> /tmp/setupVPS.log 2>&1
-    echo " installing boost-dev"
+    #echo " installing boost-dev"
 
     apt-get install -t testing -yfV cmake libboost-all-dev >> /tmp/setupVPS.log 2>&1
     # reset to stable apt sources

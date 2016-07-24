@@ -71,12 +71,17 @@ class VultrAPI(object):
         log.info('Creating Vultr instance {} in {}...'.format(name, location))
         ssh_keys_list = self.call('sshkey/list').values()
         ssh_key_id = {key['name']: key['SSHKEYID'] for key in ssh_keys_list}
+        try:
+            ssh_key_id_str = ','.join(ssh_key_id[k] for k in ssh_keys)
+        except KeyError:
+            log.error('Invalid key for Vultr: {}\navailable keys: {}'.format(ssh_keys, ssh_key_id.keys()))
+            raise
         r = self.call('server/create',
                       DCID=self.datacenters[location.lower()],
                       VPSPLANID=self.plans[vps_plan.lower()],
                       OSID=os_id,
                       label=name,
-                      SSHKEYID=','.join(ssh_key_id[k] for k in ssh_keys))
+                      SSHKEYID=ssh_key_id_str)
         sub_id = r['SUBID']
 
         # wait until server is properly created
