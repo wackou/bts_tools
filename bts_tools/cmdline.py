@@ -390,10 +390,13 @@ Examples:
                 elif role['role'] == 'seed':
                     apis += ['network_node_api']
 
+                elif role['role'] == 'feed_producer':
+                    apis += ['network_broadcast_api']
+
                 elif role['role'] == 'api':
                     if client['type'] == 'steem':
                         plugins += ['account_history', 'follow', 'market_history', 'private_message', 'tags']
-                        public_apis += ['database_api', 'login_api', 'market_history_api', 'tags_api', 'follow_api']
+                        public_apis += ['database_api', 'login_api', 'market_history_api', 'tag_api', 'follow_api']
 
             def make_unique(l):
                 result = []
