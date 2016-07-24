@@ -49,6 +49,12 @@ def init_ctx(node, ctx, cfg):
     ctx.stats = deque(maxlen=min(desired_maxlen, maxlen))
 
     if node.rpc_host.is_witness_localhost() and cpu_total_ctx is None:
+        # FIXME: this doesn't work when we have multiple clients being monitored,
+        #        and the one supposed to fill in those values is offline.
+        #        they get set to 0, when other clients are running which could fill those values....
+        #        actually, we have more problems related to that, as seed nodes, graphene, etc.
+        #        don't show global stats anymore...
+
         # first monitoring thread that initializes its context gets to be
         # the one that will fill in the global cpu values
         cpu_total_ctx = ctx

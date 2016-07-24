@@ -61,28 +61,26 @@ def create_vps_instance(cfg):
     if cfg.get('host'):
         # do not create an instance, use the one on the given ip address
         log.info('================ Installing graphene on given host: {} ================'.format(cfg['host']))
-        return
+        return cfg['host']
 
-    elif cfg['vps'].get('provider', '').lower() == 'vultr':
-        log.info('================ Creating new instance on Vultr ================')
-        v = cfg['vps']['vultr']
-        vultr = VultrAPI(v['api_key'])
+
+    VPS_PROVIDERS = {'gandi': GandiAPI,
+                     'vultr': VultrAPI}
+
+    vps_provider = cfg.get('vps', {}).get('provider', '').lower()
+
+    if vps_provider in VPS_PROVIDERS:
+        log.info('================ Creating new instance on {} ================'.format(vps_provider))
+        v = cfg['vps'][vps_provider]
+        provider = VPS_PROVIDERS[vps_provider](v['api_key'])
         params = dict(v)
         params.pop('api_key')
-        ip_addr = vultr.create_server(**params)
+        ip_addr = provider.create_server(**params)
         cfg['host'] = ip_addr
+        return cfg['host']
 
-    elif cfg['vps'].get('provider', '').lower() == 'gandi':
-        log.info('================ Creating new instance on Gandi ================')
-        v = cfg['vps']['gandi']
-        gandi = GandiAPI(v['api_key'])
-        params = dict(v)
-        params.pop('api_key')
-        ip_addr = gandi.create_server(**params)
-        cfg['host'] = ip_addr
-
-    else:
-        raise ValueError('No host and no valid vps provider given')
+    raise ValueError('No host and no valid vps provider given (host = {}  --  vps provider = {}'
+                     .format(cfg.get('host'), vps_provider))
 
 
 def render_template_file(cfg, build_dir, env, template_name, output_name=None):
@@ -118,23 +116,7 @@ def prepare_installation_bundle(cfg, build_dir):
     render_template('api_access.json')
     render_template('api_access.steem.json')
 
-    # 0.4- nginx
-    nginx = join(build_dir, 'etc', 'nginx')
-    run('mkdir -p {} {}'.format(join(nginx, 'sites-available'),
-                                join(nginx, 'sites-enabled')))
-    render_template('nginx_sites_available', join(nginx, 'sites-available', 'default'))
-    run('cd {}; ln -s ../sites-available/default'.format(join(nginx, 'sites-enabled')))
-    run('cd {}; tar cvzf {} etc/nginx'.format(build_dir, join(build_dir, 'etcNginx.tgz')))
-
-    # 0.5- uwsgi
-    uwsgi = join(build_dir, 'etc', 'uwsgi')
-    run('mkdir -p {} {}'.format(join(uwsgi, 'apps-available'),
-                                join(uwsgi, 'apps-enabled')))
-    render_template('uwsgi_apps_available', join(uwsgi, 'apps-available', 'bts_tools.ini'))
-    run('cd {}; ln -s ../apps-available/bts_tools.ini'.format(join(uwsgi, 'apps-enabled')))
-    run('cd {}; tar cvzf {} etc/uwsgi'.format(build_dir, join(build_dir, 'etcUwsgi.tgz')))
-
-    # 0.6- get authorized_keys if any
+    # 0.4- get authorized_keys if any
     if cfg.get('ssh_keys'):
         with open(join(build_dir, 'authorized_keys'), 'w') as key_file:
             for key in cfg['ssh_keys']:
@@ -173,12 +155,50 @@ def deploy_base_node(cfg, build_dir, build_env):
     log.info('================ Installing remote host ================')
     run_remote('cd /tmp; bash install_new_graphene_node.sh')
 
+    # 2.0- copy config.yaml file to ~/.bts_tools/
+    copy(join(build_dir, 'config.yaml'), '~/.bts_tools/config.yaml', user=cfg['unix_user'])
+
     # 2.1- install supervisord conf
-    log.info('Installing supervisord config')
+    log.info('* Installing supervisord config')
     run_remote('apt-get install -yfV supervisor')
     run_remote('systemctl enable supervisor')   # not enabled by default, at least on ubuntu 16.04 (bug?)
     render_template('supervisord.conf')
     copy(join(build_dir, 'supervisord.conf'), '/etc/supervisor/conf.d/bts_tools.conf')
+
+    # 2.2- install nginx
+    log.info('* Installing nginx...')
+
+    run_remote('apt-get install -yfV nginx >> /tmp/setupVPS.log 2>&1')
+    run_remote('rm -fr /etc/nginx-original; cp -R /etc/nginx /etc/nginx-original')
+    nginx = join(build_dir, 'etc', 'nginx')
+    run('mkdir -p {}'.format(join(nginx, 'sites-available')))
+    render_template('nginx_sites_available', join(nginx, 'sites-available', 'default'))
+    copy(join(nginx, 'sites-available', 'default'), '/etc/nginx/sites-available/default')
+    run_remote('cd /etc/nginx/sites-enabled; ln -fs ../sites-available/default')
+    run_remote('chown -R root:root /etc/nginx')
+
+    # copy certs if provided
+    run_remote('cd /etc/nginx; mkdir -p certs')
+    ssl_key, ssl_cert = cfg.get('ssl_key'), cfg.get('ssl_cert')
+    if ssl_key:
+        copy(ssl_key, '/etc/nginx/certs')
+    if ssl_cert:
+        copy(ssl_cert, '/etc/nginx/certs')
+
+    run_remote('service nginx restart')
+
+    # 2.2- install uwsgi
+    log.info('* Installing uwsgi...')
+
+    run_remote('apt-get install -yfV uwsgi uwsgi-plugin-python3 >> /tmp/setupVPS.log 2>&1')
+    run_remote('rm -fr /etc/uwsgi-original; cp -R /etc/uwsgi /etc/uwsgi-original')
+    uwsgi = join(build_dir, 'etc', 'uwsgi')
+    run('mkdir -p {}'.format(join(uwsgi, 'apps-available')))
+    render_template('uwsgi_apps_available', join(uwsgi, 'apps-available', 'bts_tools.ini'))
+    copy(join(uwsgi, 'apps-available', 'bts_tools.ini'), '/etc/uwsgi/apps-available/bts_tools.ini')
+    run_remote('cd /etc/uwsgi/apps-enabled; ln -fs ../apps-available/bts_tools.ini')
+    run_remote('chown -R root:root /etc/uwsgi')
+    run_remote('service uwsgi restart')
 
     # 3- copy prebuilt binaries
     if cfg.get('compile_on_new_host', False):
@@ -211,6 +231,9 @@ def deploy_base_node(cfg, build_dir, build_env):
                 log.warning('Could not deploy {} blockchain dir because:'.format(client_name))
                 log.exception(e)
 
+    # make sure log file survives a reboot
+    run_remote('cp /tmp/setupVPS.log /root/')
+
 
 def deploy_seed_node(cfg):
     log.info('Deploying seed node...')
@@ -220,10 +243,9 @@ def deploy_seed_node(cfg):
 def is_ip(host):
     return re.fullmatch('[0-9]{1,3}(\.[0-9]{1,3}){3}', host) is not None
 
-def deploy_node(build_env, config_file, host):
-    select_build_environment(build_env)
-
+def load_config(config_file):
     log.info('Reading config from file: %s' % config_file)
+
     with open(config_file, 'r') as f:
         cfg = yaml.load(f)
 
@@ -241,6 +263,18 @@ def deploy_node(build_env, config_file, host):
         cfg['python_version'] = '3.5'
     else:
         raise ValueError('unknown OS: {}'.format(cfg['os']))
+
+    if cfg.get('ssl_key'):
+        cfg['ssl_key_basename'] = os.path.basename(cfg['ssl_key'])
+    if cfg.get('ssl_cert'):
+        cfg['ssl_cert_basename'] = os.path.basename(cfg['ssl_cert'])
+
+    return cfg
+
+
+def deploy_node(build_env, config_file, host):
+    select_build_environment(build_env)
+    cfg = load_config(config_file)
 
     # 1- create vps instance if needed
     try:
@@ -260,7 +294,7 @@ def deploy_node(build_env, config_file, host):
     # 2- prepare the bundle of files to be copied on the remote host
     prepare_installation_bundle(cfg, build_dir)
 
-    # 4- perform the remote install
+    # 3- perform the remote install
     log.info('To view the log of the current installation, run the following command in another terminal:')
     print()
     print('ssh root@{} "tail -f /tmp/setupVPS.log"'.format(cfg['host']))
@@ -269,9 +303,10 @@ def deploy_node(build_env, config_file, host):
 
 
     # 4- reboot remote host
-    log.info('Installation completed successfully, starting fresh node')
-    log.info('Please wait a minute or two to let it start fully')
-    log.warning('The script will now hang, sorry... Please stop it using ctrl-c')
-    run_remote_cmd(cfg['host'], 'root', 'reboot &')  # FIXME: we hang here on reboot
-    # see: http://unix.stackexchange.com/questions/58271/closing-connection-after-executing-reboot-using-ssh-command
-    # maybe use nohup: https://en.wikipedia.org/wiki/Nohup
+    if cfg.get('reboot', True):
+        log.info('Installation completed successfully, starting fresh node')
+        log.info('Please wait a minute or two to let it start fully')
+        log.warning('The script will now hang, sorry... Please stop it using ctrl-c')
+        run_remote_cmd(cfg['host'], 'root', 'reboot &')  # FIXME: we hang here on reboot
+        # see: http://unix.stackexchange.com/questions/58271/closing-connection-after-executing-reboot-using-ssh-command
+        # maybe use nohup: https://en.wikipedia.org/wiki/Nohup

@@ -124,60 +124,7 @@ install_user $UNIX_USER $UNIX_PASSWORD
 if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to continue..."; fi
 
 
-# Install and configure nginx web server for use with python monitor
-if [ ! -d /etc/nginx-original ]; then
-    # Install nginx
-    echo "* Installing nginx..."
-    apt-get install -yfV nginx >> /tmp/setupVPS.log 2>&1
-    pushd /etc
-    cp -R nginx nginx-original
-
-    pushd /
-    tar xzf /tmp/etcNginx.tgz
-    popd
-
-    # set $SERVER_NAME in nginx config
-    #cat /etc/nginx/sites-available/default |
-    #  sed "s/server_name\(.*\)/server_name $NGINX_SERVER_NAME;/" |
-    #  sed "s/auth_basic_user_file\(.*\)/auth_basic_user_file \/home\/$UNIX_USER\/.htpasswd;/" |
-    #  sponge /etc/nginx/sites-available/default
-    chown -R root nginx
-    chgrp -R root nginx
-    service nginx restart
-    popd
-fi
-if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to continue..."; fi
-
-# Install and configure uwsgi
-if [ ! -d /etc/uwsgi-original ]; then
-    # Install uwsgi
-    echo "* Installing uwsgi..."
-    apt-get install -yfV uwsgi uwsgi-plugin-python3 >> /tmp/setupVPS.log 2>&1
-    pushd /etc
-    cp -R uwsgi uwsgi-original
-
-    pushd /
-    tar xzf /tmp/etcUwsgi.tgz
-    popd
-
-    #mv /tmp/etc/uwsgi uwsgi
-    # set user/group in uwsgi config
-#    cat /etc/uwsgi/apps-available/bts_tools.ini |
-#      sed "s/uid = \(.*\)/uid = $UWSGI_USER/" |
-#      sed "s/gid = \(.*\)/gid = $UWSGI_GROUP/" |
-#      sed "s/virtualenv = \(.*\)/virtualenv = \/home\/$UWSGI_USER\/.virtualenvs\/bts_tools/" |
-#      sponge /etc/uwsgi/apps-available/bts_tools.ini
-    chown -R root uwsgi
-    chgrp -R root uwsgi
-    service uwsgi restart
-    popd
-fi
-if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to finish!"; fi
-
 echo ""
 echo "Please reboot in order for the hostname to take effect"
 
 touch /root/base_graphene_installed
-cp /tmp/setupVPS.log /root/
-exit
-echo "not exited"
