@@ -677,10 +677,12 @@ def load_graphene_clients():
     nodes = []
     for client_name, client in core.config['clients'].items():
         for role in client.get('roles', []):
-            nodes.append(GrapheneClient(client_name=client_name,
-                                        client=client,
-                                        type=client.get('type'),
-                                        **role))
+            kwargs = dict(client_name=client_name,
+                          client=client,
+                          type=client.get('type'),
+                          notification=client.get('notification'))
+            kwargs.update(dict(**role))
+            nodes.append(GrapheneClient(**kwargs))
 
     try:
         main_node = nodes[0]

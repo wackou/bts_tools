@@ -82,10 +82,10 @@ def send_notification(nodes, node_msg, alert=False):
 
     for ntype, notify in [('email', send_notification_email),
                           ('boxcar', send_notification_boxcar)]:
-        notify_nodes = {node for node in nodes if ntype in node.notification}
+        notify_nodes = [node for node in nodes if ntype in node.notification]
         if notify_nodes:
             node_names = ', '.join(n.name for n in notify_nodes)
-            msg = '%s - %s: %s' % (notify_nodes[0].type(), node_names, node_msg)
+            msg = '[%s] %s: %s' % (notify_nodes[0].type(), node_names, node_msg)
             try:
                 notify(msg, alert)
             except Exception as e:
