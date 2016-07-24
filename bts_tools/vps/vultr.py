@@ -67,7 +67,7 @@ class VultrAPI(object):
             raise
         return result
 
-    def create_server(self, name, location, vps_plan, os_id, ssh_keys):
+    def create_server(self, name, location, vps_plan, os, ssh_keys):
         log.info('Creating Vultr instance {} in {}...'.format(name, location))
         ssh_keys_list = self.call('sshkey/list').values()
         ssh_key_id = {key['name']: key['SSHKEYID'] for key in ssh_keys_list}
@@ -76,6 +76,12 @@ class VultrAPI(object):
         except KeyError:
             log.error('Invalid key for Vultr: {}\navailable keys: {}'.format(ssh_keys, ssh_key_id.keys()))
             raise
+
+        if os in ['debian', 'debian8', 'jessie']:
+            os_id = 193
+        else:
+            raise ValueError('Unknown OS to deploy on Vultr: {}'.format(os))
+
         r = self.call('server/create',
                       DCID=self.datacenters[location.lower()],
                       VPSPLANID=self.plans[vps_plan.lower()],

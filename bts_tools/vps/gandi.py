@@ -72,7 +72,7 @@ class GandiAPI(object):
 
         log.info('Update of dns entry for {}.{} successfully finished!'.format(host, domain))
 
-    def create_server(self, name, location, src_disk_id, ssh_keys, cores=1, memory=1024, disk_size=40960):
+    def create_server(self, name, location, os, ssh_keys, cores=1, memory=1024, disk_size=40960):
         log.info('Creating Gandi instance {} in {}...'.format(name, location))
         ssh_key_id = {key['name']: key['id'] for key in self.call('hosting.ssh.list')}
 
@@ -88,6 +88,12 @@ class GandiAPI(object):
                    'cores': cores,
                    'keys': [ssh_key_id[k] for k in ssh_keys],
                    }
+
+        if os in ['debian', 'debian8', 'jessie']:
+            src_disk_id = 3315704  # Debian 8 64 bits (HVM)
+        else:
+            raise ValueError('Unknown OS to deploy on Gandi: {}'.format(os))
+
 
         op = self.call('hosting.vm.create_from', vm_spec, disk_spec, src_disk_id)
 
