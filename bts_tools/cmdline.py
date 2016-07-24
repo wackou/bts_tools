@@ -364,14 +364,14 @@ Examples:
                 run_args += ['--seed-node', node]
 
 
-            plugins = set()
-            apis = set()
-            public_apis = set()
+            plugins = []
+            apis = []
+            public_apis = []
 
             roles = client.get('roles', [])
             for role in roles:
                 if role['role'] == 'witness':
-                    plugins.add('witness')
+                    plugins.append('witness')
 
                     if client['type'] == 'steem':
                         private_key = role.get('signing_key')
@@ -388,19 +388,27 @@ Examples:
                                          '--private-key', '[\\"{}\\", \\"{}\\"]'.format(public_key, private_key)]
 
                 elif role['role'] == 'seed':
-                    apis |= {'network_node_api'}
+                    apis += ['network_node_api']
 
                 elif role['role'] == 'api':
                     if client['type'] == 'steem':
-                        plugins |= {'account_history', 'follow', 'market_history', 'private_message', 'tags'}
-                        public_apis |= {'database_api', 'login_api', 'market_history_api', 'tags_api', 'follow_api'}
+                        plugins += ['account_history', 'follow', 'market_history', 'private_message', 'tags']
+                        public_apis += ['database_api', 'login_api', 'market_history_api', 'tags_api', 'follow_api']
 
-            plugins = set(client.get('plugins', plugins))
-            apis = set(client.get('apis', apis))
-            public_apis = set(client.get('public_apis', public_apis))
+            def make_unique(l):
+                result = []
+                for x in l:
+                    if x not in result:
+                        result.append(x)
+                return result
 
-            # always required for working with bts_tools
-            apis |= {'database_api', 'login_api', 'network_node_api'}
+            # always required for working with bts_tools, ensure they are always
+            # in this order at the beginning (so database_api=0, login_api=1, etc.)
+            apis = ['database_api', 'login_api', 'network_node_api'] + apis
+
+            plugins = make_unique(client.get('plugins', plugins))
+            apis = make_unique(client.get('apis', apis))
+            public_apis = make_unique(client.get('public_apis', public_apis))
 
             log.debug('Running with plugins: {}'.format(plugins))
             log.debug('Running with apis: {}'.format(apis))
@@ -422,7 +430,7 @@ Examples:
                 api_user_str = '{"username":"%s", ' % client['witness_user']
                 api_user_str += '"password_hash_b64": "{}", '.format(pw_hash)
                 api_user_str += '"password_salt_b64": "{}", '.format(salt)
-                allowed_apis_str = ', '.join('"{}"'.format(api) for api in (apis | public_apis))
+                allowed_apis_str = ', '.join('"{}"'.format(api) for api in make_unique(apis + public_apis))
                 api_user_str += '"allowed_apis": [{}]'.format(allowed_apis_str)
                 api_user_str += '}'
                 run_args += ['--api-user', api_user_str.replace('"', '\\"')]
@@ -522,6 +530,7 @@ Examples:
         from .deploy import deploy  # can only import now due to potential circular import
 
         for remote_host in args.args:
+            remote_host = core.config.get('hosts', {}).get(remote_host, remote_host)
             deploy(args.environment, remote_host)
 
     elif args.command == 'deploy_node':
