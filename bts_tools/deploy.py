@@ -75,6 +75,7 @@ def create_vps_instance(cfg):
         provider = VPS_PROVIDERS[vps_provider](v['api_key'])
         params = dict(v)
         params.pop('api_key')
+        params['os'] = cfg['os']
         ip_addr = provider.create_server(**params)
         cfg['host'] = ip_addr
         return cfg['host']
@@ -158,6 +159,9 @@ def deploy_base_node(cfg, build_dir, build_env):
     # 2.0- copy config.yaml file to ~/.bts_tools/
     copy(join(build_dir, 'config.yaml'), '~/.bts_tools/config.yaml', user=cfg['unix_user'])
 
+    # 2.0- copy api_access.json
+    copy(join(build_dir, 'api_access.json'), '~/', user=cfg['unix_user'])
+
     # 2.1- install supervisord conf
     log.info('* Installing supervisord config')
     run_remote('apt-get install -yfV supervisor')
@@ -182,6 +186,7 @@ def deploy_base_node(cfg, build_dir, build_env):
     ssl_key, ssl_cert = cfg.get('ssl_key'), cfg.get('ssl_cert')
     if ssl_key:
         copy(ssl_key, '/etc/nginx/certs')
+        run_remote('chmod 640 /etc/nginx/certs/{}'.format(os.path.basename(ssl_key)))
     if ssl_cert:
         copy(ssl_cert, '/etc/nginx/certs')
 
@@ -253,11 +258,11 @@ def load_config(config_file):
     cfg['pause'] = False  # do not pause during installation
     cfg['nginx_server_name'] = '{}.{}'.format(cfg['hostname'], cfg['domain'])
 
-    if cfg['os'] == 'debian':
+    if cfg['os'] in ['debian', 'debian8', 'jessie']:
         cfg['is_debian'] = True
         cfg['is_ubuntu'] = False
         cfg['python_version'] = '3.4'
-    elif cfg['os'] == 'ubuntu':
+    elif cfg['os'] in ['ubuntu', 'ubuntu 16.04']:
         cfg['is_debian'] = False
         cfg['is_ubuntu'] = True
         cfg['python_version'] = '3.5'
@@ -289,7 +294,7 @@ def deploy_node(build_env, config_file, host):
         log.warning('No host and no valid vps provider given. Exiting...')
         return
 
-    build_dir = '/tmp/bts_deploy'
+    build_dir = '/tmp/bts_deploy_{}'.format(cfg['host'])
 
     # 2- prepare the bundle of files to be copied on the remote host
     prepare_installation_bundle(cfg, build_dir)

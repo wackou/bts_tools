@@ -38,7 +38,7 @@ echo "---- Installing base system"
 #fi
 #if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to continue..."; fi
 
-# setting hostnamec
+# setting hostname
 echo "* Setting hostname to $UNIX_HOSTNAME..."
 echo "!! Please reboot after install for this to take effect !!"
 echo "$UNIX_HOSTNAME" > /etc/hostname
@@ -49,6 +49,8 @@ if [ -f /tmp/authorized_keys ]; then
   cat /tmp/authorized_keys >> ~/.ssh/authorized_keys
 fi
 
+
+export DEBIAN_FRONTEND=noninteractive    # required, "apt-get -y" is not sufficient
 
 # Install packages
 echo "* Updating system..."
@@ -89,7 +91,6 @@ if [ $IS_DEBIAN -eq 1 ]; then
     apt-get update >> /tmp/setupVPS.log 2>&1
 
     #echo " installing libc first"
-    export DEBIAN_FRONTEND=noninteractive    # required, "apt-get -y" is not sufficient
     apt-get install -t testing -yfV libc-bin >> /tmp/setupVPS.log 2>&1
     #echo " installing boost-dev"
 

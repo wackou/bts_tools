@@ -77,8 +77,11 @@ class VultrAPI(object):
             log.error('Invalid key for Vultr: {}\navailable keys: {}'.format(ssh_keys, ssh_key_id.keys()))
             raise
 
+        # list available at: https://api.vultr.com/v1/os/list
         if os in ['debian', 'debian8', 'jessie']:
             os_id = 193
+        elif os in ['ubuntu', 'ubuntu 16.04']:
+            os_id = 215
         else:
             raise ValueError('Unknown OS to deploy on Vultr: {}'.format(os))
 

@@ -26,8 +26,11 @@ log = logging.getLogger(__name__)
 
 
 class GandiAPI(object):
+    # TODO: somehow, g.call('hosting.datacenter.list') doesn't return the full list,
+    #       so let's hardcode them for now
     datacenters = {'paris': 1,
-                   'baltimore': 2}
+                   'baltimore': 2,
+                   'bissen': 3}
 
     def __init__(self, api_key, endpoint='https://rpc.gandi.net/xmlrpc/'):
         self.endpoint = endpoint
@@ -72,11 +75,28 @@ class GandiAPI(object):
 
         log.info('Update of dns entry for {}.{} successfully finished!'.format(host, domain))
 
+    def find_datacenter(self, location):
+        dc_id = self.datacenters[location.lower()]
+        log.debug('Found datacenter id {} for location {}'.format(dc_id, location))
+        return dc_id
+
+    def find_disk_image(self, location, os):
+        dc_id = self.find_datacenter(location)
+        images = [img for img in self.call('hosting.image.list', {'datacenter_id': dc_id})
+                  if img['label'].lower().startswith(os)]
+
+        if not images:
+            raise ValueError('Could not find {} image in {} datacenter'.format(os, location))
+        img = images[0]
+        log.debug('Found image: {} with disk_id {}'.format(img['label'], img['disk_id']))
+        return img
+
+
     def create_server(self, name, location, os, ssh_keys, cores=1, memory=1024, disk_size=40960):
         log.info('Creating Gandi instance {} in {}...'.format(name, location))
         ssh_key_id = {key['name']: key['id'] for key in self.call('hosting.ssh.list')}
 
-        dc_id = self.datacenters[location.lower()]
+        dc_id = self.find_datacenter(location)
 
         disk_spec = {'datacenter_id': dc_id,
                      'name': name,
@@ -90,9 +110,13 @@ class GandiAPI(object):
                    }
 
         if os in ['debian', 'debian8', 'jessie']:
-            src_disk_id = 3315704  # Debian 8 64 bits (HVM)
+            src_disk = self.find_disk_image(location, 'debian 8')
+        elif os in ['ubuntu', 'ubuntu 16.04']:
+            src_disk = self.find_disk_image(location, 'ubuntu 16.04')
         else:
             raise ValueError('Unknown OS to deploy on Gandi: {}'.format(os))
+
+        src_disk_id = src_disk['disk_id']
 
 
         op = self.call('hosting.vm.create_from', vm_spec, disk_spec, src_disk_id)

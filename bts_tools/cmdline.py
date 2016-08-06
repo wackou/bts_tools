@@ -408,6 +408,7 @@ Examples:
             # always required for working with bts_tools, ensure they are always
             # in this order at the beginning (so database_api=0, login_api=1, etc.)
             apis = ['database_api', 'login_api', 'network_node_api'] + apis
+            plugins = plugins or ['witness']  # always have at least the witness plugin
 
             plugins = make_unique(client.get('plugins', plugins))
             apis = make_unique(client.get('apis', apis))
