@@ -4,8 +4,8 @@ echo "CALLING install_user.sh WITH ARGS: $@"
 
 set -o nounset
 USER="{{ unix_user }}"
-GIT_NAME="{{ git_name }}"
-GIT_EMAIL="{{ git_email }}"
+GIT_NAME="{{ git['name'] }}"
+GIT_EMAIL="{{ git['email'] }}"
 set +o nounset
 
 cd ~

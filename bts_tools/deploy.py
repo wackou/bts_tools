@@ -183,7 +183,8 @@ def deploy_base_node(cfg, build_dir, build_env):
 
     # copy certs if provided
     run_remote('cd /etc/nginx; mkdir -p certs')
-    ssl_key, ssl_cert = cfg.get('ssl_key'), cfg.get('ssl_cert')
+    cfg_nginx = cfg.get('nginx', {})
+    ssl_key, ssl_cert = cfg_nginx.get('ssl_key'), cfg_nginx.get('ssl_cert')
     if ssl_key:
         copy(ssl_key, '/etc/nginx/certs')
         run_remote('chmod 640 /etc/nginx/certs/{}'.format(os.path.basename(ssl_key)))
@@ -256,7 +257,6 @@ def load_config(config_file):
 
     # auto adjustements of settings in the config
     cfg['pause'] = False  # do not pause during installation
-    cfg['nginx_server_name'] = '{}.{}'.format(cfg['hostname'], cfg['domain'])
 
     if cfg['os'] in ['debian', 'debian8', 'jessie']:
         cfg['is_debian'] = True
@@ -269,10 +269,16 @@ def load_config(config_file):
     else:
         raise ValueError('unknown OS: {}'.format(cfg['os']))
 
-    if cfg.get('ssl_key'):
-        cfg['ssl_key_basename'] = os.path.basename(cfg['ssl_key'])
-    if cfg.get('ssl_cert'):
-        cfg['ssl_cert_basename'] = os.path.basename(cfg['ssl_cert'])
+    nginx = cfg.setdefault('nginx', {})
+    nginx.setdefault('server_name', '{}.{}'.format(cfg['hostname'], cfg['domain']))
+    if nginx.get('ssl_key'):
+        nginx['ssl_key_basename'] = os.path.basename(nginx['ssl_key'])
+    if nginx.get('ssl_cert'):
+        nginx['ssl_cert_basename'] = os.path.basename(nginx['ssl_cert'])
+
+    git = cfg.setdefault('git', {})
+    git.setdefault('name', 'John Doe')
+    git.setdefault('email', 'johndoe@example.com')
 
     return cfg
 
