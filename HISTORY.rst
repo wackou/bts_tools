@@ -6,6 +6,27 @@
 History
 =======
 
+0.4.2 (2016-08-09)
+------------------
+
+* [all] pre-release of "bts deploy_node" command: complete setup of a
+        fresh VPS node, with bts/muse/steem client, nginx/uwsgi,
+        supervisor, etc.
+* [all] added view for seed nodes of BTS, MUSE and STEEM networks
+* [all] added world map view of connected peers and seed nodes along with
+        country detection (requires geoip2 account)
+* [bts] added ARS (Argentine peso) market pegged asset
+* [bts] reactivated GOLD and SILVER (Yahoo issue only temporary)
+* [bts] removed Yunbi and CCEDK as feed providers for BTS/BTC
+* [all] internal cleanups and refactoring, innumerable minor bug fixes
+
+
+0.4.1 (2016-06-30)
+------------------
+
+* deactivated GOLD and SILVER feed publishing (issue with Yahoo)
+
+
 0.4 (2016-05-01)
 ----------------
 

@@ -9,6 +9,10 @@ logging:
 # flags to be passed to make; shared among all build environments
 make_args: ['-j4']
 
+build_environments:
+    steem:
+        cmake_args: ['-DENABLE_CONTENT_PATCHING=OFF', '-DLOW_MEMORY_NODE=ON']
+
 #
 # list of clients (witness accounts / seed nodes) that are being monitored
 #
@@ -81,8 +85,8 @@ monitoring:
         median_time_span: 1800
         #publish_time_interval: 2400         # use this to publish feeds at fixed time intervals (in seconds)
         #publish_time_slot: 0                # use this to publish every hour at a fixed number of minutes (in minutes)
-        feed_providers: [Poloniex, CCEDK, Btc38, Yunbi,  # BTS valuation
-                         Yahoo, Google, Bloomberg]       # market indices
+        feed_providers: [Poloniex, Btc38, Yunbi,    # BTS valuation
+                         Yahoo, Google, Bloomberg]  # market indices
 
 #
 # configuration of the notification channels
