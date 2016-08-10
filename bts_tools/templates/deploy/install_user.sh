@@ -71,11 +71,12 @@ fi
 {% if compile_on_new_host %}
     # compile client locally
     {% for client in config_yaml['clients'] %}
-        echo "Building {{ client }} client"
-        {{ client }} build
+        {% set client_type = config_yaml['clients'][client].get('type', client) %}
+        echo "Building {{ client_type }} client for {{ client }}"
+        {{ client_type }} build
     {% endfor %}
 {% else %}
-    echo "Not building {{ client }} client locally"
+    echo "Not building client locally"
 {% endif %}
 
 
