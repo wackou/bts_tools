@@ -83,7 +83,7 @@ SEED_NODES = {
         ('104.199.157.70:2001',              'us', 'clayop'),
         ('104.40.230.35:2001',               '',   'aizensou'),
         ('gtg.steem.house:2001',             '',   'gtg / gandalf'),
-        ('seed.steem.network:2001',          '',   'someguy123'),
+        ('seed.steem.network:2001',          'us', 'someguy123'),
         ('seed.zapto.org:2001',              '',   'geoffrey'),
         ('45.55.217.111:12150',              'us', ''),
         ('81.89.101.133:2001',               'de', ''),
@@ -172,11 +172,12 @@ def get_seeds_view_data(chain):
         return '<i class="famfamfam-flag-%s" style="margin:0 8px 0 0;"></i>' % country
 
     def add_flag(country, ip):
-        try:
-            geo = get_geoip_info(resolve_dns(ip).split(':')[0])
-            country = geo['country_iso'].lower()
-        except ValueError:
-            pass
+        if not country:
+            try:
+                geo = get_geoip_info(resolve_dns(ip).split(':')[0])
+                country = geo['country_iso'].lower()
+            except ValueError:
+                pass
 
         return '<span>%s %s</span>' % (get_flag(country), ip)
 
@@ -186,7 +187,6 @@ def get_seeds_view_data(chain):
             if seed_status.get(seed) == 'stuck' else
             (add_flag(location, seed), error(seed_status.get(seed, 'offline')), provider)
             for seed, location, provider in seed_nodes]
-
 
     #attrs = {}
     #data, attrs = split_columns(data, attrs)
