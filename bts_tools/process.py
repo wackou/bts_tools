@@ -34,8 +34,11 @@ def bts_process(node):
 
     # find the process corresponding to our node by looking at the rpc port
     #log.debug('find bts binary on {}:{}'.format(host, port))
-    procs = [p for p in psutil.process_iter()
-             if node.bin_name in p.name() and port in [c.laddr[1] for c in p.connections()]]
+    procs = []
+    for p in psutil.process_iter():
+        if node.bin_name in p.name():
+            if port in [c.laddr[1] for c in p.connections()]:
+                procs.append(p)
 
     if procs:
         if len(procs) > 1:
