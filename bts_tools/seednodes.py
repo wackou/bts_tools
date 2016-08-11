@@ -82,7 +82,7 @@ SEED_NODES = {
         ('212.47.249.84:40696',              'fr', 'ihashfury'),
         ('104.199.157.70:2001',              'us', 'clayop'),
         ('104.40.230.35:2001',               '',   'aizensou'),
-        ('gtg.steem.house:2001',             '',   'gtg / gandalf'),
+        ('gtg.steem.house:2001',             '',   'gtg'),
         ('seed.steem.network:2001',          'us', 'someguy123'),
         ('seed.zapto.org:2001',              '',   'geoffrey'),
         ('45.55.217.111:12150',              'us', ''),
