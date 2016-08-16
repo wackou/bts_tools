@@ -86,14 +86,14 @@ if [ $IS_DEBIAN -eq 1 ]; then
     # get boost from testing
     echo "* Getting boost from testing distribution..."
     mv /etc/apt/sources.list /etc/apt/sources.list.orig
-    (echo "deb http://debian.mirror.constant.com/ testing main"; cat /etc/apt/sources.list.orig) > /etc/apt/sources.list
+    (echo "deb http://httpredir.debian.org/debian testing main"; cat /etc/apt/sources.list.orig) > /etc/apt/sources.list
     apt-get update >> /tmp/setupVPS.log 2>&1
 
     #echo " installing libc first"
     apt-get install -t testing -yfV libc-bin >> /tmp/setupVPS.log 2>&1
     #echo " installing boost-dev"
 
-    apt-get install -t testing -yfV cmake libboost-all-dev >> /tmp/setupVPS.log 2>&1
+    apt-get install -t testing -yfV cmake libboost1.58-all-dev >> /tmp/setupVPS.log 2>&1
 
     # reset to stable apt sources
     cp /etc/apt/sources.list.orig /etc/apt/sources.list
@@ -101,7 +101,7 @@ if [ $IS_DEBIAN -eq 1 ]; then
     if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to continue..."; fi
 elif [ $IS_UBUNTU -eq 1 ]; then
     echo "* Installing boost..."
-    apt-get install -yfV cmake libboost-all-dev >> /tmp/setupVPS.log 2>&1
+    apt-get install -yfV cmake libboost1.58-all-dev >> /tmp/setupVPS.log 2>&1
 fi
 
 if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to continue..."; fi

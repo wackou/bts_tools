@@ -219,16 +219,13 @@ def deploy_base_node(cfg, build_dir, build_env):
 
     # 4- copy blockchain snapshots in their respective data dirs
     for client_name, client in cfg['config_yaml']['clients'].items():
-        # create remote data folder if it doesn't exist yet
-        remote_data_dir = client['data_dir']
-        run_remote_cmd(host, cfg['unix_user'], 'mkdir -p {}'.format(remote_data_dir))
-
-        # copy snapshot of the blockchain, if available
         deploy_config = client.get('deploy', {})
         local_data_dir = deploy_config.get('blockchain_snapshot')
         if local_data_dir:
             log.info('Deploying {} chain snapshot from {}'.format(client_name, local_data_dir))
             try:
+                # create remote data folder if it doesn't exist yet
+                remote_data_dir = client['data_dir']
                 run_remote_cmd(host, cfg['unix_user'], 'mkdir -p {}/blockchain'.format(remote_data_dir))
                 copy('{}/blockchain/'.format(local_data_dir),
                      '{}/blockchain/'.format(remote_data_dir),

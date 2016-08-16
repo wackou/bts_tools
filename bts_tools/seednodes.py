@@ -86,9 +86,7 @@ SEED_NODES = {
         ('seed.steem.network:2001',          'us', 'someguy123'),
         ('seed.zapto.org:2001',              '',   'geoffrey'),
         ('seed.jesta.us:2001',               '',   'jesta'),
-        ('45.55.217.111:12150',              'us', ''),
-        ('81.89.101.133:2001',               'de', ''),
-        ('192.99.4.226:2001',                'ca', ''),
+        ('seed.royaltiffany.me:2001',        '',   'royaltiffany')
     ]
 }
 

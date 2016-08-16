@@ -9,6 +9,8 @@
         <b>Seed node: </b>
     {%- elif node.role == 'backbone' -%}
         <b>Backbone node: </b>
+    {%- elif node.role == 'api' -%}
+        <b>API node: </b>
     {%- else -%}
         <b>Node (type={{ node.role }}): </b>
     {%- endif -%}
