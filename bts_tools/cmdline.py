@@ -390,7 +390,7 @@ Examples:
                 elif role['role'] == 'seed':
                     apis += ['network_node_api']
 
-                elif role['role'] == 'feed_producer':
+                elif role['role'] == 'feed_publisher':
                     apis += ['network_broadcast_api']
 
                 elif role['role'] == 'api':

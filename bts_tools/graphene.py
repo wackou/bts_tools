@@ -151,7 +151,7 @@ class MonitoringProtocol(WebSocketClientProtocol):
         if self.type == 'steem':
             self.rpc_call(LOGIN_API, 'get_api_by_name', 'database_api')
             self.rpc_call(LOGIN_API, 'get_api_by_name', 'network_node_api')
-            self.rpc_call(LOGIN_API, 'get_api_by_name', 'network_broadcast_api')  # only needed for feed_producer role
+            self.rpc_call(LOGIN_API, 'get_api_by_name', 'network_broadcast_api')  # only needed for feed_publisher role
         else:
             self.rpc_call(LOGIN_API, 'network_node')
 
