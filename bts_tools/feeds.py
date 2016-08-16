@@ -39,7 +39,7 @@ log = logging.getLogger(__name__)
 YAHOO_ASSETS = {'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN', 'RUB', 'SEK', 'SGD',
                 'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD', 'ARS'}
 
-OTHER_ASSETS = {'TUSD', 'CASH.USD', 'TCNY', 'CASH.BTC', 'ALTCAP', 'STEEM'}
+OTHER_ASSETS = {'TUSD', 'CASH.USD', 'TCNY', 'CASH.BTC', 'ALTCAP', 'GRIDCOIN', 'STEEM'}
 
 # BIT_ASSETS_INDICES = {'SHENZHEN': 'CNY',
 #                       'SHANGHAI': 'CNY',
@@ -229,6 +229,10 @@ def get_feed_prices():
                              stddev_tolerance=0.05)
     altcap = statistics.mean(f.price for f in altcap)
     feeds['ALTCAP'] = altcap
+
+    gridcoin = get_multi_feeds('get', [('GRIDCOIN', 'BTC')], {PoloniexFeedProvider(), BittrexFeedProvider()},
+                               stddev_tolerance=0.05)
+    feeds['GRIDCOIN'] = weighted_mean(gridcoin)
 
     steem_usd = BittrexFeedProvider().get('STEEM', 'BTC').price * btc_usd
     feeds['STEEM'] = steem_usd

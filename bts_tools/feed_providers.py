@@ -256,7 +256,8 @@ class BitstampFeedProvider(FeedProvider):
 
 class PoloniexFeedProvider(FeedProvider):
     NAME = 'Poloniex'
-    AVAILABLE_MARKETS = [('BTS', 'BTC')]
+    AVAILABLE_MARKETS = [('BTS', 'BTC'), ('GRIDCOIN', 'BTC')]
+    _ASSET_MAP = {'GRIDCOIN': 'GRC'}
 
     @check_online_status
     @check_market
@@ -264,7 +265,7 @@ class PoloniexFeedProvider(FeedProvider):
         log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
         r = requests.get('https://poloniex.com/public?command=returnTicker',
                          timeout=self.TIMEOUT).json()
-        r = r['{}_{}'.format(base, cur)]
+        r = r['{}_{}'.format(base, self.from_bts(cur))]
         return self.feed_price(cur, base,
                                price=float(r['last']),
                                volume=float(r['quoteVolume']))
@@ -406,20 +407,22 @@ class CoinMarketCapFeedProvider(FeedProvider):
 
 class BittrexFeedProvider(FeedProvider):
     NAME = 'Bittrex'
-    AVAILABLE_MARKETS = [('STEEM', 'BTC')]
+    AVAILABLE_MARKETS = [('STEEM', 'BTC'), ('GRIDCOIN', 'BTC')]
+    _ASSET_MAP = {'GRIDCOIN': 'GRC'}
 
     @check_online_status
     @check_market
     def get(self, cur, base):
         log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
-        r = requests.get('https://bittrex.com/api/v1.1/public/getmarkethistory?market={}-{}'.format(base, cur),
+        r = requests.get('https://bittrex.com/api/v1.1/public/getmarketsummary?market={}-{}'.format(base, self.from_bts(cur)),
                          timeout=self.TIMEOUT).json()
 
-        last = r['result'][0]
-        log.debug('Got feed price for steem: {} (from bittrex)'.format(last['Price']))
+        summary = r['result'][0]
+        log.debug('Got feed price for {}: {} (from bittrex)'.format(cur, summary['Last']))
         return self.feed_price(cur, base,
-                               price=last['Price'],
-                               last_updated=datetime.strptime(last['TimeStamp'].split('.')[0], '%Y-%m-%dT%H:%M:%S'))
+                               price=summary['Last'],
+                               volume=summary['Volume'],
+                               last_updated=datetime.strptime(summary['TimeStamp'].split('.')[0], '%Y-%m-%dT%H:%M:%S'))
 
 
 _suffix = 'FeedProvider'
