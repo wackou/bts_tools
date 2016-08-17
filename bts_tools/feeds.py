@@ -232,7 +232,7 @@ def get_feed_prices():
 
     gridcoin = get_multi_feeds('get', [('GRIDCOIN', 'BTC')], {PoloniexFeedProvider(), BittrexFeedProvider()},
                                stddev_tolerance=0.05)
-    feeds['GRIDCOIN'] = weighted_mean(gridcoin)
+    feeds['GRIDCOIN'] = btc_price / weighted_mean(gridcoin)
 
     steem_usd = BittrexFeedProvider().get('STEEM', 'BTC').price * btc_usd
     feeds['STEEM'] = steem_usd
