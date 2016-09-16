@@ -414,9 +414,9 @@ Examples:
             apis = make_unique(client.get('apis', apis))
             public_apis = make_unique(client.get('public_apis', public_apis))
 
-            log.debug('Running with plugins: {}'.format(plugins))
-            log.debug('Running with apis: {}'.format(apis))
-            log.debug('Running with public apis: {}'.format(public_apis))
+            log.info('Running with plugins: {}'.format(plugins))
+            log.info('Running with apis: {}'.format(apis))
+            log.info('Running with public apis: {}'.format(public_apis))
 
 
             # enabling plugins
@@ -426,18 +426,20 @@ Examples:
 
             # enabling api access
             if client['type'] == 'steem':
-                # FIXME: check if this also works with bts and muse
                 for api in public_apis:
                     run_args += ['--public-api', api]
 
-                pw_hash, salt = hash_salt_password(client['witness_password'])
-                api_user_str = '{"username":"%s", ' % client['witness_user']
-                api_user_str += '"password_hash_b64": "{}", '.format(pw_hash)
-                api_user_str += '"password_salt_b64": "{}", '.format(salt)
-                allowed_apis_str = ', '.join('"{}"'.format(api) for api in make_unique(apis + public_apis))
-                api_user_str += '"allowed_apis": [{}]'.format(allowed_apis_str)
-                api_user_str += '}'
-                run_args += ['--api-user', api_user_str.replace('"', '\\"')]
+                if not public_apis:
+                    # it seems like we can't access the public apis anymore if specifying this
+                    pw_hash, salt = hash_salt_password(client['witness_password'])
+                    api_user_str = '{"username":"%s", ' % client['witness_user']
+                    api_user_str += '"password_hash_b64": "{}", '.format(pw_hash)
+                    api_user_str += '"password_salt_b64": "{}", '.format(salt)
+                    allowed_apis_str = ', '.join('"{}"'.format(api) for api in make_unique(apis + public_apis))
+                    api_user_str += '"allowed_apis": [{}]'.format(allowed_apis_str)
+                    api_user_str += '}'
+                    run_args += ['--api-user', api_user_str.replace('"', '\\"')]
+
             else:
                 api_access = client.get('api_access')
                 if api_access:

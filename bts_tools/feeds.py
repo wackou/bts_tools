@@ -31,6 +31,9 @@ from datetime import datetime, timedelta
 import threading
 import itertools
 import statistics
+import json
+import arrow
+import re
 import logging
 
 log = logging.getLogger(__name__)
@@ -39,7 +42,7 @@ log = logging.getLogger(__name__)
 YAHOO_ASSETS = {'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN', 'RUB', 'SEK', 'SGD',
                 'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD', 'ARS'}
 
-OTHER_ASSETS = {'TUSD', 'CASH.USD', 'TCNY', 'CASH.BTC', 'ALTCAP', 'GRIDCOIN', 'STEEM'}
+OTHER_ASSETS = {'TUSD', 'CASH.USD', 'TCNY', 'CASH.BTC', 'ALTCAP', 'GRIDCOIN', 'STEEM', 'BTWTY'}
 
 # BIT_ASSETS_INDICES = {'SHENZHEN': 'CNY',
 #                       'SHANGHAI': 'CNY',
@@ -55,7 +58,6 @@ BIT_ASSETS = {'BTC', 'USD', 'CNY'} | YAHOO_ASSETS | OTHER_ASSETS | BIT_ASSETS_IN
 always check and publish all feeds, regardless of this variable."""
 DEFAULT_VISIBLE_FEEDS = ['USD', 'BTC', 'CNY', 'GOLD', 'EUR']
 
-feeds = {}
 nfeed_checked = 0
 cfg = None
 history_len = None
@@ -122,7 +124,70 @@ def filter_market(feed_list, market):
     return [f for f in feed_list if (f.cur, f.base) == market]
 
 
-def get_feed_prices():
+def get_bit20_feed(node, usd_price):
+    # read composition of the index
+    # need to import the following key to decrypt memos
+    #   import_key "announce" 5KJJNfiSyzsbHoVb81WkHHjaX2vZVQ1Fqq5wE5ro8HWXe6qNFyQ
+    if not node.is_online():
+        log.warning('Wallet is offline, will not be able to read bit20 composition')
+        return
+
+    if node.is_locked():
+        log.warning('Wallet is locked, will not be able to read bit20 composition')
+        return
+
+    bit20feed = node.get_account_history('bittwenty.feed', 15)
+
+    bit20 = None  # contains the composition of the feed
+    bit20_value = 0
+
+    for f in bit20feed:
+        if 'COMPOSITION' in f['memo']:
+            last_updated = re.search('\((.*)\)', f['memo'])
+            if last_updated:
+                last_updated = arrow.get(last_updated.group(1), 'YYYY/MM/DD')
+
+            bit20 = json.loads(f['memo'].split(')', maxsplit=1)[1])
+            log.debug('Found bit20 composition, last update = {}'.format(last_updated))
+            break
+
+    else:
+        log.warning('Did not find any bit20 composition in the last {} messages '
+                    'to account bittwenty.feed'.format(len(bit20feed)))
+        log.warning('Make sure that your wallet is unlocked and you have imported '
+                    'the private key needed for reading bittwenty.feed memos: ')
+        log.warning('import_key "announce" 5KJJNfiSyzsbHoVb81WkHHjaX2vZVQ1Fqq5wE5ro8HWXe6qNFyQ')
+        return
+
+    if len(bit20['data']) < 3:
+        log.warning('Not enough assets in bit20 data: {}'.format(bit20['data']))
+        return
+
+    cmc = CoinMarketCapFeedProvider()
+    assets = cmc.get_all()
+
+    for bit20asset, qty in bit20['data']:
+        # find each asset's value on CMC
+        for asset in assets:
+            if asset['symbol'] == bit20asset:
+                log.debug('{} {} at ${} = ${}'.format(qty, bit20asset, asset['price_usd'],
+                                                      qty * float(asset['price_usd'])))
+                bit20_value += qty * float(asset['price_usd'])
+                break
+        else:
+            log.warning('Unknown asset on CMC: {}'.format(bit20asset))
+
+    log.debug('Total value of bit20 asset: ${}'.format(bit20_value))
+
+    # get bit20 value in BTS
+    bit20_value /= usd_price
+    log.debug('Value of the bit20 asset in BTS: {} BTS'.format(bit20_value))
+
+    return 1 / bit20_value
+
+
+
+def get_feed_prices(node):
     provider_names = {p.lower() for p in cfg['feed_providers']}
     active_providers = set()
     for name, provider in ALL_FEED_PROVIDERS.items():
@@ -198,6 +263,7 @@ def get_feed_prices():
 
     cny_price = bts_cny
 
+    feeds = {}
     feeds['BTC'] = btc_price
     feeds['CASH.BTC'] = btc_price
     feeds['USD'] = usd_price
@@ -218,14 +284,16 @@ def get_feed_prices():
     providers_quotes = {yahoo, GoogleFeedProvider(), BloombergFeedProvider()}
 
     all_quotes = get_multi_feeds('query_quote',
-                                 BIT_ASSETS_INDICES.items(), providers_quotes & active_providers,
+                                 BIT_ASSETS_INDICES.items(),
+                                 providers_quotes & active_providers,
                                  stddev_tolerance=0.02)
 
     for asset, cur in BIT_ASSETS_INDICES.items():
         feeds[asset] = 1 / statistics.mean(f.price for f in filter_market(all_quotes, (asset, cur)))
 
     # 4- get other assets
-    altcap = get_multi_feeds('get', [('ALTCAP', 'BTC')], {CoinCapFeedProvider(), CoinMarketCapFeedProvider()},
+    altcap = get_multi_feeds('get', [('ALTCAP', 'BTC')],
+                             {CoinCapFeedProvider(), CoinMarketCapFeedProvider()},
                              stddev_tolerance=0.05)
     altcap = statistics.mean(f.price for f in altcap)
     feeds['ALTCAP'] = altcap
@@ -237,10 +305,16 @@ def get_feed_prices():
     steem_usd = BittrexFeedProvider().get('STEEM', 'BTC').price * btc_usd
     feeds['STEEM'] = steem_usd
 
-    # 5- update price history for all feeds
+    # 5- Bit20 asset
+    bit20 = get_bit20_feed(node, usd_price)
+    if bit20 is not None:
+        feeds['BTWTY'] = bit20
+
+    # 6- update price history for all feeds
     for cur, price in feeds.items():
         price_history[cur].append(price)
 
+    return feeds
 
 def median_str(cur):
     try:
@@ -299,7 +373,7 @@ def check_feeds(nodes):
         return False
 
     try:
-        get_feed_prices()
+        feeds = get_feed_prices(nodes[0]) # use first node if we need to query the blockchain, eg: for bit20 asset composition
         nfeed_checked += 1
 
         def fmt(feeds):

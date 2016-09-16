@@ -169,7 +169,7 @@ class YahooFeedProvider(FeedProvider):
         r = requests.get('http://download.finance.yahoo.com/d/quotes.csv',
                          timeout=self.TIMEOUT,
                          params={'s': query_string, 'f': 'l1', 'e': 'csv'})
-        log.debug('Received from yahoo: {}'.format(r.text))
+        log.debug('Received from yahoo: {}'.format(repr(r.text)))
 
         try:
             asset_prices = map(float, r.text.split())
@@ -353,7 +353,7 @@ class YunbiFeedProvider(FeedProvider):
         r = requests.get('https://yunbi.com/api/v2/tickers.json',
                          timeout=10,
                          headers=headers).json()
-        log.debug('received: {}'.format(json.dumps(r, indent=4)))
+        #log.debug('received: {}'.format(json.dumps(r, indent=4)))
         r = r['{}{}'.format(cur.lower(), base.lower())]
         return self.feed_price(cur, base,
                                price=float(r['ticker']['last']),
@@ -369,16 +369,19 @@ class CoinCapFeedProvider(FeedProvider):
     @check_market
     def get(self, cur, base):
         log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
-        r = requests.get('http://www.coincap.io/page/BTS', timeout=self.TIMEOUT).json()
+        r = requests.get('http://www.coincap.io/global', timeout=self.TIMEOUT).json()
 
-        btcCap = float(r['btcCap'])
-        altCap = float(r['altCap'])
+        btc_cap = float(r['btcCap'])
+        alt_cap = float(r['altCap'])
 
-        log.debug('{} - btc: {}'.format(self.NAME, btcCap))
-        log.debug('{} - total: {}'.format(self.NAME, btcCap + altCap))
-        log.debug('{} - alt: {}'.format(self.NAME, altCap))
+        log.debug('{} - btc: {}'.format(self.NAME, btc_cap))
+        log.debug('{} - total: {}'.format(self.NAME, btc_cap + alt_cap))
+        log.debug('{} - alt: {}'.format(self.NAME, alt_cap))
 
-        price = btcCap / altCap
+        price = btc_cap / alt_cap
+
+        log.debug('{} - ALTCAP price: {}'.format(self.NAME, price))
+
         return self.feed_price(cur, base, price=price)
 
 
@@ -390,19 +393,19 @@ class CoinMarketCapFeedProvider(FeedProvider):
     @check_market
     def get(self, cur, base):
         log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
-        r = requests.get('http://coinmarketcap.com', timeout=self.TIMEOUT)
-        soup = BeautifulSoup(r.text, 'html.parser')
+        r = requests.get('https://api.coinmarketcap.com/v1/global/').json()
+        btc_cap = r['bitcoin_percentage_of_market_cap']
+        alt_cap = 100 - btc_cap
+        price = btc_cap / alt_cap
 
-        total_market_cap = float(soup.find(id='total-marketcap')['data-usd'].replace(',', ''))
-        btc_market_cap = float(soup.find(id='id-bitcoin').find(class_='market-cap')['data-usd'])
-        alt_market_cap = total_market_cap - btc_market_cap
+        log.debug('{} - btc: {}'.format(self.NAME, btc_cap))
+        log.debug('{} - alt: {}'.format(self.NAME, alt_cap))
+        log.debug('{} - ALTCAP price: {}'.format(self.NAME, price))
 
-        log.debug('{} - btc: {}'.format(self.NAME, btc_market_cap))
-        log.debug('{} - total: {}'.format(self.NAME, total_market_cap))
-        log.debug('{} - alt: {}'.format(self.NAME, alt_market_cap))
-
-        price = btc_market_cap / alt_market_cap
         return self.feed_price(cur, base, price=price)
+
+    def get_all(self):
+        return requests.get('https://api.coinmarketcap.com/v1/ticker/').json()
 
 
 class BittrexFeedProvider(FeedProvider):
