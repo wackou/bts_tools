@@ -72,7 +72,7 @@ SEED_NODES = {
         ('steem-seed1.abit-more.com:2001',   'au', 'abit'),
         ('steem.clawmap.com:2001',           'gb', 'steempty'),
         ('52.62.24.225:2001',                'au', 'au1nethyb1'),
-        ('steem-id.altexplorer.xyz:2001',    'id', 'steem-id'),
+        ('steem-id.altexplorer.xyz:2001',    '',   'steem-id'),
         ('213.167.243.223:2001',             'fr', 'bhuz'),
         ('seed.steemd.com:34191',            'us', 'roadscape'),
         ('52.4.250.181:39705',               'us', 'lafona'),
@@ -86,7 +86,9 @@ SEED_NODES = {
         ('seed.steem.network:2001',          'us', 'someguy123'),
         ('seed.zapto.org:2001',              '',   'geoffrey'),
         ('seed.jesta.us:2001',               '',   'jesta'),
-        ('seed.royaltiffany.me:2001',        '',   'royaltiffany')
+        ('seed.royaltiffany.me:2001',        '',   'royaltiffany'),
+        ('steem.imcoins.org:2001',           '',   'dr2073'),
+        ('104.196.141.163:2001',             '',   'good-karma')
     ]
 }
 

@@ -502,7 +502,7 @@ def check_feeds(nodes):
 
                         except Exception as e:
                             log.error('tried single transaction for all feeds, failed because:')
-                            log.exception(e)
+                            log.warning(str(e)[:1000] + ' [...]')
 
                             # if an error happened, publish feeds individually to make sure that
                             # at least the ones that work can get published
@@ -513,9 +513,11 @@ def check_feeds(nodes):
                                 # publish all feeds even if a single one fails
                                 try:
                                     price = hashabledict(get_price_for_publishing(asset, price))
+                                    log.debug('Publishing {} {}'.format(asset, price))
                                     node.publish_asset_feed(node.name, asset, price, True)  # True: sign+broadcast
                                 except Exception as e:
-                                    log.exception(e)
+                                    log.warning(str(e)[:1000] + ' [...]')
+                                    #log.exception(e)
 
                     else:
                         feeds_as_string = [(cur, '{:.10f}'.format(price)) for cur, price in median_feeds.items()]
