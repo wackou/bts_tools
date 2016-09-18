@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from datetime import datetime
 from os.path import join, dirname, expanduser, exists, abspath
 from collections import namedtuple, defaultdict
 from subprocess import Popen, PIPE
@@ -469,28 +468,6 @@ def to_list(obj):
         return obj
     else:
         return [obj]
-
-
-class FeedPrice(object):
-    """Represent a feed price value. Contains additional metadata such as volume, etc.
-
-    volume should be represented as number of <cur> units, not <base>."""
-    def __init__(self, price, cur, base, volume=None, last_updated=None, provider=None):
-        self.price = price
-        self.cur = cur
-        self.base = base
-        self.volume = volume
-        self.last_updated = last_updated or datetime.utcnow()
-        self.provider = provider
-
-    def __str__(self):
-        return 'FeedPrice: {} {}/{}{}{}'.format(
-            self.price, self.cur, self.base,
-            ' - vol={}'.format(self.volume) if self.volume is not None else '',
-            ' from {}'.format(self.provider) if self.provider else '')
-
-    def __repr__(self):
-        return '<{}>'.format(str(self))
 
 
 def hash_salt_password(password):

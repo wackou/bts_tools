@@ -24,11 +24,102 @@ from datetime import datetime
 from retrying import retry
 from requests.exceptions import Timeout
 import json
+import arrow
 import requests
+import statistics
 import functools
 import logging
 
 log = logging.getLogger('bts_tools.feeds')
+
+
+class FeedPrice(object):
+    """Represent a feed price value. Contains additional metadata such as volume, etc.
+
+    volume should be represented as number of <asset> units, not <base>."""
+    def __init__(self, price, asset, base, volume=None, last_updated=None, provider=None):
+        self.price = price
+        self.asset = asset
+        self.base = base
+        self.volume = volume
+        self.last_updated = last_updated or datetime.utcnow()
+        self.provider = provider
+
+    def __str__(self):
+        return 'FeedPrice: {} {}/{}{}{}'.format(
+            self.price, self.asset, self.base,
+            ' - vol={}'.format(self.volume) if self.volume is not None else '',
+            ' from {}'.format(self.provider) if self.provider else '')
+
+    def __repr__(self):
+        return '<{}>'.format(str(self))
+
+
+class FeedSet(list):
+    # NOTE: use list for now and not set because we're not sure what to hash or use for __eq__
+
+    def filter(self, asset, base):
+        """Returns a new FeedSet containing only the feed prices about the given market"""
+        return FeedSet([f for f in self if f.asset == asset and f.base == base])
+
+    def _price(self):
+        if len(self) == 0:
+            raise ValueError('FeedSet is empty, can\'t get value...')
+        if len(self) > 1:
+            raise ValueError('FeedSet contains more than one feed. Please use self.weighted_mean() to compute the value')
+
+        return self[0].price
+
+    def price(self, asset=None, base=None, stddev_tolerance=None):
+        """Automatically compute the price of an asset using all relevant data in this FeedSet"""
+        if len(self) == 0:
+            raise ValueError('FeedSet is empty, can\'t compute price...')
+        asset = asset or self[0].asset
+        base = base or self[0].base
+        prices = self.filter(asset, base)
+        return prices.weighted_mean(stddev_tolerance=stddev_tolerance)
+
+    def weighted_mean(self, stddev_tolerance=None):
+        if len(self) == 0:
+            raise ValueError('FeedSet is empty, can\'t get weighted mean...')
+
+        if len(self) == 1:
+            #log.debug('Got price from single source: {}'.format(self[0]))
+            return self[0].price
+
+        asset, base = self[0].asset, self[0].base
+
+        # check all feeds are related to the same market
+        if any((f.asset, f.base) != (asset, base) for f in self):
+            raise ValueError('Inconsistent feeds: there is more than 1 market in this FeedSet: {}'
+                             .format(set((f.asset, f.base) for f in self)))
+
+        # if any(f.volume is None for f in self) -> use simple mean of them, each has a weight of 1
+        if any(f.volume is None for f in self):
+            log.debug('No volume defined for at least one feed: {}, using simple mean'.format(self))
+            total_volume = len(self)
+        else:
+            total_volume = sum(f.volume for f in self)
+
+        weighted_mean = sum(f.price * (f.volume or 1) for f in self) / total_volume
+
+        log.debug('Weighted mean for {}/{}: {:.6g}'.format(asset, base, weighted_mean))
+        log.debug('Exchange      Price          Volume          Contribution')
+        for f in self:
+            percent = 100 * (f.volume or 1) / total_volume
+            log.debug('{:14s} {:12.4g} {:14.2f} {:14.2f}%'.format(f.provider, f.price, (f.volume or 1), percent))
+
+        if stddev_tolerance:
+            price_list = [f.price for f in self]
+            price = statistics.mean(price_list)
+            stddev = statistics.stdev(price_list, price) / price  # relative stddev
+            if stddev > stddev_tolerance:
+                log.warning(
+                    'Feeds for {asset} are not consistent amongst providers: {feeds} (stddev = {stddev:.7f})'.format(
+                        asset=(asset, base), stddev=stddev, feeds=str(self)
+                    ))
+
+        return weighted_mean
 
 
 def check_online_status(f):
@@ -88,8 +179,8 @@ def reuse_last_value_on_fail(f):
 
 # TODO: make use of this: https://pymotw.com/3/abc/index.html
 class FeedProvider(object):
-    """need to implement a get(cur, base) method. It returns price and volume.
-    The volume is expressed in <cur> units."""
+    """need to implement a get(asset, base) method. It returns price and volume.
+    The volume is expressed in <asset> units."""
     NAME = 'base FeedProvider'
     AVAILABLE_MARKETS = []  # redefine in derived classes, used by @check_market decorator
     PROVIDER_STATES = {}
@@ -106,7 +197,7 @@ class FeedProvider(object):
         return hash(self) == hash(other)
 
     def feed_price(self, cur, base, price, volume=None, last_updated=None):
-        return core.FeedPrice(price, cur, base, volume, last_updated, provider=self.NAME)
+        return FeedPrice(price, cur, base, volume, last_updated, provider=self.NAME)
 
     @classmethod
     def to_bts(cls, c):
@@ -256,7 +347,7 @@ class BitstampFeedProvider(FeedProvider):
 
 class PoloniexFeedProvider(FeedProvider):
     NAME = 'Poloniex'
-    AVAILABLE_MARKETS = [('BTS', 'BTC'), ('GRIDCOIN', 'BTC')]
+    AVAILABLE_MARKETS = [('BTS', 'BTC'), ('STEEM', 'BTC'), ('GRIDCOIN', 'BTC')]
     _ASSET_MAP = {'GRIDCOIN': 'GRC'}
 
     @check_online_status
@@ -373,16 +464,24 @@ class CoinCapFeedProvider(FeedProvider):
 
         btc_cap = float(r['btcCap'])
         alt_cap = float(r['altCap'])
-
-        log.debug('{} - btc: {}'.format(self.NAME, btc_cap))
-        log.debug('{} - total: {}'.format(self.NAME, btc_cap + alt_cap))
-        log.debug('{} - alt: {}'.format(self.NAME, alt_cap))
-
         price = btc_cap / alt_cap
 
+        #log.debug('{} - btc: {}'.format(self.NAME, btc_cap))
+        #log.debug('{} - total: {}'.format(self.NAME, btc_cap + alt_cap))
+        #log.debug('{} - alt: {}'.format(self.NAME, alt_cap))
         log.debug('{} - ALTCAP price: {}'.format(self.NAME, price))
 
         return self.feed_price(cur, base, price=price)
+
+
+    def get_all(self):
+        feeds = requests.get('http://www.coincap.io/front').json()
+        result = FeedSet()
+        for f in feeds:
+            result.append(self.feed_price(f['short'], 'USD', price=float(f['price']),
+                                          volume=float(f['usdVolume']),
+                                          last_updated=arrow.get(f['time']/1000)))
+        return result
 
 
 class CoinMarketCapFeedProvider(FeedProvider):
@@ -398,19 +497,25 @@ class CoinMarketCapFeedProvider(FeedProvider):
         alt_cap = 100 - btc_cap
         price = btc_cap / alt_cap
 
-        log.debug('{} - btc: {}'.format(self.NAME, btc_cap))
-        log.debug('{} - alt: {}'.format(self.NAME, alt_cap))
+        #log.debug('{} - btc: {}'.format(self.NAME, btc_cap))
+        #log.debug('{} - alt: {}'.format(self.NAME, alt_cap))
         log.debug('{} - ALTCAP price: {}'.format(self.NAME, price))
 
         return self.feed_price(cur, base, price=price)
 
     def get_all(self):
-        return requests.get('https://api.coinmarketcap.com/v1/ticker/').json()
+        feeds = requests.get('https://api.coinmarketcap.com/v1/ticker/').json()
+        result = FeedSet()
+        for f in feeds:
+            result.append(self.feed_price(f['symbol'], 'USD', price=float(f['price_usd']),
+                                          volume=float(f['24h_volume_usd']) if f['24h_volume_usd'] else None,
+                                          last_updated=arrow.get(f['last_updated'])))
+        return result
 
 
 class BittrexFeedProvider(FeedProvider):
     NAME = 'Bittrex'
-    AVAILABLE_MARKETS = [('STEEM', 'BTC'), ('GRIDCOIN', 'BTC')]
+    AVAILABLE_MARKETS = [('BTS', 'BTC'), ('STEEM', 'BTC'), ('GRIDCOIN', 'BTC')]
     _ASSET_MAP = {'GRIDCOIN': 'GRC'}
 
     @check_online_status
@@ -421,7 +526,7 @@ class BittrexFeedProvider(FeedProvider):
                          timeout=self.TIMEOUT).json()
 
         summary = r['result'][0]
-        log.debug('Got feed price for {}: {} (from bittrex)'.format(cur, summary['Last']))
+        #log.debug('Got feed price for {}: {} (from bittrex)'.format(cur, summary['Last']))
         return self.feed_price(cur, base,
                                price=summary['Last'],
                                volume=summary['Volume'],

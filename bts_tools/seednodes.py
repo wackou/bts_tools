@@ -88,7 +88,8 @@ SEED_NODES = {
         ('seed.jesta.us:2001',               '',   'jesta'),
         ('seed.royaltiffany.me:2001',        '',   'royaltiffany'),
         ('steem.imcoins.org:2001',           '',   'dr2073'),
-        ('104.196.141.163:2001',             '',   'good-karma')
+        ('104.196.141.163:2001',             '',   'good-karma'),
+        ('steem.global:2001',                '',   'klye')
     ]
 }
 

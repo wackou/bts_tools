@@ -287,8 +287,8 @@ def view_info():
         if rpc.main_node.is_graphene_based():
             published_feeds = rpc.main_node.get_witness_feeds(rpc.main_node.name, feeds.visible_feeds)
             last_update = max(f.last_updated for f in published_feeds) if published_feeds else None
-            pfeeds = {f.cur: f.price for f in published_feeds}
-            bfeeds = {f.cur: f.price for f in rpc.main_node.get_blockchain_feeds(feeds.visible_feeds)}
+            pfeeds = {f.asset: f.price for f in published_feeds}
+            bfeeds = {f.asset: f.price for f in rpc.main_node.get_blockchain_feeds(feeds.visible_feeds)}
         else:
             published_feeds = rpc.main_node.blockchain_get_feeds_from_delegate(rpc.main_node.name)
             last_update = max(f['last_update'] for f in published_feeds) if published_feeds else None

@@ -20,7 +20,7 @@
 
 from . import core
 from .core import hashabledict
-from .feed_providers import YahooFeedProvider, BterFeedProvider, Btc38FeedProvider,\
+from .feed_providers import FeedPrice, FeedSet, YahooFeedProvider, BterFeedProvider, Btc38FeedProvider,\
     PoloniexFeedProvider, GoogleFeedProvider, BloombergFeedProvider, BitcoinAverageFeedProvider,\
     CCEDKFeedProvider, BitfinexFeedProvider, BitstampFeedProvider, YunbiFeedProvider,\
     CoinCapFeedProvider, CoinMarketCapFeedProvider, BittrexFeedProvider, ALL_FEED_PROVIDERS
@@ -73,22 +73,8 @@ def load_feeds():
     visible_feeds = cfg.get('visible_feeds', DEFAULT_VISIBLE_FEEDS)
 
 
-def weighted_mean(l):
-    """return the weighted mean of a list of FeedPrices"""
-    if len(l) == 1:
-        return l[0].price
-    total_volume = sum(f.volume for f in l)
-    result = sum(f.price*f.volume for f in l) / total_volume
-    log.debug('Weighted mean for {}/{}: {:.4g}'.format(l[0].cur, l[0].base, result))
-    log.debug('Exchange      Price          Volume          Contribution')
-    for f in l:
-        percent = 100 * f.volume / total_volume
-        log.debug('{:14s} {:12.4g} {:14.2f} {:14.2f}%'.format(f.provider, f.price, f.volume, percent))
-    return result
-
-
 def get_multi_feeds(func, args, providers, stddev_tolerance=None):
-    result = []
+    result = FeedSet()
     provider_list = []
 
     def get_price(pargs):
@@ -103,25 +89,7 @@ def get_multi_feeds(func, args, providers, stddev_tolerance=None):
                 result.append(price)
                 provider_list.append(provider)
 
-    if stddev_tolerance:
-        feeds_per_market = [(k, list(v)) for k, v in itertools.groupby(result, lambda x: (x.cur, x.base))]
-        for market, feed_list in feeds_per_market:
-            if len(feed_list) < 2:
-                continue  # cannot compute stddev with less than 2 elements
-            price_list = [f.price for f in feed_list]
-            price = statistics.mean(price_list)
-            stddev = statistics.stdev(price_list, price) / price  # relative stddev
-            if stddev > stddev_tolerance:
-                log.warning('Feeds for {asset} are not consistent amongst providers: {feeds} (stddev = {stddev:.7f})'.format(
-                    asset=market, stddev=stddev, feeds=str(feed_list)
-                ))
-
     return result
-
-
-def filter_market(feed_list, market):
-    """market should be a tuple (cur, base)"""
-    return [f for f in feed_list if (f.cur, f.base) == market]
 
 
 def get_bit20_feed(node, usd_price):
@@ -132,14 +100,9 @@ def get_bit20_feed(node, usd_price):
         log.warning('Wallet is offline, will not be able to read bit20 composition')
         return
 
-    if node.is_locked():
-        log.warning('Wallet is locked, will not be able to read bit20 composition')
-        return
-
     bit20feed = node.get_account_history('bittwenty.feed', 15)
 
     bit20 = None  # contains the composition of the feed
-    bit20_value = 0
 
     for f in bit20feed:
         if 'COMPOSITION' in f['memo']:
@@ -163,20 +126,34 @@ def get_bit20_feed(node, usd_price):
         log.warning('Not enough assets in bit20 data: {}'.format(bit20['data']))
         return
 
-    cmc = CoinMarketCapFeedProvider()
-    assets = cmc.get_all()
-
+    bit20_value_cmc = 0
+    cmc_assets = CoinMarketCapFeedProvider().get_all()
     for bit20asset, qty in bit20['data']:
-        # find each asset's value on CMC
-        for asset in assets:
-            if asset['symbol'] == bit20asset:
-                log.debug('{} {} at ${} = ${}'.format(qty, bit20asset, asset['price_usd'],
-                                                      qty * float(asset['price_usd'])))
-                bit20_value += qty * float(asset['price_usd'])
-                break
-        else:
+        try:
+            price = cmc_assets.price(bit20asset, 'USD')
+            #log.debug('CoinMarketcap {} {} at ${} = ${}'.format(qty, bit20asset, price, qty * price))
+            bit20_value_cmc += qty * price
+        except ValueError as e:
             log.warning('Unknown asset on CMC: {}'.format(bit20asset))
+            log.warning(e)
 
+    coincap_assets = CoinCapFeedProvider().get_all()
+    bit20_value_cc = 0
+    for bit20asset, qty in bit20['data']:
+        try:
+            price = coincap_assets.price(bit20asset, 'USD')
+            #log.debug('CoinCap {} {} at ${} = ${}'.format(qty, bit20asset, price, qty * price))
+            bit20_value_cc += qty * price
+
+        except ValueError as e:
+            log.warning('Unknown asset on CMC: {}'.format(bit20asset))
+            log.warning(e)
+
+    bit20_feeds = FeedSet([FeedPrice(bit20_value_cmc, 'BTWTY', 'USD', provider=CoinMarketCapFeedProvider.NAME),
+                           FeedPrice(bit20_value_cc, 'BTWTY', 'USD', provider=CoinCapFeedProvider.NAME)
+                           ])
+
+    bit20_value = bit20_feeds.price(stddev_tolerance=0.01)
     log.debug('Total value of bit20 asset: ${}'.format(bit20_value))
 
     # get bit20 value in BTS
@@ -184,7 +161,6 @@ def get_bit20_feed(node, usd_price):
     log.debug('Value of the bit20 asset in BTS: {} BTS'.format(bit20_value))
 
     return 1 / bit20_value
-
 
 
 def get_feed_prices(node):
@@ -202,43 +178,36 @@ def get_feed_prices(node):
     yahoo_prices = yahoo.get(YAHOO_ASSETS, 'USD')
 
     # 1- get the BitShares price in major markets: BTC, USD and CNY
-    bter, btc38, poloniex, ccedk, bitcoinavg, bitfinex, bitstamp, yunbi = (
-        BterFeedProvider(), Btc38FeedProvider(), PoloniexFeedProvider(),
+    bter, btc38 = BterFeedProvider(), Btc38FeedProvider()
+
+    poloniex, bittrex, ccedk, bitcoinavg, bitfinex, bitstamp, yunbi = (
+        PoloniexFeedProvider(), BittrexFeedProvider(),
         CCEDKFeedProvider(), BitcoinAverageFeedProvider(), BitfinexFeedProvider(),
         BitstampFeedProvider(), YunbiFeedProvider())
 
+    coincap, cmc = CoinCapFeedProvider(), CoinMarketCapFeedProvider()
+
     # 1.1- first get the bts/btc valuation
-    providers_bts_btc = {poloniex} & active_providers
+    providers_bts_btc = {poloniex, bittrex} & active_providers
     if not providers_bts_btc:
         log.warning('No feed providers for BTS/BTC feed price')
     all_feeds = get_multi_feeds('get', [('BTS', 'BTC')], providers_bts_btc)
 
-    # providers_bts_cny = {bter, btc38} & active_providers
-    # if not providers_bts_cny:
-    #     log.warning('No feed providers for BTS/CNY feed price')
-    # all_feeds.update(get_multi_feeds('get', [('BTC', 'CNY'), ('BTS', 'CNY)')], providers_bts_cny))
-    #
-    # feeds_btc_cny = all_feeds[('BTC', 'CNY')]
-    # if not feeds_btc_cny:
-    #     raise core.NoFeedData('Could not get any BTC/CNY feeds')
-    # btc_cny = weighted_mean(feeds_btc_cny)
-    # cny_btc = 1 / btc_cny
-
-    feeds_bts_btc = filter_market(all_feeds, ('BTS', 'BTC')) #+ [(p[0]*cny_btc, p[1]) for p in all_feeds[('BTS', 'CNY')]]
+    feeds_bts_btc = all_feeds.filter('BTS', 'BTC')
     if not feeds_bts_btc:
         raise core.NoFeedData('Could not get any BTS/BTC feeds')
 
-    btc_price = weighted_mean(feeds_bts_btc)
+    btc_price = feeds_bts_btc.price()
 
     # 1.2- get the btc/usd (bitcoin avg)
     try:
-        feeds_btc_usd = [bitcoinavg.get('BTC', 'USD')]
+        feeds_btc_usd = FeedSet([bitcoinavg.get('BTC', 'USD')])
     except Exception:
         # fall back on Bitfinex, Bitstamp if BitcoinAverage is down - TODO: add Kraken, others?
         log.debug('Could not get USD/BTC')
         feeds_btc_usd = get_multi_feeds('get', [('BTC', 'USD')], {bitfinex, bitstamp})
 
-    btc_usd = weighted_mean(feeds_btc_usd)
+    btc_usd = feeds_btc_usd.price()
 
     usd_price = btc_price * btc_usd
 
@@ -259,7 +228,7 @@ def get_feed_prices(node):
         else:
             raise core.NoFeedData('Could not get any BTS/CNY feeds')
     else:
-        bts_cny = weighted_mean(feeds_bts_cny)
+        bts_cny = feeds_bts_cny.price()
 
     cny_price = bts_cny
 
@@ -285,24 +254,21 @@ def get_feed_prices(node):
 
     all_quotes = get_multi_feeds('query_quote',
                                  BIT_ASSETS_INDICES.items(),
-                                 providers_quotes & active_providers,
-                                 stddev_tolerance=0.02)
+                                 providers_quotes & active_providers)
 
-    for asset, cur in BIT_ASSETS_INDICES.items():
-        feeds[asset] = 1 / statistics.mean(f.price for f in filter_market(all_quotes, (asset, cur)))
+    for asset, base in BIT_ASSETS_INDICES.items():
+        feeds[asset] = 1 / all_quotes.price(asset, base, stddev_tolerance=0.02)
 
     # 4- get other assets
-    altcap = get_multi_feeds('get', [('ALTCAP', 'BTC')],
-                             {CoinCapFeedProvider(), CoinMarketCapFeedProvider()},
-                             stddev_tolerance=0.05)
-    altcap = statistics.mean(f.price for f in altcap)
+    altcap = get_multi_feeds('get', [('ALTCAP', 'BTC')], {coincap, cmc})
+    altcap = altcap.price(stddev_tolerance=0.05)
     feeds['ALTCAP'] = altcap
 
-    gridcoin = get_multi_feeds('get', [('GRIDCOIN', 'BTC')], {PoloniexFeedProvider(), BittrexFeedProvider()},
-                               stddev_tolerance=0.05)
-    feeds['GRIDCOIN'] = btc_price / weighted_mean(gridcoin)
+    gridcoin = get_multi_feeds('get', [('GRIDCOIN', 'BTC')], {poloniex, bittrex})
+    feeds['GRIDCOIN'] = btc_price / gridcoin.price(stddev_tolerance=0.05)
 
-    steem_usd = BittrexFeedProvider().get('STEEM', 'BTC').price * btc_usd
+    steem_btc = get_multi_feeds('get', [('STEEM', 'BTC')], {poloniex, bittrex})
+    steem_usd = steem_btc.price() * btc_usd
     feeds['STEEM'] = steem_usd
 
     # 5- Bit20 asset
@@ -417,10 +383,10 @@ def check_feeds(nodes):
             try:
                 if should_publish():
                     if not node.is_online():
-                        log.warning('Cannot publish feeds for delegate %s: client is not running' % node.name)
+                        log.warning('Cannot publish feeds for witness %s: client is not running' % node.name)
                         continue
                     if node.is_locked():
-                        log.warning('Cannot publish feeds for delegate %s: wallet is locked' % node.name)
+                        log.warning('Cannot publish feeds for witness %s: wallet is locked' % node.name)
                         continue
                     # publish median value of the price, not latest one
                     median_feeds = {c: statistics.median(price_history[c]) for c in feeds}

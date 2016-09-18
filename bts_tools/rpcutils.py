@@ -19,7 +19,8 @@
 #
 
 from .core import UnauthorizedError, RPCError, run, get_data_dir, get_bin_name, is_graphene_based,\
-    hashabledict, to_list, FeedPrice, trace
+    hashabledict, to_list, trace
+from .feed_providers import FeedPrice
 from .process import bts_binary_running, bts_process
 from .feeds import BIT_ASSETS, BIT_ASSETS_INDICES
 from .privatekey import PrivateKey
