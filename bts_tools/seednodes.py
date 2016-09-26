@@ -19,7 +19,9 @@
 #
 
 from bts_tools.network_utils import get_geoip_info, resolve_dns
+from collections import defaultdict
 import socket
+import time
 import threading
 import logging
 log = logging.getLogger(__name__)
@@ -138,6 +140,19 @@ def check_all_seeds(chain):
     return seed_status
 
 
+_SEEDS_STATUS = defaultdict(dict)
+
+def monitor_seed_nodes(chain):
+    global _SEEDS_STATUS
+    while True:
+        _SEEDS_STATUS[chain] = check_all_seeds(chain)
+        time.sleep(300)
+
+
+def check_all_seeds_cached(chain):
+    return _SEEDS_STATUS[chain]
+
+
 def split_columns(items, attrs):
     # split into 2 columns, more readable on a laptop
     n = len(items)
@@ -164,7 +179,7 @@ def get_seeds_as_peers(chain):
 
 def get_seeds_view_data(chain):
     seed_nodes = [(s[0], s[1], s[2]) for s in SEED_NODES[chain]]
-    seed_status = check_all_seeds(chain)
+    seed_status = check_all_seeds_cached(chain)
 
     success = lambda s: '<div class="btn btn-xs btn-success">{}</div>'.format(s)
     warning = lambda s: '<div class="btn btn-xs btn-warning">{}</div>'.format(s)

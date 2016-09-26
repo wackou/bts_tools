@@ -25,6 +25,7 @@ from bts_tools import core, init, seednodes, network_utils
 from bts_tools.frontend import format_datetime, hide_private_key, add_ip_flag
 from collections import defaultdict
 import bts_tools
+import threading
 import logging
 log = logging.getLogger(__name__)
 
@@ -78,6 +79,10 @@ def create_app(settings_override=None):
                                  rpc=bts_tools.rpcutils,
                                  monitor=bts_tools.monitor,
                                  process=bts_tools.process)
+
+    t = threading.Thread(target=bts_tools.seednodes.monitor_seed_nodes, args=(chain,))
+    t.daemon = True
+    t.start()
 
     return app
 
