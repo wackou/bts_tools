@@ -28,6 +28,7 @@ log = logging.getLogger(__name__)
 class GandiAPI(object):
     # TODO: somehow, g.call('hosting.datacenter.list') doesn't return the full list,
     #       so let's hardcode them for now
+    # TODO: WRONG! full list isn't returned because datacenter in baltimore is closing...
     datacenters = {'paris': 1,
                    'baltimore': 2,
                    'bissen': 3}

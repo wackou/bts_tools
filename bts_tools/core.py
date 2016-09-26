@@ -403,7 +403,7 @@ def _run(cmd, capture_io=False, verbose=False):
             return IOStream(p.returncode, None, None)
 
     except KeyboardInterrupt:
-        log.warning('Caught Ctrl+C, exiting...')
+        log.warning('Caught Ctrl+C, exiting...')  # FIXME: need to forward ctrl-C to subprocess (eg: steemd) so that it exits properly too
         sys.exit(0)
 
 

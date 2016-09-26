@@ -179,6 +179,9 @@ def deploy_base_node(cfg, build_dir, build_env):
     render_template('nginx_sites_available', join(nginx, 'sites-available', 'default'))
     copy(join(nginx, 'sites-available', 'default'), '/etc/nginx/sites-available/default')
     run_remote('cd /etc/nginx/sites-enabled; ln -fs ../sites-available/default')
+    # get remoter nginx.conf
+    # add:   limit_req_zone $binary_remote_addr zone=ws:10m rate=1r/s;
+    # write it back
     run_remote('chown -R root:root /etc/nginx')
 
     # copy certs if provided
