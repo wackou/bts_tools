@@ -96,6 +96,8 @@ def get_bit20_feed(node, usd_price):
     # read composition of the index
     # need to import the following key to decrypt memos
     #   import_key "announce" 5KJJNfiSyzsbHoVb81WkHHjaX2vZVQ1Fqq5wE5ro8HWXe6qNFyQ
+    if node.type() != 'bts':
+        return
     if not node.is_online():
         log.warning('Wallet is offline, will not be able to read bit20 composition')
         return
@@ -402,7 +404,7 @@ def check_feeds(nodes):
                     median_feeds = {c: statistics.median(price_history[c]) for c in feeds}
                     log.info('Node %s publishing feeds: %s' % (node.name, fmt(median_feeds)))
                     if node.is_graphene_based():
-                        DISABLED_ASSETS = ['RUB', 'SEK',  # black swan
+                        DISABLED_ASSETS = ['RUB', 'SEK', 'GRIDCOIN',  # black swan
                                            'STEEM']       # not on bitshares
 
 
