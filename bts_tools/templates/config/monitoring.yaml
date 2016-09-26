@@ -25,6 +25,7 @@ monitoring:
         min_required_space: 5G
 
     feeds:
+        steem_dollar_adjustment: 0.90
         asset_params:
             default:
                 maintenance_collateral_ratio: 1750  # Call when collateral only pays off 175% the debt

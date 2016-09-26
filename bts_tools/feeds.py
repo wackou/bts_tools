@@ -362,19 +362,29 @@ def check_feeds(nodes):
             # TODO: dealt with as an exceptional case for now, should be refactored
             if node.type() == 'steem':
                 price = statistics.median(price_history['STEEM'])
+
                 # check whether we need to publish again:
                 # - if published more than 12 hours ago, publish again
                 # - if published price different by more than 3%, publish again
-                if 'last_price' in node.opts:  # make sure we have already published once
-                    if not (datetime.utcnow() - node.opts['last_published'] > timedelta(hours=12) or
-                            abs(price - node.opts['last_price']) / node.opts['last_price'] >= 0.03):
-                        continue
+                def should_publish(node):
+                    if 'last_price' not in node.opts:  # make sure we have already published once
+                        return True
+                    if datetime.utcnow() - node.opts['last_published'] > timedelta(hours=12):
+                        return True
+                    if abs(price - node.opts['last_price']) / node.opts['last_price'] >= 0.03:
+                        return True
+                    return False
+
                 # publish median value of the price, not latest one
-                price_obj = {'base': '{:.3f} SBD'.format(price), 'quote': '1.000 STEEM'}
-                log.info('Node %s publishing feed price for steem: %s SBD' % (node.name, price))
-                node.publish_feed(node.name, price_obj, True)
-                node.opts['last_price'] = price
-                node.opts['last_published'] = datetime.utcnow()
+                if should_publish(node):
+                    ratio = cfg['steem_dollar_adjustment']
+                    price_obj = {'base': '{:.3f} SBD'.format(price*ratio), 'quote': '1.000 STEEM'}
+                    log.info('Node {} publishing feed price for steem: {:.3f} SBD (real: {:.3f} adjusted by {:.2f})'
+                             .format(node.name, price*ratio, price, ratio))
+                    node.publish_feed(node.name, price_obj, True)
+                    node.opts['last_price'] = price
+                    node.opts['last_published'] = datetime.utcnow()
+
                 continue
 
 
