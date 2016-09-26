@@ -104,6 +104,8 @@ def check_seed_status(seed):
         s.connect((host, int(port)))
     except (ConnectionError, socket.timeout):
         return 'offline'
+    except OSError:
+        return 'unreachable'
     try:
         # do we receive a hello message?
         s.recv(256)
