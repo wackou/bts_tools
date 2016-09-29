@@ -379,6 +379,13 @@ def check_feeds(nodes):
 
                 # publish median value of the price, not latest one
                 if should_publish(node):
+                    if not node.is_online():
+                        log.warning('Cannot publish feeds for steem witness %s: client is not running' % node.name)
+                        continue
+                    if node.is_locked():
+                        log.warning('Cannot publish feeds for steem witness %s: wallet is locked' % node.name)
+                        continue
+
                     ratio = cfg['steem_dollar_adjustment']
                     price_obj = {'base': '{:.3f} SBD'.format(price*ratio), 'quote': '1.000 STEEM'}
                     log.info('Node {} publishing feed price for steem: {:.3f} SBD (real: {:.3f} adjusted by {:.2f})'

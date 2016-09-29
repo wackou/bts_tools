@@ -31,67 +31,68 @@ SEED_STATUS_TIMEOUT = 5  # in seconds
 
 SEED_NODES = {
     'bts': [
-        ('bts-seed1.abit-more.com:62015',  'cn', 'abit'),
-        ('seed.blocktrades.us:1776',       'us', 'blocktrades'),
-        ('seed.bitsharesnodes.com:1776',   'nl', 'wackou'),
-        ('seed04.bitsharesnodes.com:1776', 'au', 'thom'),
-        ('seed05.bitsharesnodes.com:1776', 'de', 'thom'),
-        ('seed06.bitsharesnodes.com:1776', 'ca', 'thom'),
-        ('seed07.bitsharesnodes.com:1776', 'sg', 'thom'),
-        ('seed.cubeconnex.com:1777',       'us', 'cube'),
-        ('54.85.252.77:39705',             'us', 'lafona'),
-        ('104.236.144.84:1777',            'us', 'puppies'),
-        ('212.47.249.84:50696',            'fr', 'ihashfury'),
-        ('128.199.143.47:2015',            'sg', 'harvey')
+        ('bts-seed1.abit-more.com:62015',  'cn', 'abit', ''),
+        ('seed.blocktrades.us:1776',       'us', 'blocktrades', ''),
+        ('seed.bitsharesnodes.com:1776',   'nl', 'wackou', ''),
+        ('seed04.bitsharesnodes.com:1776', 'au', 'thom', ''),
+        ('seed05.bitsharesnodes.com:1776', 'de', 'thom', ''),
+        ('seed06.bitsharesnodes.com:1776', 'ca', 'thom', ''),
+        ('seed07.bitsharesnodes.com:1776', 'sg', 'thom', ''),
+        ('seed.cubeconnex.com:1777',       'us', 'cube', ''),
+        ('54.85.252.77:39705',             'us', 'lafona', ''),
+        ('104.236.144.84:1777',            'us', 'puppies', ''),
+        ('212.47.249.84:50696',            'fr', 'ihashfury', ''),
+        ('128.199.143.47:2015',            'sg', 'harvey', '')
     ],
     'muse': [
-        ('81.89.101.133:1777',             'de', ''),
-        ('104.238.191.99:1781',            'fr', ''),
-        ('120.24.182.36:8091',             'cn', ''),
-        ('128.199.143.47:2017',            'sg', ''),
-        ('139.129.54.169:8091',            'cn', ''),
-        ('139.196.182.71:9091',            'cn', ''),
-        ('159.203.251.178:1776',           'us', ''),
-        ('185.82.203.92:1974',             'nl', ''),
-        ('192.241.190.227:5197',           'us', ''),
-        ('192.241.208.17:5197',            'us', ''),
-        ('54.165.143.33:5197',             'us', 'official seed node'),
-        ('45.55.13.98:1776',               'us', 'puppies'),
-        ('81.89.101.133:1777',             'de', 'pc')
+        ('81.89.101.133:1777',             'de', '', ''),
+        ('104.238.191.99:1781',            'fr', '', ''),
+        ('120.24.182.36:8091',             'cn', '', ''),
+        ('128.199.143.47:2017',            'sg', '', ''),
+        ('139.129.54.169:8091',            'cn', '', ''),
+        ('139.196.182.71:9091',            'cn', '', ''),
+        ('159.203.251.178:1776',           'us', '', ''),
+        ('185.82.203.92:1974',             'nl', '', ''),
+        ('192.241.190.227:5197',           'us', '', ''),
+        ('192.241.208.17:5197',            'us', '', ''),
+        ('54.165.143.33:5197',             'us', 'official seed node', ''),
+        ('45.55.13.98:1776',               'us', 'puppies', ''),
+        ('81.89.101.133:1777',             'de', 'pc', '')
     ],
     'steem': [
-        ('212.117.213.186:2016',             'ch', 'liondani'),
-        ('seed.riversteem.com:2001',         'nl', 'riverhead'),
-        ('52.74.152.79:2001',                'sg', 'smooth'),
-        ('52.63.172.229:2001',               'au', 'rossco99'),
-        ('104.236.82.250:2001',              'us', 'svk'),
-        ('steem.kushed.com:2001',            'us', 'kushed'),
-        ('steemd.pharesim.me:2001',          'de', 'pharesim'),
-        ('seed.steemnodes.com:2001',         'nl', 'wackou'),
-        ('steemseed.dele-puppy.com:2001',    'us', 'puppies'),
-        ('seed.steemwitness.com:2001',       'us', 'nextgencrypto'),
-        ('seed.steemed.net:2001',            'us', 'steemed'),
-        ('steem-seed1.abit-more.com:2001',   'au', 'abit'),
-        ('steem.clawmap.com:2001',           'gb', 'steempty'),
-        ('52.62.24.225:2001',                'au', 'au1nethyb1'),
-        ('steem-id.altexplorer.xyz:2001',    '',   'steem-id'),
-        ('213.167.243.223:2001',             'fr', 'bhuz'),
-        ('seed.steemd.com:34191',            'us', 'roadscape'),
-        ('52.4.250.181:39705',               'us', 'lafona'),
-        ('46.252.27.1:1337',                 'de', 'jabbasteem'),
-        ('anyx.co:2001',                     '',   'anyx'),
-        ('seed.cubeconnex.com:2001',         '',   'bitcube'),
-        ('212.47.249.84:40696',              'fr', 'ihashfury'),
-        ('104.199.157.70:2001',              'us', 'clayop'),
-        ('104.40.230.35:2001',               '',   'aizensou'),
-        ('gtg.steem.house:2001',             '',   'gtg'),
-        ('seed.steem.network:2001',          'us', 'someguy123'),
-        ('seed.zapto.org:2001',              '',   'geoffrey'),
-        ('seed.jesta.us:2001',               '',   'jesta'),
-        ('seed.royaltiffany.me:2001',        '',   'royaltiffany'),
-        ('steem.imcoins.org:2001',           '',   'dr2073'),
-        ('104.196.141.163:2001',             '',   'good-karma'),
-        ('steem.global:2001',                '',   'klye')
+        ('212.117.213.186:2016',             'ch', 'liondani', 'https://steemit.com/introduceyourself/@liondani/hi-liondani-here-aka-daniel-schwarz-happy-husband-father-steem-witness-steemit-enthusiast'),
+        ('seed.riversteem.com:2001',         'nl', 'riverhead', 'https://steemit.com/witness-category/@riverhead/witness-proposal-riverhead'),
+        ('52.74.152.79:2001',                'sg', 'smooth', ''),
+        ('52.63.172.229:2001',               'au', 'rossco99', ''),
+        ('104.236.82.250:2001',              'us', 'svk', ''),
+        ('steem.kushed.com:2001',            'us', 'kushed', 'www.saluscoin.info'),
+        ('steemd.pharesim.me:2001',          'de', 'pharesim', 'https://steemit.com/witness-category/@pharesim/witness-post'),
+        ('seed.steemnodes.com:2001',         'nl', 'wackou', 'https://steemit.com/witness-category/@wackou/wackou-witness-post'),
+        ('steemseed.dele-puppy.com:2001',    'us', 'puppies', ''),
+        ('seed.steemwitness.com:2001',       'us', 'nextgencrypto', 'http://steemd.com/@nextgencrypto'),
+        ('seed.steemed.net:2001',            'us', 'steemed', 'https://steemdb.com/@steemed'),
+        ('steem-seed1.abit-more.com:2001',   'au', 'abit', 'https://steemit.com/witness-category/@abit/abit-witness-post'),
+        ('steem.clawmap.com:2001',           'gb', 'steempty', 'https://steemit.com/witness-category/@steempty/steempty-witness-post'),
+        ('52.62.24.225:2001',                'au', 'au1nethyb1', 'https://steemit.com/witness-category/@au1nethyb1/au1nethyb1-witness-in-the-lan-down-under'),
+        ('steem-id.altexplorer.xyz:2001',    '',   'steem-id', 'https://keybase.io/jemekite'),
+        ('213.167.243.223:2001',             'fr', 'bhuz', 'https://steemit.com/witness-category/@bhuz/bhuz-witness-thread'),
+        ('seed.steemd.com:34191',            'us', 'roadscape', 'https://steemit.com/witness-category/@roadscape/witness-roadscape'),
+        ('52.4.250.181:39705',               'us', 'lafona', ''),
+        ('46.252.27.1:1337',                 'de', 'jabbasteem', 'https://steemit.com/witness-category/@jabbasteem/witness-jabbasteem'),
+        ('anyx.co:2001',                     '',   'anyx', 'https://steemit.com/witness-category/@anyx/witness-application-anyx'),
+        ('seed.cubeconnex.com:2001',         '',   'bitcube', 'https://steemit.com/witness-category/@bitcube/bitcube-witness-post'),
+        ('212.47.249.84:40696',              'fr', 'ihashfury', 'https://steemit.com/witness-category/@ihashfury/ihashfury-witness-thread'),
+        ('104.199.157.70:2001',              'us', 'clayop', 'https://steemit.com/witness-category/@clayop/witness-clayop'),
+        ('104.40.230.35:2001',               '',   'aizensou', 'https://steemit.com/witness-category/@aizensou/witness-application-aizensou'),
+        ('gtg.steem.house:2001',             '',   'gtg', 'https://steemit.com/witness-category/@gtg/witness-gtg'),
+        ('seed.steem.network:2001',          'us', 'someguy123', 'https://steemit.com/witness-category/@someguy123/someguy123-witness-thread'),
+        ('seed.zapto.org:2001',              '',   'geoffrey', 'https://steemit.com/witness-category/@geoffrey/witness-geoffrey'),
+        ('seed.jesta.us:2001',               '',   'jesta', 'http://jesta.us'),
+        ('seed.royaltiffany.me:2001',        '',   'royaltiffany', 'https://steemit.com/witness-category/@royaltiffany/royaltiffany-witness-thread'),
+        ('steem.imcoins.org:2001',           '',   'dr2073', 'https://steemit.com/witness-category/@dr2073/witness-thread-dr2073'),
+        ('104.196.141.163:2001',             '',   'good-karma', 'https://steemit.com/witness-category/@good-karma/good-karma-witness-thread'),
+        ('steem.global:2001',                '',   'klye', 'https://steemit.com/witness-category/@klye/klye-s-witness-campaign'),
+        ('129.232.223.74:2001',              '',   'thecryptodrive', '')
     ]
 }
 
@@ -179,9 +180,13 @@ def get_seeds_as_peers(chain):
     return [{'addr': d[0], 'provided_by': d[2]} for d in SEED_NODES[chain]]
 
 
-def get_seeds_view_data(chain):
-    seed_nodes = [(s[0], s[1], s[2]) for s in SEED_NODES[chain]]
-    seed_status = check_all_seeds_cached(chain)
+def get_seeds_view_data(chain, cached=False):
+    seed_nodes = SEED_NODES[chain]
+
+    if cached:
+        seed_status = check_all_seeds_cached(chain)
+    else:
+        seed_status = check_all_seeds(chain)
 
     success = lambda s: '<div class="btn btn-xs btn-success">{}</div>'.format(s)
     warning = lambda s: '<div class="btn btn-xs btn-warning">{}</div>'.format(s)
@@ -200,12 +205,18 @@ def get_seeds_view_data(chain):
 
         return '<span>%s %s</span>' % (get_flag(country), ip)
 
-    data = [(add_flag(location, seed), success('online'), provider)
+    def add_url(witness, url):
+        if url:
+            return '<a href="{}">{}</a>'.format(url, witness)
+        else:
+            return witness
+
+    data = [(add_flag(location, seed), success('online'), add_url(provider, url))
             if seed_status.get(seed) == 'online' else
-            (add_flag(location, seed), warning('stuck'), provider)
+            (add_flag(location, seed), warning('stuck'), add_url(provider, url))
             if seed_status.get(seed) == 'stuck' else
-            (add_flag(location, seed), error(seed_status.get(seed, 'offline')), provider)
-            for seed, location, provider in seed_nodes]
+            (add_flag(location, seed), error(seed_status.get(seed, 'offline')), add_url(provider, url))
+            for seed, location, provider, url in seed_nodes]
 
     #attrs = {}
     #data, attrs = split_columns(data, attrs)

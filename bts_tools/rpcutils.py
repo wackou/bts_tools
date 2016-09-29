@@ -501,16 +501,22 @@ class GrapheneClient(object):
             return [self.get_witness_name(w)
                     for w in self.info()['active_witnesses']]
 
-    def is_active(self, delegate):
+    def is_active(self, witness):
         if self.is_graphene_based():
             try:
-                return delegate in self.get_active_witnesses()
-            except:
+                witnesses = self.get_active_witnesses()
+                if self.type() == 'steem':
+                    witnesses = sorted(((name, self.get_witness(name)['votes']) for name in witnesses), key=lambda x:int(x[1]))
+                    if witness == witnesses[0][0] or witness == witnesses[1][0]:
+                        return False
+                return witness in witnesses
+
+            except Exception as e:
                 # if witness doesn't exist (eg: at block head = 0), return False instead of failing
                 return False
         else:
             active_delegates = [d['name'] for d in self.blockchain_list_delegates(0, 101)]
-            return delegate in active_delegates
+            return witness in active_delegates
 
     def get_head_block_num(self):
         if self.is_graphene_based():

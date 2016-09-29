@@ -39,7 +39,7 @@ chain = 'steem'
 @bp.route('/')
 def view_seed_nodes():
     headers = ['seed host', 'status', 'provided by']
-    data = seednodes.get_seeds_view_data(chain)
+    data = seednodes.get_seeds_view_data(chain, cached=True)
     headers *= (len(data[0]) // len(headers))
 
     peers = seednodes.get_seeds_as_peers(chain)
