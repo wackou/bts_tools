@@ -92,7 +92,7 @@ SEED_NODES = {
         ('steem.imcoins.org:2001',           '',   'dr2073', 'https://steemit.com/witness-category/@dr2073/witness-thread-dr2073'),
         ('104.196.141.163:2001',             '',   'good-karma', 'https://steemit.com/witness-category/@good-karma/good-karma-witness-thread'),
         ('steem.global:2001',                '',   'klye', 'https://steemit.com/witness-category/@klye/klye-s-witness-campaign'),
-        ('129.232.223.74:2001',              '',   'thecryptodrive', '')
+        ('129.232.223.74:2001',              '',   'thecryptodrive', 'https://steemit.com/witness-category/@thecryptodrive/ricardo-goncalves-thecryptodrive-first-steem-witness-in-africa-a-witness-for-the-people')
     ]
 }
 
