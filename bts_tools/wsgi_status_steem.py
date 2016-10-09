@@ -53,7 +53,7 @@ def view_seed_nodes():
                            headers=headers,
                            points=points,
                            countries=countries,
-                           data=data, order='[]', nrows=100, sortable=True)
+                           data=data, order='[[1, "desc"]]', nrows=100, sortable=True)
 
 
 
