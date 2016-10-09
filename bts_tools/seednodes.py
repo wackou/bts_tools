@@ -62,9 +62,9 @@ SEED_NODES = {
     'steem': [
         ('212.117.213.186:2016',             'ch', 'liondani', 'https://steemit.com/introduceyourself/@liondani/hi-liondani-here-aka-daniel-schwarz-happy-husband-father-steem-witness-steemit-enthusiast'),
         ('seed.riversteem.com:2001',         'nl', 'riverhead', 'https://steemit.com/witness-category/@riverhead/witness-proposal-riverhead'),
-        ('52.74.152.79:2001',                'sg', 'smooth', ''),
+        ('52.74.152.79:2001',                'sg', 'smooth', 'https://steemit.com/witness-category/@smooth.witness/smooth-witness'),
         ('52.63.172.229:2001',               'au', 'rossco99', ''),
-        ('104.236.82.250:2001',              'us', 'svk', ''),
+        ('104.236.82.250:2001',              'us', 'svk', 'https://steemit.com/witness-category/@witness.svk/witness-thread'),
         ('steem.kushed.com:2001',            'us', 'kushed', 'www.saluscoin.info'),
         ('steemd.pharesim.me:2001',          'de', 'pharesim', 'https://steemit.com/witness-category/@pharesim/witness-post'),
         ('seed.steemnodes.com:2001',         'nl', 'wackou', 'https://steemit.com/witness-category/@wackou/wackou-witness-post'),
@@ -77,7 +77,7 @@ SEED_NODES = {
         ('steem-id.altexplorer.xyz:2001',    '',   'steem-id', 'https://keybase.io/jemekite'),
         ('213.167.243.223:2001',             'fr', 'bhuz', 'https://steemit.com/witness-category/@bhuz/bhuz-witness-thread'),
         ('seed.steemd.com:34191',            'us', 'roadscape', 'https://steemit.com/witness-category/@roadscape/witness-roadscape'),
-        ('52.4.250.181:39705',               'us', 'lafona', ''),
+        ('52.4.250.181:39705',               'us', 'lafona', 'https://steemit.com/witness-category/@delegate.lafona/delegate'),
         ('46.252.27.1:1337',                 'de', 'jabbasteem', 'https://steemit.com/witness-category/@jabbasteem/witness-jabbasteem'),
         ('anyx.co:2001',                     '',   'anyx', 'https://steemit.com/witness-category/@anyx/witness-application-anyx'),
         ('seed.cubeconnex.com:2001',         '',   'bitcube', 'https://steemit.com/witness-category/@bitcube/bitcube-witness-post'),
@@ -92,7 +92,10 @@ SEED_NODES = {
         ('steem.imcoins.org:2001',           '',   'dr2073', 'https://steemit.com/witness-category/@dr2073/witness-thread-dr2073'),
         ('104.196.141.163:2001',             '',   'good-karma', 'https://steemit.com/witness-category/@good-karma/good-karma-witness-thread'),
         ('steem.global:2001',                '',   'klye', 'https://steemit.com/witness-category/@klye/klye-s-witness-campaign'),
-        ('129.232.223.74:2001',              '',   'thecryptodrive', 'https://steemit.com/witness-category/@thecryptodrive/ricardo-goncalves-thecryptodrive-first-steem-witness-in-africa-a-witness-for-the-people')
+        ('129.232.223.74:2001',              '',   'thecryptodrive', 'https://steemit.com/witness-category/@thecryptodrive/ricardo-goncalves-thecryptodrive-first-steem-witness-in-africa-a-witness-for-the-people'),
+        ('45.55.54.83:2001',                 '',   'tdv.witness', 'https://steemit.com/steemit/@dollarvigilante/announcement-the-dollar-vigilante-witness-proposal-tdv-witness'),
+        ('seed.roelandp.nl:2001',            '',   'roelandp', 'https://steemit.com/witness-category/@roelandp/witness-roelandp'),
+        ('seed.steempower.org:2001',         '',   'charlieshrem', 'https://steemit.com/witness-category/@charlieshrem/announcement-charlie-shrem-advisor-to-steem-and-witness-proposal')
     ]
 }
 
