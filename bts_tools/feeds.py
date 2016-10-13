@@ -387,7 +387,8 @@ def check_feeds(nodes):
                         continue
 
                     ratio = cfg['steem_dollar_adjustment']
-                    price_obj = {'base': '{:.3f} SBD'.format(price*ratio), 'quote': '1.000 STEEM'}
+                    price_obj = {'base': '{:.3f} SBD'.format(price),
+                                 'quote': '{:.3f} STEEM'.format(1/ratio)}
                     log.info('Node {} publishing feed price for steem: {:.3f} SBD (real: {:.3f} adjusted by {:.2f})'
                              .format(node.name, price*ratio, price, ratio))
                     node.publish_feed(node.name, price_obj, True)
