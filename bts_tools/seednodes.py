@@ -31,19 +31,19 @@ SEED_STATUS_TIMEOUT = 5  # in seconds
 
 SEED_NODES = {
     'bts': [
-        ('bts-seed1.abit-more.com:62015',  'cn', 'abit', ''),
-        ('seed.blocktrades.us:1776',       'us', 'blocktrades', ''),
-        ('seed.bitsharesnodes.com:1776',   'nl', 'wackou', ''),
-        ('seed04.bitsharesnodes.com:1776', 'au', 'thom', ''),
-        ('seed05.bitsharesnodes.com:1776', 'de', 'thom', ''),
-        ('seed06.bitsharesnodes.com:1776', 'ca', 'thom', ''),
-        ('seed07.bitsharesnodes.com:1776', 'sg', 'thom', ''),
-        ('seed.cubeconnex.com:1777',       'us', 'cube', ''),
-        ('54.85.252.77:39705',             'us', 'lafona', ''),
-        ('104.236.144.84:1777',            'us', 'puppies', ''),
-        ('212.47.249.84:50696',            'fr', 'ihashfury', ''),
-        ('128.199.143.47:2015',            'sg', 'harvey', ''),
-        ('seed.roelandp.nl:1776',          'nl', 'roelandp', '')
+        ('bts-seed1.abit-more.com:62015',  '', 'abit',        ''),
+        ('seed.blocktrades.us:1776',       '', 'blocktrades', ''),
+        ('seed.bitsharesnodes.com:1776',   '', 'wackou',      ''),
+        ('seed04.bitsharesnodes.com:1776', '', 'thom',        ''),
+        ('seed05.bitsharesnodes.com:1776', '', 'thom',        ''),
+        ('seed06.bitsharesnodes.com:1776', '', 'thom',        ''),
+        ('seed07.bitsharesnodes.com:1776', '', 'thom',        ''),
+        ('seed.cubeconnex.com:1777',       '', 'cube',        ''),
+        ('54.85.252.77:39705',             '', 'lafona',      ''),
+        ('104.236.144.84:1777',            '', 'puppies',     ''),
+        ('212.47.249.84:50696',            '', 'ihashfury',   ''),
+        ('128.199.143.47:2015',            '', 'harvey',      ''),
+        ('seed.roelandp.nl:1776',          '', 'roelandp',    '')
     ],
     'muse': [
         ('81.89.101.133:1777',             'de', '', ''),
@@ -70,7 +70,7 @@ SEED_NODES = {
         ('104.236.82.250:2001',              'us', 'svk',            'https://steemit.com/witness-category/@witness.svk/witness-thread'),
         ('steem.kushed.com:2001',            'us', 'kushed',         'www.saluscoin.info'),
         ('steemd.pharesim.me:2001',          'de', 'pharesim',       'https://steemit.com/witness-category/@pharesim/witness-post'),
-        ('seed.steemnodes.com:2001',         'nl', 'wackou',         'https://steemit.com/witness-category/@wackou/wackou-witness-post'),
+        ('seed.steemnodes.com:2001',         '',   'wackou',         'https://steemit.com/witness-category/@wackou/wackou-witness-post'),
         ('steemseed.dele-puppy.com:2001',    'us', 'puppies',        ''),
         ('seed.steemwitness.com:2001',       'us', 'nextgencrypto',  'http://steemd.com/@nextgencrypto'),
         ('seed.steemed.net:2001',            'us', 'steemed',        'https://steemdb.com/@steemed'),
@@ -98,7 +98,8 @@ SEED_NODES = {
         ('129.232.223.74:2001',              '',   'thecryptodrive', 'https://steemit.com/witness-category/@thecryptodrive/ricardo-goncalves-thecryptodrive-first-steem-witness-in-africa-a-witness-for-the-people'),
         ('45.55.54.83:2001',                 '',   'tdv.witness',    'https://steemit.com/steemit/@dollarvigilante/announcement-the-dollar-vigilante-witness-proposal-tdv-witness'),
         ('seed.roelandp.nl:2001',            '',   'roelandp',       'https://steemit.com/witness-category/@roelandp/witness-roelandp'),
-        ('seed.steempower.org:2001',         '',   'charlieshrem',   'https://steemit.com/witness-category/@charlieshrem/announcement-charlie-shrem-advisor-to-steem-and-witness-proposal')
+        ('seed.steempower.org:2001',         '',   'charlieshrem',   'https://steemit.com/witness-category/@charlieshrem/announcement-charlie-shrem-advisor-to-steem-and-witness-proposal'),
+        ('178.63.82.69:2001',                '',   'theprophet0',    'https://www.steemit.com/@theprophet0')
     ]
 }
 
