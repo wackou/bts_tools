@@ -507,9 +507,14 @@ class CoinMarketCapFeedProvider(FeedProvider):
         feeds = requests.get('https://api.coinmarketcap.com/v1/ticker/').json()
         result = FeedSet()
         for f in feeds:
-            result.append(self.feed_price(f['symbol'], 'USD', price=float(f['price_usd']),
-                                          volume=float(f['24h_volume_usd']) if f['24h_volume_usd'] else None,
-                                          last_updated=arrow.get(f['last_updated'])))
+            try:
+                result.append(self.feed_price(f['symbol'], 'USD', price=float(f['price_usd']),
+                                              volume=float(f['24h_volume_usd']) if f['24h_volume_usd'] else None,
+                                              last_updated=arrow.get(f['last_updated'])))
+            except TypeError:
+                # catches: TypeError: float() argument must be a string or a number, not 'NoneType'
+                # on: f['price_usd']
+                log.warning('Could not get USD price for feed: {}'.format(json.dumps(f, indent=4)))
         return result
 
 

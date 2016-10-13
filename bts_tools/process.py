@@ -36,9 +36,13 @@ def bts_process(node):
     #log.debug('find bts binary on {}:{}'.format(host, port))
     procs = []
     for p in psutil.process_iter():
-        if node.bin_name in p.name():
-            if port in [c.laddr[1] for c in p.connections()]:
-                procs.append(p)
+        try:
+            if node.bin_name in p.name():
+                if port in [c.laddr[1] for c in p.connections()]:
+                    procs.append(p)
+        except psutil.NoSuchProcess:
+            # process disappeared in the meantime, so it's not our witness process
+            pass
 
     if procs:
         if len(procs) > 1:
