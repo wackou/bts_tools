@@ -315,11 +315,11 @@ def view_info():
         format_feeds(pfeeds)
         format_feeds(bfeeds)
 
-        feeds = dict(assets=feeds.visible_feeds, feeds=lfeeds, pfeeds=pfeeds,
-                     mfeeds=mfeeds, bfeeds=bfeeds, last_update=last_update)
+        feeds_obj = dict(assets=feeds.visible_feeds, feeds=lfeeds, pfeeds=pfeeds,
+                         mfeeds=mfeeds, bfeeds=bfeeds, last_update=last_update)
 
     else:
-        feeds = {}
+        feeds_obj = {}
 
     if rpc.main_node.is_witness() and rpc.main_node.is_graphene_based():
         info_items2 = sorted(rpc.main_node.get_witness(rpc.main_node.name).items())
@@ -332,7 +332,7 @@ def view_info():
     return render_template('info.html', #title='BTS Client - Info',
                            title='Global info', data=info_items, attrs=attrs,
                            title2='Witness info', data2=info_items2, attrs2=attrs2,
-                           **feeds)
+                           **feeds_obj)
 
 
 @bp.route('/rpchost/<type>/<host>/<name>/<url>')
