@@ -296,15 +296,15 @@ def format_qualifier(c):
     return '%f'
 
 
-def get_fraction(price, asset_precision, base_precision, N=8):
+def get_fraction(price, asset_precision, base_precision, N=6):
     """Find nice fraction with at least N significant digits in
     both the numerator and denominator."""
     numerator = int(price * 10 ** asset_precision)
     denominator = 10 ** base_precision
     multiplier = 0
-    while len(str(numerator)) < N and len(str(denominator)) < N:
+    while len(str(numerator)) < N or len(str(denominator)) < N:
         multiplier += 1
-        numerator = int(price * 10 ** (asset_precision + multiplier))
+        numerator = round(price * 10 ** (asset_precision + multiplier))
         denominator = 10 ** (base_precision + multiplier)
     return numerator, denominator
 
@@ -440,7 +440,7 @@ def check_feeds(nodes):
                             else:
                                 cer_numerator, cer_denominator = numerator, int(denominator*c['core_exchange_factor'])
 
-                            price = {
+                            price_obj = {
                                 'settlement_price': {
                                     'quote': {
                                         'asset_id': base_id,
@@ -464,7 +464,7 @@ def check_feeds(nodes):
                                     }
                                 }
                             }
-                            return price
+                            return price_obj
 
                         # first, try to publish all of them in a single transaction
                         try:
