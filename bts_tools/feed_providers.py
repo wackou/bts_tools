@@ -514,7 +514,8 @@ class CoinMarketCapFeedProvider(FeedProvider):
             except TypeError:
                 # catches: TypeError: float() argument must be a string or a number, not 'NoneType'
                 # on: f['price_usd']
-                log.debug('Could not get USD price for feed: {}'.format(json.dumps(f, indent=4)))
+                #log.debug('Could not get USD price for feed: {}'.format(json.dumps(f, indent=4)))
+                pass
         return result
 
 

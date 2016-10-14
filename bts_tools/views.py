@@ -23,13 +23,11 @@ from functools import wraps
 from collections import defaultdict
 from datetime import datetime
 from . import rpcutils as rpc
-from . import core, monitor, slogging, backbone, seednodes, network_utils
+from . import core, monitor, slogging, backbone, seednodes, network_utils, feeds
 from .seednodes import split_columns
 import bts_tools
 import json
 import requests.exceptions
-import socket
-import threading
 import logging
 
 log = logging.getLogger(__name__)
@@ -150,6 +148,7 @@ def find_node(type, host, name):
             return node
     raise ValueError('Node not found: {}/{}/{}'.format(type, host, name))
 
+
 def find_local_node(port):
     for node in rpc.nodes:
         if node.is_localhost() and node.rpc_port == port:
@@ -163,6 +162,7 @@ def authenticate():
     'Could not verify your access level for that URL.\n'
     'You have to login with proper credentials', 401,
     {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
 
 def requires_auth(f):
     @wraps(f)
@@ -281,9 +281,9 @@ def view_info():
     if not rpc.main_node.is_graphene_based():
         info_items, attrs = split_columns(info_items, attrs)
 
-    if rpc.main_node.is_witness() and rpc.main_node.type() in ['bts', 'bts1']:
-        from . import feeds
+    global feeds
 
+    if rpc.main_node.is_witness() and rpc.main_node.type() in ['bts', 'bts1']:
         if rpc.main_node.is_graphene_based():
             published_feeds = rpc.main_node.get_witness_feeds(rpc.main_node.name, feeds.visible_feeds)
             last_update = max(f.last_updated for f in published_feeds) if published_feeds else None
@@ -302,7 +302,7 @@ def view_info():
         def format_feeds(fds):
             for asset in feeds.visible_feeds:
                 fmt, field_size = (('%.4g', 10)
-                                   if asset in ({'BTC', 'GOLD', 'SILVER'} | set(feeds.BIT_ASSETS_INDICES.keys()))
+                                   if feeds.is_extended_precision(asset)
                                    else ('%.4f', 7))
                 try:
                     s = fmt % float(fds[asset])

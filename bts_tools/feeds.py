@@ -63,6 +63,7 @@ cfg = None
 history_len = None
 price_history = None
 visible_feeds = DEFAULT_VISIBLE_FEEDS
+feeds = {}
 
 
 def load_feeds():
@@ -234,7 +235,7 @@ def get_feed_prices(node):
 
     cny_price = bts_cny
 
-    feeds = {}
+    feeds = {}  # TODO: do we really want to reset the global var 'feeds' everytime we come here?
     feeds['BTC'] = btc_price
     feeds['CASH.BTC'] = btc_price
     feeds['USD'] = usd_price
@@ -284,14 +285,20 @@ def get_feed_prices(node):
 
     return feeds
 
+
 def median_str(cur):
     try:
         return statistics.median(price_history[cur])
     except Exception:
         return 'N/A'
 
-def format_qualifier(c):
-    if c in {'BTC', 'GOLD', 'SILVER'} | set(BIT_ASSETS_INDICES.keys()):
+
+def is_extended_precision(asset):
+    return asset in {'BTC', 'GOLD', 'SILVER', 'BTWTY'} | set(BIT_ASSETS_INDICES.keys())
+
+
+def format_qualifier(asset):
+    if is_extended_precision(asset):
         return '%g'
     return '%f'
 
@@ -311,7 +318,7 @@ def get_fraction(price, asset_precision, base_precision, N=6):
 
 def check_feeds(nodes):
     # TODO: update according to: https://bitsharestalk.org/index.php?topic=9348.0;all
-    global nfeed_checked
+    global nfeed_checked, feeds
 
     try:
         feed_period = int(cfg['publish_time_interval'] / cfg['check_time_interval'])
@@ -435,10 +442,11 @@ def check_feeds(nodes):
 
                             if base != 'BTS':
                                 base_bts_price = median_feeds[base]
-                                cer_price = price * base_bts_price / c['core_exchange_factor']
-                                cer_numerator, cer_denominator = get_fraction(cer_price, base_precision, bts_precision)
+                                cer_numerator, cer_denominator = get_fraction(price * base_bts_price,
+                                                                              asset_precision, bts_precision)
+                                cer_denominator *= c['core_exchange_factor']
                             else:
-                                cer_numerator, cer_denominator = numerator, int(denominator*c['core_exchange_factor'])
+                                cer_numerator, cer_denominator = numerator, round(denominator*c['core_exchange_factor'])
 
                             price_obj = {
                                 'settlement_price': {
@@ -464,6 +472,8 @@ def check_feeds(nodes):
                                     }
                                 }
                             }
+                            #log.debug('Publishing feed for {}/{}: {} as {}/{} - CER: {}/{}'
+                            #          .format(asset, base, price, numerator, denominator, cer_numerator, cer_denominator))
                             return price_obj
 
                         # first, try to publish all of them in a single transaction
@@ -488,7 +498,7 @@ def check_feeds(nodes):
 
                         except Exception as e:
                             log.error('tried single transaction for all feeds, failed because:')
-                            log.warning(str(e)[:1000] + ' [...]')
+                            log.warning(str(e)[:1000] + (' [...]' if len(str(e)) > 1000 else ''))
 
                             # if an error happened, publish feeds individually to make sure that
                             # at least the ones that work can get published
