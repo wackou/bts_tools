@@ -46,7 +46,6 @@ SEED_NODES = {
         ('seed.roelandp.nl:1776',          '', 'roelandp',    '')
     ],
     'muse': [
-        ('81.89.101.133:1777',             'de', '', ''),
         ('104.238.191.99:1781',            'fr', '', ''),
         ('120.24.182.36:8091',             'cn', '', ''),
         ('128.199.143.47:2017',            'sg', '', ''),
@@ -72,7 +71,6 @@ SEED_NODES = {
         ('steemd.pharesim.me:2001',          'de', 'pharesim',       'https://steemit.com/witness-category/@pharesim/witness-post'),
         ('seed.steemnodes.com:2001',         '',   'wackou',         'https://steemit.com/witness-category/@wackou/wackou-witness-post'),
         ('steemseed.dele-puppy.com:2001',    'us', 'puppies',        ''),
-        ('seed.steemwitness.com:2001',       'us', 'nextgencrypto',  'http://steemd.com/@nextgencrypto'),
         ('seed.steemed.net:2001',            'us', 'steemed',        'https://steemdb.com/@steemed'),
         ('steem-seed1.abit-more.com:2001',   'au', 'abit',           'https://steemit.com/witness-category/@abit/abit-witness-post'),
         ('steem.clawmap.com:2001',           'gb', 'steempty',       'https://steemit.com/witness-category/@steempty/steempty-witness-post'),
@@ -99,9 +97,23 @@ SEED_NODES = {
         ('45.55.54.83:2001',                 '',   'tdv.witness',    'https://steemit.com/steemit/@dollarvigilante/announcement-the-dollar-vigilante-witness-proposal-tdv-witness'),
         ('seed.roelandp.nl:2001',            '',   'roelandp',       'https://steemit.com/witness-category/@roelandp/witness-roelandp'),
         ('seed.steempower.org:2001',         '',   'charlieshrem',   'https://steemit.com/witness-category/@charlieshrem/announcement-charlie-shrem-advisor-to-steem-and-witness-proposal'),
-        ('178.63.82.69:2001',                '',   'theprophet0',    'https://www.steemit.com/@theprophet0')
+        ('178.63.82.69:2001',                '',   'theprophet0',    'https://steemit.com/witness-category/@theprophet0/theprophet0-steem-witness-youngest-steem-witness-at-15-years-of-age-100-of-the-funds-from-this-blog-will-be-donated-to-charity'),
+        ('5.9.18.213:2001',                  '',   'pfunk', 'https://steemit.com/witness-category/@pfunk/backup-witness-pfunk')
     ]
 }
+
+def check_valid_seed_nodes():
+    for chain, seeds in SEED_NODES.items():
+        ips = [(host, resolve_dns(host), provider) for host, _, provider, *_ in seeds]
+        for ip in set(x[1] for x in ips):
+            found = [i for i in ips if i[1] == ip]
+            if len(found) > 1:
+                log.error('For chain {}, ip {} appears more than 1 time:'.format(chain, ip))
+                for host, i, provider in found:
+                    log.error(' - {}  ({})'.format(host, provider))
+
+# basic check when launching the app
+check_valid_seed_nodes()
 
 
 def check_seed_status(seed):
