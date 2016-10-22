@@ -131,17 +131,19 @@ def get_bit20_feed(node, usd_price):
 
     bit20_value_cmc = 0
     cmc_assets = CoinMarketCapFeedProvider().get_all()
+    cmc_missing_assets = []
     for bit20asset, qty in bit20['data']:
         try:
             price = cmc_assets.price(bit20asset, 'USD')
             #log.debug('CoinMarketcap {} {} at ${} = ${}'.format(qty, bit20asset, price, qty * price))
             bit20_value_cmc += qty * price
         except ValueError as e:
-            log.warning('Unknown asset on CMC: {}'.format(bit20asset))
-            log.warning(e)
+            log.debug('Unknown asset on CMC: {}'.format(bit20asset))
+            cmc_missing_assets.append(bit20asset)
 
-    coincap_assets = CoinCapFeedProvider().get_all()
     bit20_value_cc = 0
+    coincap_assets = CoinCapFeedProvider().get_all()
+    coincap_missing_assets = []
     for bit20asset, qty in bit20['data']:
         try:
             price = coincap_assets.price(bit20asset, 'USD')
@@ -149,12 +151,27 @@ def get_bit20_feed(node, usd_price):
             bit20_value_cc += qty * price
 
         except ValueError as e:
-            log.warning('Unknown asset on CoinCap: {}'.format(bit20asset))
-            log.warning(e)
+            log.debug('Unknown asset on CoinCap: {}'.format(bit20asset))
+            coincap_missing_assets.append(bit20asset)
 
-    bit20_feeds = FeedSet([FeedPrice(bit20_value_cmc, 'BTWTY', 'USD', provider=CoinMarketCapFeedProvider.NAME),
-                           FeedPrice(bit20_value_cc, 'BTWTY', 'USD', provider=CoinCapFeedProvider.NAME)
-                           ])
+
+    bit20_feeds = FeedSet()
+    cmc_feed = FeedPrice(bit20_value_cmc, 'BTWTY', 'USD', provider=CoinMarketCapFeedProvider.NAME)
+    cc_feed = FeedPrice(bit20_value_cc, 'BTWTY', 'USD', provider=CoinCapFeedProvider.NAME)
+
+    # TODO: simple logic, could do something better here
+    # take the feed for the providers that provide a price for all the assets inside the index
+    # if none of them can (ie: they all have at least one asset that is not listed), then we
+    # take the weighted mean anyway, and hope for the best...
+    if not cmc_missing_assets:
+        bit20_feeds.append(cmc_feed)
+    if not coincap_missing_assets:
+        bit20_feeds.append(cc_feed)
+    if not bit20_feeds:
+        log.warning('All providers have at least one asset not listed:')
+        log.warning('- CoinMarketCap: {}'.format(cmc_missing_assets))
+        log.warning('- CoinCap: {}'.format(coincap_missing_assets))
+        bit20_feeds = FeedSet([cmc_feed, cc_feed])
 
     bit20_value = bit20_feeds.price(stddev_tolerance=0.01)
     log.debug('Total value of bit20 asset: ${}'.format(bit20_value))
