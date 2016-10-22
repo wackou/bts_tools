@@ -26,7 +26,9 @@ import socket
 import fcntl
 import struct
 import sys
-import functools
+import copy
+import cachetools.func
+import wrapt
 import logging
 
 log = logging.getLogger(__name__)
@@ -61,9 +63,7 @@ def get_ip_nofail():
         return 'N/A'
 
 
-# FIXME: need to use a better caching strategy using time, we want to react
-#        to node operators changing their dns settings
-@functools.lru_cache()
+@cachetools.func.ttl_cache(maxsize=8192, ttl=3600)
 def resolve_dns(host):
     if ':' in host:
         ip, port = host.split(':')
@@ -71,12 +71,13 @@ def resolve_dns(host):
     return socket.gethostbyname(host)
 
 
+@wrapt.decorator
+def copy_cached_value(wrapped, instance, args, kwargs):
+    return copy.copy(wrapped(*args, **kwargs))
 
-geoip_cache = {}  # cache queries to geoip service
 
-
-import copy
-
+@copy_cached_value
+@cachetools.func.lfu_cache(8192)
 def get_geoip_info(ip_addr):
     try:
         core.config['geoip2']  # check that we have a geoip2 section in config.yaml
@@ -86,24 +87,17 @@ def get_geoip_info(ip_addr):
         raise ValueError('No geoip2 user and password defined in config.yaml') from e
 
 
-    try:
-        pt = geoip_cache[ip_addr]
-        log.debug('using geoip2 cached value for {}: {}'.format(ip_addr, pt))
+    log.debug('getting geoip2 info for for {}'.format(ip_addr))
+    response = client.city(ip_addr)
 
-    except KeyError:
-        log.debug('getting geoip2 info for for {}'.format(ip_addr))
-        response = client.city(ip_addr)
+    pt = {'country': response.country.name,
+          'country_iso': response.country.iso_code,
+          'lat': response.location.latitude,
+          'lon': response.location.longitude
+          }
 
-        pt = {'country': response.country.name,
-              'country_iso': response.country.iso_code,
-              'lat': response.location.latitude,
-              'lon': response.location.longitude
-              }
-
-        log.debug('  {} -- {} ({}, {})'.format(ip_addr, pt['country'], pt['lat'], pt['lon']))
-
-    geoip_cache[ip_addr] = pt
-    return copy.copy(pt)
+    log.debug('  {} -- {} ({}, {})'.format(ip_addr, pt['country'], pt['lat'], pt['lon']))
+    return pt
 
 
 def get_world_map_points_from_peers(peers):
