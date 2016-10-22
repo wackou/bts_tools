@@ -114,10 +114,10 @@ class FeedSet(list):
             price = statistics.mean(price_list)
             stddev = statistics.stdev(price_list, price) / price  # relative stddev
             if stddev > stddev_tolerance:
-                log.warning(
-                    'Feeds for {asset} are not consistent amongst providers: {feeds} (stddev = {stddev:.7f})'.format(
-                        asset=(asset, base), stddev=stddev, feeds=str(self)
-                    ))
+                log.warning('Feeds for {asset} are not consistent amongst providers: {feeds} (stddev = {stddev:.7f})'
+                            .format(asset=(asset, base), stddev=stddev, feeds=str(self)))
+                for f in self:
+                    log.warning(' -- {} {} {} {} {}'.format(f, repr(f), f.price, f.asset, f.base))
 
         return weighted_mean
 

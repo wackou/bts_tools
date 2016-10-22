@@ -149,7 +149,7 @@ def get_bit20_feed(node, usd_price):
             bit20_value_cc += qty * price
 
         except ValueError as e:
-            log.warning('Unknown asset on CMC: {}'.format(bit20asset))
+            log.warning('Unknown asset on CoinCap: {}'.format(bit20asset))
             log.warning(e)
 
     bit20_feeds = FeedSet([FeedPrice(bit20_value_cmc, 'BTWTY', 'USD', provider=CoinMarketCapFeedProvider.NAME),
