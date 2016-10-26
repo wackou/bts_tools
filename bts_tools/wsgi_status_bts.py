@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from flask import render_template, Flask, Blueprint
+from flask import render_template, Flask, Blueprint, jsonify
 from werkzeug.serving import run_simple
 from werkzeug.wsgi import DispatcherMiddleware
 from bts_tools import core, init, seednodes, network_utils
@@ -35,6 +35,7 @@ DEBUG = core.config['wsgi_debug']
 bp = Blueprint('web', __name__, static_folder='static', template_folder='templates')
 
 chain = 'bts'
+
 
 @bp.route('/')
 def view_seed_nodes():
@@ -54,6 +55,12 @@ def view_seed_nodes():
                            points=points,
                            countries=countries,
                            data=data, order='[[1, "desc"]]', nrows=100, sortable=True)
+
+
+@bp.route('/status.json')
+def json_online_nodes():
+    status = seednodes.check_all_seeds_cached(chain)
+    return jsonify(status)
 
 
 def create_app(settings_override=None):

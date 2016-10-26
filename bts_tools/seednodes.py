@@ -98,7 +98,9 @@ SEED_NODES = {
         ('seed.roelandp.nl:2001',            '',   'roelandp',       'https://steemit.com/witness-category/@roelandp/witness-roelandp'),
         ('seed.steempower.org:2001',         '',   'charlieshrem',   'https://steemit.com/witness-category/@charlieshrem/announcement-charlie-shrem-advisor-to-steem-and-witness-proposal'),
         ('178.63.82.69:2001',                '',   'theprophet0',    'https://steemit.com/witness-category/@theprophet0/theprophet0-steem-witness-youngest-steem-witness-at-15-years-of-age-100-of-the-funds-from-this-blog-will-be-donated-to-charity'),
-        ('5.9.18.213:2001',                  '',   'pfunk', 'https://steemit.com/witness-category/@pfunk/backup-witness-pfunk')
+        ('5.9.18.213:2001',                  '',   'pfunk', 'https://steemit.com/witness-category/@pfunk/backup-witness-pfunk'),
+        ('176.31.126.187:2001',              '',   'timcliff', 'https://steemit.com/witness-category/@timcliff/i-m-timcliff-and-i-approve-this-message-my-witness-application'),
+        ('seed.bitcoiner.me:2001',           '',   'bitcoiner', 'https://steemit.com/witness-category/@bitcoiner/bitcoiner-witness-thread')
     ]
 }
 
