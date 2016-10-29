@@ -398,6 +398,11 @@ def view_delegates():
 @catch_error
 @core.profile
 def view_backbone_nodes():
+    backbone_nodes = backbone.node_list(rpc.main_node)
+    if not backbone_nodes:
+        return render_template('error.html',
+                       msg='No backbone nodes currently configured in the config.yaml file...')
+
     peers = rpc.main_node.network_get_connected_peers()
 
     headers = ['Address', 'Status', 'Connected since', 'Platform', 'BitShares git time', 'fc git time']
@@ -407,12 +412,6 @@ def view_backbone_nodes():
         attrs['datetime'].append((i, 2))
         attrs['datetime'].append((i, 4))
         attrs['datetime'].append((i, 5))
-
-    backbone_nodes = backbone.node_list(rpc.main_node)
-
-    if not backbone_nodes:
-        return render_template('error.html',
-                       msg='No backbone nodes currently configured in the config.yaml file...')
 
     connected = {}
     for p in peers:

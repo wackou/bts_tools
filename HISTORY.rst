@@ -6,6 +6,18 @@
 History
 =======
 
+0.4.3 (2016-10-30)
+------------------
+
+* [steem] new config var 'steem_dollar_adjustment' to help maintain SD stability,
+          price is published so that bias shows properly on steemd.com
+* [steem] added Poloniex feed price provider for Steem
+* [bts] new asset feeds: BTWTY, GRIDCOIN (currently disabled due to black swan)
+* [bts] fixed precision bug when publishing feed price for expensive assets (eg: BTWTY, GOLD, ...)
+* [all] updated seed nodes list, faster page rendering (cache seed nodes status)
+* [all] general cleanup fixes, deploy script WIP
+
+
 0.4.2 (2016-08-09)
 ------------------
 
