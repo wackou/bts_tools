@@ -436,7 +436,7 @@ def check_feeds(nodes):
                     median_feeds = {c: statistics.median(price_history[c]) for c in feeds}
                     log.info('Node %s publishing feeds: %s' % (node.name, fmt(median_feeds)))
                     if node.is_graphene_based():
-                        DISABLED_ASSETS = ['RUB', 'SEK', 'GRIDCOIN',  # black swan
+                        DISABLED_ASSETS = ['RUB', 'SEK', 'GRIDCOIN', 'TCNY',  # black swan
                                            'STEEM']       # not on bitshares
 
 
