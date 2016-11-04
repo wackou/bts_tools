@@ -65,7 +65,7 @@ SEED_NODES = {
         ('212.117.213.186:2016',             'ch', 'liondani',       'https://steemit.com/introduceyourself/@liondani/hi-liondani-here-aka-daniel-schwarz-happy-husband-father-steem-witness-steemit-enthusiast'),
         ('seed.riversteem.com:2001',         'nl', 'riverhead',      'https://steemit.com/witness-category/@riverhead/witness-proposal-riverhead'),
         ('52.74.152.79:2001',                'sg', 'smooth',         'https://steemit.com/witness-category/@smooth.witness/smooth-witness'),
-        ('52.63.172.229:2001',               'au', 'rossco99',       ''),
+        ('seed.rossco99.com:2001',           '',   'rossco99',       ''),
         ('104.236.82.250:2001',              'us', 'svk',            'https://steemit.com/witness-category/@witness.svk/witness-thread'),
         ('steem.kushed.com:2001',            'us', 'kushed',         'www.saluscoin.info'),
         ('steemd.pharesim.me:2001',          'de', 'pharesim',       'https://steemit.com/witness-category/@pharesim/witness-post'),
