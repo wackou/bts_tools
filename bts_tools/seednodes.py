@@ -93,7 +93,7 @@ SEED_NODES = {
         ('steem.imcoins.org:2001',           '',   'dr2073',         'https://steemit.com/witness-category/@dr2073/witness-thread-dr2073'),
         ('104.196.141.163:2001',             '',   'good-karma',     'https://steemit.com/witness-category/@good-karma/good-karma-witness-thread'),
         ('steem.global:2001',                '',   'klye',           'https://steemit.com/witness-category/@klye/klye-s-witness-campaign'),
-        ('129.232.223.74:2001',              '',   'thecryptodrive', 'https://steemit.com/witness-category/@thecryptodrive/ricardo-goncalves-thecryptodrive-first-steem-witness-in-africa-a-witness-for-the-people'),
+        ('seed.thecryptodrive.com:2001',     '',   'thecryptodrive', 'https://steemit.com/witness-category/@thecryptodrive/ricardo-goncalves-thecryptodrive-first-steem-witness-in-africa-a-witness-for-the-people'),
         ('45.55.54.83:2001',                 '',   'tdv.witness',    'https://steemit.com/steemit/@dollarvigilante/announcement-the-dollar-vigilante-witness-proposal-tdv-witness'),
         ('seed.roelandp.nl:2001',            '',   'roelandp',       'https://steemit.com/witness-category/@roelandp/witness-roelandp'),
         ('seed.steempower.org:2001',         '',   'charlieshrem',   'https://steemit.com/witness-category/@charlieshrem/announcement-charlie-shrem-advisor-to-steem-and-witness-proposal'),
