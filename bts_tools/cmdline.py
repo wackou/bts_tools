@@ -245,10 +245,14 @@ Examples:
                                             'run', 'run_cli', 'run_gui', 'list', 'monitor', 'publish_slate',
                                             'deploy', 'deploy_node'],
                         help='the command to run')
-    parser.add_argument('-r', '--norpc', action='store_true',
+    parser.add_argument('-r', '--norpc', action='store_true',  # FIXME: deprecate
                         help='run binary with RPC server deactivated')
     parser.add_argument('environment', nargs='?',
                         help='the build/run environment (bts, pts, ...)')
+    parser.add_argument('-p', '--pidfile', action='store',
+                        help='filename in which to write PID of child process')
+    parser.add_argument('-f', '--forward-signals', action='store_true',
+                        help='forward unix signals to spawned witness client child process')
     parser.add_argument('args', nargs='*',
                         help='additional arguments to be passed to the given command')
     args = parser.parse_args()
@@ -376,7 +380,7 @@ Examples:
                     if client['type'] == 'steem':
                         private_key = role.get('signing_key')
                         if private_key:
-                            run_args += ['--witness', '\\"{}\\"'.format(role['name']),
+                            run_args += ['--witness', '"{}"'.format(role['name']),
                                          '--private-key', '{}'.format(private_key)]
 
                     else:
@@ -384,8 +388,8 @@ Examples:
                         private_key = role.get('signing_key')
                         if witness_id and private_key:
                             public_key = format(PrivateKey(private_key).pubkey, client['type'])
-                            run_args += ['--witness-id', '\\"{}\\"'.format(witness_id),
-                                         '--private-key', '[\\"{}\\", \\"{}\\"]'.format(public_key, private_key)]
+                            run_args += ['--witness-id', '"{}"'.format(witness_id),
+                                         '--private-key', '["{}", "{}"]'.format(public_key, private_key)]
 
                 elif role['role'] == 'seed':
                     apis += ['network_node_api']
@@ -431,7 +435,7 @@ Examples:
                     run_args += ['--public-api', api]
 
                 if not public_apis:
-                    # it seems like we can't access the public apis anymore if specifying this
+                    # FIXME: it seems like we can't access the public apis anymore if specifying this
                     pw_hash, salt = hash_salt_password(client['witness_password'])
                     api_user_str = '{"username":"%s", ' % client['witness_user']
                     api_user_str += '"password_hash_b64": "{}", '.format(pw_hash)
@@ -439,7 +443,7 @@ Examples:
                     allowed_apis_str = ', '.join('"{}"'.format(api) for api in make_unique(apis + public_apis))
                     api_user_str += '"allowed_apis": [{}]'.format(allowed_apis_str)
                     api_user_str += '}'
-                    run_args += ['--api-user', api_user_str.replace('"', '\\"')]
+                    run_args += ['--api-user', api_user_str]
 
             else:
                 api_access = client.get('api_access')
@@ -455,7 +459,7 @@ Examples:
                 run_args += ['--server-rpc-endpoint', 'ws://{}:{}'.format(witness_host, witness_port)]
 
             run_args += ['--server-rpc-user', client['witness_user']]
-            run_args += ['--server-rpc-password', client['witness_password'].replace('"', '\\"')]
+            run_args += ['--server-rpc-password', client['witness_password']]
 
             wallet_port = client.get('wallet_port')
             if wallet_port:
@@ -472,14 +476,15 @@ Examples:
 
         if client.get('debug', False):
             if platform == 'linux':
-                cmd = ' '.join(['gdb', '-ex', 'run', '--args', bin_name] + run_args)
+                # FIXME: pidfile will write pid of gdb, not of the process being run inside gdb...
+                cmd = ['gdb', '-ex', 'run', '--args', bin_name] + run_args
             else:
                 log.warning('Running with debug=true is not implemented on your platform (%s)' % platform)
                 cmd = [bin_name] + run_args
-
         else:
             cmd = [bin_name] + run_args
 
+        data_dir = None
         if is_graphene_based(client):
             # for graphene clients, always cd to data dir first (if defined), this ensures the wallet file
             # and everything else doesn't get scattered all over the place
@@ -488,9 +493,12 @@ Examples:
                 # ensure it exists to be able to cd into it
                 with suppress(FileExistsError):
                     Path(data_dir).mkdir(parents=True)
-                cmd = 'cd "{}"; {}'.format(data_dir, join_shell_cmd(cmd))
+            else:
+                log.warning('No data dir specified for running {} client'.format(client['name']))
 
-        run(cmd)
+        # also install signal handler to forward signals to witness client child process (esp. SIGINT)
+        pidfile = args.pidfile or client.get('pidfile')
+        run(cmd, run_dir=data_dir, forward_signals=args.forward_signals, pidfile=pidfile)
 
     elif args.command == 'run_gui':
         select_build_environment(args.environment)
@@ -642,5 +650,3 @@ def main_pts():
 
 def main_pls():
     return main(flavor='pls')
-
-

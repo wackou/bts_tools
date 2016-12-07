@@ -27,6 +27,8 @@ import pwd
 import sys
 import os
 import shutil
+import shlex
+import signal
 from ruamel import yaml
 import hashlib
 import base64
@@ -376,39 +378,102 @@ StatsFrame = namedtuple('StatsFrame', 'cpu, mem, connections, timestamp')
 
 def join_shell_cmd(cmd):
     if isinstance(cmd, list):
-        if len(cmd) > 1: # if we have args, quote them properly
-            cmd = cmd[0] + ' "' + '" "'.join(cmd[1:]) + '"'
-        else:
-            cmd = cmd[0]
-    return cmd
+        return ' '.join(shlex.quote(c) for c in cmd)
+    elif isinstance(cmd, str):
+        # we assume it's already a fully built shell string, so we shouldn't quote it twice
+        #return shlex.quote(cmd)
+        return cmd
+    else:
+        raise TypeError('Given cmd to run needs to be either a list or a str, is a {}'.format(type(cmd)))
 
 
-def _run(cmd, capture_io=False, verbose=False):
-    cmd = join_shell_cmd(cmd)
+def split_shell_cmd(cmd):
+    if isinstance(cmd, str):
+        return shlex.split(cmd)
+    elif isinstance(cmd, list):
+        return cmd
+    else:
+        raise TypeError('Given cmd to run needs to be either a list or a str, is a {}'.format(type(cmd)))
 
-    (log.info if verbose else log.debug)('SHELL: running command: %s' % cmd)
+
+_SIGNAL_NAMES = dict((k, v) for v, k in signal.__dict__.items()
+                     if v.startswith('SIG') and not v.startswith('SIG_'))
+
+
+def _forward_signal(pid):
+    def wrapped(sig, frame):
+        log.debug('Forwarding signal {} ({}) to pid {}'.format(sig, _SIGNAL_NAMES.get(sig, 'UNKNOWN'), pid))
+        os.kill(pid, sig)
+        if sig in [signal.SIGTERM, signal.SIGINT, signal.SIGQUIT]:
+            if sig == signal.SIGINT:
+                log.warning('Caught Ctrl+C, exiting...')
+            else:
+                log.warning('Caught signal {} ({}), exiting...'.format(sig, _SIGNAL_NAMES[sig]))
+            log.info('Waiting for child process to exit')
+            _pid, status = os.waitpid(pid, 0)
+            log.info('Child process exited with status code {}'.format(status))
+            sys.exit(0)
+    return wrapped
+
+
+def _install_signal_forwarding(pid):
+    signal.signal(signal.SIGHUP, _forward_signal(pid))
+    signal.signal(signal.SIGINT, _forward_signal(pid))
+    signal.signal(signal.SIGQUIT, _forward_signal(pid))
+    signal.signal(signal.SIGTERM, _forward_signal(pid))
+    signal.signal(signal.SIGUSR1, _forward_signal(pid))
+    signal.signal(signal.SIGUSR2, _forward_signal(pid))
+
+
+def _run(cmd, capture_io=False, verbose=False, run_dir=None, forward_signals=False, pidfile=None):
+    cmd = split_shell_cmd(cmd)
+
+    (log.info if verbose else log.debug)('SHELL: running command: %s' % join_shell_cmd(cmd))
+
+    last_dir = os.getcwd()
+    if run_dir is not None:
+        log.debug('switching to run dir: {}'.format(run_dir))
+        os.chdir(run_dir)
 
     try:
         if capture_io:
-            p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
+            p = Popen(cmd, shell=False, stdout=PIPE, stderr=PIPE)
+            if forward_signals:
+                _install_signal_forwarding(p.pid)
+            if pidfile:
+                with open(expanduser(pidfile), 'w') as pidf:
+                    pidf.write('{}'.format(p.pid))
             stdout, stderr = p.communicate()
             if sys.version_info[0] >= 3:
                 stdout, stderr = (str(stdout, encoding='utf-8'),
                                   str(stderr, encoding='utf-8'))
+            os.chdir(last_dir)  # restore previous cwd
             return IOStream(p.returncode, stdout, stderr)
 
         else:
-            p = Popen(cmd, shell=True)
+            p = Popen(cmd, shell=False)
+            if forward_signals:
+                _install_signal_forwarding(p.pid)
+            if pidfile:
+                with open(expanduser(pidfile), 'w') as pidf:
+                    pidf.write('{}'.format(p.pid))
             p.communicate()
+            os.chdir(last_dir)  # restore previous cwd
             return IOStream(p.returncode, None, None)
 
     except KeyboardInterrupt:
-        log.warning('Caught Ctrl+C, exiting...')  # FIXME: need to forward ctrl-C to subprocess (eg: steemd) so that it exits properly too
+        log.warning('Caught Ctrl+C, exiting...')
         sys.exit(0)
 
+    finally:
+        if pidfile:
+            os.remove(pidfile)
 
-def run(cmd, capture_io=False, verbose=True, log_on_fail=True):
-    r = _run(cmd, capture_io, verbose)
+
+def run(cmd, capture_io=False, verbose=True, log_on_fail=True,
+        run_dir=None, forward_signals=False, pidfile=None):
+    r = _run(cmd, capture_io=capture_io, verbose=verbose,
+             run_dir=run_dir, forward_signals=forward_signals, pidfile=pidfile)
     if r.status != 0:
         if log_on_fail:
             log.warning('Failed running: %s' % cmd)
