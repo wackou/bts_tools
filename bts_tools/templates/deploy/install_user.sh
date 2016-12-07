@@ -48,10 +48,12 @@ pip install -U pip setuptools
 
 rm -fr dist; python setup.py sdist && (pip uninstall -y bts_tools; pip install dist/bts_tools-*.tar.gz)
 
+# ensure we have a ~/.bts_tools folder with default config.yaml
+bts list >/dev/null 2>&1
+
 
 if [ -f /tmp/config.yaml ]; then
-    # ensure we have a ~/.bts_tools folder
-    bts list >/dev/null 2>&1
+    # FIXME: unnecessary due to line 52, right?
     if [ -f ~/.bts_tools/config.yaml ]; then
         echo "config yaml found in .bts_tools"
     else

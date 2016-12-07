@@ -74,7 +74,7 @@ SEED_NODES = {
         ('seed.steemed.net:2001',            'us', 'steemed',        'https://steemdb.com/@steemed'),
         ('steem-seed1.abit-more.com:2001',   'au', 'abit',           'https://steemit.com/witness-category/@abit/abit-witness-post'),
         ('steem.clawmap.com:2001',           'gb', 'steempty',       'https://steemit.com/witness-category/@steempty/steempty-witness-post'),
-        ('52.62.24.225:2001',                'au', 'au1nethyb1',     'https://steemit.com/witness-category/@au1nethyb1/au1nethyb1-witness-in-the-lan-down-under'),
+        ('seed.steemfeeder.com:2001',        'au', 'au1nethyb1',     'https://steemit.com/witness-category/@au1nethyb1/au1nethyb1-witness-in-the-lan-down-under'),
         ('steem-id.altexplorer.xyz:2001',    '',   'steem-id',       'https://keybase.io/jemekite'),
         ('213.167.243.223:2001',             'fr', 'bhuz',           'https://steemit.com/witness-category/@bhuz/bhuz-witness-thread'),
         ('seed.steemd.com:34191',            'us', 'roadscape',      'https://steemit.com/witness-category/@roadscape/witness-roadscape'),

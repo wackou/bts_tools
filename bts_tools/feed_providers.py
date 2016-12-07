@@ -362,26 +362,6 @@ class PoloniexFeedProvider(FeedProvider):
                                volume=float(r['quoteVolume']))
 
 
-class CCEDKFeedProvider(FeedProvider):
-    NAME = 'CCEDK'
-    MARKET_IDS = {('BTS', 'BTC'): 50,
-                  ('BTS', 'USD'): 55,
-                  ('BTS', 'CNY'): 123,
-                  ('BTS', 'EUR'): 54}
-    AVAILABLE_MARKETS = list(MARKET_IDS.keys())
-
-    @check_online_status
-    @check_market
-    def get(self, cur, base):
-        log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
-        r = requests.get('https://www.ccedk.com/api/v1/stats/marketdepthfull?pair_id=%d' % self.MARKET_IDS[(cur, base)],
-                         timeout=self.TIMEOUT)
-        r = r.json()['response']['entity']
-        return self.feed_price(cur, base,
-                               price=float(r['last_price']),
-                               volume=float(r['vol']))
-
-
 class BterFeedProvider(FeedProvider):
     NAME = 'Bter'
     AVAILABLE_MARKETS = [('BTS', 'BTC'), ('BTS', 'CNY'), ('BTC', 'CNY')]

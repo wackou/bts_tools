@@ -22,7 +22,7 @@ from . import core
 from .core import hashabledict
 from .feed_providers import FeedPrice, FeedSet, YahooFeedProvider, BterFeedProvider, Btc38FeedProvider,\
     PoloniexFeedProvider, GoogleFeedProvider, BloombergFeedProvider, BitcoinAverageFeedProvider,\
-    CCEDKFeedProvider, BitfinexFeedProvider, BitstampFeedProvider, YunbiFeedProvider,\
+    BitfinexFeedProvider, BitstampFeedProvider, YunbiFeedProvider,\
     CoinCapFeedProvider, CoinMarketCapFeedProvider, BittrexFeedProvider, ALL_FEED_PROVIDERS
 from collections import deque, defaultdict
 from contextlib import suppress
@@ -200,9 +200,9 @@ def get_feed_prices(node):
     # 1- get the BitShares price in major markets: BTC, USD and CNY
     bter, btc38 = BterFeedProvider(), Btc38FeedProvider()
 
-    poloniex, bittrex, ccedk, bitcoinavg, bitfinex, bitstamp, yunbi = (
+    poloniex, bittrex, bitcoinavg, bitfinex, bitstamp, yunbi = (
         PoloniexFeedProvider(), BittrexFeedProvider(),
-        CCEDKFeedProvider(), BitcoinAverageFeedProvider(), BitfinexFeedProvider(),
+        BitcoinAverageFeedProvider(), BitfinexFeedProvider(),
         BitstampFeedProvider(), YunbiFeedProvider())
 
     coincap, cmc = CoinCapFeedProvider(), CoinMarketCapFeedProvider()
