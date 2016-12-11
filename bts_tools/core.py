@@ -466,7 +466,7 @@ def _run(cmd, capture_io=False, verbose=False, run_dir=None, forward_signals=Fal
         sys.exit(0)
 
     finally:
-        if pidfile:
+        if pidfile and os.path.exists(pidfile):
             os.remove(pidfile)
 
 

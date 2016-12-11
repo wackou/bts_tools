@@ -33,7 +33,7 @@ A node specifies the following properties:
 - the ``"monitoring"`` variable will contain: ``[version, feeds, email]``.
   As online status, network connections and missed blocks are always monitored
   for a delegate node, you only need to specify whether you want to receive the
-  notifications by email or `boxcar`_, in this case here we want ``email``.
+  notifications by email, `boxcar`_ or Telegram, in this case here we want ``email``.
   You will also need to configure the ``email`` section in the ``config.yaml``
   in order to be able to send them out.
 

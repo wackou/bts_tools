@@ -18,14 +18,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from os.path import join, exists
 from . import core
 import smtplib
-import random
+import urllib
 import requests
 import logging
 
 log = logging.getLogger(__name__)
+
 
 def send_email(to, subject, body, bcc=None, replyto=None):
     """Return True if the email could be sent, raise an exception
@@ -72,6 +72,20 @@ def send_notification_boxcar(msg, alert=False):
     log.info('Sent Boxcar notification: %s' % msg)
 
 
+def send_notification_telegram(msg, alert=False):
+    log.debug('Sending notification trough Telegram: %s' % msg)
+    token = core.config['notification']['telegram']['token']
+    chat_id = core.config['notification']['telegram']['chat_id']
+
+    response = requests.get('https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}'
+                            .format(token, chat_id, urllib.parse.quote_plus(msg))).json()
+
+    if response['ok']:
+        log.info('Sent Telegram notification: %s' % msg)
+    else:
+        log.warning('Could not send Telegram notification: {} {}'
+                    .format(response['error_code'], response['description']))
+
 
 def send_notification(nodes, node_msg, alert=False):
     msg = '[%s] %s: %s' % (nodes[0].type(), ', '.join({n.name for n in nodes}), node_msg)
@@ -81,11 +95,14 @@ def send_notification(nodes, node_msg, alert=False):
         log.info(msg)
 
     for ntype, notify in [('email', send_notification_email),
-                          ('boxcar', send_notification_boxcar)]:
+                          ('boxcar', send_notification_boxcar),
+                          ('telegram', send_notification_telegram)]:
         notify_nodes = [node for node in nodes if ntype in node.notification]
         if notify_nodes:
             node_names = ', '.join(n.name for n in notify_nodes)
             msg = '[%s] %s: %s' % (notify_nodes[0].type(), node_names, node_msg)
+            if core.config.get('hostname'):
+                msg = '[{}] {}'.format(core.config['hostname'], msg)
             try:
                 notify(msg, alert)
             except Exception as e:

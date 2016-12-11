@@ -3,6 +3,11 @@
 # https://bts-tools.readthedocs.io/en/latest/config_format.html
 #
 
+# (OPTIONAL) will show this hostname as the source of notification messages
+hostname: <your-host-name>
+
+# the logging levels for the different submodules
+# can be any of DEBUG, INFO, WARNING, ERROR
 logging:
     bts_tools.feeds: INFO
 
@@ -102,3 +107,6 @@ notification:
     boxcar:
         tokens: []
 
+    telegram:
+        token: 'xxxxxxxxxxxxxxxx'
+        chat_id: 12341234
