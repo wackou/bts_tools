@@ -68,7 +68,11 @@ def resolve_dns(host):
     if ':' in host:
         ip, port = host.split(':')
         return '%s:%s' % (resolve_dns(ip), port)
-    return socket.gethostbyname(host)
+    try:
+        return socket.gethostbyname(host)
+    except socket.gaierror:
+        log.warning('Cannot resolve host "{}"'.format(host))
+        return host
 
 
 @wrapt.decorator
