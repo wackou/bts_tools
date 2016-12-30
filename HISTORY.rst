@@ -6,6 +6,14 @@
 History
 =======
 
+0.4.4 (2016-12-30)
+------------------
+
+* [all] added Telegram notification plugin
+* [all] better subprocess management
+* [bts] properly authenticate bit20 feed publication on the blockchain
+
+
 0.4.3 (2016-10-30)
 ------------------
 
