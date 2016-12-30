@@ -93,6 +93,37 @@ def get_multi_feeds(func, args, providers, stddev_tolerance=None):
     return result
 
 
+def is_valid_bit20_publication(trx):
+    """
+    check that the transaction is a valid one, ie:
+      - it contains a single operation
+      - it is a transfer from 'bittwenty' (1.2.111226) to 'bittwenty.feed' (1.2.126782)
+
+    note: this does not check the contents of the transaction, it only
+          authenticates it
+    """
+    try:
+        # we only want a single operation
+        if len(trx['op']['op']) != 2:  # (trx_id, content)
+            return False
+
+        # authenticates sender and receiver
+        trx_metadata = trx['op']['op'][1]
+        if trx_metadata['from'] != '1.2.111226':  # 'bittwenty'
+            log.debug('invalid sender for bit20 publication: {}'.format(json.dumps(trx, indent=4)))
+            return False
+        if trx_metadata['to'] != '1.2.126782':  # 'bittwenty.feed'
+            log.debug('invalid receiver for bit20 publication: {}'.format(json.dumps(trx, indent=4)))
+            return False
+
+        return True
+
+    except KeyError:
+        # trying to access a non-existent field -> probably looking at something we don't want
+        log.warning('invalid transaction for bit20 publication: {}'.format(json.dumps(trx, indent=4)))
+        return False
+
+
 def get_bit20_feed(node, usd_price):
     # read composition of the index
     # need to import the following key to decrypt memos
@@ -108,6 +139,10 @@ def get_bit20_feed(node, usd_price):
     bit20 = None  # contains the composition of the feed
 
     for f in bit20feed:
+        if not is_valid_bit20_publication(f):
+            log.warning('Hijacking attempt of the bit20 feed? trx: {}'.format(json.dumps(f, indent=4)))
+            continue
+
         if 'COMPOSITION' in f['memo']:
             last_updated = re.search('\((.*)\)', f['memo'])
             if last_updated:
