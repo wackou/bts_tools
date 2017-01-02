@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from bts_tools.core import run
 import sys
 import re
 
@@ -89,7 +90,16 @@ def task_upload_pypi():
     """Build and upload the package on PyPI"""
     # FIXME: only apply "git stash apply" if "git stash" did stash something.
     #git stash && rm -fr dist/ && python setup.py sdist upload && git stash apply && python setup.py develop
-    return {'actions': ['git stash && (python setup.py register sdist upload; git stash apply)'],
+
+    def check_valid_git_state():
+        # check that we are on a git tag before uploading a dev version number...
+        tag_version = run('git describe --tags', capture_io=True, verbose=False).stdout
+        if '-g' in tag_version:
+            # we're not on a git tag
+            raise RuntimeError('Not on a git tag, probably not a good idea to upload this to PyPI')
+
+    return {'actions': [check_valid_git_state,
+                        'git stash && (python setup.py register sdist upload; git stash apply)'],
             'verbosity': 2}
 
 
