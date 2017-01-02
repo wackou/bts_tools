@@ -263,10 +263,17 @@ class YahooFeedProvider(FeedProvider):
         log.debug('Received from yahoo: {}'.format(repr(r.text)))
 
         try:
-            asset_prices = map(float, r.text.split())
+            asset_prices = list(map(float, r.text.split()))
         except Exception as e:
             log.warning('Could not parse feeds from yahoo, response: {}'.format(r.text))
             raise core.NoFeedData from e
+
+        if 'XAU' in asset_list:
+            # get correct price for gold from yahoo. see: https://bitsharestalk.org/index.php/topic,23614.0/all.html
+            r = requests.get('http://download.finance.yahoo.com/d/quotes.csv?s=GC=F&f=l1&e=.csv')
+            idx = asset_list.index('XAU')
+            asset_prices[idx] = float(r.text)
+
         return dict(zip((self.to_bts(asset) for asset in asset_list), asset_prices))
 
 
