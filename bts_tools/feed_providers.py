@@ -268,11 +268,25 @@ class YahooFeedProvider(FeedProvider):
             log.warning('Could not parse feeds from yahoo, response: {}'.format(r.text))
             raise core.NoFeedData from e
 
+        # fetch correct price for gold and silver
+        # see: https://bitsharestalk.org/index.php/topic,23614.0/all.html
         if 'XAU' in asset_list:
-            # get correct price for gold from yahoo. see: https://bitsharestalk.org/index.php/topic,23614.0/all.html
-            r = requests.get('http://download.finance.yahoo.com/d/quotes.csv?s=GC=F&f=l1&e=.csv')
-            idx = asset_list.index('XAU')
-            asset_prices[idx] = float(r.text)
+            try:
+                r = requests.get('http://download.finance.yahoo.com/d/quotes.csv?s=GC=F&f=l1&e=.csv')
+                idx = asset_list.index('XAU')
+                asset_prices[idx] = float(r.text)
+            except Exception as e:
+                log.warning('Could not fetch correct price for gold from yahoo, response: {}'.format(r.text))
+                raise core.NoFeedData from e
+
+        if 'XAG' in asset_list:
+            try:
+                r = requests.get('http://download.finance.yahoo.com/d/quotes.csv?s=SI=F&f=l1&e=.csv')
+                idx = asset_list.index('XAG')
+                asset_prices[idx] = float(r.text)
+            except Exception as e:
+                log.warning('Could not fetch correct price for silver from yahoo, response: {}'.format(r.text))
+                raise core.NoFeedData from e
 
         return dict(zip((self.to_bts(asset) for asset in asset_list), asset_prices))
 
