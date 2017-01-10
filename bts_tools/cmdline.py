@@ -102,7 +102,7 @@ def is_valid_environment(env):
 def clone():
     def is_git_dir(path):
         try:
-            run('cd "%s"; git rev-parse' % BTS_BUILD_DIR, verbose=False)
+            run('git rev-parse', run_dir=BTS_BUILD_DIR, verbose=False)
             return True
         except RuntimeError:
             return False
@@ -285,8 +285,8 @@ Examples:
         # check if user forgot to specify it
         def search_tag(tag):
             env = args.environment
-            if env in {'bts', 'dvs', 'pls'}:
-                tags = run('cd %s; git tag -l' % BTS_BUILD_DIR, capture_io=True, verbose=False).stdout.strip().split('\n')
+            if env in {'bts1', 'dvs', 'pls'}:
+                tags = run('git tag -l', run_dir=BTS_BUILD_DIR, capture_io=True, verbose=False).stdout.strip().split('\n')
                 for pattern in ['%s/%s', '%s/v%s']:
                     if pattern % (env, tag) in tags:
                         return pattern % (env, tag)
