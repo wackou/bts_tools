@@ -96,6 +96,11 @@ def setupLogging(colored=True, with_time=False, with_thread=False, filename=None
 
     logging.getLogger().addHandler(LogsCopy())
 
-    file_log = TimedRotatingFileHandler(expanduser('~/.bts_tools/bts_tools.log'), when='D', backupCount=10, utc=True)
+    # make sure we can write to our default log file
+    default_logfile = expanduser('~/.bts_tools/bts_tools.log')
+    logdir = os.path.dirname(default_logfile)
+    if not os.path.exists(logdir):
+        os.makedirs(logdir)
+    file_log = TimedRotatingFileHandler(default_logfile, when='D', backupCount=10, utc=True)
     file_log.setFormatter(SimpleFormatter(with_time, with_thread))
     logging.getLogger().addHandler(file_log)

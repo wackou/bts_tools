@@ -135,7 +135,7 @@ def configure(debug=False):
     cmake_opts += core.config.get('cmake_args', []) + BUILD_ENV.get('cmake_args', [])
 
     run('{} cmake {} .'.format(' '.join(CONFIGURE_OPTS),
-                               ' '.join(cmake_opts)))
+                               ' '.join(cmake_opts)), shell=True)
 
 
 
@@ -302,7 +302,9 @@ Examples:
         if tag:
             run('git checkout %s' % tag)
         else:
-            run('git checkout %s && git pull' % BTS_GIT_BRANCH)
+            r = run('git checkout %s' % BTS_GIT_BRANCH)
+            if r.status == 0:
+                run('git pull')
         run('git submodule update --init --recursive')
         clean_config()
 

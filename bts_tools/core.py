@@ -425,8 +425,11 @@ def _install_signal_forwarding(pid):
     signal.signal(signal.SIGUSR2, _forward_signal(pid))
 
 
-def _run(cmd, capture_io=False, verbose=False, run_dir=None, forward_signals=False, pidfile=None):
-    cmd = split_shell_cmd(cmd)
+def _run(cmd, capture_io=False, verbose=False, run_dir=None, forward_signals=False, pidfile=None, shell=False):
+    if shell:
+        cmd = join_shell_cmd(cmd)
+    else:
+        cmd = split_shell_cmd(cmd)
 
     (log.info if verbose else log.debug)('SHELL: running command: %s' % join_shell_cmd(cmd))
 
@@ -437,7 +440,7 @@ def _run(cmd, capture_io=False, verbose=False, run_dir=None, forward_signals=Fal
 
     try:
         if capture_io:
-            p = Popen(cmd, shell=False, stdout=PIPE, stderr=PIPE)
+            p = Popen(cmd, shell=shell, stdout=PIPE, stderr=PIPE)
             if forward_signals:
                 _install_signal_forwarding(p.pid)
             if pidfile:
@@ -451,7 +454,7 @@ def _run(cmd, capture_io=False, verbose=False, run_dir=None, forward_signals=Fal
             return IOStream(p.returncode, stdout, stderr)
 
         else:
-            p = Popen(cmd, shell=False)
+            p = Popen(cmd, shell=shell)
             if forward_signals:
                 _install_signal_forwarding(p.pid)
             if pidfile:
@@ -471,9 +474,9 @@ def _run(cmd, capture_io=False, verbose=False, run_dir=None, forward_signals=Fal
 
 
 def run(cmd, capture_io=False, verbose=True, log_on_fail=True,
-        run_dir=None, forward_signals=False, pidfile=None):
+        run_dir=None, forward_signals=False, pidfile=None, shell=False):
     r = _run(cmd, capture_io=capture_io, verbose=verbose,
-             run_dir=run_dir, forward_signals=forward_signals, pidfile=pidfile)
+             run_dir=run_dir, forward_signals=forward_signals, pidfile=pidfile, shell=shell)
     if r.status != 0:
         if log_on_fail:
             log.warning('Failed running: %s' % cmd)
