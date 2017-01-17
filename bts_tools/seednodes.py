@@ -83,7 +83,7 @@ SEED_NODES = {
         ('anyx.co:2001',                     '',   'anyx',           'https://steemit.com/witness-category/@anyx/witness-application-anyx'),
         ('seed.cubeconnex.com:2001',         '',   'bitcube',        'https://steemit.com/witness-category/@bitcube/bitcube-witness-post'),
         ('212.47.249.84:40696',              'fr', 'ihashfury',      'https://steemit.com/witness-category/@ihashfury/ihashfury-witness-thread'),
-        ('104.199.157.70:2001',              'us', 'clayop',         'https://steemit.com/witness-category/@clayop/witness-clayop'),
+        ('104.199.118.92:2001',              'us', 'clayop',         'https://steemit.com/witness-category/@clayop/witness-clayop'),
         ('104.40.230.35:2001',               '',   'aizensou',       'https://steemit.com/witness-category/@aizensou/witness-application-aizensou'),
         ('gtg.steem.house:2001',             '',   'gtg',            'https://steemit.com/witness-category/@gtg/witness-gtg'),
         ('seed.steem.network:2001',          'us', 'someguy123',     'https://steemit.com/witness-category/@someguy123/someguy123-witness-thread'),
@@ -100,7 +100,8 @@ SEED_NODES = {
         ('178.63.82.69:2001',                '',   'theprophet0',    'https://steemit.com/witness-category/@theprophet0/theprophet0-steem-witness-youngest-steem-witness-at-15-years-of-age-100-of-the-funds-from-this-blog-will-be-donated-to-charity'),
         ('5.9.18.213:2001',                  '',   'pfunk', 'https://steemit.com/witness-category/@pfunk/backup-witness-pfunk'),
         ('176.31.126.187:2001',              '',   'timcliff', 'https://steemit.com/witness-category/@timcliff/i-m-timcliff-and-i-approve-this-message-my-witness-application'),
-        ('seed.bitcoiner.me:2001',           '',   'bitcoiner', 'https://steemit.com/witness-category/@bitcoiner/bitcoiner-witness-thread')
+        ('seed.bitcoiner.me:2001',           '',   'bitcoiner', 'https://steemit.com/witness-category/@bitcoiner/bitcoiner-witness-thread'),
+        ('89.36.26.82:2001',                 '',   'dragosroua', 'https://steemit.com/witness-category/@dragosroua/dragosroua-witness-thread')
     ]
 }
 
