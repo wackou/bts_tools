@@ -138,12 +138,14 @@ def get_bit20_feed(node, usd_price):
 
     bit20 = None  # contains the composition of the feed
 
+    market_params = None
+
     for f in bit20feed:
         if not is_valid_bit20_publication(f):
             log.warning('Hijacking attempt of the bit20 feed? trx: {}'.format(json.dumps(f, indent=4)))
             continue
 
-        if 'COMPOSITION' in f['memo']:
+        if f['memo'].startswith('COMPOSITION'):
             last_updated = re.search('\((.*)\)', f['memo'])
             if last_updated:
                 last_updated = arrow.get(last_updated.group(1), 'YYYY/MM/DD')
@@ -151,6 +153,15 @@ def get_bit20_feed(node, usd_price):
             bit20 = json.loads(f['memo'].split(')', maxsplit=1)[1])
             log.debug('Found bit20 composition, last update = {}'.format(last_updated))
             break
+
+        if not market_params and f['memo'].startswith('MARKET'):
+            # only take the most recent into account
+            market_params = json.loads(f['memo'][len('MARKET :: '):])
+            log.debug('Got market params for bit20: {}'.format(market_params))
+            # FIXME: this affects the global config object
+            cfg['asset_params']['BTWTY'] = {'maintenance_collateral_ratio': market_params['MCR'],
+                                            'maximum_short_squeeze_ratio': market_params['MSSR']}
+
 
     else:
         log.warning('Did not find any bit20 composition in the last {} messages '
