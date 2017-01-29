@@ -6,6 +6,12 @@
 History
 =======
 
+0.4.7 (2017-01-29)
+------------------
+
+* [bts] Read market parameters for bit20 feed from the blockchain
+
+
 0.4.6 (2017-01-07)
 ------------------
 
