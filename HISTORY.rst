@@ -6,6 +6,12 @@
 History
 =======
 
+0.4.8 (2017-02-04)
+------------------
+
+* [bts] Fix bug in bit20 feed publishing with non-default market parameters
+
+
 0.4.7 (2017-01-29)
 ------------------
 
