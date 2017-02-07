@@ -84,11 +84,16 @@ def monitor(node, ctx, cfg):
             log.info('[{:2d}%] Indexing block number {} on {}'.format(progress, current_block_num, node.rpc_id))
 
         block = node.get_block(current_block_num)
-        witness_name = ctx.to_name.get(block['witness'], block['witness'])
-        if witness_name in db['static']['monitor_witnesses']:
-            db['total_produced'][witness_name] += 1
-            db['last_produced'][witness_name] = datetime.strptime(block['timestamp'], '%Y-%m-%dT%H:%M:%S')
+        if block is None:
+            log.warning('Could not get {} block number {}: head block = {}'.format(node.bts_type(), current_block_num, node.get_head_block_num()))
 
+        else:
+            witness_name = ctx.to_name.get(block['witness'], block['witness'])
+            if witness_name in db['static']['monitor_witnesses']:
+                db['total_produced'][witness_name] += 1
+                db['last_produced'][witness_name] = datetime.strptime(block['timestamp'], '%Y-%m-%dT%H:%M:%S')
+
+        # FIXME: should be update this even in the case that block == None?
         db['last_indexed_block'] = current_block_num
 
     if ctx.first_reindex:
