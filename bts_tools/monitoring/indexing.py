@@ -85,7 +85,7 @@ def monitor(node, ctx, cfg):
 
         block = node.get_block(current_block_num)
         if block is None:
-            log.warning('Could not get {} block number {}: head block = {}'.format(node.bts_type(), current_block_num, node.get_head_block_num()))
+            log.warning('Could not get {} block number {}: head block = {}'.format(node.type(), current_block_num, node.get_head_block_num()))
 
         else:
             witness_name = ctx.to_name.get(block['witness'], block['witness'])
