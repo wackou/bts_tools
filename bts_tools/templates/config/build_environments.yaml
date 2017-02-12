@@ -7,8 +7,8 @@
 build_environments:
     bts:
         debug: false
-        git_repo: https://github.com/bitshares/bitshares-2.git
-        git_branch: bitshares
+        git_repo: https://github.com/bitshares/bitshares-core.git
+        git_branch: master
         build_dir: ~/.BitShares2_build
         bin_dir: ~/.BitShares2_bin
         make_args: [witness_node, cli_wallet]
