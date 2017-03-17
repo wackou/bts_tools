@@ -138,8 +138,7 @@ def get_bit20_feed(node, usd_price):
 
     bit20 = None  # contains the composition of the feed
 
-    market_params = None
-
+    # find bit20 composition
     for f in bit20feed:
         if not is_valid_bit20_publication(f):
             log.warning('Hijacking attempt of the bit20 feed? trx: {}'.format(json.dumps(f, indent=4)))
@@ -154,16 +153,6 @@ def get_bit20_feed(node, usd_price):
             log.debug('Found bit20 composition, last update = {}'.format(last_updated))
             break
 
-        if not market_params and f['memo'].startswith('MARKET'):
-            # only take the most recent into account
-            market_params = json.loads(f['memo'][len('MARKET :: '):])
-            log.debug('Got market params for bit20: {}'.format(market_params))
-            # FIXME: this affects the global config object
-            cfg['asset_params']['BTWTY'] = {'maintenance_collateral_ratio': market_params['MCR'],
-                                            'maximum_short_squeeze_ratio': market_params['MSSR'],
-                                            'core_exchange_factor': 0.95}
-
-
     else:
         log.warning('Did not find any bit20 composition in the last {} messages '
                     'to account bittwenty.feed'.format(len(bit20feed)))
@@ -172,34 +161,64 @@ def get_bit20_feed(node, usd_price):
         log.warning('import_key "announce" 5KJJNfiSyzsbHoVb81WkHHjaX2vZVQ1Fqq5wE5ro8HWXe6qNFyQ')
         return
 
+    # look for custom market parameters
+    for f in bit20feed:
+        if not is_valid_bit20_publication(f):
+            log.warning('Hijacking attempt of the bit20 feed? trx: {}'.format(json.dumps(f, indent=4)))
+            continue
+
+        if f['memo'].startswith('MARKET'):
+            # only take the most recent into account
+            market_params = json.loads(f['memo'][len('MARKET :: '):])
+            log.debug('Got market params for bit20: {}'.format(market_params))
+            # FIXME: this affects the global config object
+            cfg['asset_params']['BTWTY'] = {'maintenance_collateral_ratio': market_params['MCR'],
+                                            'maximum_short_squeeze_ratio': market_params['MSSR'],
+                                            'core_exchange_factor': 0.95}
+            break
+    else:
+        log.debug('Did not find any custom market parameters in the last {} messages '
+                  'to account bittwenty.feed'.format(len(bit20feed)))
+        log.debug('Make sure that your wallet is unlocked and you have imported '
+                  'the private key needed for reading bittwenty.feed memos: ')
+        log.debug('import_key "announce" 5KJJNfiSyzsbHoVb81WkHHjaX2vZVQ1Fqq5wE5ro8HWXe6qNFyQ')
+
     if len(bit20['data']) < 3:
         log.warning('Not enough assets in bit20 data: {}'.format(bit20['data']))
         return
 
-    bit20_value_cmc = 0
-    cmc_assets = CoinMarketCapFeedProvider().get_all()
-    cmc_missing_assets = []
-    for bit20asset, qty in bit20['data']:
-        try:
-            price = cmc_assets.price(bit20asset, 'USD')
-            #log.debug('CoinMarketcap {} {} at ${} = ${}'.format(qty, bit20asset, price, qty * price))
-            bit20_value_cmc += qty * price
-        except ValueError as e:
-            log.debug('Unknown asset on CMC: {}'.format(bit20asset))
-            cmc_missing_assets.append(bit20asset)
+    try:
+        bit20_value_cmc = 0
+        cmc_assets = CoinMarketCapFeedProvider().get_all()
+        cmc_missing_assets = []
+        for bit20asset, qty in bit20['data']:
+            try:
+                price = cmc_assets.price(bit20asset, 'USD')
+                #log.debug('CoinMarketcap {} {} at ${} = ${}'.format(qty, bit20asset, price, qty * price))
+                bit20_value_cmc += qty * price
+            except ValueError as e:
+                log.debug('Unknown asset on CMC: {}'.format(bit20asset))
+                cmc_missing_assets.append(bit20asset)
 
-    bit20_value_cc = 0
-    coincap_assets = CoinCapFeedProvider().get_all()
-    coincap_missing_assets = []
-    for bit20asset, qty in bit20['data']:
-        try:
-            price = coincap_assets.price(bit20asset, 'USD')
-            #log.debug('CoinCap {} {} at ${} = ${}'.format(qty, bit20asset, price, qty * price))
-            bit20_value_cc += qty * price
+    except Exception as e:
+        log.warning('Could not get bit20 assets feed from CoinMarketCap: {}'.format(e))
 
-        except ValueError as e:
-            log.debug('Unknown asset on CoinCap: {}'.format(bit20asset))
-            coincap_missing_assets.append(bit20asset)
+    try:
+        bit20_value_cc = 0
+        coincap_assets = CoinCapFeedProvider().get_all()
+        coincap_missing_assets = []
+        for bit20asset, qty in bit20['data']:
+            try:
+                price = coincap_assets.price(bit20asset, 'USD')
+                #log.debug('CoinCap {} {} at ${} = ${}'.format(qty, bit20asset, price, qty * price))
+                bit20_value_cc += qty * price
+
+            except ValueError as e:
+                log.debug('Unknown asset on CoinCap: {}'.format(bit20asset))
+                coincap_missing_assets.append(bit20asset)
+
+    except Exception as e:
+        log.warning('Could not get bit20 assets feed from CoinCap: {}'.format(e))
 
 
     bit20_feeds = FeedSet()
