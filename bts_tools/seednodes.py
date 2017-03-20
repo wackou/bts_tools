@@ -62,7 +62,7 @@ SEED_NODES = {
         ('seed.musenodes.com:1781',        'nl', 'wackou', '')
     ],
     'steem': [
-        ('212.117.213.186:2016',             'ch', 'liondani',       'https://steemit.com/introduceyourself/@liondani/hi-liondani-here-aka-daniel-schwarz-happy-husband-father-steem-witness-steemit-enthusiast'),
+        ('seed.liondani.com:2016',           '',   'liondani',       'https://steemit.com/introduceyourself/@liondani/hi-liondani-here-aka-daniel-schwarz-happy-husband-father-steem-witness-steemit-enthusiast'),
         ('seed.riversteem.com:2001',         'nl', 'riverhead',      'https://steemit.com/witness-category/@riverhead/witness-proposal-riverhead'),
         ('52.74.152.79:2001',                'sg', 'smooth',         'https://steemit.com/witness-category/@smooth.witness/smooth-witness'),
         ('seed.rossco99.com:2001',           '',   'rossco99',       ''),
@@ -78,7 +78,7 @@ SEED_NODES = {
         ('steem-id.altexplorer.xyz:2001',    '',   'steem-id',       'https://keybase.io/jemekite'),
         ('seed.bhuz.info:2001',              'fr', 'bhuz',           'https://steemit.com/witness-category/@bhuz/bhuz-witness-thread'),
         ('seed.steemd.com:34191',            'us', 'roadscape',      'https://steemit.com/witness-category/@roadscape/witness-roadscape'),
-        ('52.4.250.181:39705',               'us', 'lafona',         'https://steemit.com/witness-category/@delegate.lafona/delegate'),
+        ('lafonasteem.com:2001',             '',   'lafona',         'https://steemit.com/witness-category/@delegate.lafona/delegate'),
         ('46.252.27.1:1337',                 'de', 'jabbasteem',     'https://steemit.com/witness-category/@jabbasteem/witness-jabbasteem'),
         ('anyx.co:2001',                     '',   'anyx',           'https://steemit.com/witness-category/@anyx/witness-application-anyx'),
         ('seed.cubeconnex.com:2001',         '',   'bitcube',        'https://steemit.com/witness-category/@bitcube/bitcube-witness-post'),
