@@ -460,11 +460,15 @@ def check_feeds(nodes):
                 # - if published price different by more than 3%, publish again
                 def should_publish(node):
                     if 'last_price' not in node.opts:  # make sure we have already published once
+                        log.debug('Steem should publish for the first time since launch of bts_tools')
                         return True
                     if datetime.utcnow() - node.opts['last_published'] > timedelta(hours=12):
+                        log.debug('Steem should publish as it has not published for 12 hours')
                         return True
                     if abs(price - node.opts['last_price']) / node.opts['last_price'] >= 0.03:
+                        log.debug('Steem should publish as price has moved more than 3%')
                         return True
+                    log.debug('No need for Steem to publish')
                     return False
 
                 # publish median value of the price, not latest one
