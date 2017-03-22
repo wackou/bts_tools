@@ -347,7 +347,7 @@ def get_feed_prices(node):
 
     # 4- get other assets
     altcap = get_multi_feeds('get', [('ALTCAP', 'BTC')], {coincap, cmc})
-    altcap = altcap.price(stddev_tolerance=0.05)
+    altcap = altcap.price(stddev_tolerance=0.08)
     feeds['ALTCAP'] = altcap
 
     gridcoin = get_multi_feeds('get', [('GRIDCOIN', 'BTC')], {poloniex, bittrex})
