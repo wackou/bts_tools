@@ -83,7 +83,7 @@ override OSX's native version, as it is antiquated.
 
 ::
 
-    $ brew install git cmake boost berkeley-db readline openssl
+    $ brew install git cmake boost readline openssl autoconf automake libtool   # FIXME: remove? berkeley-db
     $ brew link --force readline
 
 

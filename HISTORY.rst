@@ -6,6 +6,14 @@
 History
 =======
 
+0.4.9 (2017-03-22)
+------------------
+
+* [bts] Updated location of BitShares git repository
+* [bts] Fix bug in bit20 market parameters not being fetched after new composition has been published
+* [bts] Do not try to publish CASH.BTC feed price anymore (black swan)
+
+
 0.4.8 (2017-02-04)
 ------------------
 
