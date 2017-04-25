@@ -42,7 +42,8 @@ log = logging.getLogger(__name__)
 YAHOO_ASSETS = {'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN', 'RUB', 'SEK', 'SGD',
                 'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD', 'ARS'}
 
-OTHER_ASSETS = {'TUSD', 'CASH.USD', 'TCNY', 'CASH.BTC', 'ALTCAP', 'GRIDCOIN', 'STEEM', 'BTWTY'}
+OTHER_ASSETS = {'TUSD', 'CASH.USD', 'TCNY', 'CASH.BTC', 'ALTCAP', 'GRIDCOIN', 'STEEM',
+                'BTWTY', 'RUBLE'}
 
 # BIT_ASSETS_INDICES = {'SHENZHEN': 'CNY',
 #                       'SHANGHAI': 'CNY',
@@ -335,6 +336,10 @@ def get_feed_prices(node):
     for cur, yprice in yahoo_prices.items():
         feeds[cur] = usd_price / yprice
 
+    # 2.1- RUBLE is used temporarily by RUDEX instead of bitRUB (black swan)
+    #      see https://bitsharestalk.org/index.php/topic,24004.0/all.html
+    feeds['RUBLE'] = feeds['RUB']
+
     # 3- get the feeds for major composite indices
     providers_quotes = {yahoo, GoogleFeedProvider(), BloombergFeedProvider()}
 
@@ -358,9 +363,10 @@ def get_feed_prices(node):
     feeds['STEEM'] = steem_usd
 
     # 5- Bit20 asset
-    bit20 = get_bit20_feed(node, usd_price)
-    if bit20 is not None:
-        feeds['BTWTY'] = bit20
+    if 'BTWTY' not in get_disabled_assets():
+        bit20 = get_bit20_feed(node, usd_price)
+        if bit20 is not None:
+            feeds['BTWTY'] = bit20
 
     # 6- update price history for all feeds
     for cur, price in feeds.items():
@@ -397,6 +403,86 @@ def get_fraction(price, asset_precision, base_precision, N=6):
         numerator = round(price * 10 ** (asset_precision + multiplier))
         denominator = 10 ** (base_precision + multiplier)
     return numerator, denominator
+
+
+def get_price_for_publishing(node, median_feeds, asset, price):
+    c = cfg['asset_params']['default']
+    c.update(cfg['asset_params'].get(asset) or {})
+    asset_id = node.asset_data(asset)['id']
+    asset_precision = node.asset_data(asset)['precision']
+
+    base = 'BTS'
+    if asset == 'ALTCAP':
+        base = 'BTC'
+    base_id = node.asset_data(base)['id']
+    base_precision = node.asset_data(base_id)['precision']
+    bts_precision = node.asset_data('BTS')['precision']
+
+    numerator, denominator = get_fraction(price, asset_precision, base_precision)
+
+    # CER price needs to be priced in BTS always. Get conversion rate
+    # from the base currency to BTS, and use it to scale the CER price
+
+    if base != 'BTS':
+        base_bts_price = median_feeds[base]
+        cer_numerator, cer_denominator = get_fraction(price * base_bts_price,
+                                                      asset_precision, bts_precision)
+        cer_denominator *= c['core_exchange_factor']
+    else:
+        cer_numerator, cer_denominator = numerator, round(denominator * c['core_exchange_factor'])
+
+    price_obj = {
+        'settlement_price': {
+            'quote': {
+                'asset_id': base_id,
+                'amount': denominator
+            },
+            'base': {
+                'asset_id': asset_id,
+                'amount': numerator
+            }
+        },
+        'maintenance_collateral_ratio': c['maintenance_collateral_ratio'],
+        'maximum_short_squeeze_ratio': c['maximum_short_squeeze_ratio'],
+        'core_exchange_rate': {
+            'quote': {
+                'asset_id': '1.3.0',
+                'amount': cer_denominator
+            },
+            'base': {
+                'asset_id': asset_id,
+                'amount': cer_numerator
+            }
+        }
+    }
+    # log.debug('Publishing feed for {}/{}: {} as {}/{} - CER: {}/{}'
+    #          .format(asset, base, price, numerator, denominator, cer_numerator, cer_denominator))
+    return price_obj
+
+
+def get_disabled_assets():
+    cfg_enabled = set(cfg.get('enabled_assets', []))
+    cfg_disabled = set(cfg.get('disabled_assets', []))
+    for asset in cfg_enabled:
+        if asset in cfg_disabled:
+            log.warning("Asset {} is both in 'enabled_assets' and 'disabled_assets'. Disabling it")
+
+    # Steem is disabled as it appears in the feed history but should not be published on BitShares
+    # NOTE: the proper fix would be to maintain feeds per client type, and not as a global object
+    disabled_assets = {'STEEM'}
+
+    # these are not published by default as they are experimental or have some requirements
+    # eg: need to be an approved witness to publish
+    disabled_assets.update({'BTWTY', 'RUBLE', 'ALTCAP'})
+
+    # enable plugins in cfg
+    disabled_assets.difference_update(cfg_enabled)
+
+    # disable plugins in cfg
+    disabled_assets.update(cfg_disabled)
+
+    log.warning('DISABLED {}'.format(disabled_assets))
+    return disabled_assets
 
 
 def check_feeds(nodes):
@@ -506,73 +592,19 @@ def check_feeds(nodes):
                     median_feeds = {c: statistics.median(price_history[c]) for c in feeds}
                     log.info('Node %s publishing feeds: %s' % (node.name, fmt(median_feeds)))
                     if node.is_graphene_based():
-                        DISABLED_ASSETS = ['RUB', 'SEK', 'GRIDCOIN', 'TCNY', 'CASH.BTC',  # black swan
-                                           'STEEM']       # not on bitshares
-
-
-                        def get_price_for_publishing(asset, price):
-                            c = cfg['asset_params'].get(asset) or cfg['asset_params']['default']
-                            asset_id = node.asset_data(asset)['id']
-                            asset_precision = node.asset_data(asset)['precision']
-
-                            base = 'BTS'
-                            if asset == 'ALTCAP':
-                                base = 'BTC'
-                            base_id = node.asset_data(base)['id']
-                            base_precision = node.asset_data(base_id)['precision']
-                            bts_precision = node.asset_data('BTS')['precision']
-
-                            numerator, denominator = get_fraction(price, asset_precision, base_precision)
-
-                            # CER price needs to be priced in BTS always. Get conversion rate
-                            # from the base currency to BTS, and use it to scale the CER price
-
-                            if base != 'BTS':
-                                base_bts_price = median_feeds[base]
-                                cer_numerator, cer_denominator = get_fraction(price * base_bts_price,
-                                                                              asset_precision, bts_precision)
-                                cer_denominator *= c['core_exchange_factor']
-                            else:
-                                cer_numerator, cer_denominator = numerator, round(denominator*c['core_exchange_factor'])
-
-                            price_obj = {
-                                'settlement_price': {
-                                    'quote': {
-                                        'asset_id': base_id,
-                                        'amount': denominator
-                                    },
-                                    'base': {
-                                        'asset_id': asset_id,
-                                        'amount': numerator
-                                    }
-                                },
-                                'maintenance_collateral_ratio': c['maintenance_collateral_ratio'],
-                                'maximum_short_squeeze_ratio': c['maximum_short_squeeze_ratio'],
-                                'core_exchange_rate': {
-                                    'quote': {
-                                        'asset_id': '1.3.0',
-                                        'amount': cer_denominator
-                                    },
-                                    'base': {
-                                        'asset_id': asset_id,
-                                        'amount': cer_numerator
-                                    }
-                                }
-                            }
-                            #log.debug('Publishing feed for {}/{}: {} as {}/{} - CER: {}/{}'
-                            #          .format(asset, base, price, numerator, denominator, cer_numerator, cer_denominator))
-                            return price_obj
+                        disabled_assets = get_disabled_assets()
 
                         # first, try to publish all of them in a single transaction
                         try:
+                            published = []
                             handle = node.begin_builder_transaction()
                             for asset, price in median_feeds.items():
-                                if asset in DISABLED_ASSETS:
-                                    # markets temporarily disabled because they are in a black swan state
+                                if asset in disabled_assets:
                                     continue
+                                published.append(asset)
                                 op = [19,  # id 19 corresponds to price feed update operation
                                       hashabledict({"asset_id": node.asset_data(asset)['id'],
-                                                    "feed": get_price_for_publishing(asset, price),
+                                                    "feed": get_price_for_publishing(node, median_feeds, asset, price),
                                                     "publisher": node.get_account(node.name)["id"]})
                                       ]
                                 node.add_operation_to_builder_transaction(handle, op)
@@ -582,6 +614,8 @@ def check_feeds(nodes):
 
                             # sign and broadcast
                             node.sign_builder_transaction(handle, True)
+                            log.debug('Successfully published feeds for {}'.format(', '.join(published)))
+
 
                         except Exception as e:
                             log.error('tried single transaction for all feeds, failed because:')
@@ -589,18 +623,20 @@ def check_feeds(nodes):
 
                             # if an error happened, publish feeds individually to make sure that
                             # at least the ones that work can get published
+                            published = []
                             for asset, price in median_feeds.items():
-                                if asset in DISABLED_ASSETS:
-                                    # markets temporarily disabled because they are in a black swan state
+                                if asset in disabled_assets:
                                     continue
                                 # publish all feeds even if a single one fails
                                 try:
-                                    price = hashabledict(get_price_for_publishing(asset, price))
+                                    price = hashabledict(get_price_for_publishing(node, median_feeds, asset, price))
                                     log.debug('Publishing {} {}'.format(asset, price))
                                     node.publish_asset_feed(node.name, asset, price, True)  # True: sign+broadcast
+                                    published.append(asset)
                                 except Exception as e:
                                     log.warning(str(e)[:1000] + ' [...]')
                                     #log.exception(e)
+                            log.debug('Successfully published feeds for {}'.format(', '.join(published)))
 
                     else:
                         feeds_as_string = [(cur, '{:.10f}'.format(price)) for cur, price in median_feeds.items()]

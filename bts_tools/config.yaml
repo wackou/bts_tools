@@ -86,6 +86,8 @@ monitoring:
         maximum_number_of_connections: 400
 
     feeds:
+        enabled_assets: [RUBLE, BTWTY, ALTCAP]
+        disabled_assets: [RUB, SEK, GRIDCOIN, TCNY, CASH.BTC]  # black swan
         check_time_interval: 300
         median_time_span: 1800
         #publish_time_interval: 2400         # use this to publish feeds at fixed time intervals (in seconds)

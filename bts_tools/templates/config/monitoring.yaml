@@ -26,31 +26,32 @@ monitoring:
 
     feeds:
         steem_dollar_adjustment: 0.90
+        enabled_assets: []   # [RUBLE, BTWTY, ALTCAP]
+        disabled_assets: [RUB, SEK, GRIDCOIN, TCNY, CASH.BTC]  # black swan
         asset_params:
             default:
                 maintenance_collateral_ratio: 1750  # Call when collateral only pays off 175% the debt
                 maximum_short_squeeze_ratio: 1100   # Stop calling when collateral only pays off 110% of the debt
                 core_exchange_factor: 0.95          # 5% discount if paying fees in bitassets
             TCNY:
-                maintenance_collateral_ratio: 1750  # Call when collateral only pays off 175% the debt
-                maximum_short_squeeze_ratio: 1001   # Stop calling when collateral only pays off 100.1% of the debt
-                core_exchange_factor: 0.95          # 5% discount if paying fees in bitassets
+                maintenance_collateral_ratio: 1750
+                maximum_short_squeeze_ratio: 1001
             TUSD:
-                maintenance_collateral_ratio: 1750  # Call when collateral only pays off 175% the debt
-                maximum_short_squeeze_ratio: 1001   # Stop calling when collateral only pays off 100.1% of the debt
-                core_exchange_factor: 0.95          # 5% discount if paying fees in bitassets
+                maintenance_collateral_ratio: 1750
+                maximum_short_squeeze_ratio: 1001
             CASH.USD:
-                maintenance_collateral_ratio: 1750  # Call when collateral only pays off 175% the debt
-                maximum_short_squeeze_ratio: 1001   # Stop calling when collateral only pays off 100.1% of the debt
-                core_exchange_factor: 0.95          # 5% discount if paying fees in bitassets
+                maintenance_collateral_ratio: 1750
+                maximum_short_squeeze_ratio: 1001
             CASH.BTC:
-                maintenance_collateral_ratio: 1750  # Call when collateral only pays off 175% the debt
-                maximum_short_squeeze_ratio: 1001   # Stop calling when collateral only pays off 100.1% of the debt
-                core_exchange_factor: 0.95          # 5% discount if paying fees in bitassets
+                maintenance_collateral_ratio: 1750
+                maximum_short_squeeze_ratio: 1001
             ALTCAP:
-                maintenance_collateral_ratio: 1360  # Call when collateral only pays off 136% the debt
-                maximum_short_squeeze_ratio: 1069   # Stop calling when collateral only pays off 106.9% of the debt
-                core_exchange_factor: 0.95          # 5% discount if paying fees in bitassets
+                maintenance_collateral_ratio: 1360
+                maximum_short_squeeze_ratio: 1069
+            RUBLE:
+                maintenance_collateral_ratio: 1750
+                maximum_short_squeeze_ratio: 1500
+
         check_time_interval: 300
         #publish_time_interval: 2400         # use this to publish feeds at fixed time intervals (in seconds)
         #publish_time_slot: 0                # use this to publish every hour at a fixed number of minutes (in minutes)

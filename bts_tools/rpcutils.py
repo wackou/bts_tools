@@ -61,7 +61,7 @@ def rpc_call(host, port, user, password,
     if __graphene:
         payload = {
             'method': 'call',
-            'params': [graphene.DATABASE_API, funcname, args],
+            'params': [graphene.Api.DATABASE_API, funcname, args],
             'jsonrpc': '2.0',
             'id': _rpc_call_id[(host, port)]
         }
@@ -402,14 +402,14 @@ class GrapheneClient(object):
 
     def network_get_info(self):
         if self.is_graphene_based() and not self.proxy_host:
-            return self.ws_rpc_call(graphene.NETWORK_API, 'get_info')
+            return self.ws_rpc_call(graphene.Api.NETWORK_API, 'get_info')
         else:
             return self.rpc_call('network_get_info')
 
     def network_get_connected_peers(self):
         if self.is_graphene_based():
             if not self.proxy_host:
-                return [p['info'] for p in self.ws_rpc_call(graphene.NETWORK_API, 'get_connected_peers')]
+                return [p['info'] for p in self.ws_rpc_call(graphene.Api.NETWORK_API, 'get_connected_peers')]
             else:
                 return self.rpc_call('network_get_connected_peers')
         else:
@@ -418,7 +418,7 @@ class GrapheneClient(object):
     def network_get_potential_peers(self):
         if self.is_graphene_based():
             if not self.proxy_host:
-                return self.ws_rpc_call(graphene.NETWORK_API, 'get_potential_peers')
+                return self.ws_rpc_call(graphene.Api.NETWORK_API, 'get_potential_peers')
             else:
                 return self.rpc_call('network_get_potential_peers')
         else:
@@ -426,18 +426,18 @@ class GrapheneClient(object):
 
     def network_set_advanced_node_parameters(self, params):
         if self.is_graphene_based() and not self.proxy_host:
-            return self.ws_rpc_call(graphene.NETWORK_API, 'set_advanced_node_parameters', params)
+            return self.ws_rpc_call(graphene.Api.NETWORK_API, 'set_advanced_node_parameters', params)
         else:
             return self.rpc_call('network_set_advanced_node_parameters', params)
 
     def network_get_advanced_node_parameters(self):
         if self.is_graphene_based() and not self.proxy_host:
-            return self.ws_rpc_call(graphene.NETWORK_API, 'get_advanced_node_parameters')
+            return self.ws_rpc_call(graphene.Api.NETWORK_API, 'get_advanced_node_parameters')
         else:
             return self.rpc_call('network_get_advanced_node_parameters')
 
     def get_object(self, oid):
-        return self.ws_rpc_call(graphene.DATABASE_API, 'get_objects', [oid])
+        return self.ws_rpc_call(graphene.Api.DATABASE_API, 'get_objects', [oid])
 
     def process(self):
         return bts_process(self)
@@ -506,6 +506,9 @@ class GrapheneClient(object):
             try:
                 witnesses = self.get_active_witnesses()
                 if self.type() == 'steem':
+                    # return True so that "standby" witnesses still get some useful info
+                    # (they *do* produce from time to time, unlike in BitShares)
+                    return True
                     witnesses = sorted(((name, self.get_witness(name)['votes']) for name in witnesses), key=lambda x:int(x[1]))
                     if witness == witnesses[0][0] or witness == witnesses[1][0]:
                         return False

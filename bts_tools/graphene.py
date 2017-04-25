@@ -25,6 +25,7 @@ from autobahn.asyncio.websocket import WebSocketClientProtocol, WebSocketClientF
 from collections import defaultdict
 from concurrent.futures import Future
 from contextlib import suppress
+from enum import IntEnum
 import functools
 import threading
 import json
@@ -50,21 +51,22 @@ def print_balances(n):
         print('\n\nTO IMPORT: keys = ["%s"]\n\n' % '", "'.join(keys))
 
 
-# Note: this is only an enum, it does not correspond to the actual api id
-DATABASE_API = 0
-LOGIN_API = 1
-NETWORK_API = 2
-NETWORK_BROADCAST_API = 3
+# Note: this is only an enum, it does not correspond to the actual api id in the witness client
+class Api(IntEnum):
+    DATABASE_API = 0
+    LOGIN_API = 1
+    NETWORK_API = 2
+    NETWORK_BROADCAST_API = 3
 
 
 def api_name(api_id):
-    if api_id == DATABASE_API:
+    if api_id == Api.DATABASE_API:
         return 'database_api'
-    elif api_id == LOGIN_API:
+    elif api_id == Api.LOGIN_API:
         return 'login_api'
-    elif api_id == NETWORK_API:
+    elif api_id == Api.NETWORK_API:
         return 'network_node_api'
-    elif api_id == NETWORK_BROADCAST_API:
+    elif api_id == Api.NETWORK_BROADCAST_API:
         return 'network_broadcast_api'
     else:
         log.warning('unknown api id: {}'.format(api_id))
@@ -141,19 +143,19 @@ class MonitoringProtocol(WebSocketClientProtocol):
                    'id': self.request_id,
                    'method': 'call',
                    'params': call_params}
-        log.debug('rpc call: {}'.format(payload))
+        log.debug('rpc call for {} on {}:{}: {}'.format(self.type, self.host, self.port, payload))
         self.sendMessage(json.dumps(payload).encode('utf8'))
 
     def onConnect(self, response) :
         log.debug("Server connected: {0}".format(response.peer))
         # login, authenticate
-        self.rpc_call(LOGIN_API, 'login', self.user, self.passwd)
+        self.rpc_call(Api.LOGIN_API, 'login', self.user, self.passwd)
         if self.type == 'steem':
-            self.rpc_call(LOGIN_API, 'get_api_by_name', 'database_api')
-            self.rpc_call(LOGIN_API, 'get_api_by_name', 'network_node_api')
-            self.rpc_call(LOGIN_API, 'get_api_by_name', 'network_broadcast_api')  # only needed for feed_publisher role
+            self.rpc_call(Api.LOGIN_API, 'get_api_by_name', 'database_api')
+            self.rpc_call(Api.LOGIN_API, 'get_api_by_name', 'network_node_api')
+            self.rpc_call(Api.LOGIN_API, 'get_api_by_name', 'network_broadcast_api')  # only needed for feed_publisher role
         else:
-            self.rpc_call(LOGIN_API, 'network_node')
+            self.rpc_call(Api.LOGIN_API, 'network_node')
 
     def onMessage(self, payload, isBinary):
         res = json.loads(payload.decode('utf8'))
@@ -172,7 +174,7 @@ class MonitoringProtocol(WebSocketClientProtocol):
         else:
             cache[(api, method, args)] = p
 
-        if (api, method) == (LOGIN_API, 'network_node'):
+        if (api, method) == (Api.LOGIN_API, 'network_node'):
             api_id = p['result']
             if api_id is not None:
                 cache['network_node_api'] = api_id
@@ -180,7 +182,7 @@ class MonitoringProtocol(WebSocketClientProtocol):
             else:
                 log.warning('Refused access to network api. Make sure to set your user/password properly!')
 
-        if (api, method) == (LOGIN_API, 'get_api_by_name'):
+        if (api, method) == (Api.LOGIN_API, 'get_api_by_name'):
             api_id = p['result']
             if api_id is not None:
                 log.info('Granted access to {} api on {}:{}'.format(args[0], self.host, self.port))
