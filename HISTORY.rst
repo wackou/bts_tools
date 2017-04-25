@@ -6,24 +6,32 @@
 History
 =======
 
+0.4.10 (2017-04-25)
+-------------------
+
+* [bts] refactored how feeds that need published are specified. New fields in config.yaml:
+        "enabled_assets" and "disabled_assets" allow to specify non-standard assets
+* [bts] added feed publishing for RUBLE (needs to be enabled explicitly)
+
+
 0.4.9 (2017-03-22)
 ------------------
 
-* [bts] Updated location of BitShares git repository
-* [bts] Fix bug in bit20 market parameters not being fetched after new composition has been published
-* [bts] Do not try to publish CASH.BTC feed price anymore (black swan)
+* [bts] updated location of BitShares git repository
+* [bts] fix bug in bit20 market parameters not being fetched after new composition has been published
+* [bts] do not try to publish CASH.BTC feed price anymore (black swan)
 
 
 0.4.8 (2017-02-04)
 ------------------
 
-* [bts] Fix bug in bit20 feed publishing with non-default market parameters
+* [bts] fix bug in bit20 feed publishing with non-default market parameters
 
 
 0.4.7 (2017-01-29)
 ------------------
 
-* [bts] Read market parameters for bit20 feed from the blockchain
+* [bts] read market parameters for bit20 feed from the blockchain
 
 
 0.4.6 (2017-01-07)

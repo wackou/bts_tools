@@ -481,7 +481,6 @@ def get_disabled_assets():
     # disable plugins in cfg
     disabled_assets.update(cfg_disabled)
 
-    log.warning('DISABLED {}'.format(disabled_assets))
     return disabled_assets
 
 
