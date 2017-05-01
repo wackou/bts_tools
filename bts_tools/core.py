@@ -376,9 +376,16 @@ GlobalStatsFrame = namedtuple('GlobalStatsFrame', 'cpu_total, timestamp')
 StatsFrame = namedtuple('StatsFrame', 'cpu, mem, connections, timestamp')
 
 
+def quote_shell_arg(arg):
+    q = shlex.quote(arg)
+    if q[0] == q[-1] == "'" and '*' in q:
+        # we might have shell wildcard, we want to quote using " instead of '
+        q = '"{}"'.format(q[1:-1])
+    return q
+
 def join_shell_cmd(cmd):
     if isinstance(cmd, list):
-        return ' '.join(shlex.quote(c) for c in cmd)
+        return ' '.join(quote_shell_arg(c) for c in cmd)
     elif isinstance(cmd, str):
         # we assume it's already a fully built shell string, so we shouldn't quote it twice
         #return shlex.quote(cmd)

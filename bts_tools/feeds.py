@@ -39,8 +39,10 @@ import logging
 log = logging.getLogger(__name__)
 
 """BitAssets for which we check and publish feeds."""
-YAHOO_ASSETS = {'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN', 'RUB', 'SEK', 'SGD',
-                'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD', 'ARS'}
+BASE_ASSETS = {'BTC', 'USD', 'CNY', 'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN', 'RUB', 'SEK', 'SGD',
+               'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD', 'ARS'}
+
+YAHOO_ASSETS = BASE_ASSETS - {'BTC', 'USD', 'CNY'}
 
 OTHER_ASSETS = {'TUSD', 'CASH.USD', 'TCNY', 'CASH.BTC', 'ALTCAP', 'GRIDCOIN', 'STEEM',
                 'BTWTY', 'RUBLE'}
@@ -53,7 +55,7 @@ OTHER_ASSETS = {'TUSD', 'CASH.USD', 'TCNY', 'CASH.BTC', 'ALTCAP', 'GRIDCOIN', 'S
 # deactivate those indices for now
 BIT_ASSETS_INDICES = {}
 
-BIT_ASSETS = {'BTC', 'USD', 'CNY'} | YAHOO_ASSETS | OTHER_ASSETS | BIT_ASSETS_INDICES.keys()
+BIT_ASSETS = BASE_ASSETS | OTHER_ASSETS | BIT_ASSETS_INDICES.keys()
 
 """List of feeds that should be shown on the UI and in the logs. Note that we
 always check and publish all feeds, regardless of this variable."""
@@ -262,7 +264,9 @@ def get_feed_prices(node):
     # - BTC as we don't get it from yahoo
     # - USD as it is our base currency
     yahoo = YahooFeedProvider()
-    yahoo_prices = yahoo.get(YAHOO_ASSETS, 'USD')
+    yahoo_prices = yahoo.get(YAHOO_ASSETS | {'CNY'}, 'USD')  # still get CNY, we might need it later
+
+    base_usd_price = yahoo_prices
 
     # 1- get the BitShares price in major markets: BTC, USD and CNY
     bter, btc38 = BterFeedProvider(), Btc38FeedProvider()
@@ -308,12 +312,16 @@ def get_feed_prices(node):
     #all_feeds.append(get_multi_feeds('get', [('BTS', 'CNY')], providers_bts_cny))
     feeds_bts_cny = get_multi_feeds('get', [('BTS', 'CNY')], providers_bts_cny)
     if not feeds_bts_cny:
-        # if we couldn't get the feeds for cny, try picking up our last value
-        if price_history.get('cny'):
-            log.warning('Could not get any BTS/CNY feeds, using last feed price')
-            bts_cny = price_history['cny'][-1]
-        else:
-            raise core.NoFeedData('Could not get any BTS/CNY feeds')
+        # if we couldn't get the feeds for cny, go BTS->BTC, BTC->CNY
+        log.warning('Could not get any BTS/CNY feeds, going BTS->BTC, BTC->CNY')
+        bts_cny = btc_price * btc_usd / base_usd_price.price('CNY')
+
+        # # if we couldn't get the feeds for cny, try picking up our last value
+        # if price_history.get('cny'):
+        #     log.warning('Could not get any BTS/CNY feeds, using last feed price')
+        #     bts_cny = price_history['cny'][-1]
+        # else:
+        #     raise core.NoFeedData('Could not get any BTS/CNY feeds')
     else:
         bts_cny = feeds_bts_cny.price()
 
@@ -333,8 +341,8 @@ def get_feed_prices(node):
     log.debug('Got cny price: {}'.format(cny_price))
 
     # 2- now get the BitShares price in all other required currencies
-    for cur, yprice in yahoo_prices.items():
-        feeds[cur] = usd_price / yprice
+    for asset in YAHOO_ASSETS:
+        feeds[asset] = usd_price / base_usd_price.price(asset)
 
     # 2.1- RUBLE is used temporarily by RUDEX instead of bitRUB (black swan)
     #      see https://bitsharestalk.org/index.php/topic,24004.0/all.html
@@ -356,7 +364,7 @@ def get_feed_prices(node):
     feeds['ALTCAP'] = altcap
 
     gridcoin = get_multi_feeds('get', [('GRIDCOIN', 'BTC')], {poloniex, bittrex})
-    feeds['GRIDCOIN'] = btc_price / gridcoin.price(stddev_tolerance=0.05)
+    feeds['GRIDCOIN'] = btc_price / gridcoin.price(stddev_tolerance=0.1)
 
     steem_btc = get_multi_feeds('get', [('STEEM', 'BTC')], {poloniex, bittrex})
     steem_usd = steem_btc.price() * btc_usd

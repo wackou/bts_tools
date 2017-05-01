@@ -41,7 +41,7 @@ class FeedPrice(object):
         self.price = price
         self.asset = asset
         self.base = base
-        self.volume = volume
+        self.volume = volume  # volume of the market from which this price is coming, if any
         self.last_updated = last_updated or datetime.utcnow()
         self.provider = provider
 
@@ -70,14 +70,35 @@ class FeedSet(list):
 
         return self[0].price
 
-    def price(self, asset=None, base=None, stddev_tolerance=None):
+    def average_price(self, asset=None, base=None, stddev_tolerance=None):
         """Automatically compute the price of an asset using all relevant data in this FeedSet"""
         if len(self) == 0:
             raise ValueError('FeedSet is empty, can\'t compute price...')
+
+        # check that if asset=None or base=None then there is no ambiguity
+        if asset is None:
+            asset_list = [f.asset for f in self]
+            if asset_list.count(asset_list[0]) != len(asset_list):  # they're not all equal
+                raise ValueError('asset=None: cannot decide which asset to use for computing the price: {}'.format(set(asset_list)))
+        if base is None:
+            base_list = [f.base for f in self]
+            if base_list.count(base_list[0]) != len(base_list):  # they're not all equal
+                raise ValueError('base=None: cannot decide which base to use for computing the price: {}'.format(set(base_list)))
+
         asset = asset or self[0].asset
         base = base or self[0].base
         prices = self.filter(asset, base)
         return prices.weighted_mean(stddev_tolerance=stddev_tolerance)
+
+    def median_price(self, asset=None, base=None):
+        # do some checks (as in average_price)
+        pass
+
+    price = average_price
+
+    def median(self):
+        # TODO: implement me!
+        pass
 
     def weighted_mean(self, stddev_tolerance=None):
         if len(self) == 0:
@@ -95,13 +116,15 @@ class FeedSet(list):
                              .format(set((f.asset, f.base) for f in self)))
 
         # if any(f.volume is None for f in self) -> use simple mean of them, each has a weight of 1
+        use_simple_mean = False
         if any(f.volume is None for f in self):
             log.debug('No volume defined for at least one feed: {}, using simple mean'.format(self))
+            use_simple_mean = True
             total_volume = len(self)
         else:
             total_volume = sum(f.volume for f in self)
 
-        weighted_mean = sum(f.price * (f.volume or 1) for f in self) / total_volume
+        weighted_mean = sum(f.price * (1 if use_simple_mean else f.volume) for f in self) / total_volume
 
         log.debug('Weighted mean for {}/{}: {:.6g}'.format(asset, base, weighted_mean))
         log.debug('Exchange      Price          Volume          Contribution')
@@ -184,7 +207,7 @@ class FeedProvider(object):
     NAME = 'base FeedProvider'
     AVAILABLE_MARKETS = []  # redefine in derived classes, used by @check_market decorator
     PROVIDER_STATES = {}
-    _ASSET_MAP = {}
+    ASSET_MAP = {}
     TIMEOUT = 60
 
     def __init__(self):
@@ -201,22 +224,28 @@ class FeedProvider(object):
 
     @classmethod
     def to_bts(cls, c):
+        """The API for FeedProvider requires that all assets be named using their BTS denomination.
+        However, certain providers use other names (eg: GOLD vs. XAG), and this method provides a way
+        to convert an asset from its internal representation to its BTS representation."""
         c = c.upper()
-        for b, y in cls._ASSET_MAP.items():
+        for b, y in cls.ASSET_MAP.items():
             if c == y:
                 return b
         return c
 
     @classmethod
     def from_bts(cls, c):
+        """The API for FeedProvider requires that all assets be named using their BTS denomination.
+        However, certain providers use other names (eg: GOLD vs. XAG), and this method provides a way
+        to convert an asset from its BTS representation to its internal representation."""
         c = c.upper()
-        return cls._ASSET_MAP.get(c, c)
+        return cls.ASSET_MAP.get(c, c)
 
 
 class YahooFeedProvider(FeedProvider):
     NAME = 'Yahoo'
     _YQL_URL = 'http://query.yahooapis.com/v1/public/yql'
-    _ASSET_MAP = {'GOLD': 'XAU',
+    ASSET_MAP = {'GOLD': 'XAU',
                   'SILVER': 'XAG',
                   'SHENZHEN': '399106.SZ',
                   'SHANGHAI': '000001.SS',
@@ -288,13 +317,15 @@ class YahooFeedProvider(FeedProvider):
                 log.warning('Could not fetch correct price for silver from yahoo, response: {}'.format(r.text))
                 raise core.NoFeedData from e
 
+
+        return FeedSet([self.feed_price(self.to_bts(asset), base, price) for asset, price in zip(asset_list, asset_prices)])
         return dict(zip((self.to_bts(asset) for asset in asset_list), asset_prices))
 
 
 class GoogleFeedProvider(FeedProvider):
     NAME = 'Google'
     _GOOGLE_URL = 'https://www.google.com/finance'
-    _ASSET_MAP = {'SHENZHEN': 'SHE:399106',
+    ASSET_MAP = {'SHENZHEN': 'SHE:399106',
                   'SHANGHAI': 'SHA:000001',
                   'NIKKEI': 'NI225',
                   'NASDAQC': '.IXIC',
@@ -312,11 +343,12 @@ class GoogleFeedProvider(FeedProvider):
 class BloombergFeedProvider(FeedProvider):
     NAME = 'Bloomberg'
     _BLOOMBERG_URL = 'http://www.bloomberg.com/quote/{}'
-    _ASSET_MAP = {'SHENZHEN': 'SZCOMP:IND',
+    ASSET_MAP = {'SHENZHEN': 'SZCOMP:IND',
                   'SHANGHAI': 'SHCOMP:IND',
                   'NIKKEI': 'NKY:IND',
                   'NASDAQC': 'CCMP:IND',
-                  'HANGSENG': 'HSI:IND'}
+                  'HANGSENG': 'HSI:IND',
+                  'GOLD': 'XAUUSD:CUR'}
 
     @check_online_status
     def query_quote(self, q, base_currency=None):
@@ -369,7 +401,7 @@ class BitstampFeedProvider(FeedProvider):
 class PoloniexFeedProvider(FeedProvider):
     NAME = 'Poloniex'
     AVAILABLE_MARKETS = [('BTS', 'BTC'), ('STEEM', 'BTC'), ('GRIDCOIN', 'BTC')]
-    _ASSET_MAP = {'GRIDCOIN': 'GRC'}
+    ASSET_MAP = {'GRIDCOIN': 'GRC'}
 
     @check_online_status
     @check_market
@@ -523,7 +555,7 @@ class CoinMarketCapFeedProvider(FeedProvider):
 class BittrexFeedProvider(FeedProvider):
     NAME = 'Bittrex'
     AVAILABLE_MARKETS = [('BTS', 'BTC'), ('STEEM', 'BTC'), ('GRIDCOIN', 'BTC')]
-    _ASSET_MAP = {'GRIDCOIN': 'GRC'}
+    ASSET_MAP = {'GRIDCOIN': 'GRC'}
 
     @check_online_status
     @check_market
