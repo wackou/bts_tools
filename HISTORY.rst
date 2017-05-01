@@ -6,6 +6,13 @@
 History
 =======
 
+0.4.11 (2017-05-01)
+-------------------
+
+* [bts] when no BTS/CNY markets are available, go BTS/BTC and BTC/CNY to get a feed price for CNY
+* [bts] fixed seemingly random market parameters when published
+
+
 0.4.10 (2017-04-25)
 -------------------
 
