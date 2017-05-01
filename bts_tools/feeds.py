@@ -414,7 +414,7 @@ def get_fraction(price, asset_precision, base_precision, N=6):
 
 
 def get_price_for_publishing(node, median_feeds, asset, price):
-    c = cfg['asset_params']['default']
+    c = dict(cfg['asset_params']['default'])  # make a copy, we don't want to update the default value
     c.update(cfg['asset_params'].get(asset) or {})
     asset_id = node.asset_data(asset)['id']
     asset_precision = node.asset_data(asset)['precision']
