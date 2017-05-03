@@ -43,7 +43,8 @@ SEED_NODES = {
         ('104.236.144.84:1777',            '', 'puppies',     ''),
         ('212.47.249.84:50696',            '', 'ihashfury',   ''),
         ('128.199.143.47:2015',            '', 'harvey',      ''),
-        ('seed.roelandp.nl:1776',          '', 'roelandp',    '')
+        ('seed.roelandp.nl:1776',          '', 'roelandp',    ''),
+        ('node.blckchnd.com:4243',         '', 'blckchnd',    '')
     ],
     'muse': [
         ('104.238.191.99:1781',            'fr', '', ''),
