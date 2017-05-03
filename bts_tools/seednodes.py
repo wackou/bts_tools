@@ -31,20 +31,22 @@ SEED_STATUS_TIMEOUT = 5  # in seconds
 
 SEED_NODES = {
     'bts': [
-        ('bts-seed1.abit-more.com:62015',  '', 'abit',        ''),
-        ('seed.blocktrades.us:1776',       '', 'blocktrades', ''),
-        ('seed.bitsharesnodes.com:1776',   '', 'wackou',      ''),
-        ('seed04.bts-nodes.net:1776',      '', 'thom',        ''),
-        ('seed05.bts-nodes.net:1776',      '', 'thom',        ''),
-        ('seed06.bts-nodes.net:1776',      '', 'thom',        ''),
-        ('seed07.bts-nodes.net:1776',      '', 'thom',        ''),
-        ('seed.cubeconnex.com:1777',       '', 'cube',        ''),
-        ('54.85.252.77:39705',             '', 'lafona',      ''),
-        ('104.236.144.84:1777',            '', 'puppies',     ''),
-        ('212.47.249.84:50696',            '', 'ihashfury',   ''),
-        ('128.199.143.47:2015',            '', 'harvey',      ''),
-        ('seed.roelandp.nl:1776',          '', 'roelandp',    ''),
-        ('node.blckchnd.com:4243',         '', 'blckchnd',    '')
+        ('bts-seed1.abit-more.com:62015',  '', 'abit',             ''),
+        ('seed.blocktrades.us:1776',       '', 'blocktrades',      ''),
+        ('seed.bitsharesnodes.com:1776',   '', 'wackou',           ''),
+        ('seed04.bts-nodes.net:1776',      '', 'thom',             ''),
+        ('seed05.bts-nodes.net:1776',      '', 'thom',             ''),
+        ('seed06.bts-nodes.net:1776',      '', 'thom',             ''),
+        ('seed07.bts-nodes.net:1776',      '', 'thom',             ''),
+        ('seed.cubeconnex.com:1777',       '', 'cube',             ''),
+        ('54.85.252.77:39705',             '', 'lafona',           ''),
+        ('104.236.144.84:1777',            '', 'puppies',          ''),
+        ('212.47.249.84:50696',            '', 'ihashfury',        ''),
+        ('128.199.143.47:2015',            '', 'harvey',           ''),
+        ('seed.roelandp.nl:1776',          '', 'roelandp',         ''),
+        ('node.blckchnd.com:4243',         '', 'blckchnd',         ''),
+        ('23.92.53.182:1776',              '', 'sahkan-bitshares', '')
+
     ],
     'muse': [
         ('104.238.191.99:1781',            'fr', '', ''),
