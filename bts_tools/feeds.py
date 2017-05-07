@@ -27,7 +27,7 @@ from .feed_providers import FeedPrice, FeedSet, YahooFeedProvider, BterFeedProvi
 from collections import deque, defaultdict
 from contextlib import suppress
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import threading
 import itertools
 import statistics
@@ -45,7 +45,7 @@ BASE_ASSETS = {'BTC', 'USD', 'CNY', 'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', '
 YAHOO_ASSETS = BASE_ASSETS - {'BTC', 'USD', 'CNY'}
 
 OTHER_ASSETS = {'TUSD', 'CASH.USD', 'TCNY', 'CASH.BTC', 'ALTCAP', 'GRIDCOIN', 'STEEM',
-                'BTWTY', 'RUBLE'}
+                'BTWTY', 'RUBLE', 'HERO'}
 
 # BIT_ASSETS_INDICES = {'SHENZHEN': 'CNY',
 #                       'SHANGHAI': 'CNY',
@@ -294,7 +294,7 @@ def get_feed_prices(node):
     try:
         feeds_btc_usd = FeedSet([bitcoinavg.get('BTC', 'USD')])
     except Exception:
-        # fall back on Bitfinex, Bitstamp if BitcoinAverage is down - TODO: add Kraken, others?
+        # fall back on Bitfinex, Bitstamp if BitcoinAverage is down - TODO: add Kraken, others? CMC
         log.debug('Could not get USD/BTC')
         feeds_btc_usd = get_multi_feeds('get', [('BTC', 'USD')], {bitfinex, bitstamp})
 
@@ -335,6 +335,8 @@ def get_feed_prices(node):
     feeds['CASH.USD'] = usd_price
     feeds['CNY'] = cny_price
     feeds['TCNY'] = cny_price
+
+    feeds['HERO'] = usd_price / (1.05 ** ((date.today() - date(1913, 12, 23)).days / 365.2425))
 
     log.debug('Got btc/usd price: {}'.format(btc_usd))
     log.debug('Got usd price: {}'.format(usd_price))
