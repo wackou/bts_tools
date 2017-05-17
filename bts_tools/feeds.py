@@ -483,7 +483,7 @@ def get_disabled_assets():
 
     # these are not published by default as they are experimental or have some requirements
     # eg: need to be an approved witness to publish
-    disabled_assets.update({'BTWTY', 'RUBLE', 'ALTCAP'})
+    disabled_assets.update({'BTWTY', 'RUBLE', 'ALTCAP', 'HERO'})
 
     # enable plugins in cfg
     disabled_assets.difference_update(cfg_enabled)
