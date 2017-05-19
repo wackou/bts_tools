@@ -1,6 +1,20 @@
 TODO
 ====
 
+- seed should be started with "--force-validate" (temporary? potential security issue 2017/05)
+
+- add range for RAM plots to be [0, total system RAM]  (get it using: psutil.virtual_memory().total)
+
+- visible feeds only in /info header, not in the logs (print everything in the logs)
+
+- if feed prices moves more than x%, publish feed anyway
+
+- documentation of the config.yaml file is generated from the comments in the provided default config.yaml (use ruamel.yaml)
+  - script can generate a diff for the release notes and write a history.rst stub
+
+- documentation should also include a list of the monitoring plugins, description, parameters and their default values
+
+- reintroduce aliases for monitoring plugins
 
 - rename "bts run_cli" to "bts cli"
 

@@ -632,7 +632,11 @@ class GrapheneClient(object):
     def get_blockchain_feeds(self, asset_list):
         result = []
         for asset in asset_list:
-            asset_data = self.get_bitasset_data(asset)
+            try:
+                asset_data = self.get_bitasset_data(asset)
+            except RPCError:
+                log.warning('Unknown blockchain asset: {}'.format(asset))
+                continue
 
             try:
                 base  = asset_data['current_feed']['settlement_price']['base']
@@ -654,7 +658,11 @@ class GrapheneClient(object):
         asset_list = asset_list or BIT_ASSETS
         result = []
         for asset in asset_list:
-            asset_data = self.get_bitasset_data(asset)
+            try:
+                asset_data = self.get_bitasset_data(asset)
+            except RPCError:
+                log.warning('Unknown blockchain asset: {}'.format(asset))
+                continue
 
             try:
                 for feed in asset_data['feeds']:
@@ -672,7 +680,7 @@ class GrapheneClient(object):
                 else:
                     log.warning('No published feeds found for witness {} - id: {}'.format(witness_name, witness_id))
 
-            except ZeroDivisionError :
+            except ZeroDivisionError:
                 print("No price feeds for asset %s available on the blockchain, yet!" % asset)
 
         return result

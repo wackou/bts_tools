@@ -642,6 +642,10 @@ def main_steem():
     return main(flavor='steem')
 
 
+def main_ppy():
+    return main(flavor='ppy')
+
+
 def main_dvs():
     return main(flavor='dvs')
 

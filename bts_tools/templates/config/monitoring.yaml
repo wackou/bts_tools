@@ -29,10 +29,11 @@ monitoring:
         enabled_assets: []   # [RUBLE, BTWTY, ALTCAP]
         disabled_assets: [RUB, SEK, GRIDCOIN, TCNY, CASH.BTC]  # black swan
         asset_params:
+            # FIXME: MCR and MSSR should be the actual percentage (float) not a fixed-point integer
             default:
                 maintenance_collateral_ratio: 1750  # Call when collateral only pays off 175% the debt
                 maximum_short_squeeze_ratio: 1100   # Stop calling when collateral only pays off 110% of the debt
-                core_exchange_factor: 0.95          # 5% discount if paying fees in bitassets
+                core_exchange_factor: 0.95          # 5% premium if paying fees in bitassets
             TCNY:
                 maintenance_collateral_ratio: 1750
                 maximum_short_squeeze_ratio: 1001

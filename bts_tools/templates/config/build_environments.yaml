@@ -28,6 +28,13 @@ build_environments:
         build_dir: ~/.Steem_build
         bin_dir: ~/.Steem_bin
 
+    ppy:
+        debug: false
+        git_repo: https://github.com/pbsa/testnet.git
+        git_branch: testnet
+        build_dir: ~/.PeerPlays_build
+        bin_dir: ~/.PeerPlays_bin
+
     bts1:
         git_repo: https://github.com/BitShares/bitshares.git
         git_branch: master

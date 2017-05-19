@@ -44,6 +44,7 @@ entry_points = {
         'bts2 = bts_tools.cmdline:main_bts2',
         'muse = bts_tools.cmdline:main_muse',
         'steem = bts_tools.cmdline:main_steem',
+        'ppy = bts_tools.cmdline:main_ppy',
         'dvs = bts_tools.cmdline:main_dvs',
         'pts = bts_tools.cmdline:main_pts',
         'pls = bts_tools.cmdline:main_pls'

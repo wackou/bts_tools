@@ -530,8 +530,15 @@ def check_feeds(nodes):
         nfeed_checked += 1
 
         def fmt(feeds):
-            fmt = ', '.join('%s %s' % (format_qualifier(c), c) for c in visible_feeds)
-            msg = fmt % tuple(feeds[c] for c in visible_feeds)
+            display_feeds = []
+            for c in set(visible_feeds) | set(feeds.keys()):
+                if c not in feeds:
+                    log.warning('No feed price available for {}, cannot display it'.format(c))
+                else:
+                    display_feeds.append(c)
+
+            fmt = ', '.join('%s %s' % (format_qualifier(c), c) for c in display_feeds)
+            msg = fmt % tuple(feeds[c] for c in display_feeds)
             return msg
 
         publish_status = ''

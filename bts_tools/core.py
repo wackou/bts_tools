@@ -309,12 +309,13 @@ def is_graphene_based(n):
             n = config['clients'][n]['type']
         except KeyError:
             pass
-        return n == 'bts' or n == 'muse' or n == 'steem'
+        return n == 'bts' or n == 'muse' or n == 'steem' or n == 'ppy'
 
 
 DEFAULT_BIN_FILENAMES = {'bts': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
                          'muse': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
                          'steem': ['steemd/steemd', 'cli_wallet/cli_wallet'],
+                         'ppy': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
                          'bts1': ['client/bitshares_client'],
                          'dvs': ['client/devshares_client'],
                          'pts': ['client/pts_client'],
@@ -324,6 +325,7 @@ DEFAULT_BIN_FILENAMES = {'bts': ['witness_node/witness_node', 'cli_wallet/cli_wa
 DEFAULT_GUI_BIN_FILENAMES = {'bts': '',
                              'muse': '',
                              'steem': '',
+                             'ppy': '',
                              'bts1': 'BitShares',
                              'dvs': 'DevShares',
                              'pts': 'PTS',

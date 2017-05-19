@@ -91,7 +91,8 @@ def render_template_file(cfg, build_dir, env, template_name, output_name=None):
 
 
 def prepare_installation_bundle(cfg, build_dir):
-    run('rm -fr {d}; mkdir {d}'.format(d=build_dir))
+    run('rm -fr {d}'.format(d=build_dir))
+    run('mkdir {d}'.format(d=build_dir))
     env = Environment(loader=PackageLoader('bts_tools', 'templates/deploy'))
 
     render_template = partial(render_template_file, cfg, build_dir, env)
@@ -138,7 +139,7 @@ def deploy_base_node(cfg, build_dir, build_env):
     run_remote = partial(run_remote_cmd, host, 'root')
 
     def copy(filename, dest_dir, user='root', compress=True):
-        run('rsync -av{}P {} {}@{}:"{}"'.format('z' if compress else '', filename, user, host, dest_dir))
+        run('rsync -av{}P {} {}@{}:"{}"'.format('z' if compress else '', filename, user, host, dest_dir), shell=True)  # shell=True to allow wildcard expansion
 
     # make sure we can successfully connect to it via ssh without confirmation
     run('ssh -o "StrictHostKeyChecking no" root@{} ls'.format(host))
