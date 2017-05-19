@@ -41,7 +41,7 @@ SEED_NODES = {
         ('seed.cubeconnex.com:1777',       '', 'cube',             ''),
         ('54.85.252.77:39705',             '', 'lafona',           ''),
         ('104.236.144.84:1777',            '', 'puppies',          ''),
-        ('212.47.249.84:50696',            '', 'ihashfury',        ''),
+        ('seed.bitsharesdex.com:50696',    '', 'ihashfury',        ''),
         ('128.199.143.47:2015',            '', 'harvey',           ''),
         ('seed.roelandp.nl:1776',          '', 'roelandp',         ''),
         ('node.blckchnd.com:4243',         '', 'blckchnd',         ''),
@@ -101,10 +101,11 @@ SEED_NODES = {
         ('seed.roelandp.nl:2001',            '',   'roelandp',       'https://steemit.com/witness-category/@roelandp/witness-roelandp'),
         #('seed.steempower.org:2001',         '',   'charlieshrem',   'https://steemit.com/witness-category/@charlieshrem/announcement-charlie-shrem-advisor-to-steem-and-witness-proposal'),
         ('178.63.82.69:2001',                '',   'theprophet0',    'https://steemit.com/witness-category/@theprophet0/theprophet0-steem-witness-youngest-steem-witness-at-15-years-of-age-100-of-the-funds-from-this-blog-will-be-donated-to-charity'),
-        ('5.9.18.213:2001',                  '',   'pfunk', 'https://steemit.com/witness-category/@pfunk/backup-witness-pfunk'),
-        ('176.31.126.187:2001',              '',   'timcliff', 'https://steemit.com/witness-category/@timcliff/i-m-timcliff-and-i-approve-this-message-my-witness-application'),
-        ('seed.bitcoiner.me:2001',           '',   'bitcoiner', 'https://steemit.com/witness-category/@bitcoiner/bitcoiner-witness-thread'),
-        ('89.36.26.82:2001',                 '',   'dragosroua', 'https://steemit.com/witness-category/@dragosroua/dragosroua-witness-thread')
+        ('5.9.18.213:2001',                  '',   'pfunk',          'https://steemit.com/witness-category/@pfunk/backup-witness-pfunk'),
+        ('176.31.126.187:2001',              '',   'timcliff',       'https://steemit.com/witness-category/@timcliff/i-m-timcliff-and-i-approve-this-message-my-witness-application'),
+        ('seed.bitcoiner.me:2001',           '',   'bitcoiner',      'https://steemit.com/witness-category/@bitcoiner/bitcoiner-witness-thread'),
+        ('89.36.26.82:2001',                 '',   'dragosroua',     'https://steemit.com/witness-category/@dragosroua/dragosroua-witness-thread'),
+        ('78.46.95.157:2001',                '',   'pcste',          '')
     ]
 }
 
