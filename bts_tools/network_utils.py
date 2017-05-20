@@ -84,9 +84,8 @@ def copy_cached_value(wrapped, instance, args, kwargs):
 @cachetools.func.lfu_cache(8192)
 def get_geoip_info(ip_addr):
     try:
-        core.config['geoip2']  # check that we have a geoip2 section in config.yaml
-        client = geoip2.webservice.Client(core.config['geoip2']['user'],
-                                          core.config['geoip2']['password'])
+        cred = core.config.get('credentials', {})['geoip2']  # check that we have a geoip2 section in config.yaml
+        client = geoip2.webservice.Client(cred['user'], cred['password'])
     except KeyError as e:
         raise ValueError('No geoip2 user and password defined in config.yaml') from e
 
@@ -105,8 +104,8 @@ def get_geoip_info(ip_addr):
 
 
 def get_world_map_points_from_peers(peers):
-    if 'geoip2' not in core.config:
-        log.warning("Missing 'geoip' property in config.yaml with user and password. No world map display...")
+    if 'geoip2' not in core.config.get('credentials', {}):
+        log.warning("Missing 'geoip2' property in config.yaml with user and password. No world map display...")
         return []
 
     points = []

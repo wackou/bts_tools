@@ -79,6 +79,7 @@ def get_config(plugin):
 def monitoring_thread(*nodes):
     global global_stats_frames, stats_frames
 
+    # FIXME: this should be read from config.yaml file
     # plugins acting on the client/wallet (ie: 1 instance per binary that is running)
     CLIENT_PLUGINS = ['seed', 'backbone', 'prefer_backbone_exclusively', 'network_connections',
                       'cpu_ram_usage', 'wallet_state', 'fork', 'free_disk_space']

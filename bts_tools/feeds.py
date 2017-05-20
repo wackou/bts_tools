@@ -23,7 +23,9 @@ from .core import hashabledict
 from .feed_providers import FeedPrice, FeedSet, YahooFeedProvider, BterFeedProvider, Btc38FeedProvider,\
     PoloniexFeedProvider, GoogleFeedProvider, BloombergFeedProvider, BitcoinAverageFeedProvider,\
     BitfinexFeedProvider, BitstampFeedProvider, YunbiFeedProvider,\
-    CoinCapFeedProvider, CoinMarketCapFeedProvider, BittrexFeedProvider, ALL_FEED_PROVIDERS
+    CoinCapFeedProvider, CoinMarketCapFeedProvider, BittrexFeedProvider,\
+    CurrencyLayerFeedProvider,\
+    ALL_FEED_PROVIDERS
 from collections import deque, defaultdict
 from contextlib import suppress
 from concurrent.futures import ThreadPoolExecutor
@@ -162,6 +164,7 @@ def get_bit20_feed(node, usd_price):
         log.warning('Make sure that your wallet is unlocked and you have imported '
                     'the private key needed for reading bittwenty.feed memos: ')
         log.warning('import_key "announce" 5KJJNfiSyzsbHoVb81WkHHjaX2vZVQ1Fqq5wE5ro8HWXe6qNFyQ')
+        log.warning('Also make sure that the "account_history" plugin is active and that your client is compiled to support it')
         return
 
     # look for custom market parameters
@@ -267,6 +270,15 @@ def get_feed_prices(node):
     yahoo_prices = yahoo.get(YAHOO_ASSETS | {'CNY'}, 'USD')  # still get CNY, we might need it later
 
     base_usd_price = yahoo_prices
+
+    try:
+        currency_layer = CurrencyLayerFeedProvider()
+        currency_layer_prices = currency_layer.get(YAHOO_ASSETS | {'CNY'}, 'USD')
+
+        base_usd_price = FeedSet(yahoo_prices + currency_layer_prices)
+
+    except Exception as e:
+        log.debug('Could not get feeds from CurrencyLayer: {}'.format(e))
 
     # 1- get the BitShares price in major markets: BTC, USD and CNY
     bter, btc38 = BterFeedProvider(), Btc38FeedProvider()

@@ -242,6 +242,31 @@ class FeedProvider(object):
         return cls.ASSET_MAP.get(c, c)
 
 
+class CurrencyLayerFeedProvider(FeedProvider):
+    NAME = 'CurrencyLayer'
+    ASSET_MAP = {'GOLD': 'XAU',
+                 'SILVER': 'XAG'}
+
+    @check_online_status
+    def get(self, asset_list, base):
+        log.debug('checking feeds for %s / %s at CurrencyLayer' % (' '.join(asset_list), base))
+        asset_list = [self.from_bts(asset) for asset in asset_list]
+        base = base.upper()
+
+        try:
+            access_key = core.config['credentials']['currencylayer']['access_key']
+        except KeyError:
+            raise KeyError('config.yaml does not specify a "credentials.currencylayer.access_key" variable')
+
+        url = 'http://apilayer.net/api/live?access_key={}&currencies={}'.format(access_key, ','.join(asset_list))
+        r = requests.get(url).json()
+        if not r['success']:
+            error = r['error']
+            raise ValueError('Error code {}: {}'.format(error['code'], error['info']))
+
+        return FeedSet([self.feed_price(self.to_bts(asset), base, 1/r['quotes']['USD{}'.format(asset)]) for asset in asset_list])
+
+
 class YahooFeedProvider(FeedProvider):
     NAME = 'Yahoo'
     _YQL_URL = 'http://query.yahooapis.com/v1/public/yql'

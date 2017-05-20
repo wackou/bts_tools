@@ -112,3 +112,15 @@ notification:
     telegram:
         token: 'xxxxxxxxxxxxxxxx'
         chat_id: 12341234
+
+
+#
+# List of credentials for external services used by bts_tools
+#
+credentials:
+    geoip2:
+        user: 123456
+        password: 'xxxxxxxx'
+
+    currencylayer:
+        access_key: 'xxxxxxxx'

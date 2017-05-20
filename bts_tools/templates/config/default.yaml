@@ -27,3 +27,7 @@ notification:
 
     boxcar:
         tokens: []
+
+    telegram:
+        token: 'xxxxxxxxxxxxxxxx'
+        chat_id: 12341234
