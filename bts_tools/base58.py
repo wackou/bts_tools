@@ -87,7 +87,6 @@ class Base58(object) :
         elif _format.lower() == "gph" :
             return _format.upper() + str(self)
         elif _format.lower() == "ppy":
-            print('****** check me!! base58.py line 90')
             return _format.upper() + str(self)
         else :
             sys.stderr.write("Format %s unkown. You've been warned!\n" % _format)

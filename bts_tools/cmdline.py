@@ -359,11 +359,11 @@ Examples:
 
             witness_port = client.get('witness_port')
             if witness_port:
-                run_args += ['--rpc-endpoint', '127.0.0.1:{}'.format(witness_port)]
+                run_args += ['--rpc-endpoint=127.0.0.1:{}'.format(witness_port)]
 
             p2p_port = client.get('p2p_port')
             if p2p_port:
-                run_args += ['--p2p-endpoint', '0.0.0.0:{}'.format(p2p_port)]
+                run_args += ['--p2p-endpoint=0.0.0.0:{}'.format(p2p_port)]
 
             seed_nodes = client.get('seed_nodes', [])
             for node in seed_nodes:
@@ -458,14 +458,14 @@ Examples:
             witness_host = client.get('witness_host', '127.0.0.1')
             witness_port = client.get('witness_port')
             if witness_port:
-                run_args += ['--server-rpc-endpoint', 'ws://{}:{}'.format(witness_host, witness_port)]
+                run_args += ['--server-rpc-endpoint=ws://{}:{}'.format(witness_host, witness_port)]
 
-            run_args += ['--server-rpc-user', client['witness_user']]
-            run_args += ['--server-rpc-password', client['witness_password']]
+            run_args += ['--server-rpc-user={}'.format(client['witness_user'])]
+            run_args += ['--server-rpc-password={}'.format(client['witness_password'])]
 
             wallet_port = client.get('wallet_port')
             if wallet_port:
-                run_args += ['--rpc-http-endpoint', '127.0.0.1:{}'.format(wallet_port)]
+                run_args += ['--rpc-http-endpoint=127.0.0.1:{}'.format(wallet_port)]
 
             chain_id = client.get('chain_id')
             if chain_id:
