@@ -106,6 +106,10 @@ SEED_NODES = {
         ('seed.bitcoiner.me:2001',           '',   'bitcoiner',      'https://steemit.com/witness-category/@bitcoiner/bitcoiner-witness-thread'),
         ('89.36.26.82:2001',                 '',   'dragosroua',     'https://steemit.com/witness-category/@dragosroua/dragosroua-witness-thread'),
         ('78.46.95.157:2001',                '',   'pcste',          '')
+    ],
+    'ppy': [
+        ('213.184.225.234:59500',          '', 'official seed node', ''),
+        ('seed.peerplaysnodes.com:7777',   '', 'wackou',             '')
     ]
 }
 
