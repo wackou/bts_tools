@@ -41,6 +41,15 @@ clients:
         wallet_host: localhost
         wallet_port: 8493
 
+    ppy:
+        type: ppy
+        data_dir: ~/.PeerPlays
+        p2p_port: 1783
+        witness_host: localhost
+        witness_port: 8590
+        wallet_host: localhost
+        wallet_port: 8593
+
     debug:
         type: bts
         debug: true

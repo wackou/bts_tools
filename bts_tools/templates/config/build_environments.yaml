@@ -30,8 +30,8 @@ build_environments:
 
     ppy:
         debug: false
-        git_repo: https://github.com/pbsa/testnet.git
-        git_branch: testnet
+        git_repo: https://github.com/PBSA/peerplays.git
+        git_branch: master
         build_dir: ~/.PeerPlays_build
         bin_dir: ~/.PeerPlays_bin
 
