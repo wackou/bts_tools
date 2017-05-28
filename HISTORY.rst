@@ -6,6 +6,12 @@
 History
 =======
 
+0.4.13 (2017-05-29)
+-------------------
+
+* [ppy] added preliminary support for PeerPlays testnet
+
+
 0.4.12 (2017-05-10)
 -------------------
 

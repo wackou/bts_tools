@@ -26,7 +26,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.rst')).read()
 HISTORY = open(os.path.join(here, 'HISTORY.rst')).read()
 
-VERSION = '0.4.12'
+VERSION = '0.4.13'
 
 
 install_requires = ['Flask', 'requests', 'psutil', 'arrow', 'pyyaml', 'dogpile.cache',
