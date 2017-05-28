@@ -245,7 +245,7 @@ def get_bit20_feed(node, usd_price):
         log.warning('- CoinCap: {}'.format(coincap_missing_assets))
         bit20_feeds = FeedSet([cmc_feed, cc_feed])
 
-    bit20_value = bit20_feeds.price(stddev_tolerance=0.01)
+    bit20_value = bit20_feeds.price(stddev_tolerance=0.02)
     log.debug('Total value of bit20 asset: ${}'.format(bit20_value))
 
     # get bit20 value in BTS
@@ -271,14 +271,17 @@ def get_feed_prices(node):
 
     base_usd_price = yahoo_prices
 
-    try:
-        currency_layer = CurrencyLayerFeedProvider()
-        currency_layer_prices = currency_layer.get(YAHOO_ASSETS | {'CNY'}, 'USD')
+    CURRENCYLAYER_ACTIVE = False
+    if CURRENCYLAYER_ACTIVE:
+        try:
+            currency_layer = CurrencyLayerFeedProvider()
+            currency_layer_prices = currency_layer.get(YAHOO_ASSETS | {'CNY'}, 'USD')
 
-        base_usd_price = FeedSet(yahoo_prices + currency_layer_prices)
+            base_usd_price = FeedSet(yahoo_prices + currency_layer_prices)
 
-    except Exception as e:
-        log.debug('Could not get feeds from CurrencyLayer: {}'.format(e))
+        except Exception as e:
+            log.debug('Could not get feeds from CurrencyLayer: {}'.format(e))
+
 
     # 1- get the BitShares price in major markets: BTC, USD and CNY
     bter, btc38 = BterFeedProvider(), Btc38FeedProvider()

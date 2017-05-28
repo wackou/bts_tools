@@ -180,7 +180,7 @@ class MonitoringProtocol(WebSocketClientProtocol):
                 cache['network_node_api'] = api_id
                 log.info('Granted access to network api on {}:{}'.format(self.host, self.port))
             else:
-                log.warning('Refused access to network api. Make sure to set your user/password properly!')
+                log.warning('Refused access to network api on {}:{}. Make sure to set your user/password properly!'.format(self.host, self.port))
 
         if (api, method) == (Api.LOGIN_API, 'get_api_by_name'):
             api_id = p['result']
