@@ -109,7 +109,7 @@ SEED_NODES = {
     ],
     'ppy': [
         ('213.184.225.234:59500',          '', 'official seed node', ''),
-        ('seed.peerplaysnodes.com:7777',   '', 'wackou',             '')
+        ('seed.peerplaysnodes.com:7777',   '', 'wackou',             ''),
         ('5.9.18.213:59500',               '', 'pfunk',              ''),
         ('31.171.244.121:59500',           '', 'taconator',          ''),
         ('ppy2t.blckchnd.com:7777',        '', 'blckchnd',           ''),
