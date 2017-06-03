@@ -33,6 +33,6 @@ In details, these are the following steps that this guide will cover:
 
 
 Note that there are some choices of software that are quite opinionated in this
-guide, however this should not be considered as the ony way to do things, but
+guide, however this should not be considered as the only way to do things, but
 rather just a way that the author thinks makes sense and found convenient for
 himself.

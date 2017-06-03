@@ -1,0 +1,9 @@
+# doc generation
+sphinx
+sphinx_rtd_theme
+docutils
+
+
+# other dependencies which do not require a specific version come from setup.py
+# see: https://caremad.io/blog/setup-vs-requirement/
+-e .

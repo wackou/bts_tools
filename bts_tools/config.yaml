@@ -25,6 +25,8 @@ clients:
     bts:
         type: bts
         data_dir: ~/.BitShares2
+        seed_nodes: ["bts-seed1.abit-more.com:62015", "seed.bitsharesnodes.com:1776"]
+        track_accounts: [1.6.18]  # [optional] reduce RAM usage by specifying the only accounts that should be tracked
         witness_host: localhost
         witness_port: 8090
         # api_access.json should be created according to:
@@ -69,6 +71,25 @@ clients:
         api_access: ~/.Steem/api_access.steem.json
         witness_user: xxxxxxxx
         witness_password: xxxxxxxx
+
+    ppy:
+        type: ppy
+        data_dir: ~/.PeerPlays
+        seed_nodes: ['213.184.225.234:59500']
+        p2p_port: 9777
+        witness_host: localhost
+        witness_port: 8090
+        witness_user: xxx
+        witness_password: xxx
+        wallet_host: localhost
+        wallet_port: 8093
+        api_access: ~/api_access.json
+        roles:
+        -
+            role: witness
+            name: wackou-witness
+            witness_id: 1.6.23
+            signing_key: xxx
         roles:
         -
             role: witness

@@ -245,8 +245,6 @@ Examples:
                                             'run', 'run_cli', 'run_gui', 'list', 'monitor', 'publish_slate',
                                             'deploy', 'deploy_node'],
                         help='the command to run')
-    parser.add_argument('-r', '--norpc', action='store_true',  # FIXME: deprecate
-                        help='run binary with RPC server deactivated')
     parser.add_argument('environment', nargs='?',
                         help='the build/run environment (bts, pts, ...)')
     parser.add_argument('-p', '--pidfile', action='store',
@@ -369,6 +367,11 @@ Examples:
             for node in seed_nodes:
                 run_args += ['--seed-node', node]
 
+            track_accounts = client.get('track_accounts', [])
+            if track_accounts:
+                run_args += ['--partial-operations', 'true']
+                for account in track_accounts:
+                    run_args += ['--track-account', account]
 
             plugins = []
             apis = []
@@ -472,9 +475,6 @@ Examples:
                 run_args += ['--chain-id', chain_id]
 
             run_args += client.get('run_cli_args', [])
-
-        if not args.norpc and not is_graphene_based(client):
-            run_args = ['--server'] + run_args
 
         if client.get('debug', False):
             if platform == 'linux':

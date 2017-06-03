@@ -70,7 +70,6 @@ just run the ``bts`` script with the command you want to execute:
     
     optional arguments:
       -h, --help            show this help message and exit
-      -r, --norpc           run binary with RPC server deactivated
     
     You should also look into ~/.bts_tools/config.yaml to tune it to your liking.
 

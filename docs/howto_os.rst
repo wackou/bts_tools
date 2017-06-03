@@ -65,25 +65,5 @@ properly installed dependencies, etc.)
     $ brew upgrade cmake
 
 
-Choosing the correct version of XCode
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. note:: This happens on the author's computer and may or may not happen to you,
-          so take with a grain of salt. YMMV.
-
-It appears that the most recent version of XCode cannot build the BitShares client,
-at least on Mavericks (OSX 10.9), because the API generator segfaults.
-XCode 5.1 does work properly, though, so the recommended way is to:
-
-- download XCode 5.1.1 from the Apple developer center
-- install it on your computer, say in ``/Applications/Xcode-5.1.1``
-  (you can use it in parallel with the latest version if you like)
-- tell your system to use this version on the command-line by running::
-
-      $ sudo xcode-select -s /Applications/Xcode-5.1.1.app/Contents/Developer
-
-- you can now proceed normally!
-
-
 .. _homebrew: http://brew.sh/
 
