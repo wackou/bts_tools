@@ -371,7 +371,7 @@ Examples:
             if track_accounts:
                 run_args += ['--partial-operations', 'true']
                 for account in track_accounts:
-                    run_args += ['--track-account', account]
+                    run_args += ['--track-account', '"{}"'.format(account)]
 
             plugins = []
             apis = []
