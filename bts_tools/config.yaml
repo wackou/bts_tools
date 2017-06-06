@@ -26,7 +26,7 @@ clients:
         type: bts
         data_dir: ~/.BitShares2
         seed_nodes: ["bts-seed1.abit-more.com:62015", "seed.bitsharesnodes.com:1776"]
-        track_accounts: [1.6.18]  # [optional] reduce RAM usage by specifying the only accounts that should be tracked
+        track_accounts: [1.2.1]  # [optional] reduce RAM usage by specifying the only accounts that should be tracked
         witness_host: localhost
         witness_port: 8090
         # api_access.json should be created according to:

@@ -105,16 +105,24 @@ SEED_NODES = {
         ('176.31.126.187:2001',              '',   'timcliff',       'https://steemit.com/witness-category/@timcliff/i-m-timcliff-and-i-approve-this-message-my-witness-application'),
         ('seed.bitcoiner.me:2001',           '',   'bitcoiner',      'https://steemit.com/witness-category/@bitcoiner/bitcoiner-witness-thread'),
         ('89.36.26.82:2001',                 '',   'dragosroua',     'https://steemit.com/witness-category/@dragosroua/dragosroua-witness-thread'),
-        ('78.46.95.157:2001',                '',   'pcste',          '')
+        ('78.46.95.157:2001',                '',   'pcste',          ''),
+        ('45.76.13.167:2001',                '',   'chitty',         'https://steemfund.github.io/pages/witness.html'),
+        ('seed.steemviz.com:2001',           '',   'ausbitbank',     'https://steemit.com/steem/@ausbitbank/new-seed-node-online-a-seedsteemvizcom')
     ],
     'ppy': [
-        ('213.184.225.234:59500',          '', 'official seed node', ''),
-        ('seed.peerplaysnodes.com:7777',   '', 'wackou',             ''),
-        ('5.9.18.213:59500',               '', 'pfunk',              ''),
-        ('31.171.244.121:59500',           '', 'taconator',          ''),
-        ('ppy2t.blckchnd.com:7777',        '', 'blckchnd',           ''),
-        ('peerplays.roelandp.nl:7777',     '', 'roelandp',           ''),
-        ('peerplays-seed.altcap.io:7777',  '', 'ihashfury',          '')
+        ('5.9.18.213:18828', '', 'pfunk', ''),
+        ('31.171.244.121:7777', '', 'taconator', ''),
+        ('seed.peerplaysdb.com:9777', '', 'jesta', ''),
+        ('ppy.esteem.ws:7777', '', 'good-karma', ''),
+        ('peerplays.roelandp.nl:9777', '', 'roelandp', ''),
+        ('ppy-seed.xeldal.com:19777', '', 'xeldal', ''),
+        ('51.15.42.228:61388', '', 'iPerky', ''),
+        ('seed.peerplaysnodes.com:9777', '', 'wackou', ''),
+        ('peerplays-seed.privex.io:7777', '', 'someguy123/privex', ''),
+        ('51.15.78.16:9777', '', 'agoric.systems', ''),
+        ('212.71.253.163:9777', '', 'xtar', ''),
+        ('51.15.35.96:9777', '', 'lafona', ''),
+        ('ppyseed.nuevax.com:19777', '', 'nuevax', '')
     ]
 }
 
