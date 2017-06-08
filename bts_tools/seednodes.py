@@ -126,7 +126,9 @@ SEED_NODES = {
         ('anyx.ca:9777',                   '', 'anyx', ''),
         ('ppyseed.nuevax.com:19777',       '', 'nuevax', ''),
         ('82.223.108.91:7777',             '', 'hiltos', ''),
-        ('peerplays.butler.net:9777',      '', 'billbutler', '')
+        ('peerplays.butler.net:9777',      '', 'billbutler', ''),
+        ('peerplays.bitcoiner.me:9777',    '', 'bitcoiner', ''),
+        ('ppyseed.bacchist.me:42420',      '', 'bacchist-witness', '')
     ]
 }
 
