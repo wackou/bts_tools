@@ -120,7 +120,7 @@ SEED_NODES = {
         ('peerplays-seed.altcap.io:61388', '', 'winner.winner.chicken.dinner', ''),
         ('seed.peerplaysnodes.com:9777',   '', 'wackou', ''),
         ('peerplays-seed.privex.io:7777',  '', 'someguy123/privex', ''),
-        ('51.15.78.16:9777',               '', 'agoric.systems', ''),
+        ('peerplays.agoric.systems:9777',  '', 'agoric.systems', ''),
         ('212.71.253.163:9777',            '', 'xtar', ''),
         ('51.15.35.96:9777',               '', 'lafona', ''),
         ('anyx.ca:9777',                   '', 'anyx', ''),
@@ -128,7 +128,9 @@ SEED_NODES = {
         ('82.223.108.91:7777',             '', 'hiltos', ''),
         ('peerplays.butler.net:9777',      '', 'billbutler', ''),
         ('peerplays.bitcoiner.me:9777',    '', 'bitcoiner', ''),
-        ('ppyseed.bacchist.me:42420',      '', 'bacchist-witness', '')
+        ('ppyseed.bacchist.me:42420',      '', 'bacchist-witness', ''),
+        ('peerplays.bhuz.info:9777',       '', 'bhuz', ''),
+        ('node.peerblock.trade:9777',      '', 'bitcoin-sig', '')
     ]
 }
 
