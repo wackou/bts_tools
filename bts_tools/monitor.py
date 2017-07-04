@@ -84,8 +84,8 @@ def monitoring_thread(*nodes):
     CLIENT_PLUGINS = ['seed', 'backbone', 'prefer_backbone_exclusively', 'network_connections',
                       'cpu_ram_usage', 'wallet_state', 'fork', 'free_disk_space']
 
-    # plugins acting on each node (ie: 1 for each account contained in a wallet)
-    NODE_PLUGINS = ['version', 'missed', 'payroll', 'voted_in']
+    # plugins acting on each role (ie: 1 plugin instance for each role defined in a client)
+    ROLE_PLUGINS = ['missed', 'payroll', 'voted_in']
 
     client_node = nodes[0]
     node_names = ', '.join(n.name for n in nodes)
@@ -101,7 +101,7 @@ def monitoring_thread(*nodes):
     # check validity of name in all_monitoring and warn for non-existent plugins
     for m in all_monitoring:
         if (m not in CLIENT_PLUGINS and
-            m not in NODE_PLUGINS and
+            m not in ROLE_PLUGINS and
             m not in {'feeds', 'delegate', 'watcher_delegate'}):
             log.warning('Unknown plugin specified in monitoring config: %s' % m)
 
@@ -133,7 +133,7 @@ def monitoring_thread(*nodes):
     contexts = {}
     for node in nodes:
         ctx = contexts.get(node.name, AttributeDict())
-        for plugin_name in NODE_PLUGINS:
+        for plugin_name in ROLE_PLUGINS:
             with suppress(AttributeError):
                 getattr(monitoring, plugin_name).init_ctx(node, ctx, get_config(plugin_name))
 
@@ -186,7 +186,7 @@ def monitoring_thread(*nodes):
                 ctx = contexts[node.name]
                 ctx.info = global_ctx.info
                 ctx.online_state = global_ctx.online_state
-                for plugin_name in NODE_PLUGINS:
+                for plugin_name in ROLE_PLUGINS:
                     if plugin_name in node.monitoring:
                         try:
                             plugin = getattr(monitoring, plugin_name)

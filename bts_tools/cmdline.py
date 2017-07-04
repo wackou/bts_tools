@@ -361,7 +361,7 @@ Examples:
 
             p2p_port = client.get('p2p_port')
             if p2p_port:
-                run_args += ['--p2p-endpoint=0.0.0.0:{}'.format(p2p_port)]
+                run_args += ['--p2p-endpoint', '0.0.0.0:{}'.format(p2p_port)]
 
             seed_nodes = client.get('seed_nodes', [])
             for node in seed_nodes:

@@ -46,7 +46,7 @@ def init_ctx(node, ctx, cfg):
 
 
 def is_valid_node(node):
-    return node.is_synced()
+    return node.is_witness() and node.is_synced()
 
 
 def monitor(node, ctx, cfg):

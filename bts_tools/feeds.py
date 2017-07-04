@@ -284,14 +284,18 @@ def get_feed_prices(node):
 
 
     # 1- get the BitShares price in major markets: BTC, USD and CNY
-    bter, btc38 = BterFeedProvider(), Btc38FeedProvider()
+    btcavg = core.config['credentials']['bitcoinaverage']
 
-    poloniex, bittrex, bitcoinavg, bitfinex, bitstamp, yunbi = (
-        PoloniexFeedProvider(), BittrexFeedProvider(),
-        BitcoinAverageFeedProvider(), BitfinexFeedProvider(),
-        BitstampFeedProvider(), YunbiFeedProvider())
-
-    coincap, cmc = CoinCapFeedProvider(), CoinMarketCapFeedProvider()
+    bitcoinavg = BitcoinAverageFeedProvider(btcavg['secret_key'], btcavg['public_key'])
+    bitfinex = BitfinexFeedProvider()
+    bitstamp = BitstampFeedProvider()
+    bittrex = BittrexFeedProvider()
+    btc38 = Btc38FeedProvider()
+    bter = BterFeedProvider()
+    cmc = CoinMarketCapFeedProvider()
+    coincap = CoinCapFeedProvider()
+    poloniex = PoloniexFeedProvider()
+    yunbi = YunbiFeedProvider()
 
     # 1.1- first get the bts/btc valuation
     providers_bts_btc = {poloniex, bittrex} & active_providers
@@ -309,8 +313,8 @@ def get_feed_prices(node):
     try:
         feeds_btc_usd = FeedSet([bitcoinavg.get('BTC', 'USD')])
     except Exception:
-        # fall back on Bitfinex, Bitstamp if BitcoinAverage is down - TODO: add Kraken, others? CMC
-        log.debug('Could not get USD/BTC')
+        # fall back on Bitfinex, Bitstamp if BitcoinAverage is down or not configured - TODO: add Kraken, others? CMC
+        log.debug('Could not get BTC/USD using BitcoinAverage, trying other sources')
         feeds_btc_usd = get_multi_feeds('get', [('BTC', 'USD')], {bitfinex, bitstamp})
 
     btc_usd = feeds_btc_usd.price()
@@ -551,6 +555,7 @@ def check_feeds(nodes):
                     log.warning('No feed price available for {}, cannot display it'.format(c))
                 else:
                     display_feeds.append(c)
+            display_feeds = list(sorted(feeds))
 
             fmt = ', '.join('%s %s' % (format_qualifier(c), c) for c in display_feeds)
             msg = fmt % tuple(feeds[c] for c in display_feeds)

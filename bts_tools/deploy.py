@@ -254,7 +254,7 @@ def load_config(config_file):
     log.info('Reading config from file: %s' % config_file)
 
     with open(config_file, 'r') as f:
-        cfg = yaml.load(f)
+        cfg = yaml.load(f, Loader=yaml.Loader)
 
     # auto adjustements of settings in the config
     cfg['pause'] = False  # do not pause during installation

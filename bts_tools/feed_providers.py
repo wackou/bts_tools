@@ -23,8 +23,10 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from retrying import retry
 from requests.exceptions import Timeout
+from bitcoinaverage import RestfulClient
 import json
 import arrow
+import pendulum
 import requests
 import statistics
 import functools
@@ -388,13 +390,16 @@ class BitcoinAverageFeedProvider(FeedProvider):
     NAME = 'BitcoinAverage'
     AVAILABLE_MARKETS = [('BTC', 'USD')]
 
+    def __init__(self, secret_key, public_key):
+        super().__init__()
+        self.client = RestfulClient(secret_key=secret_key, public_key=public_key)
+
     @check_online_status
     @check_market
     def get(self, cur, base):
         log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
-        r = requests.get('https://api.bitcoinaverage.com/ticker/{}'.format(base),
-                         timeout=self.TIMEOUT).json()
-        return self.feed_price(cur, base, float(r['last']), float(r['total_vol']))
+        r = self.client.ticker_short_local()[cur+base]
+        return self.feed_price(cur, base, price=float(r['last']), last_updated=pendulum.from_timestamp(r['timestamp']))
 
 
 class BitfinexFeedProvider(FeedProvider):

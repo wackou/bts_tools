@@ -103,7 +103,7 @@ ALL_SLOTS = {}
 
 
 class GrapheneClient(object):
-    def __init__(self, role, name, client_name, client, type=None,
+    def __init__(self, role, name, client_name, client, *, type=None,
                  monitoring=None, notification=None, venv_path=None,
                  witness_id=None, signing_key=None, **kwargs):
         self.role = role
@@ -228,10 +228,12 @@ class GrapheneClient(object):
         self._committee_member_names = {}
 
     def __str__(self):
-        return '{} ({} / {}:{})'.format(self.name, self.type(), self.rpc_host, self.rpc_port)
+        return '{}: {} {} "{}" on {}:{}'.format(self.client_name, self.type(), self.role, self.name, self.witness_host, self.witness_port)
+        #return '{} ({} / {}:{})'.format(self.name, self.type(), self.rpc_host, self.rpc_port)
 
     def __repr__(self):
-        return 'GrapheneClient(%s, %s)' % (self.client_name, self.name)
+        #return '<GrapheneClient(%s, %s)>' % (self.client_name, self.name)
+        return '<GrapheneClient(%s)>' % str(self)
 
     def __getattr__(self, funcname):
         if funcname.startswith('_'):
@@ -694,7 +696,10 @@ def load_graphene_clients():
     global nodes, main_node
     nodes = []
     for client_name, client in core.config['clients'].items():
-        for role in client.get('roles', []):
+        roles = client.get('roles', [])
+        if not roles:
+            log.warning('Client "{}" doesn\'t define any roles, it will not be monitored by the web interface'.format(client_name))
+        for role in roles:
             kwargs = dict(client_name=client_name,
                           client=client,
                           type=client.get('type'),

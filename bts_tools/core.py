@@ -255,35 +255,30 @@ def load_config(loglevels=None):
                 n['monitoring'] = [n['monitoring']]
 
             def add_cmdline_args(args):
-                # only do this for delegates running on localhost (for which we have a 'client' field defined)
-                # --statistics-enabled not available for PTS yet
-                if client['type'] == 'pts':
-                    with suppress(ValueError):
-                        args.remove('--statistics-enabled')
                 append_unique(client.setdefault('run_args', []), args)
 
             def add_monitoring(l2):
                 append_unique(n['monitoring'], l2)
 
-            # options for 'delegate' node types
-            if n['role'] == 'delegate' and not is_graphene_based(n):
-                add_cmdline_args(['--min-delegate-connection-count=0', '--statistics-enabled'])
-
-            if n['role'] in ['watcher_delegate', 'delegate', 'witness']:
+            if n['role'] == 'witness':
                 # TODO: add 'prefer_backbone_exclusively' when implemented; in this case we also need:
                 # TODO: "--accept-incoming-connections 0" (or limit list of allowed peers from within the client)
                 add_monitoring(['missed', 'network_connections', 'voted_in', 'wallet_state', 'fork', 'version'])
-            if n['role'] in ['feed_publisher', 'delegate']:
+
+            elif n['role'] == 'feed_publisher':
                 add_monitoring(['feeds'])
 
             # options for seed node types
-            if n['role'] == 'seed':
+            elif n['role'] == 'seed':
                 add_monitoring(['seed', 'network_connections', 'fork'])
 
             # options for backbone node types
-            if n['role'] == 'backbone':
+            elif n['role'] == 'backbone':
                 add_cmdline_args(['--disable-peer-advertising'])
                 add_monitoring(['backbone', 'network_connections', 'fork'])
+
+            else:
+                log.warning('Unknown role: {}'.format(n['role']))
 
             # always check for free disk space
             add_monitoring(['free_disk_space'])
