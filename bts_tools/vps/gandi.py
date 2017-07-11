@@ -110,7 +110,9 @@ class GandiAPI(object):
                    'keys': [ssh_key_id[k] for k in ssh_keys],
                    }
 
-        if os in ['debian', 'debian8', 'jessie']:
+        if os in ['debian', 'debian9', 'stretch']:
+            src_disk = self.find_disk_image(location, 'debian 9')
+        elif os in ['debian8', 'jessie']:
             src_disk = self.find_disk_image(location, 'debian 8')
         elif os in ['ubuntu', 'ubuntu 16.04']:
             src_disk = self.find_disk_image(location, 'ubuntu 16.04')

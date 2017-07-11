@@ -340,7 +340,7 @@ def get_data_dir(env):
 
 
 def get_gui_bin_name(build_env):
-    return DEFAULT_GUI_BIN_FILENAMES[build_env]
+    return DEFAULT_GUI_BIN_FILENAMES.get(build_env)
 
 
 def get_all_bin_names(client=None, build_env=None):
@@ -354,7 +354,7 @@ def get_all_bin_names(client=None, build_env=None):
         return get_all_bin_names(build_env=env['type'])
 
     elif build_env is not None:
-        return DEFAULT_BIN_FILENAMES[build_env]
+        return DEFAULT_BIN_FILENAMES.get(build_env)
 
     else:
         raise ValueError('You need to specify either a build env or a client name')

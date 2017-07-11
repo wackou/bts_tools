@@ -49,12 +49,18 @@ def view_seed_nodes():
     for pt in points:
         countries[pt['country_iso'].lower()] += 1
 
+    seeds_status = seednodes.check_all_seeds_cached(chain)
+    online_seeds = [seed for seed, status in seeds_status.items() if status == 'online']
+    config_ini = '\n'.join('seed-node = {}'.format(seed) for seed in online_seeds)
+    config_ini_list = '[{}]'.format(', '.join('"{}"'.format(seed) for seed in online_seeds))
+
     return render_template('tableview_naked.html',
                            title='{} seed nodes'.format(chain),
                            headers=headers,
                            points=points,
                            countries=countries,
-                           data=data, order='[[1, "desc"]]', nrows=100, sortable=True)
+                           data=data, order='[[1, "desc"]]', nrows=100, sortable=True,
+                           config_ini=config_ini, config_ini_list=config_ini_list)
 
 
 @bp.route('/status.json')

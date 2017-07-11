@@ -49,22 +49,3 @@ clients:
         witness_port: 8590
         wallet_host: localhost
         wallet_port: 8593
-
-    debug:
-        type: bts
-        debug: true
-
-    bts-dev:
-        type: bts-dev
-
-    dvs:
-        type: dvs
-
-    pts:
-        type: pts
-
-    pts-dev:
-        type: pts-dev
-
-    pls:
-        type: pls

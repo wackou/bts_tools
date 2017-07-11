@@ -60,7 +60,9 @@ fi
 
 echo "* Installing packages for running the client..."
 apt-get install -yfV git autoconf automake libtool doxygen zip virtualenvwrapper moreutils tmux rsync ntp\
-  python3-dev libyaml-dev qt5-default qttools5-dev-tools >> /tmp/setupVPS.log 2>&1
+  python3-dev libyaml-dev qt5-default qttools5-dev-tools vim >> /tmp/setupVPS.log 2>&1
+
+apt-get remove -yfV vim-tiny >> /tmp/setupVPS.log 2>&1
 
 if [ $INSTALL_COMPILE_DEPENDENCIES -eq 1 ]; then
     echo "* Installing packages for compiling the client..."
@@ -70,13 +72,13 @@ if [ $INSTALL_COMPILE_DEPENDENCIES -eq 1 ]; then
     apt-get install -yfV nodejs-legacy nodejs npm mc >> /tmp/setupVPS.log 2>&1
 fi
 
-if [ $IS_DEBIAN -eq 1 ]; then
-    apt-get install -yfV vim >> /tmp/setupVPS.log 2>&1
-    apt-get remove -yfV vim-tiny >> /tmp/setupVPS.log 2>&1
-
-    # on debian, this needs to be installed from testing:
-    #apt-get install -yfV cmake libboost-all-dev >> /tmp/setupVPS.log 2>&1
-fi
+#if [ $IS_DEBIAN -eq 1 ]; then
+#    apt-get install -yfV vim >> /tmp/setupVPS.log 2>&1
+#    apt-get remove -yfV vim-tiny >> /tmp/setupVPS.log 2>&1
+#
+#    # on debian, this needs to be installed from testing:
+#    #apt-get install -yfV cmake libboost-all-dev >> /tmp/setupVPS.log 2>&1
+#fi
 
 echo "* Cleaning up..."
 apt-get -y autoremove >> /tmp/setupVPS.log 2>&1
@@ -84,22 +86,24 @@ if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to continue..."; fi
 
 # Install the boost libraries
 if [ $IS_DEBIAN -eq 1 ]; then
-    # get boost from testing
-    echo "* Getting boost from testing distribution..."
-    mv /etc/apt/sources.list /etc/apt/sources.list.orig
-    (echo "deb http://httpredir.debian.org/debian testing main"; cat /etc/apt/sources.list.orig) > /etc/apt/sources.list
-    apt-get update >> /tmp/setupVPS.log 2>&1
+#    # get boost from testing
+#    echo "* Getting boost from testing distribution..."
+#    mv /etc/apt/sources.list /etc/apt/sources.list.orig
+#    (echo "deb http://httpredir.debian.org/debian testing main"; cat /etc/apt/sources.list.orig) > /etc/apt/sources.list
+#    apt-get update >> /tmp/setupVPS.log 2>&1
+#
+#    #echo " installing libc first"
+#    apt-get install -t testing -yfV libc-bin >> /tmp/setupVPS.log 2>&1
+#    #echo " installing boost-dev"
+#
+#    apt-get install -t testing -yfV cmake libboost1.58-all-dev >> /tmp/setupVPS.log 2>&1
+#
+#    # reset to stable apt sources
+#    cp /etc/apt/sources.list.orig /etc/apt/sources.list
+#    apt-get update >> /tmp/setupVPS.log 2>&1
+    echo "* Installing boost..."
+    apt-get install -yfV cmake libboost-all-dev >> /tmp/setupVPS.log 2>&1
 
-    #echo " installing libc first"
-    apt-get install -t testing -yfV libc-bin >> /tmp/setupVPS.log 2>&1
-    #echo " installing boost-dev"
-
-    apt-get install -t testing -yfV cmake libboost1.58-all-dev >> /tmp/setupVPS.log 2>&1
-
-    # reset to stable apt sources
-    cp /etc/apt/sources.list.orig /etc/apt/sources.list
-    apt-get update >> /tmp/setupVPS.log 2>&1
-    if [ $PAUSE -eq 1 ]; then read -p "Press [Enter] key to continue..."; fi
 elif [ $IS_UBUNTU -eq 1 ]; then
     echo "* Installing boost..."
     apt-get install -yfV cmake libboost1.58-all-dev >> /tmp/setupVPS.log 2>&1

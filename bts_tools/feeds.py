@@ -139,9 +139,15 @@ def get_bit20_feed(node, usd_price):
         log.warning('Wallet is offline, will not be able to read bit20 composition')
         return
 
+    bit20 = None  # contains the composition of the feed
+
     bit20feed = node.get_account_history('bittwenty.feed', 15)
 
-    bit20 = None  # contains the composition of the feed
+    if not bit20_feed:
+        # import the 'announce' key to be able to read the memo publications
+        node.import_key('announce', '5KJJNfiSyzsbHoVb81WkHHjaX2vZVQ1Fqq5wE5ro8HWXe6qNFyQ')
+        # try again
+        bit20feed = node.get_account_history('bittwenty.feed', 15)
 
     # find bit20 composition
     for f in bit20feed:

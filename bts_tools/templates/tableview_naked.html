@@ -25,70 +25,89 @@
     <h3 align="center">{{ title }}</h3>
 
         <div>
-{% if points %}
+
+
   <!-- Nav tabs -->
   <ul class="nav nav-tabs" role="tablist">
+{% if points %}
     <li role="presentation"><a href="#map" aria-controls="maps" role="tab" data-toggle="tab">Map</a></li>
+{% endif %}
     <li role="presentation" class="active"><a href="#detail" aria-controls="detail" role="tab" data-toggle="tab">Detail</a></li>
+{% if config_ini %}
+    <li role="presentation"><a href="#config_ini" aria-controls="config_ini" role="tab" data-toggle="tab">config.ini format</a></li>
+{% endif %}
   </ul>
 
   <!-- Tab panes -->
   <div class="tab-content">
+
+{% if points %}
     <div role="tabpanel" class="tab-pane" id="map">
         <div id="map_container"></div>
     </div>
+{% endif %}
 
     <div role="tabpanel" class="tab-pane active" id="detail">
-{% endif %}
-    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="tableview">
-        {% if headers %}
-            <thead><tr>
-            {% for h in headers %}
-                <th>{{ h }}</th>
-            {% endfor %}
-            </tr></thead>
 
-            <tfoot><tr>
-            {% for h in headers %}
-                <th>{{ h }}</th>
-            {% endfor %}
-            </tr></tfoot>
-        {% endif %}
+        <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="tableview">
+            {% if headers %}
+                <thead><tr>
+                {% for h in headers %}
+                    <th>{{ h }}</th>
+                {% endfor %}
+                </tr></thead>
 
-        <tbody>
-        {% for fields in data %}
-            {% set field = loop %}
-            <tr>
-            {%- for f in fields -%}
-                {% if attrs and (field.index-1, loop.index-1) in attrs.get('green', []) -%}
-                <td style="background-color: limegreen">
-                {% elif attrs and (field.index-1, loop.index-1) in attrs.get('red', []) %}
-                <td style="background-color: red;">
-                {% elif attrs and (field.index-1, loop.index-1) in attrs.get('orange', []) %}
-                <td style="background-color: orange;">
-                {% elif attrs and (field.index-1, loop.index-1) in attrs.get('blue', []) %}
-                <td style="background-color: lightskyblue;">
-                {% else %}
-                <td>
-                {%- endif -%}
-                    {%- if attrs and (field.index-1, loop.index-1) in attrs.get('bold', []) -%}
-                        <b>{{ f }}</b>
-                    {%- elif attrs and (field.index-1, loop.index-1) in attrs.get('datetime', []) -%}
-                        {{ f | datetime }}
-                    {%- else -%}
-                        {{ f | safe }}
+                <tfoot><tr>
+                {% for h in headers %}
+                    <th>{{ h }}</th>
+                {% endfor %}
+                </tr></tfoot>
+            {% endif %}
+
+            <tbody>
+            {% for fields in data %}
+                {% set field = loop %}
+                <tr>
+                {%- for f in fields -%}
+                    {% if attrs and (field.index-1, loop.index-1) in attrs.get('green', []) -%}
+                    <td style="background-color: limegreen">
+                    {% elif attrs and (field.index-1, loop.index-1) in attrs.get('red', []) %}
+                    <td style="background-color: red;">
+                    {% elif attrs and (field.index-1, loop.index-1) in attrs.get('orange', []) %}
+                    <td style="background-color: orange;">
+                    {% elif attrs and (field.index-1, loop.index-1) in attrs.get('blue', []) %}
+                    <td style="background-color: lightskyblue;">
+                    {% else %}
+                    <td>
                     {%- endif -%}
-                </td>
-            {%- endfor %}
-            </tr>
-        {% endfor %}
-        </tbody>
+                        {%- if attrs and (field.index-1, loop.index-1) in attrs.get('bold', []) -%}
+                            <b>{{ f }}</b>
+                        {%- elif attrs and (field.index-1, loop.index-1) in attrs.get('datetime', []) -%}
+                            {{ f | datetime }}
+                        {%- else -%}
+                            {{ f | safe }}
+                        {%- endif -%}
+                    </td>
+                {%- endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
 
-    </table>
-{% if points %}
-        </div></div>
-{% endif %}
+        </table>
     </div>
+
+
+{% if config_ini %}
+    <div role="tabpanel" class="tab-pane" id="config_ini">
+        <div id="config_ini_contents"><pre># use this to add seed nodes to the default list of built-in ones
+{{ config_ini }}</pre></div>
+        <div id="config_ini_contents2"><pre># use this to overwrite the default list of built-in seeds
+seed-nodes = {{ config_ini_list}}</pre></div>
+    </div>
+
+{% endif %}
+
+  </div>
 {%- endmacro %}
 
 
