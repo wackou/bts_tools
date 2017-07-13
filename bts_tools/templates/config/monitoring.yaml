@@ -33,7 +33,7 @@ monitoring:
             default:
                 maintenance_collateral_ratio: 1750  # Call when collateral only pays off 175% the debt
                 maximum_short_squeeze_ratio: 1100   # Stop calling when collateral only pays off 110% of the debt
-                core_exchange_factor: 0.95          # 5% premium if paying fees in bitassets
+                core_exchange_factor: 0.80          # 20% premium if paying fees in bitassets (avoids people draining the fee pool during price swings)
             TCNY:
                 maintenance_collateral_ratio: 1750
                 maximum_short_squeeze_ratio: 1001

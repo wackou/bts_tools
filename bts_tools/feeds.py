@@ -186,7 +186,7 @@ def get_bit20_feed(node, usd_price):
             # FIXME: this affects the global config object
             cfg['asset_params']['BTWTY'] = {'maintenance_collateral_ratio': market_params['MCR'],
                                             'maximum_short_squeeze_ratio': market_params['MSSR'],
-                                            'core_exchange_factor': 0.95}
+                                            'core_exchange_factor': cfg['asset_params']['default']['core_exchange_factor']}
             break
     else:
         log.debug('Did not find any custom market parameters in the last {} messages '
