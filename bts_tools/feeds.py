@@ -143,8 +143,9 @@ def get_bit20_feed(node, usd_price):
 
     bit20feed = node.get_account_history('bittwenty.feed', 15)
 
-    if not bit20_feed:
+    if not bit20feed:
         # import the 'announce' key to be able to read the memo publications
+        log.info('Importing the "announce" key in the wallet')
         node.import_key('announce', '5KJJNfiSyzsbHoVb81WkHHjaX2vZVQ1Fqq5wE5ro8HWXe6qNFyQ')
         # try again
         bit20feed = node.get_account_history('bittwenty.feed', 15)
@@ -171,6 +172,7 @@ def get_bit20_feed(node, usd_price):
                     'the private key needed for reading bittwenty.feed memos: ')
         log.warning('import_key "announce" 5KJJNfiSyzsbHoVb81WkHHjaX2vZVQ1Fqq5wE5ro8HWXe6qNFyQ')
         log.warning('Also make sure that the "account_history" plugin is active and that your client is compiled to support it')
+        log.warning('Finally, if you use the "track-accounts" option, make sure to include 1.2.111226 and 1.2.126782 accounts')
         return
 
     # look for custom market parameters
