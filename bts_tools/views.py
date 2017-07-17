@@ -66,9 +66,8 @@ def unauthorized():
 
 
 @core.profile
-def server_error():
-    return render_template('error.html',
-                           msg=('An unknown server error occurred... Please check your log files.'))
+def server_error(msg='An unknown server error occurred... Please check your log files.'):
+    return render_template('error.html', msg=msg)
 
 
 def catch_error(f):
@@ -83,6 +82,10 @@ def catch_error(f):
             if 'Connection aborted' in str(e):
                 core.is_online = False
                 return offline()
+            elif 'fund != nullptr: Invalid reward fund name' in str(e):
+                # trying to access the reward fund via the cli_wallet, but it still doesn't exist...
+                return server_error('Cannot access reward fund from the witness client as it is still syncing. '
+                                    'Please wait until it has synced at least up to HF17')
             else:
                 log.error('While processing %s()' % f.__name__)
                 log.exception(e)
