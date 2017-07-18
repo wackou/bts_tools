@@ -20,6 +20,7 @@
 
 from .. import core
 from datetime import datetime
+import time
 import logging
 
 log = logging.getLogger(__name__)
@@ -84,6 +85,12 @@ def monitor(node, ctx, cfg):
             log.info('[{:2d}%] Indexing block number {} on {}'.format(progress, current_block_num, node.rpc_id))
 
         block = node.get_block(current_block_num)
+        # TODO: investigate weird random steem block not found although head number is correct... this is a crappy workaround
+        for i in range(3):  # retry 3 times at 1 second interval
+            if block is None:
+                time.sleep(1)
+                block = node.get_block(current_block_num)
+
         if block is None:
             log.warning('Could not get {} block number {}: head block = {}'.format(node.type(), current_block_num, node.get_head_block_num()))
 

@@ -41,7 +41,11 @@ $.plot("#cpu_plot", [{data: cpu_total, color: "rgb(255,241,210)", shadowSize: 0,
                      {data: mem, label: "Memory (MB)", yaxis: 2}], {
     xaxes: [{mode: "time", timezone: "browser", lines: { fill: true } }],
     yaxes: [{min: 0, /*max: 100,*/ position: "right", tickFormatter: function(v, axis) { return v + " %" }},
-            {min: 0, position: "left", tickFormatter: function(v, axis) { return v + " MB" }}],
+            {min: 0,
+        {%- if total_ram -%}
+             max: {{ total_ram }},
+        {%- endif -%}
+            position: "left", tickFormatter: function(v, axis) { return v + " MB" }}],
 });
 
 $.plot("#connections_plot", [{data: conn, label: "Number of connections"}], {

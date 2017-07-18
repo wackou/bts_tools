@@ -26,6 +26,7 @@ from . import rpcutils as rpc
 from . import core, monitor, slogging, backbone, seednodes, network_utils, feeds
 from .seednodes import split_columns
 import bts_tools
+import psutil
 import json
 import requests.exceptions
 import logging
@@ -142,7 +143,11 @@ def view_status():
                 stat.cpu_total)
                for stat in list(monitor.global_stats_frames)]
 
-    return render_template('status.html', title='BTS Client - Status', points=points, gpoints=gpoints)
+    total_ram = None  # total RAM in MB
+    if rpc.main_node.is_localhost():
+        total_ram = psutil.virtual_memory().total / (1024*1024)
+
+    return render_template('status.html', title='BTS Client - Status', points=points, gpoints=gpoints, total_ram=total_ram)
 
 
 def find_node(type, host, name):
