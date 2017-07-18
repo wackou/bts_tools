@@ -85,6 +85,7 @@ def monitor(node, ctx, cfg):
             log.info('[{:2d}%] Indexing block number {} on {}'.format(progress, current_block_num, node.rpc_id))
 
         block = node.get_block(current_block_num)
+
         # TODO: investigate weird random steem block not found although head number is correct... this is a crappy workaround
         for i in range(3):  # retry 3 times at 1 second interval
             if block is None:
@@ -100,7 +101,7 @@ def monitor(node, ctx, cfg):
                 db['total_produced'][witness_name] += 1
                 db['last_produced'][witness_name] = datetime.strptime(block['timestamp'], '%Y-%m-%dT%H:%M:%S')
 
-        # FIXME: should be update this even in the case that block == None?
+        # FIXME: should we update this even in the case that block == None?
         db['last_indexed_block'] = current_block_num
 
     if ctx.first_reindex:

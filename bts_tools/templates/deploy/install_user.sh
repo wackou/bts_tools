@@ -70,6 +70,11 @@ else
     echo "no config.yaml file given"
 fi
 
+if [ -f /tmp/launch_tmux_sessions.sh ]; then
+    cp /tmp/launch_tmux_sessions.sh ~
+    chmod a+x ~/launch_tmux_sessions.sh
+fi
+
 {% if compile_on_new_host %}
     # compile client locally
     {% for client in config_yaml['clients'] %}

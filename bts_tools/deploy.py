@@ -118,7 +118,10 @@ def prepare_installation_bundle(cfg, build_dir):
     render_template('api_access.json')
     render_template('api_access.steem.json')
 
-    # 0.4- get authorized_keys if any
+    # 0.4- generate launch_tmux_sessions.sh
+    render_template('launch_tmux_sessions.sh')
+
+    # 0.5- get authorized_keys if any
     if cfg.get('ssh_keys'):
         with open(join(build_dir, 'authorized_keys'), 'w') as key_file:
             for key in cfg['ssh_keys']:
