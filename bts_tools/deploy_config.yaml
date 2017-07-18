@@ -15,6 +15,11 @@ compile_on_new_host: True
 # usually need to set to True; use False only for debugging installs
 reboot: True
 
+# only prepare files for installation, do not actually perform the install on remote host
+only_prepare_install_bundle: False  # [OPTIONAL] [default=False]
+
+# TODO: mention somewhere that this will also install a "launch_tmux_sessions.py" in the home folder
+
 nginx:
     # optional, will be defined as <hostname>.<domain> if not specified
     server_name: xxxxxxxx
@@ -43,6 +48,8 @@ witness_api_access:
 
 # config.yaml variables
 config_yaml:
+    hostname: *hostname
+
     logging:
         bts_tools.cmdline: DEBUG
 

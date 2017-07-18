@@ -309,6 +309,11 @@ def deploy_node(build_env, config_file, host):
     # 2- prepare the bundle of files to be copied on the remote host
     prepare_installation_bundle(cfg, build_dir)
 
+    if cfg.get('only_prepare_install_bundle'):
+        log.info('Finished preparing install bundle, now exiting...')
+        log.info('Install bundle dir: {}'.format(build_dir))
+        return
+
     # 3- perform the remote install
     log.info('To view the log of the current installation, run the following command in another terminal:')
     print()
