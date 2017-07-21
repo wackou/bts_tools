@@ -109,8 +109,9 @@ SEED_NODES = {
         ('45.76.13.167:2001',                '',   'chitty',         'https://steemfund.github.io/pages/witness.html'),
         ('seed.steemviz.com:2001',           '',   'ausbitbank',     'https://steemit.com/steem/@ausbitbank/new-seed-node-online-a-seedsteemvizcom'),
         ('steem-seed.lukestokes.info:2001',  '',   'lukestokes',     'https://steemit.com/witness-category/@lukestokes/vote-luke-stokes-for-witness-as-lukestokes-mhth'),
-        ('85.10.227.254:2001',               '',   'christoff5221',  ''),
-        ('seed.jerrybanfield.com:2001',      '',   'JerryBanfield',  'https://steemit.com/witness-category/@jerrybanfield/steem-witness-14-542-reporting-for-duty')
+        ('85.10.227.254:2001',               '',   'christoff5221',  'https://steemit.com/witness-category/@christoff5221/witness-application-i-wish-to-become-a-witness-and-help-steem-steemit'),
+        ('seed.jerrybanfield.com:2001',      '',   'JerryBanfield',  'https://steemit.com/witness-category/@jerrybanfield/steem-witness-14-542-reporting-for-duty'),
+        ('seed.blackrift.net:2001',          '',   'drakos',         'https://steemit.com/witness-category/@drakos/my-witness-application')
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),
