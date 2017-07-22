@@ -47,6 +47,48 @@ class FeedPrice(object):
         self.last_updated = last_updated or datetime.utcnow()
         self.provider = provider
 
+    @staticmethod
+    def from_graphene_tx(tx):
+        block_num = tx['op']['block_num']
+        op_id, feed = tx['op']['op']
+        assert op_id == 19
+        asset_id = feed['asset_id']
+
+        import bts_tools.rpcutils as rpc
+
+        price = int(feed['feed']['settlement_price']['base']['amount']) / int(feed['feed']['settlement_price']['quote']['amount'])
+
+        assert asset_id == feed['feed']['settlement_price']['base']['asset_id']
+
+        asset_data = rpc.main_node.get_asset(asset_id)
+        #print('asset data: {}'.format(asset_data))
+        asset = asset_data['symbol']
+        base = rpc.main_node.get_asset(feed['feed']['settlement_price']['quote']['asset_id'])['symbol']
+
+        block_time = pendulum.parse(rpc.main_node.get_block(block_num)['timestamp'])
+        f = FeedPrice(price, asset, base, last_updated=block_time)
+        return f
+
+    # FIXME: move me somewhere else
+    @staticmethod
+    def find_feeds(account, nfeeds=1000, valid=None):
+        from bts_tools.rpcutils import main_node
+        feeds = [FeedPrice.from_graphene_tx(tx) for tx in main_node.get_account_history(account, nfeeds)
+                 if tx['op']['op'][0] == 19]  # only feed publishing operations
+        if valid is not None:
+            feeds = [f for f in feeds if valid(f)]
+        return feeds
+
+    @staticmethod
+    def bit20_feeds(account, nfeeds=1000):
+        feeds = FeedPrice.find_feeds(account, nfeeds=nfeeds, valid=lambda f: f.asset == 'BTWTY')
+        print('found {} feeds'.format(len(feeds)))
+        for f in feeds:
+            print(f'[{f.last_updated}] {str(f)}  {1/f.price}')
+
+        return feeds
+
+
     def __str__(self):
         return 'FeedPrice: {} {}/{}{}{}'.format(
             self.price, self.asset, self.base,
@@ -384,6 +426,53 @@ class BloombergFeedProvider(FeedProvider):
         soup = BeautifulSoup(r.text, 'html.parser')
         r = float(soup.find(class_='price').text.replace(',', ''))
         return self.feed_price(q, base_currency, r)
+
+
+class QuandlFeedProvider(FeedProvider):
+    NAME = 'Quandl'
+    AVAILABLE_MARKETS = [('GOLD', 'USD'), ('SILVER', 'USD')]
+
+    _DATASETS = {('GOLD', 'USD'): ['WGC/GOLD_DAILY_USD', 'LBMA/GOLD', 'PERTH/GOLD_USD_D'],
+                 ('SILVER', 'USD'): ['LBMA/SILVER', 'PERTH/SLVR_USD_D']}
+
+    @check_online_status
+    @check_market
+    def get(self, cur, base):
+        log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
+
+        prices = []
+        for dataset in self._DATASETS[(cur, base)]:
+            url = 'https://www.quandl.com/api/v3/datasets/{dataset}.json?start_date={date}'.format(
+                dataset=dataset,
+                date=datetime.datetime.strftime(datetime.datetime.now() - 3,
+                                                '%Y-%m-%d')
+            )
+            data = requests.get(url=url, timeout=self.TIMEOUT).json()
+            if 'dataset' not in data:
+                raise RuntimeError('Feed has not returned a dataset for url: %s' % url)
+            d = data['dataset']
+            if len(d['data']):
+                prices.append(d['data'][0][1])
+        log.warning('prices: {}'.format(prices))
+
+        return self.feed_price(cur, base, sum(prices) / len(prices))
+
+
+class UpholdFeedProvider(FeedProvider):
+    NAME = 'Uphold'
+    # Fiat: AUDUSD, EURUSD, GBPUSD, NZDUSD, USDARS, USDCAD, USDCHF, USDCNY, USDDKK, USDHKD, USDJPY, USDMXN, USDNOK, USDSEK, USDSGD
+    # Crypto: BTCUSD, ETHUSD, LTCUSD,
+    # Metal: XAGUSD, XAUUSD
+    # Other (fiat?): USDAED, USDBRL, USDILS, USDINR, USDKES, USDPHP, USDPLN, VOXUSD, XPDUSD, XPTUSD
+    AVAILABLE_MARKETS = [('GOLD', 'USD'), ('SILVER', 'USD')]
+
+    _DATASETS = {('GOLD', 'USD'): ['WGC/GOLD_DAILY_USD', 'LBMA/GOLD', 'PERTH/GOLD_USD_D'],
+                 ('SILVER', 'USD'): ['LBMA/SILVER', 'PERTH/SLVR_USD_D']}
+
+    @check_online_status
+    @check_market
+    def get(self, cur, base):
+        log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
 
 
 class BitcoinAverageFeedProvider(FeedProvider):
