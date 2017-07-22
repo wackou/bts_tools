@@ -52,10 +52,10 @@ if [ $IS_DEBIAN -eq 1 ]; then
     yes | apt-get -yqfV dist-upgrade >> /tmp/setupVPS.log 2>&1
 elif [ $IS_UBUNTU -eq 1 ]; then
     apt-get -yfV install software-properties-common  >> /tmp/setupVPS.log 2>&1
-    add-apt-repository universe
-    echo "deb http://archive.ubuntu.com/ubuntu xenial-updates universe" >> /etc/apt/sources.list
+    #add-apt-repository universe  # TODO: necessary?
+    #echo "deb http://archive.ubuntu.com/ubuntu xenial-updates universe" >> /etc/apt/sources.list
     apt-get -y update >> /tmp/setupVPS.log 2>&1
-    #yes | apt-get -yqfV upgrade >> /tmp/setupVPS.log 2>&1
+    yes | apt-get -yqfV upgrade >> /tmp/setupVPS.log 2>&1
 fi
 
 echo "* Installing packages for running the client..."

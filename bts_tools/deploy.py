@@ -18,7 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from os.path import join
+from os.path import join, dirname
+from shutil import copyfile
 from functools import partial
 from jinja2 import Environment, PackageLoader
 from ruamel import yaml
@@ -104,6 +105,8 @@ def prepare_installation_bundle(cfg, build_dir):
     # 0.2- generate config.yaml file
     config_yaml = yaml.load(env.get_template('config.yaml').render(), Loader=yaml.RoundTripLoader)
     config_yaml.update(copy.deepcopy(cfg['config_yaml']))
+    if 'hostname' not in config_yaml:
+        config_yaml['hostname'] = cfg['hostname']
     for client_name, client in config_yaml['clients'].items():
         client.pop('deploy', None)
     with open(join(build_dir, 'config.yaml'), 'w') as config_yaml_file:
@@ -262,7 +265,11 @@ def load_config(config_file):
     # auto adjustements of settings in the config
     cfg['pause'] = False  # do not pause during installation
 
-    if cfg['os'] in ['debian', 'debian8', 'jessie']:
+    if cfg['os'] in ['debian', 'debian9', 'stretch']:
+        cfg['is_debian'] = True
+        cfg['is_ubuntu'] = False
+        cfg['python_version'] = '3.5'
+    elif cfg['os'] in ['debian8', 'jessie']:
         cfg['is_debian'] = True
         cfg['is_ubuntu'] = False
         cfg['python_version'] = '3.4'

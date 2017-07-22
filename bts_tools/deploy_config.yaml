@@ -2,6 +2,7 @@
 hostname: &hostname xxxxxxxx
 domain: xxxxxxxx.xxx
 
+# 'debian', 'debian9', 'stretch', 'debian8', 'jessie', 'ubuntu', 'ubuntu 16.04'
 os: ubuntu   # debian, ubuntu. more to come...
 
 unix_hostname: *hostname
@@ -57,7 +58,7 @@ config_yaml:
 
     build_environments:
         steem:
-            cmake_args: ['-DENABLE_CONTENT_PATCHING=OFF', '-DLOW_MEMORY_NODE=ON']
+            cmake_args: ['-DSKIP_BY_TX_ID=OFF', '-DLOW_MEMORY_NODE=ON']
 
     geoip2:
         user: xxxxxxxx
