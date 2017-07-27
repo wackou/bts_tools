@@ -102,7 +102,19 @@ if [ $IS_DEBIAN -eq 1 ]; then
 #    cp /etc/apt/sources.list.orig /etc/apt/sources.list
 #    apt-get update >> /tmp/setupVPS.log 2>&1
     echo "* Installing boost..."
-    apt-get install -yfV cmake libboost-all-dev >> /tmp/setupVPS.log 2>&1
+
+    BOOST_VER=60
+    wget http://downloads.sourceforge.net/project/boost/boost/1.${BOOST_VER}.0/boost_1_${BOOST_VER}_0.tar.gz
+    tar xf boost_1_${BOOST_VER}_0.tar.gz
+    cd boost_1_${BOOST_VER}_0
+
+    # patch to compile boost1.60
+    sed -e 's/BOOST_STATIC_CONSTANT(limb_type, sign_bit_mask = 1u << (limb_bits - 1))/BOOST_STATIC_CONSTANT(limb_type, sign_bit_mask = static_cast<limb_type>(1u) << (limb_bits - 1))/g' boost/multiprecision/cpp_int.hpp | sponge boost/multiprecision/cpp_int.hpp
+
+    ./bootstrap.sh
+    ./b2 -j$(grep -c ^processor /proc/cpuinfo) install
+
+    cd ..
 
 elif [ $IS_UBUNTU -eq 1 ]; then
     echo "* Installing boost..."

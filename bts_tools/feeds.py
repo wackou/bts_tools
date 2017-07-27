@@ -720,21 +720,20 @@ def check_feeds(nodes):
                         continue
                     # publish median value of the price, not latest one
                     median_feeds = {c: statistics.median(price_history[c]) for c in feeds}
-                    log.info('Node %s publishing feeds: %s' % (node.name, feed_control.format_feeds(median_feeds)))
-
                     disabled_assets = get_disabled_assets()
+                    publish_feeds = {asset: price for asset, price in median_feeds.items() if asset not in disabled_assets}
+                    log.info('Node %s publishing feeds: %s' % (node.name, feed_control.format_feeds(publish_feeds)))
+                    log.debug('Not publishing: {}'.format(disabled_assets))
 
                     # first, try to publish all of them in a single transaction
                     try:
                         published = []
                         handle = node.begin_builder_transaction()
-                        for asset, price in median_feeds.items():
-                            if asset in disabled_assets:
-                                continue
+                        for asset, price in publish_feeds.items():
                             published.append(asset)
                             op = [19,  # id 19 corresponds to price feed update operation
                                   hashabledict({"asset_id": node.asset_data(asset)['id'],
-                                                "feed": get_price_for_publishing(node, median_feeds, asset, price),
+                                                "feed": get_price_for_publishing(node, publish_feeds, asset, price),
                                                 "publisher": node.get_account(node.name)["id"]})
                                   ]
                             node.add_operation_to_builder_transaction(handle, op)
@@ -755,11 +754,9 @@ def check_feeds(nodes):
                         # if an error happened, publish feeds individually to make sure that
                         # at least the ones that work can get published
                         published = []
-                        for asset, price in median_feeds.items():
-                            if asset in disabled_assets:
-                                continue
+                        for asset, price in publish_feeds.items():
                             try:
-                                price = hashabledict(get_price_for_publishing(node, median_feeds, asset, price))
+                                price = hashabledict(get_price_for_publishing(node, publish_feeds, asset, price))
                                 log.debug('Publishing {} {}'.format(asset, price))
                                 node.publish_asset_feed(node.name, asset, price, True)  # True: sign+broadcast
                                 published.append(asset)
