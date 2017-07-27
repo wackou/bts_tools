@@ -14,6 +14,7 @@ witness_node_data_dir
 # we don't want to commit these accidentally to git or even see them
 *.crt
 *.key
+deploy_config.*.yaml
 
 # development docs, untracked
 devdocs

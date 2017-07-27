@@ -1,6 +1,6 @@
 ---
 # For a more detailed description of the format of this file, visit:
-# https://bts-tools.readthedocs.io/en/latest/config_format.html
+# https://bts-tools.readthedocs.io/en/latest/config_yaml.html
 #
 
 hostname: xxxxxxxx  # [OPTIONAL] label used as source of notification messages

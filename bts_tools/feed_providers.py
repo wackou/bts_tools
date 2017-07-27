@@ -82,10 +82,9 @@ class FeedPrice(object):
     @staticmethod
     def bit20_feeds(account, nfeeds=1000):
         feeds = FeedPrice.find_feeds(account, nfeeds=nfeeds, valid=lambda f: f.asset == 'BTWTY')
-        print('found {} feeds'.format(len(feeds)))
-        for f in feeds:
-            print(f'[{f.last_updated}] {str(f)}  {1/f.price}')
-
+        # print('found {} feeds'.format(len(feeds)))
+        # for f in feeds:
+        #     print(f'[{f.last_updated}] {str(f)}  {1/f.price}')
         return feeds
 
 
