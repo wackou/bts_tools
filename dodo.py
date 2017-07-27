@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from bts_tools.core import run
+from jinja2 import Template
 import sys
 import re
 
@@ -38,6 +39,7 @@ def open_file(filename):
 
 def task_doc():
     """Build the Sphinx documentation and open it in a web browser"""
+    # FIXME: add step to call gen_config_yaml_doc and integrate it
     return {'actions': ['cd docs; make html',
                         open_file('docs/_build/html/index.html')]}
 
@@ -46,6 +48,22 @@ def task_pypi_doc():
     """Build the main page that will be uploaded to PyPI and open it in a web browser"""
     return {'actions': ['python setup.py --long-description | rst2html.py > /tmp/bts_tools_pypi_doc.html',
                         open_file('/tmp/bts_tools_pypi_doc.html')]}
+
+
+def task_gen_config_yaml_doc():
+    """Build the config.yaml documentation from the comments in the provided default config.yaml file"""
+
+    # defined as inner function so as not to run it during task definition (ie: every time we call "doit")
+    def update_config_yaml_doc():
+        config_yaml_lines = open('bts_tools/config.yaml').readlines()
+        # shift it to the right so it fits in a code block
+        config_yaml = ''.join(['    {}'.format(l) for l in config_yaml_lines])
+        t = Template(open('docs/config_yaml.rst.jinja').read()).render(config_yaml=config_yaml)
+        with open('docs/config_yaml.rst', 'w') as out:
+            out.write(t)
+
+    return {'actions': [update_config_yaml_doc],
+            'verbosity': 2}
 
 
 # Release management functions

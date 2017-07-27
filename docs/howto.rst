@@ -1,6 +1,6 @@
-===========================================
-How to setup a delegate - the easy tutorial
-===========================================
+======================================================
+How to setup a delegate - the easy tutorial [OBSOLETE]
+======================================================
 
 
 This guide will try to show you how to setup all the infrastructure needed to

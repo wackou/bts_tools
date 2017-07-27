@@ -34,39 +34,3 @@ build_environments:
         git_branch: master
         build_dir: ~/.PeerPlays_build
         bin_dir: ~/.PeerPlays_bin
-
-    bts1:
-        git_repo: https://github.com/BitShares/bitshares.git
-        git_branch: master
-        build_dir: ~/.BitShares_build
-        bin_dir: ~/.BitShares_bin
-
-    bts-dev:
-        git_repo: https://github.com/BitShares/bitshares.git
-        git_branch: develop
-        build_dir: ~/.BitSharesDev_build
-        bin_dir: ~/.BitSharesDev_bin
-
-    dvs:
-        git_repo: https://github.com/BitShares/bitshares.git
-        git_branch: devshares
-        build_dir: ~/.DevShares_build
-        bin_dir: ~/.DevShares_bin
-
-    pts:
-        git_repo: https://github.com/PTS-DPOS/PTS.git
-        git_branch: master
-        build_dir: ~/.PTS_build
-        bin_dir: ~/.PTS_bin
-
-    pts-dev:
-        git_repo: https://github.com/PTS-DPOS/PTS.git
-        git_branch: develop
-        build_dir: ~/.PTSdev_build
-        bin_dir: ~/.PTSdev_bin
-
-    pls:
-        git_repo: https://github.com/dacsunlimited/dac_play.git
-        git_branch: master
-        build_dir: ~/.Play_build
-        bin_dir: ~/.Play_bin

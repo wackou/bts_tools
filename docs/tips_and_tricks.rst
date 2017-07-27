@@ -21,11 +21,11 @@ Alternatively, you can set the following in your ``config.yaml`` file::
     CONFIGURE_OPTS = ['CC=/usr/bin/clang', 'CXX=/usr/bin/clang++']
 
 
-Compiling Steem without dependency on Qt5
------------------------------------------
+Compiling Steem for low memory consumption
+------------------------------------------
 
 Add the following to your ``config.yaml`` file::
 
     build_environments:
         steem:
-            cmake_args: ['-DENABLE_CONTENT_PATCHING=OFF', '-DLOW_MEMORY_NODE=ON']
+            cmake_args: ['-DLOW_MEMORY_NODE=ON']

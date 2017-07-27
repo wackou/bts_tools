@@ -25,11 +25,11 @@ monitoring:
         min_required_space: 5G
 
     feeds:
-        steem_dollar_adjustment: 0.90
-        enabled_assets: []   # [RUBLE, BTWTY, ALTCAP]
+        steem_dollar_adjustment: 1.00
+        enabled_assets: []   # [RUBLE, BTWTY, ALTCAP, HERO]
         disabled_assets: [RUB, SEK, GRIDCOIN, TCNY, CASH.BTC, CASH.USD, KRW, TUSD, SGD, HKD, BTWTY]  # black swan
         asset_params:
-            # FIXME: MCR and MSSR should be the actual percentage (float) not a fixed-point integer
+            # TODO: MCR and MSSR should be the actual percentage (float) not a fixed-point integer
             default:
                 maintenance_collateral_ratio: 1750  # Call when collateral only pays off 175% the debt
                 maximum_short_squeeze_ratio: 1100   # Stop calling when collateral only pays off 110% of the debt
@@ -40,10 +40,10 @@ monitoring:
             TUSD:
                 maintenance_collateral_ratio: 1750
                 maximum_short_squeeze_ratio: 1001
-            CASH.USD:
+            CASH.USD:  # TODO: remove as it's dead
                 maintenance_collateral_ratio: 1750
                 maximum_short_squeeze_ratio: 1001
-            CASH.BTC:
+            CASH.BTC:  # TODO: remove as it's dead
                 maintenance_collateral_ratio: 1750
                 maximum_short_squeeze_ratio: 1001
             ALTCAP:

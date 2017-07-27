@@ -14,15 +14,6 @@ clients:
         wallet_host: localhost
         wallet_port: 8093
 
-    backbone:
-        type: bts
-        data_dir: ~/.BitShares2_backbone
-        p2p_port: 1777
-        witness_host: localhost
-        witness_port: 8290
-        wallet_host: localhost
-        wallet_port: 8293
-
     muse:
         type: muse
         data_dir: ~/.Muse

@@ -49,7 +49,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'BTS Tools'
-copyright = '2015, Nicolas Wack'
+copyright = '2017, Nicolas Wack'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

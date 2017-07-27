@@ -128,11 +128,12 @@ def configure(debug=False):
         cmake_opts += ['-DBOOST_ROOT="{}"'.format(boost_root)]
 
     if debug:
-        cmake_opts += ['-DCMAKE_BUILD_TYPE=Debug']
+        # do not compile really in debug, it's unusably slow otherwise
+        cmake_opts += ['-DCMAKE_BUILD_TYPE=RelWithDebInfo']
     else:
         cmake_opts += ['-DCMAKE_BUILD_TYPE=Release']
 
-    cmake_opts += core.config.get('cmake_args', []) + BUILD_ENV.get('cmake_args', [])
+    cmake_opts += core.config['build_environments'].get('cmake_args', []) + BUILD_ENV.get('cmake_args', [])
 
     run('{} cmake {} .'.format(' '.join(CONFIGURE_OPTS),
                                ' '.join(cmake_opts)), shell=True)
@@ -144,7 +145,7 @@ def configure_gui():
 
 
 def build(threads=None):
-    make_list = ['make'] + core.config.get('make_args', []) + BUILD_ENV.get('make_args', [])
+    make_list = ['make'] + core.config['build_environments'].get('make_args', []) + BUILD_ENV.get('make_args', [])
     if threads:
         make_list.append('-j%d' % threads)
     run(make_list)
@@ -209,34 +210,31 @@ def install_last_built_bin():
 def main(flavor='bts'):
     # parse commandline args
     DESC="""following commands are available:
-  - version          : show version of the tools
-  - clean_homedir    : clean home directory. WARNING: this will delete your wallet!
-  - clean            : clean build directory
-  - build            : update and build %(bin)s client
-  - build_gui        : update and build %(bin)s gui client
-  - run              : run latest compiled %(bin)s client, or the one with the given hash or tag
-  - run_cli          : run latest compiled %(bin)s cli wallet (graphene)
-  - run_gui          : run latest compiled %(bin)s gui client
-  - list             : list installed %(bin)s client binaries
-  - monitor          : run the monitoring web app
-  - publish_slate    : publish the slate as described in the given file
-  - deploy           : deploy built binaries to a remote server
-  - deploy_node      : full deploy of a seed or witness node on given ip address. Needs ssh root access
+  - version                : show version of the tools
+  - clean_homedir          : clean home directory. WARNING: this will delete your wallet!
+  - save_blockchain_dir    : save a snapshot of the current state of the blockchain
+  - restore_blockchain_dir : restore a snapshot of the current state of the blockchain
+  - clean                  : clean build directory
+  - build                  : update and build %(bin)s client
+  - build_gui              : update and build %(bin)s gui client
+  - run                    : run latest compiled %(bin)s client, or the one with the given hash or tag
+  - run_cli                : run latest compiled %(bin)s cli wallet (graphene)
+  - run_gui                : run latest compiled %(bin)s gui client
+  - list                   : list installed %(bin)s client binaries
+  - monitor                : run the monitoring web app
+  - deploy                 : deploy built binaries to a remote server
+  - deploy_node            : full deploy of a seed or witness node on given ip address. Needs ssh root access
 
 Examples:
-  $ %(bin)s build          # build the latest %(bin)s client by default
-  $ %(bin)s build v0.4.27  # build specific version
-  $ %(bin)s run
-  $ %(bin)s run debug  # run the client inside gdb
+  $ %(bin)s build                 # build the latest %(bin)s client by default
+  $ %(bin)s build v0.4.27         # build specific version
+  $ %(bin)s build ppy-dev v0.1.8  # build a specific client/version
+  $ %(bin)s run                   # run the latest compiled client by default
+  $ %(bin)s run seed-test         # clients are defined in the config.yaml file
 
-  $ %(bin)s build pts-dev v2.0.1  # build a specific client/version
-  $ %(bin)s run seed-test         # run environments are defined in the config.yaml file
+  $ %(bin)s build_gui   # FIXME: broken...
+  $ %(bin)s run_gui     # FIXME: broken...
 
-  $ %(bin)s build_gui
-  $ %(bin)s run_gui
-
-  $ %(bin)s publish_slate                      # will show a sample slate
-  $ %(bin)s publish_slate /path/to/slate.yaml  # publish the given slate
     """ % {'bin': flavor}
     EPILOG="""You should also look into ~/.bts_tools/config.yaml to tune it to your liking."""
     parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
@@ -246,7 +244,7 @@ Examples:
                                             'deploy', 'deploy_node'],
                         help='the command to run')
     parser.add_argument('environment', nargs='?',
-                        help='the build/run environment (bts, pts, ...)')
+                        help='the build/run environment (bts, steem, ...)')
     parser.add_argument('-p', '--pidfile', action='store',
                         help='filename in which to write PID of child process')
     parser.add_argument('-f', '--forward-signals', action='store_true',
@@ -414,28 +412,27 @@ Examples:
                         result.append(x)
                 return result
 
-            # always required for working with bts_tools, ensure they are always
-            # in this order at the beginning (so database_api=0, login_api=1, etc.)
-            # 'network_broadcast_api' required by the wallet (TODO: check fails only with steem >=0.16.0?)
-            apis = ['database_api', 'login_api', 'network_node_api', 'network_broadcast_api'] + apis
-            plugins = plugins or ['witness']  # always have at least the witness plugin
-
-            plugins = make_unique(client.get('plugins', plugins))
-            apis = make_unique(client.get('apis', apis))
-            public_apis = make_unique(client.get('public_apis', public_apis))
-
-            log.info('Running with plugins: {}'.format(plugins))
-            log.info('Running with apis: {}'.format(apis))
-            log.info('Running with public apis: {}'.format(public_apis))
-
-
             # enabling plugins
             if client['type'] == 'steem':
+                plugins = plugins or ['witness']  # always have at least the witness plugin
+                plugins = make_unique(client.get('plugins', plugins))
+                log.info('Running with plugins: {}'.format(plugins))
+
                 for plugin in plugins:
                     run_args += ['--enable-plugin', plugin]
 
             # enabling api access
             if client['type'] == 'steem':
+                # always required for working with bts_tools, ensure they are always
+                # in this order at the beginning (so database_api=0, login_api=1, etc.)
+                # 'network_broadcast_api' required by the wallet
+                apis = ['database_api', 'login_api', 'network_node_api', 'network_broadcast_api'] + apis
+                apis = make_unique(client.get('apis', apis))
+                public_apis = make_unique(client.get('public_apis', public_apis))
+
+                log.info('Running with apis: {}'.format(apis))
+                log.info('Running with public apis: {}'.format(public_apis))
+
                 for api in public_apis:
                     run_args += ['--public-api', api]
 
@@ -547,7 +544,6 @@ Examples:
         from .deploy import deploy  # can only import now due to potential circular import
 
         for remote_host in args.args:
-            remote_host = core.config.get('hosts', {}).get(remote_host, remote_host)
             deploy(args.environment, remote_host)
 
     elif args.command == 'deploy_node':

@@ -1,0 +1,223 @@
+
+Format of the config.yaml file
+==============================
+
+The ``config.yaml`` file is the file where you configure the tools to match your environment.
+It is located in ``~/.bts_tools/config.yaml``. If you properly fill in
+all the values in it, there is no need for you to edit anything in the data-dir of the witness
+client (ie: no config.ini editing) and the tools can manage everything from the command line.
+This allows you to keep all the information in one single file, much easier to manage.
+
+Instead of going over all the parameters in an arbitrary order and explaining them, we will
+just show a working example file that is fully commented and serves as the reference documentation.
+
+Please make sure that you fully understand some :doc:`core_concepts` before proceeding.
+
+Also know that there are a lot of other options under the hood, but in order to not be overwhelming,
+those have default values and are contained in a bigger config.yaml file. At startup, your config file is merged into it
+before being used by the application. If you want to see the full configuration file generated from it,
+it is located in ``~/.bts_tools/full_config.yaml``
+
+And now, without further ado, here is the reference ``config.yaml`` file:
+
+
+.. _config-yaml-file:
+
+config.yaml
+-----------
+
+.. code-block:: yaml
+
+    ---
+    # For a more detailed description of the format of this file, visit:
+    # https://bts-tools.readthedocs.io/en/latest/config_format.html
+    #
+    
+    hostname: xxxxxxxx  # [OPTIONAL] label used as source of notification messages
+    
+    # the logging levels for the different submodules
+    # can be any of DEBUG, INFO, WARNING, ERROR
+    logging:
+        bts_tools.cmdline: DEBUG
+        bts_tools.feeds: INFO
+    
+    #
+    # These are the types of clients that you can build. `bts`, `steem`, `ppy`, etc.
+    # Mostly the default should work and you shouldn't need to change those values.
+    # Still, if you want to add other git remote repositories to pull from or
+    # extra flags to use for compiling, this is the place to do so.
+    #
+    # The full list of build_environments can be found here:
+    # https://github.com/wackou/bts_tools/blob/master/bts_tools/templates/config/build_environments.yaml
+    #
+    build_environments:
+        make_args: ['-j4']  # [OPTIONAL] shared among all build environments
+        cmake_args: []      # [OPTIONAL] shared among all build environments
+        steem:
+            cmake_args: ['-DLOW_MEMORY_NODE=ON']  # [OPTIONAL] see https://github.com/steemit/steem/blob/master/doc/building.md
+    
+    #
+    # list of clients (witness accounts / seed nodes) that are being monitored
+    #
+    # the following file tries to keep a balanced distribution of the options between each client
+    # in order to make for easier reading, but (unless otherwise noted) all the options declared
+    # in a client also apply in the other ones
+    #
+    clients:
+        bts:
+            type: bts                         # [REQUIRED] build environment used for compiling the binary [bts, muse, steem, ppy, etc.]
+            data_dir: ~/.BitShares2           # [REQUIRED] the data dir of the client is where the blockchain data and the wallet file are stored
+            api_access: ~/api_access.json     # [REQUIRED] api_access.json should be created according to https://github.com/BitShares/bitshares-2#accessing-restricted-apis
+            seed_nodes:                       # [OPTIONAL]
+            - bts-seed1.abit-more.com:62015
+            - seed.bitsharesnodes.com:1776
+            p2p_port: 1778                    # [OPTIONAL] network port to be used for p2p communication of the witness node
+            track_accounts:                   # [OPTIONAL] [bts only] reduce RAM usage by specifying the only accounts that should be tracked
+            - 1.2.1       # witness-account
+            - 1.2.111226  # bittwenty
+            - 1.2.126782  # bittwenty.feed
+            witness_host: localhost           # [OPTIONAL] defaults to 'localhost', but can be a remote host if desired
+            witness_port: 8090                # [OPTIONAL] some defaults are provided for each different chain
+            witness_user: xxxxxxxx            # [REQUIRED] as in api_access.json
+            witness_password: xxxxxxxx        # [REQUIRED] as in api_access.json
+            wallet_host: localhost            # [OPTIONAL] defaults to 'localhost', but can be a remote host if desired
+            wallet_port: 8093                 # [OPTIONAL] some defaults are provided for each different chain
+            wallet_password: xxxxxxxx         # [OPTIONAL] only needed for feed publishing  # FIXME: not true, currently unused param
+            notification: email, telegram     # [OPTIONAL] type of notification channel to be used: [email, boxcar, telegram]
+    
+            # roles are optional, and you can have as many as you want for a given client
+            # a client that doesn't define any role will not be monitored by the web interface,
+            # but can still be used for building and running a client
+            roles:
+            -
+                role: witness
+                name: xxxxxxxx           # [REQUIRED] name of the witness account on the blockchain
+                witness_id: 1.6.xxx      # [REQUIRED]
+                signing_key: 5xxxxxxxx   # [REQUIRED] private key used by this witness for signing
+            -
+                role: feed_publisher
+                name: xxxxxxxx           # [REQUIRED] name of the account that publishes the feed on the blockchain
+            -
+                role: seed
+                name: seed01             # [REQUIRED] name has no relevance for seed nodes, except for identifying them in the UI
+    
+        # most of the clients try to have sensible defaults as much as possible, but you
+        # need to specify at least: type, data_dir, api_access, witness_user, witness_password
+        muse:
+            type: muse
+            data_dir: ~/.Muse
+            api_access: ~/api_access.json
+            witness_user: xxxxxxxx       # defined in api_access.json
+            witness_password: xxxxxxxx   # defined in api_access.json
+            roles:
+            -
+                role: seed
+                name: seed-muse
+    
+        steem:
+            type: steem
+            data_dir: ~/.Steem
+            run_args: ['--p2p-port', '1778', '--replay-blockchain']    # [OPTIONAL] additional args for running the witness client
+            run_cli_args: ['--rpc-http-allowip', '127.0.0.1']          # [OPTIONAL] additional args for running the cli wallet
+            plugins: ['witness']                                       # [OPTIONAL] defaults to ['witness', 'account_history']
+            seed_nodes: ["52.74.152.79:2001", "212.47.249.84:40696", "104.199.118.92:2001", "gtg.steem.house:2001"]
+            # FIXME: implement me!
+            override_default_seed_nodes: true  # [OPTIONAL] [default=false] if true, the client will only use the given seed nodes, otherwise it adds them to the list of built-in seed nodes
+    
+            # Steemd can now accept the contents of the api_access.json directly as argument on the command line,
+            # hence the field api_access.json is not required anymore here (and you don't need to create the file either),
+            # as bts_tools will generate the proper arguments from the user and password given here.
+            witness_user: xxxxxxxx
+            witness_password: xxxxxxxx
+            notification: telegram
+            roles:
+            -
+                role: witness  # for steem only, the 'witness_id' field is not required, only 'name' and 'signing_key'
+                name: xxxxxxxx
+                signing_key: 5xxxxxxxx
+    
+        ppy:
+            type: ppy
+            data_dir: ~/.PeerPlays
+            seed_nodes: ['213.184.225.234:59500']
+            p2p_port: 9777
+            witness_host: localhost
+            witness_port: 8590
+            witness_user: xxxxxxxx
+            witness_password: xxxxxxxx
+            wallet_host: localhost
+            wallet_port: 8593
+            api_access: ~/api_access.json
+            roles:
+            -
+                role: seed
+                name: seed01ppy
+    
+    
+    #
+    # configuration of the monitoring plugins
+    # most default values should work, see reference here:
+    # https://github.com/wackou/bts_tools/blob/master/bts_tools/templates/config/monitoring.yaml
+    #
+    monitoring:
+        seed:
+            desired_number_of_connections: 200
+            maximum_number_of_connections: 400
+    
+        feeds:
+            # some assets are not published by default as they are experimental or have some requirements
+            # eg: need to be an approved witness to publish
+            # if you want to publish them you need to say so explicitly here
+            enabled_assets: [RUBLE, ALTCAP, HERO]
+    
+            # explicitly disable some assets (eg: due to black swan)
+            #disabled_assets: [RUB, SEK, GRIDCOIN, TCNY, CASH.BTC, CASH.USD, KRW, TUSD, SGD, HKD, BTWTY]
+    
+            check_time_interval: 300            # interval at which the external feed providers should be queried, in seconds
+            median_time_span: 1800              # leave default
+    
+            # if you have at least 1 feed_publisher role defined in your clients, then
+            # you need to uncomment at least one of the next 2 lines
+            #publish_time_interval: 2400        # use this to publish feeds at fixed time intervals (in seconds)
+            #publish_time_slot: 08              # use this to publish every hour at a fixed number of minutes (in minutes)
+    
+            steem_dollar_adjustment: 1.0
+    
+    #
+    # configuration of the notification channels
+    #
+    notification:
+        email:
+            smtp_server: smtp.example.com
+            smtp_user: user
+            smtp_password: secret-password
+            identity: "BTS Monitor <bts_monitor@example.com>"
+            recipient: me@example.com
+    
+        boxcar:
+            tokens: [xxxxxxxx, xxxxxxxx]
+    
+        telegram:
+            token: xxxxxxxx
+            chat_id: xxxxxxxx
+    
+    
+    #
+    # List of credentials for external services used by bts_tools
+    #
+    credentials:
+        bitcoinaverage: # developer account recommended, otherwise need to lower 'monitoring.feeds.check_time_interval'
+            secret_key: xxxxxxxx
+            public_key: xxxxxxxx
+    
+        geoip2:
+            user: xxxxxxxx
+            password: xxxxxxxx
+    
+        currencylayer:
+            access_key: xxxxxxxx
+    
+        quandl:
+            api_key: xxxxxxxx
+    
+    
