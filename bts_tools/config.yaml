@@ -25,6 +25,9 @@ build_environments:
     cmake_args: []      # [OPTIONAL] shared among all build environments
     steem:
         cmake_args: ['-DLOW_MEMORY_NODE=ON']  # [OPTIONAL] see https://github.com/steemit/steem/blob/master/doc/building.md
+    muse2:
+        cmake_args: ['-DBUILD_MUSE_TEST=ON']
+
 
 #
 # list of clients (witness accounts / seed nodes) that are being monitored

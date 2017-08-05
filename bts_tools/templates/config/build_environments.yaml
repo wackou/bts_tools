@@ -21,6 +21,14 @@ build_environments:
         bin_dir: ~/.Muse_bin
         make_args: [witness_node, cli_wallet]
 
+    muse2:
+        debug: false
+        git_repo: https://github.com/themuseblockchain/Muse-Source
+        git_branch: master
+        build_dir: ~/.Muse2_build
+        bin_dir: ~/.Muse2_bin
+        make_args: [mused, cli_wallet]
+
     steem:
         debug: false
         git_repo: https://github.com/steemit/steem.git

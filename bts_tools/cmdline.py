@@ -422,7 +422,7 @@ Examples:
                     run_args += ['--enable-plugin', plugin]
 
             # enabling api access
-            if client['type'] == 'steem':
+            if client['type'] in ['steem', 'muse2']:
                 # always required for working with bts_tools, ensure they are always
                 # in this order at the beginning (so database_api=0, login_api=1, etc.)
                 # 'network_broadcast_api' required by the wallet
