@@ -349,6 +349,10 @@ Examples:
             if data_dir:
                 run_args = ['--data-dir', expanduser(data_dir)] + run_args
 
+            shared_file_size = client.get('shared_file_size')
+            if shared_file_size:
+                run_args = ['--shared-file-size', shared_file_size] + run_args
+
             genesis_file = client.get('genesis_file')
             if genesis_file:
                 run_args += ['--genesis-json', expanduser(genesis_file)]
