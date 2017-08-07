@@ -132,7 +132,7 @@ class GrapheneClient(object):
                     except KeyError:
                         cfg_port = 0
                     try:
-                        if self.type() == 'steem':
+                        if self.type() in ['steem', 'muse2']:
                             self.witness_signing_key = config['bts']['private-key']
                         else:
                             self.witness_signing_key = json.loads(config['bts']['private-key'])[0]
@@ -497,7 +497,7 @@ class GrapheneClient(object):
         return is_graphene_based(self)
 
     def get_active_witnesses(self):
-        if self.type() == 'steem':
+        if self.type() in ['steem', 'muse2']:
             return self.rpc_call('get_active_witnesses')
         else:
             return [self.get_witness_name(w)
@@ -507,7 +507,7 @@ class GrapheneClient(object):
         if self.is_graphene_based():
             try:
                 witnesses = self.get_active_witnesses()
-                if self.type() == 'steem':
+                if self.type() in ['steem', 'muse2']:
                     # return True so that "standby" witnesses still get some useful info
                     # (they *do* produce from time to time, unlike in BitShares)
                     return True

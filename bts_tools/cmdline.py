@@ -380,7 +380,7 @@ Examples:
                 if role['role'] == 'witness':
                     plugins.append('witness')
 
-                    if client['type'] == 'steem':
+                    if client['type'] in ['steem', 'muse2']:
                         private_key = role.get('signing_key')
                         if private_key:
                             run_args += ['--witness', '"{}"'.format(role['name']),
@@ -401,7 +401,7 @@ Examples:
                     apis += ['network_broadcast_api']
 
                 elif role['role'] == 'api':
-                    if client['type'] == 'steem':
+                    if client['type'] in ['steem', 'muse2']:
                         plugins += ['account_history', 'follow', 'market_history', 'private_message', 'tags']
                         public_apis += ['database_api', 'login_api', 'market_history_api', 'tag_api', 'follow_api']
 
@@ -413,7 +413,7 @@ Examples:
                 return result
 
             # enabling plugins
-            if client['type'] == 'steem':
+            if client['type'] in ['steem', 'muse2']:
                 plugins = plugins or ['witness']  # always have at least the witness plugin
                 plugins = make_unique(client.get('plugins', plugins))
                 log.info('Running with plugins: {}'.format(plugins))

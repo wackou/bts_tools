@@ -122,7 +122,7 @@ class MonitoringProtocol(WebSocketClientProtocol):
         self.request_id = 0
         self.request_map = {}
         _monitoring_protocols[(witness_host, witness_port)] = self
-        if type == 'steem':
+        if type in ['steem', 'muse2']:
             _ws_rpc_cache[(witness_host, witness_port)] = {'login_api': 1}
         else:
             _ws_rpc_cache[(witness_host, witness_port)] = {'database_api': 0, 'login_api': 1}
@@ -150,7 +150,7 @@ class MonitoringProtocol(WebSocketClientProtocol):
         log.debug("Server connected: {0}".format(response.peer))
         # login, authenticate
         self.rpc_call(Api.LOGIN_API, 'login', self.user, self.passwd)
-        if self.type == 'steem':
+        if self.type in ['steem', 'muse2']:
             self.rpc_call(Api.LOGIN_API, 'get_api_by_name', 'database_api')
             self.rpc_call(Api.LOGIN_API, 'get_api_by_name', 'network_node_api')
             self.rpc_call(Api.LOGIN_API, 'get_api_by_name', 'network_broadcast_api')  # only needed for feed_publisher role
