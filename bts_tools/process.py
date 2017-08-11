@@ -49,7 +49,7 @@ def bts_process(node):
     proc = _process_cache.get(port)
 
     if proc is not None:
-        if proc.status() == psutil.STATUS_RUNNING:
+        if proc.status() in [psutil.STATUS_RUNNING, psutil.STATUS_SLEEPING]:
             log.warning('returning cached proc for binary on port {}: {}'.format(port, proc))
             return proc
 
