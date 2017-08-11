@@ -20,35 +20,65 @@
 
 import psutil
 import logging
+from .core import run
 
 log = logging.getLogger(__name__)
 
 # TODO: should move all these functions inside of GrapheneClient
+
+
+# use a cache for the mapping {port: process}, as iterating over all processes with psutil is quite costly
+_process_cache = {}
+
+statuses = {psutil.STATUS_RUNNING: 'STATUS_RUNNING',
+            psutil.STATUS_SLEEPING: 'STATUS_SLEEPING',
+            psutil.STATUS_DISK_SLEEP: 'STATUS_DISK_SLEEP',
+            psutil.STATUS_STOPPED: 'STATUS_STOPPED',
+            psutil.STATUS_TRACING_STOP: 'STATUS_TRACING_STOP',
+            psutil.STATUS_ZOMBIE: 'STATUS_ZOMBIE',
+            psutil.STATUS_DEAD: 'STATUS_DEAD',
+            psutil.STATUS_WAKING: 'STATUS_WAKING',
+            psutil.STATUS_IDLE: 'STATUS_IDLE'}
+
 
 def bts_process(node):
     if not node.is_witness_localhost():
         return None
 
     port = node.witness_port
+    proc = _process_cache.get(port)
+
+    if proc is not None:
+        if proc.status() == psutil.STATUS_RUNNING:
+            log.warning('returning cached proc for binary on port {}: {}'.format(port, proc))
+            return proc
+
+        else:
+            log.warning('found cached proc, but status is {}'.format(statuses.get(proc.status(), proc.status())))
 
     # find the process corresponding to our node by looking at the rpc port
     #log.debug('find bts binary on {}:{}'.format(host, port))
-    procs = []
-    for p in psutil.process_iter():
-        try:
-            if node.bin_name in p.name():
-                if port in [c.laddr[1] for c in p.connections()]:
-                    procs.append(p)
-        except psutil.NoSuchProcess:
-            # process disappeared in the meantime, so it's not our witness process
-            pass
+    try:
+        lines = run('lsof -i :{}'.format(port), verbose=False, log_on_fail=False, capture_io=True).stdout.split('\n')
+    except RuntimeError:
+        log.warning('found no process listening on port {}'.format(port))
+        return None
 
-    if procs:
-        if len(procs) > 1:
-            log.warning('More than 1 potential bts process: {}'.format(','.join(p.name for p in procs)))
-        return procs[0]
+    lines = [l for l in lines if 'LISTEN' in l]
+    if not lines:
+        return None
+    if len(lines) > 1:
+        log.warning('More than 1 potential bts process: {}'.format(lines))
 
-    return None
+    pid = int(lines[0].split()[1])
+    proc = psutil.Process(pid)
+    if node.bin_name in proc.name():
+        _process_cache[port] = proc
+        return proc
+
+    else:
+        log.warning('Process pid={} listening on port {} doesn\'t seem to be of the correct type: {}'.format(pid, port, proc))
+        return None
 
 
 def bts_binary_running(node):
