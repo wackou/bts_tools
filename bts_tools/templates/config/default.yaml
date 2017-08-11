@@ -5,7 +5,11 @@
 # activate the debug flag on the wsgi app
 wsgi_debug: false
 
-# whether to profile how much time the RPC calls take to render
+# profile the wsgi app and write .prof files to /tmp
+wsgi_profile: false
+
+# FIXME: deprecate
+# whether to profile how much time the RPC calls take to render (old implementation)
 profile: false
 
 detailed_log: false

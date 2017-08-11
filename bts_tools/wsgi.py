@@ -20,6 +20,7 @@
 
 from werkzeug.serving import run_simple
 from werkzeug.wsgi import DispatcherMiddleware
+from werkzeug.contrib.profiler import ProfilerMiddleware
 from bts_tools import core, frontend, init
 import logging
 log = logging.getLogger(__name__)
@@ -31,6 +32,8 @@ frontend_app = frontend.create_app()
 frontend_app.debug = DEBUG
 
 application = DispatcherMiddleware(frontend_app)
+if core.config.get('wsgi_profile', False):
+    application = ProfilerMiddleware(application, profile_dir='/tmp')
 
 def main():
     print('-'*100)
