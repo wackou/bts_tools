@@ -29,8 +29,7 @@ def bts_process(node):
     if not node.is_witness_localhost():
         return None
 
-    #host = node.witness_host if node.is_graphene_based() else node.rpc_host
-    port = node.witness_port if node.is_graphene_based() else node.rpc_port
+    port = node.witness_port
 
     # find the process corresponding to our node by looking at the rpc port
     #log.debug('find bts binary on {}:{}'.format(host, port))
@@ -69,10 +68,7 @@ def binary_description(node):
     """Return a human readable version description of the running binary,
     either tag version or git revision.
     """
-    if node.is_graphene_based():
-        client_version = node.about()['client_version']
-    else:
-        client_version = node.get_info()['client_version']
+    client_version = node.about()['client_version']
     p = bts_process(node)
     if p is None:
         return client_version

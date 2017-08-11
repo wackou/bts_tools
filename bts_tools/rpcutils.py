@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from .core import UnauthorizedError, RPCError, run, get_data_dir, get_bin_name, is_graphene_based,\
+from .core import UnauthorizedError, RPCError, run, get_data_dir, get_bin_name,\
     hashabledict, to_list, trace
 from .feed_providers import FeedPrice
 from .process import bts_binary_running, bts_process
@@ -53,25 +53,17 @@ _rpc_cache = defaultdict(dict)
 _rpc_call_id = defaultdict(int)
 
 def rpc_call(host, port, user, password,
-             funcname, *args, __graphene=False, raw_response=False, rpc_args={}):
+             funcname, *args, raw_response=False, rpc_args={}):
     url = 'http://%s:%d/rpc' % (host, port)
     headers = {'content-type': 'application/json'}
     _rpc_call_id[(host, port)] += 1
 
-    if __graphene:
-        payload = {
-            'method': 'call',
-            'params': [graphene.Api.DATABASE_API, funcname, args],
-            'jsonrpc': '2.0',
-            'id': _rpc_call_id[(host, port)]
-        }
-    else:
-        payload = {
-            'method': funcname,
-            'params': args,
-            'jsonrpc': '2.0',
-            'id': _rpc_call_id[(host, port)]
-        }
+    payload = {
+        'method': 'call',
+        'params': [graphene.Api.DATABASE_API, funcname, args],
+        'jsonrpc': '2.0',
+        'id': _rpc_call_id[(host, port)]
+    }
 
     payload.update(rpc_args or {})
 
@@ -120,28 +112,25 @@ class GrapheneClient(object):
 
             try:
                 log.info('Loading RPC config for %s from %s (run_env = %s)' % (self.name, data_dir, client_name))
-                if is_graphene_based(client_name):
-                    config = configparser.ConfigParser()
-                    config_str = '[bts]\n' + open(expanduser(join(data_dir, 'config.ini'))).read()
-                    # config parser can't handle duplicate values, and we don't need seed nodes
-                    config_lines = [l for l in config_str.splitlines() if not l.startswith('seed-node')]
-                    config.read_string('\n'.join(config_lines))
-                    rpc = {}  # FIXME: need it to get the rpc user and rpc password, if necessary
-                    try:
-                        cfg_port = int(config['bts']['rpc-endpoint'].split(':')[1])
-                    except KeyError:
-                        cfg_port = 0
-                    try:
-                        if self.type() in ['steem', 'muse2']:
-                            self.witness_signing_key = config['bts']['private-key']
-                        else:
-                            self.witness_signing_key = json.loads(config['bts']['private-key'])[0]
-                    except KeyError:
-                        self.witness_signing_key = None
-                    log.debug('signing key: {}'.format(self.witness_signing_key))
-                else:
-                    rpc = json.load(open(expanduser(join(data_dir, 'config.json'))))['rpc']
-                    cfg_port = int(rpc['httpd_endpoint'].split(':')[1])
+                config = configparser.ConfigParser()
+                config_str = '[bts]\n' + open(expanduser(join(data_dir, 'config.ini'))).read()
+                # config parser can't handle duplicate values, and we don't need seed nodes
+                config_lines = [l for l in config_str.splitlines() if not l.startswith('seed-node')]
+                config.read_string('\n'.join(config_lines))
+                rpc = {}  # FIXME: need it to get the rpc user and rpc password, if necessary
+                try:
+                    cfg_port = int(config['bts']['rpc-endpoint'].split(':')[1])
+                except KeyError:
+                    cfg_port = 0
+                try:
+                    if self.type() in ['steem', 'muse2']:
+                        self.witness_signing_key = config['bts']['private-key']
+                    else:
+                        self.witness_signing_key = json.loads(config['bts']['private-key'])[0]
+                except KeyError:
+                    self.witness_signing_key = None
+                log.debug('signing key: {}'.format(self.witness_signing_key))
+
             except Exception as e:
                 log.warning('Cannot read RPC config from %s' % data_dir)
                 log.exception(e)
@@ -175,43 +164,26 @@ class GrapheneClient(object):
         self.witness_signing_key = signing_key or self.witness_signing_key
         self.bin_name = get_bin_name(client_name or 'bts')
 
-        if self.is_graphene_based():
-            # direct json-rpc call
-            def direct_call(funcname, *args):
-                # we want to avoid connecting to the client and block because
-                # it is in a stopped state (eg: in gdb after having crashed)
-                if self.is_localhost() and not bts_binary_running(self):
-                    raise RPCError('Connection aborted: {} binary does not seem to be running'.format(self.type()))
+        # direct json-rpc call
+        def direct_call(funcname, *args):
+            # we want to avoid connecting to the client and block because
+            # it is in a stopped state (eg: in gdb after having crashed)
+            if self.is_localhost() and not bts_binary_running(self):
+                raise RPCError('Connection aborted: {} binary does not seem to be running'.format(self.type()))
 
-                if self.proxy_host is not None and self.proxy_port is not None:
-                    return rpc_call(self.proxy_host, self.proxy_port,
-                                    None, None,
-                                    funcname, *args, __graphene=True,
-                                    rpc_args=dict(proxy_user=self.proxy_user,
-                                                  proxy_password=self.proxy_password,
-                                                  wallet_port=self.wallet_port))
+            if self.proxy_host is not None and self.proxy_port is not None:
+                return rpc_call(self.proxy_host, self.proxy_port,
+                                None, None,
+                                funcname, *args,
+                                rpc_args=dict(proxy_user=self.proxy_user,
+                                              proxy_password=self.proxy_password,
+                                              wallet_port=self.wallet_port))
 
-                return rpc_call(self.wallet_host, self.wallet_port,
-                                self.wallet_user, self.wallet_password,
-                                funcname, *args, __graphene=True)
-            self._rpc_call = direct_call
+            return rpc_call(self.wallet_host, self.wallet_port,
+                            self.wallet_user, self.wallet_password,
+                            funcname, *args)
 
-        elif self.rpc_host == 'localhost':
-            # direct json-rpc call
-            def local_call(funcname, *args):
-                # we want to avoid connecting to the client and block because
-                # it is in a stopped state (eg: in gdb after having crashed)
-                if not bts_binary_running(self):
-                    raise RPCError('Connection aborted: {} binary does not seem to be running'.format(self.type()))
-
-                result = rpc_call('localhost', self.rpc_port,
-                                  self.rpc_user, self.rpc_password,
-                                  funcname, *args)
-                return result
-            self._rpc_call = local_call
-
-        else:
-            raise RuntimeError('Cannot connect to remote host for non-graphene nodes')
+        self._rpc_call = direct_call
 
         if core.config.get('profile', False):
             self._rpc_call = core.profile(self._rpc_call)
@@ -308,12 +280,6 @@ class GrapheneClient(object):
         return 0
 
 
-    def info(self, cached=True):
-        if self.is_graphene_based():
-            return self.rpc_call('info', cached=cached)
-        else:
-            return self.rpc_call('get_info', cached=cached)
-
     def status(self, cached=True):
         try:
             _ = self.info()
@@ -335,36 +301,18 @@ class GrapheneClient(object):
         return self.status(cached=cached) == 'online'
 
     def is_synced(self):
-        if self.is_graphene_based():
-            age = self.info()['head_block_age']
-            return 'second' in age
-        else:
-            age = self.get_info()['blockchain_head_block_age']
-            if age is not None and age < 60:
-                return True
-            return False
-
-    def is_new(self):
-        if self.is_graphene_based():
-            return self.rpc_call('is_new')
-        else:
-            return not self.get_info()['wallet_open']
-
-    def is_locked(self):
-        if self.is_graphene_based():
-            return self.rpc_call('is_locked')
-        else:
-            return not self.get_info()['wallet_unlocked']
+        age = self.info()['head_block_age']
+        return 'second' in age
 
     def is_localhost(self):
         return self.rpc_host in ['localhost', '127.0.0.1']
 
     def is_witness_localhost(self):
-        host = self.witness_host if self.is_graphene_based() else self.rpc_host
+        host = self.witness_host
         return host in ['localhost', '127.0.0.1']
 
     def is_witness(self):
-        return self.role == 'delegate' or self.role == 'witness' or self.role == 'feed_publisher'
+        return self.role == 'witness' or self.role == 'feed_publisher'
 
     def is_signing_key_active(self):
         if self.proxy_host:
@@ -403,37 +351,31 @@ class GrapheneClient(object):
         return result
 
     def network_get_info(self):
-        if self.is_graphene_based() and not self.proxy_host:
+        if not self.proxy_host:
             return self.ws_rpc_call(graphene.Api.NETWORK_API, 'get_info')
         else:
             return self.rpc_call('network_get_info')
 
     def network_get_connected_peers(self):
-        if self.is_graphene_based():
-            if not self.proxy_host:
-                return [p['info'] for p in self.ws_rpc_call(graphene.Api.NETWORK_API, 'get_connected_peers')]
-            else:
-                return self.rpc_call('network_get_connected_peers')
+        if not self.proxy_host:
+            return [p['info'] for p in self.ws_rpc_call(graphene.Api.NETWORK_API, 'get_connected_peers')]
         else:
-            return self.rpc_call('network_get_peer_info')
+            return self.rpc_call('network_get_connected_peers')
 
     def network_get_potential_peers(self):
-        if self.is_graphene_based():
-            if not self.proxy_host:
-                return self.ws_rpc_call(graphene.Api.NETWORK_API, 'get_potential_peers')
-            else:
-                return self.rpc_call('network_get_potential_peers')
+        if not self.proxy_host:
+            return self.ws_rpc_call(graphene.Api.NETWORK_API, 'get_potential_peers')
         else:
-            return self.rpc_call('network_list_potential_peers')
+            return self.rpc_call('network_get_potential_peers')
 
     def network_set_advanced_node_parameters(self, params):
-        if self.is_graphene_based() and not self.proxy_host:
+        if not self.proxy_host:
             return self.ws_rpc_call(graphene.Api.NETWORK_API, 'set_advanced_node_parameters', params)
         else:
             return self.rpc_call('network_set_advanced_node_parameters', params)
 
     def network_get_advanced_node_parameters(self):
-        if self.is_graphene_based() and not self.proxy_host:
+        if not self.proxy_host:
             return self.ws_rpc_call(graphene.Api.NETWORK_API, 'get_advanced_node_parameters')
         else:
             return self.rpc_call('network_get_advanced_node_parameters')
@@ -493,9 +435,6 @@ class GrapheneClient(object):
 
         return self._type
 
-    def is_graphene_based(self):
-        return is_graphene_based(self)
-
     def get_active_witnesses(self):
         if self.type() in ['steem', 'muse2']:
             return self.rpc_call('get_active_witnesses')
@@ -524,10 +463,7 @@ class GrapheneClient(object):
             return witness in active_delegates
 
     def get_head_block_num(self):
-        if self.is_graphene_based():
-            return int(self.info()['head_block_num'])
-        else:
-            return int(self.get_info()['blockchain_head_block_num'])
+        return int(self.info()['head_block_num'])
 
     def get_last_slots(self):
         """Return the last delegate slots, and cache this until at least the next block
@@ -559,62 +495,11 @@ class GrapheneClient(object):
                 (self.type() == 'pls'))
 
     def get_streak(self, cached=True):
-        if self.is_graphene_based():
-            streak = core.db[self.rpc_id]['streak'][self.name]
-            if streak >= 0:
-                return True, streak
-            else:
-                return False, -streak
-
-        if not self.is_witness():
-            # only makes sense to call get_streak on delegate nodes
-            return False, 1
-
-        new_api = self.delegate_slot_records_new_api()
-
-        try:
-            global ALL_SLOTS
-            key = (self.type(), self.name)
-            if key not in ALL_SLOTS:
-                # first time, get all slots from the delegate and cache them
-                if new_api:
-                    slots = self.blockchain_get_delegate_slot_records(self.name, 10000, cached=cached)
-                    # workaround for https://github.com/BitShares/bitshares/issues/1289
-                    delegate_id = slots[0]['index']['delegate_id'] if slots else None
-                    ALL_SLOTS[key] = deque(s for s in slots if s['index']['delegate_id'] == delegate_id)
-                else:
-                    slots = self.blockchain_get_delegate_slot_records(self.name, 1, 1000000, cached=cached)
-                    ALL_SLOTS[key] = slots
-                log.debug('Got all %d slots for delegate %s' % (len(ALL_SLOTS[key]), self.name))
-            else:
-                # next time, only get last slots and update our local copy
-                log.debug('Getting last slots for delegate %s' % self.name)
-                if new_api:
-                    for slot in reversed(self.get_last_slots()):
-                        if slot not in itertools.islice(ALL_SLOTS[key], 0, 10):
-                            ALL_SLOTS[key].appendleft(slot)
-                else:
-                    for slot in self.get_last_slots():
-                        if slot not in ALL_SLOTS[key][-10:]:
-                            ALL_SLOTS[key].append(slot)
-
-            slots = ALL_SLOTS[key]
-            if not slots:
-                return True, 0
-            if new_api:
-                latest = slots[0]
-                rslots = slots
-            else:
-                latest = slots[-1]
-                rslots = reversed(slots)
-            streak = itertools.takewhile(lambda x: (type(x.get('block_id')) is type(latest.get('block_id'))), rslots)
-            return latest.get('block_id') is not None, len(list(streak))
-
-        except Exception as e:
-            # can fail with RPCError when delegate has not been registered yet
-            log.error('%s: get_streak() failed with: %s(%s)' % (self.name, type(e), e))
-            log.exception(e)
-            return False, -1
+        streak = core.db[self.rpc_id]['streak'][self.name]
+        if streak >= 0:
+            return True, streak
+        else:
+            return False, -streak
 
     def asset_data(self, asset):
         # bitAssets data (id, precision, etc.) don't ever change, so cache them forever

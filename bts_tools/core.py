@@ -263,7 +263,7 @@ def load_config(loglevels=None):
             if n['role'] == 'witness':
                 # TODO: add 'prefer_backbone_exclusively' when implemented; in this case we also need:
                 # TODO: "--accept-incoming-connections 0" (or limit list of allowed peers from within the client)
-                add_monitoring(['missed', 'network_connections', 'voted_in', 'wallet_state', 'fork', 'version'])
+                add_monitoring(['missed', 'network_connections', 'voted_in', 'wallet_state', 'fork'])
 
             elif n['role'] == 'feed_publisher':
                 add_monitoring(['feeds'])
@@ -284,27 +284,6 @@ def load_config(loglevels=None):
             add_monitoring(['free_disk_space'])
 
     return config
-
-
-def is_graphene_based(n):
-    # TODO: this function really can't get any uglier... Would benefit from a facelift
-    from .rpcutils import GrapheneClient
-    if isinstance(n, GrapheneClient):
-        return is_graphene_based(n.type())
-    elif 'type' in n and 'client' in n:
-        # if we're a node desc, get it from the run_env
-        return is_graphene_based(n['client'])
-    elif 'type' in n:
-        # if we're a run env, get it from the build env
-        return is_graphene_based(n['type'])
-    else:
-        # if we're a string, we might be a build env or a run env
-        try:
-            # if we're a run env, get the associated build env
-            n = config['clients'][n]['type']
-        except KeyError:
-            pass
-        return n == 'bts' or n == 'muse' or n == 'steem' or n == 'ppy' or n == 'muse2'
 
 
 DEFAULT_BIN_FILENAMES = {'bts': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],

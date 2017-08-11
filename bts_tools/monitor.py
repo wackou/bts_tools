@@ -106,7 +106,7 @@ def monitoring_thread(*nodes):
             log.warning('Unknown plugin specified in monitoring config: %s' % m)
 
     # launch async thread for communicating via websockets with a graphene witness client
-    if client_node.is_graphene_based() and not client_node.proxy_host:
+    if not client_node.proxy_host:
         t = threading.Thread(target=graphene.run_monitoring, args=(client_node.type(),
                                                                    client_node.witness_host,
                                                                    client_node.witness_port,

@@ -3,11 +3,7 @@
 {% block content %}
 
 {% set network_params = rpc.main_node.network_get_advanced_node_parameters() %}
-{% if rpc.main_node.is_graphene_based() %}
-    {% set connections = rpc.main_node.network_get_info()['connection_count'] %}
-{% else %}
-    {% set connections = rpc.main_node.get_info()['network_num_connections'] %}
-{% endif %}
+{% set connections = rpc.main_node.network_get_info()['connection_count'] %}
 <p>
     Connections:
     current: <b>{{ connections }}</b> &mdash;

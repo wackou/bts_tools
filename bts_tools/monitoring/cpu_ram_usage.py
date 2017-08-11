@@ -71,7 +71,7 @@ def monitor(node, ctx, cfg):
         p = node.process()
         if p is not None:
             try:
-                connections = int(node.network_get_info()['connection_count']) if node.is_graphene_based() else ctx.info['network_num_connections']
+                connections = int(node.network_get_info()['connection_count'])
             except Exception:  # TimeoutError when we just closed the witness, but the process still exists
                 connections = 0
             s = StatsFrame(cpu=p.cpu_percent(),

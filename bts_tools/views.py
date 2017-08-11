@@ -53,9 +53,9 @@ def offline():
         client_name = 'BitShares'
 
     return render_template('error.html',
-                           msg='The %s %s is currently offline. '
+                           msg='The %s cli wallet is currently offline. '
                                'Please run it and activate the HTTP RPC server.'
-                               % (client_name, 'cli wallet' if rpc.main_node.is_graphene_based() else 'client'))
+                               % client_name)
 
 
 @core.profile
@@ -234,17 +234,14 @@ def json_rpc_call():
 @core.profile
 def view_info():
     attrs = defaultdict(list)
-    if rpc.main_node.is_graphene_based():
-        n = rpc.main_node
-        info = n.info()
-        # TODO: we should cache the witness and committee member names, they never change
-        info['active_witnesses'] = n.get_active_witnesses()
-        if n.type() in ['bts', 'muse']:
-            info['active_committee_members'] = [n.get_committee_member_name(cm)
-                                                for cm in info['active_committee_members']]
-        info_items = sorted(info.items())
-    else:
-        info_items = sorted(rpc.main_node.get_info().items())
+    n = rpc.main_node
+    info = n.info()
+    # TODO: we should cache the witness and committee member names, they never change
+    info['active_witnesses'] = n.get_active_witnesses()
+    if n.type() in ['bts', 'muse']:
+        info['active_committee_members'] = [n.get_committee_member_name(cm)
+                                            for cm in info['active_committee_members']]
+    info_items = sorted(info.items())
 
     attrs['bold'] = [(i, 0) for i in range(len(info_items))]
     for i, (prop, value) in enumerate(info_items):
@@ -286,23 +283,16 @@ def view_info():
             if value is not None:
                 attrs['datetime'].append((i, 1))
 
-    if not rpc.main_node.is_graphene_based():
-        info_items, attrs = split_columns(info_items, attrs)
+    #if not rpc.main_node.is_graphene_based():
+    #    info_items, attrs = split_columns(info_items, attrs)
 
     global feeds
 
     if rpc.main_node.is_witness() and rpc.main_node.type() in ['bts', 'bts1']:
-        if rpc.main_node.is_graphene_based():
-            published_feeds = rpc.main_node.get_witness_feeds(rpc.main_node.name, feeds.visible_feeds)
-            last_update = max(f.last_updated for f in published_feeds) if published_feeds else None
-            pfeeds = {f.asset: f.price for f in published_feeds}
-            bfeeds = {f.asset: f.price for f in rpc.main_node.get_blockchain_feeds(feeds.visible_feeds)}
-        else:
-            published_feeds = rpc.main_node.blockchain_get_feeds_from_delegate(rpc.main_node.name)
-            last_update = max(f['last_update'] for f in published_feeds) if published_feeds else None
-            pfeeds = { f['asset_symbol']: f['price'] for f in published_feeds }
-            bfeeds = {}
-
+        published_feeds = rpc.main_node.get_witness_feeds(rpc.main_node.name, feeds.visible_feeds)
+        last_update = max(f.last_updated for f in published_feeds) if published_feeds else None
+        pfeeds = {f.asset: f.price for f in published_feeds}
+        bfeeds = {f.asset: f.price for f in rpc.main_node.get_blockchain_feeds(feeds.visible_feeds)}
         lfeeds = dict(feeds.feeds)
         mfeeds = {cur: feeds.median_str(cur) for cur in lfeeds}
 
@@ -329,7 +319,7 @@ def view_info():
     else:
         feeds_obj = {}
 
-    if rpc.main_node.is_witness() and rpc.main_node.is_graphene_based():
+    if rpc.main_node.is_witness():
         info_items2 = sorted(rpc.main_node.get_witness(rpc.main_node.name).items())
         attrs2 = defaultdict(list)
         attrs2['bold'] = [(i, 0) for i in range(len(info_items))]
@@ -363,10 +353,7 @@ def set_rpchost(type, host, name, url):
 @core.profile
 def view_witness(witness_name):
     attrs = defaultdict(list)
-    if rpc.main_node.is_graphene_based():
-        info_items = sorted(rpc.main_node.get_witness(witness_name).items())
-    else:
-        info_items = sorted(rpc.main_node.get_info().items())
+    info_items = sorted(rpc.main_node.get_witness(witness_name).items())
 
     attrs['bold'] = [(i, 0) for i in range(len(info_items))]
 
@@ -379,26 +366,8 @@ def view_witness(witness_name):
 @catch_error
 @core.profile
 def view_delegates():
-    if rpc.main_node.is_graphene_based():
-        return redirect('https://bitshares.openledger.info/#/explorer/witnesses')
-    response = rpc.main_node.blockchain_list_delegates(0, 300)
-
-    headers = ['Position', 'Delegate name', 'Votes for', 'Pay rate', 'Last block', 'Produced', 'Missed']
-    total_shares = rpc.main_node.get_info()['blockchain_share_supply']
-
-    data = [ (i+1,
-              d['name'],
-              '%.8f%%' % (d['delegate_info']['votes_for'] * 100 / total_shares),
-              '%s%%' % d['delegate_info']['pay_rate'],
-              d['delegate_info']['last_block_num_produced'],
-              d['delegate_info']['blocks_produced'],
-              d['delegate_info']['blocks_missed'])
-             for i, d in enumerate(response) ]
-
-    return render_template('tableview.html',
-                           headers=headers,
-                           data=data,
-                           order='[[ 2, "desc" ]]')
+    # FIXME: deprecate?
+    return redirect('https://bitshares.openledger.info/#/explorer/witnesses')
 
 
 @bp.route('/backbone')

@@ -24,8 +24,7 @@ from contextlib import suppress
 from pathlib import Path
 from ruamel import yaml
 from .core import (platform, run, get_data_dir, get_bin_name, get_gui_bin_name,
-                   get_all_bin_names, is_graphene_based, join_shell_cmd,
-                   hash_salt_password)
+                   get_all_bin_names, join_shell_cmd, hash_salt_password)
 from .privatekey import PrivateKey
 from . import core, init
 from .rpcutils import rpc_call, GrapheneClient
@@ -487,17 +486,15 @@ Examples:
         else:
             cmd = [bin_name] + run_args
 
-        data_dir = None
-        if is_graphene_based(client):
-            # for graphene clients, always cd to data dir first (if defined), this ensures the wallet file
-            # and everything else doesn't get scattered all over the place
-            data_dir = get_data_dir(client['name'])
-            if data_dir:
-                # ensure it exists to be able to cd into it
-                with suppress(FileExistsError):
-                    Path(data_dir).mkdir(parents=True)
-            else:
-                log.warning('No data dir specified for running {} client'.format(client['name']))
+        # for graphene clients, always cd to data dir first (if defined), this ensures the wallet file
+        # and everything else doesn't get scattered all over the place
+        data_dir = get_data_dir(client['name'])
+        if data_dir:
+            # ensure it exists to be able to cd into it
+            with suppress(FileExistsError):
+                Path(data_dir).mkdir(parents=True)
+        else:
+            log.warning('No data dir specified for running {} client'.format(client['name']))
 
         # also install signal handler to forward signals to witness client child process (esp. SIGINT)
         pidfile = args.pidfile or client.get('pidfile')
