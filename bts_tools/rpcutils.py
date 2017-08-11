@@ -443,24 +443,20 @@ class GrapheneClient(object):
                     for w in self.info()['active_witnesses']]
 
     def is_active(self, witness):
-        if self.is_graphene_based():
-            try:
-                witnesses = self.get_active_witnesses()
-                if self.type() in ['steem', 'muse2']:
-                    # return True so that "standby" witnesses still get some useful info
-                    # (they *do* produce from time to time, unlike in BitShares)
-                    return True
-                    witnesses = sorted(((name, self.get_witness(name)['votes']) for name in witnesses), key=lambda x:int(x[1]))
-                    if witness == witnesses[0][0] or witness == witnesses[1][0]:
-                        return False
-                return witness in witnesses
+        try:
+            witnesses = self.get_active_witnesses()
+            if self.type() in ['steem', 'muse2']:
+                # return True so that "standby" witnesses still get some useful info
+                # (they *do* produce from time to time, unlike in BitShares)
+                return True
+                witnesses = sorted(((name, self.get_witness(name)['votes']) for name in witnesses), key=lambda x:int(x[1]))
+                if witness == witnesses[0][0] or witness == witnesses[1][0]:
+                    return False
+            return witness in witnesses
 
-            except Exception as e:
-                # if witness doesn't exist (eg: at block head = 0), return False instead of failing
-                return False
-        else:
-            active_delegates = [d['name'] for d in self.blockchain_list_delegates(0, 101)]
-            return witness in active_delegates
+        except Exception as e:
+            # if witness doesn't exist (eg: at block head = 0), return False instead of failing
+            return False
 
     def get_head_block_num(self):
         return int(self.info()['head_block_num'])
