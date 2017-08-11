@@ -52,6 +52,8 @@ NON_CACHEABLE_METHODS = {'wallet_publish_price_feed',
 _rpc_cache = defaultdict(dict)
 _rpc_call_id = defaultdict(int)
 
+_pubkey_cache = {}  # separate, shared cache of immutable data. type: {(chain_type, priv_key): public_key}
+
 def rpc_call(host, port, user, password,
              funcname, *args, raw_response=False, rpc_args={}):
     url = 'http://%s:%d/rpc' % (host, port)
@@ -322,8 +324,12 @@ class GrapheneClient(object):
         if not self.is_synced():
             return 'not synced'
         # the config file only specifies the private key, we need to derive the public key
-        private_key = PrivateKey(self.witness_signing_key)
-        public_key = format(private_key.pubkey, self.type())
+        public_key = _pubkey_cache.get((self.type(), self.witness_signing_key))
+        if public_key is None:
+            private_key = PrivateKey(self.witness_signing_key)
+            public_key = format(private_key.pubkey, self.type())
+            _pubkey_cache[(self.type(), self.witness_signing_key)] = public_key
+
         return public_key == self.get_witness(self.name)['signing_key']
 
     # FIXME: use a decorator for this (forever) caching (also see bitasset_data)
