@@ -288,7 +288,7 @@ def view_info():
 
     global feeds
 
-    if rpc.main_node.is_witness() and rpc.main_node.type() in ['bts', 'bts1']:
+    if rpc.main_node.is_witness() and rpc.main_node.type() in ['bts']:
         published_feeds = rpc.main_node.get_witness_feeds(rpc.main_node.name, feeds.visible_feeds)
         last_update = max(f.last_updated for f in published_feeds) if published_feeds else None
         pfeeds = {f.asset: f.price for f in published_feeds}

@@ -431,11 +431,13 @@ class GrapheneClient(object):
             log.warning('Could not find blockchain name for {}:{}'.format(self.rpc_host, self.rpc_port))
             return ''
         if blockchain_name == 'BitShares':
-            self._type = 'bts1'
-        elif blockchain_name == 'DevShares':
-            self._type = 'dvs'
-        elif blockchain_name == 'PTS':
-            self._type = 'pts'
+            self._type = 'bts'
+        elif blockchain_name == 'Steem':
+            self._type = 'steem'
+        elif blockchain_name == 'PeerPlays':
+            self._type = 'ppy'
+        elif blockchain_name == 'Muse':
+            self._type = 'muse'
         else:
             return 'unknown'
 
@@ -466,35 +468,6 @@ class GrapheneClient(object):
 
     def get_head_block_num(self):
         return int(self.info()['head_block_num'])
-
-    def get_last_slots(self):
-        """Return the last delegate slots, and cache this until at least the next block
-        production time of the wallet."""
-        new_api = self.delegate_slot_records_new_api()
-
-        def _get_slots():
-            # make sure we get enough slots to get them all up to our latest, even if there
-            # are a lot of missed blocks by other delegates
-            if new_api:
-                # FIXME: 5 is only enough if we monitor for missed block, so that get_streak()
-                #        is called often, otherwise we need more
-                slots = self.blockchain_get_delegate_slot_records(self.name, 5)
-            else:
-                slots = self.blockchain_get_delegate_slot_records(self.name, -500, 100)
-            # non-producing wallets can afford to have a 1-min time resolution for this
-            next_production_time = self.get_info()['wallet_next_block_production_time'] or 60
-            # make it +1 to ensure we produce the block first, and then peg the CPU
-            # Note: with bts>=0.6, this shouldn't be such a time consuming operation anymore
-            self._slot_cache.expiration_time = next_production_time + 1
-            return slots
-        return self._slot_cache.get_or_create('slots', _get_slots)
-
-    def api_version(self):
-        return re.search(r'[\d.]+', self.get_info()['client_version']).group()
-
-    def delegate_slot_records_new_api(self):
-        return ((self.type() in {'bts1', 'dvs'} and self.api_version() >= '0.6') or
-                (self.type() == 'pls'))
 
     def get_streak(self, cached=True):
         streak = core.db[self.rpc_id]['streak'][self.name]

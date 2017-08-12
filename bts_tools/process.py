@@ -54,7 +54,7 @@ def bts_process(node):
             return proc
 
         else:
-            log.warning('found cached proc, but status is {}'.format(statuses.get(proc.status(), proc.status())))
+            log.warning('found cached proc on port {}, but status is {}'.format(port, statuses.get(proc.status(), proc.status())))
 
     # find the process corresponding to our node by looking at the rpc port
     #log.debug('find bts binary on {}:{}'.format(host, port))

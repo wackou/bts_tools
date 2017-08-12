@@ -290,22 +290,14 @@ DEFAULT_BIN_FILENAMES = {'bts': ['witness_node/witness_node', 'cli_wallet/cli_wa
                          'muse': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
                          'muse2': ['mused/mused', 'cli_wallet/cli_wallet'],
                          'steem': ['steemd/steemd', 'cli_wallet/cli_wallet'],
-                         'ppy': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
-                         'bts1': ['client/bitshares_client'],
-                         'dvs': ['client/devshares_client'],
-                         'pts': ['client/pts_client'],
-                         'pls': ['client/play_client']
+                         'ppy': ['witness_node/witness_node', 'cli_wallet/cli_wallet']
                          }
 
 DEFAULT_GUI_BIN_FILENAMES = {'bts': '',
                              'muse': '',
                              'muse2': '',
                              'steem': '',
-                             'ppy': '',
-                             'bts1': 'BitShares',
-                             'dvs': 'DevShares',
-                             'pts': 'PTS',
-                             'pls': 'PLAY'
+                             'ppy': ''
                              }
 
 

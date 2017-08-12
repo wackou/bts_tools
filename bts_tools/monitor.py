@@ -115,7 +115,7 @@ def monitoring_thread(*nodes):
         t.start()
 
     # launch feed monitoring and publishing thread
-    if 'feeds' in all_monitoring and client_node.type() in ['bts', 'bts1', 'steem']:
+    if 'feeds' in all_monitoring and client_node.type() in ['bts', 'steem']:
         check_feeds(nodes)
 
     # create one global context for the client, and local contexts for each node of this client

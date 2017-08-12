@@ -217,7 +217,7 @@ def main(flavor='bts'):
   - build                  : update and build %(bin)s client
   - build_gui              : update and build %(bin)s gui client
   - run                    : run latest compiled %(bin)s client, or the one with the given hash or tag
-  - run_cli                : run latest compiled %(bin)s cli wallet (graphene)
+  - run_cli                : run latest compiled %(bin)s cli wallet
   - run_gui                : run latest compiled %(bin)s gui client
   - list                   : list installed %(bin)s client binaries
   - monitor                : run the monitoring web app
@@ -239,7 +239,7 @@ Examples:
     parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
                                      formatter_class=RawTextHelpFormatter)
     parser.add_argument('command', choices=['version', 'clean_homedir', 'clean', 'build', 'build_gui',
-                                            'run', 'run_cli', 'run_gui', 'list', 'monitor', 'publish_slate',
+                                            'run', 'run_cli', 'run_gui', 'list', 'monitor',
                                             'deploy', 'deploy_node'],
                         help='the command to run')
     parser.add_argument('environment', nargs='?',
@@ -276,18 +276,7 @@ Examples:
         os.chdir(BTS_BUILD_DIR)
         run('git fetch --all')
 
-        # if we are on bitshares (devshares), tags are now prepended with bts/ (dvs/),
-        # check if user forgot to specify it
-        def search_tag(tag):
-            env = args.environment
-            if env in {'bts1', 'dvs', 'pls'}:
-                tags = run('git tag -l', run_dir=BTS_BUILD_DIR, capture_io=True, verbose=False).stdout.strip().split('\n')
-                for pattern in ['%s/%s', '%s/v%s']:
-                    if pattern % (env, tag) in tags:
-                        return pattern % (env, tag)
-            return tag
-
-        tag = search_tag(args.args[0]) if args.args else None
+        tag = args.args[0] if args.args else None
         nthreads = None
         # if we specified -jXX, then it's not a tag, it's a thread count for compiling
         if tag and tag.startswith('-j'):
@@ -564,70 +553,8 @@ Examples:
 
         deploy_node(args.environment, config_file, host)
 
-    elif args.command == 'publish_slate':
-        slate_file = args.args[0] if args.args else None
-        print()
-        if not slate_file:
-            log.error('You need to specify a slate file as argument')
-            log.info('It should be a YAML file with the following format')
-            slate_example = """
-delegate: publishing_delegate_name
-paying: paying_account  # optional, defaults to publishing delegate
-slate:
- - delegate_1
- - delegate_2
- - ...
- - delegate_N
-"""
-            print(slate_example)
-            default_slate = join(dirname(__file__), 'slate.yaml')
-            log.info('You can find a default slate at: %s' % default_slate)
-            sys.exit(1)
-
-        logging.getLogger('bts_tools').setLevel(logging.INFO)
-        log.info('Reading slate from file: %s' % slate_file)
-        with open(slate_file, 'r') as f:
-            slate_config = yaml.load(f)
-        delegate = slate_config['delegate']
-        payee = slate_config.get('payee', delegate)
-        slate = slate_config['slate']
-
-        client = GrapheneClient(type='delegate', name=delegate, client=args.environment)
-
-        if client.is_locked():
-            log.error('Cannot publish slate: wallet locked...')
-            log.error('Please unlock your wallet first and try again')
-            sys.exit(1)
-
-        log.info('Clearing all previously approved delegates')
-        for d in client.wallet_list_approvals():
-            log.debug('Unapproving delegate: %s' % d['name'])
-            client.wallet_approve(d['name'], 0)
-
-        for d in slate:
-            log.info('Approving delegate: %s' % d)
-            try:
-                client.wallet_approve(d, 1)
-            except Exception as e:
-                log.error(str(e).split('\n')[0])
-
-        log.info('Publishing slate...')
-        try:
-            client.wallet_publish_slate(delegate, payee)
-            log.info('Slate successfully published!')
-        except Exception as e:
-            log.error(e)
-
 
 def main_bts():
-    return main(flavor='bts')
-
-
-def main_bts1():
-    return main(flavor='bts1')
-
-
-def main_bts2():
     return main(flavor='bts')
 
 
@@ -641,15 +568,3 @@ def main_steem():
 
 def main_ppy():
     return main(flavor='ppy')
-
-
-def main_dvs():
-    return main(flavor='dvs')
-
-
-def main_pts():
-    return main(flavor='pts')
-
-
-def main_pls():
-    return main(flavor='pls')
