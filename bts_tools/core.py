@@ -301,6 +301,21 @@ DEFAULT_GUI_BIN_FILENAMES = {'bts': '',
                              }
 
 
+def affiliation(type):
+    """Although all supported blockchains inherit the graphene code base, they might use different versions
+    and/or behaviors, and so 'affiliation' groups them in main classes of functionality.
+
+    Currently, there are 2 main affiliations: 'bts' and 'steem'.
+    """
+    if type in ['bts', 'ppy', 'muse']:
+        return 'bts'
+    elif type in ['steem', 'muse2']:
+        return 'steem'
+    else:
+        raise ValueError('No affiliation known for blockchain type: {}'.format(type))
+
+
+
 def get_data_dir(env):
     try:
         env = config['clients'][env]

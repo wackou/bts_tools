@@ -125,7 +125,7 @@ class GrapheneClient(object):
                 except KeyError:
                     cfg_port = 0
                 try:
-                    if self.type() in ['steem', 'muse2']:
+                    if self.affiliation() == 'steem':
                         self.witness_signing_key = config['bts']['private-key']
                     else:
                         self.witness_signing_key = json.loads(config['bts']['private-key'])[0]
@@ -281,6 +281,8 @@ class GrapheneClient(object):
                 return balance
         return 0
 
+    def affiliation(self):
+        return core.affiliation(self.type())
 
     def status(self, cached=True):
         try:
@@ -444,7 +446,7 @@ class GrapheneClient(object):
         return self._type
 
     def get_active_witnesses(self):
-        if self.type() in ['steem', 'muse2']:
+        if self.affiliation() == 'steem':
             return self.rpc_call('get_active_witnesses')
         else:
             return [self.get_witness_name(w)
@@ -453,7 +455,7 @@ class GrapheneClient(object):
     def is_active(self, witness):
         try:
             witnesses = self.get_active_witnesses()
-            if self.type() in ['steem', 'muse2']:
+            if self.affiliation() == 'steem':  # FIXME: affiliation or type here? does muse do the same?
                 # return True so that "standby" witnesses still get some useful info
                 # (they *do* produce from time to time, unlike in BitShares)
                 return True

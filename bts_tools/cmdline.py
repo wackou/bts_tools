@@ -372,7 +372,7 @@ Examples:
                 if role['role'] == 'witness':
                     plugins.append('witness')
 
-                    if client['type'] in ['steem', 'muse2']:
+                    if core.affiliation(client['type']) == 'steem':
                         private_key = role.get('signing_key')
                         if private_key:
                             run_args += ['--witness', '"{}"'.format(role['name']),
@@ -393,7 +393,7 @@ Examples:
                     apis += ['network_broadcast_api']
 
                 elif role['role'] == 'api':
-                    if client['type'] in ['steem', 'muse2']:
+                    if core.affiliation(client['type']) == 'steem':
                         plugins += ['account_history', 'follow', 'market_history', 'private_message', 'tags']
                         public_apis += ['database_api', 'login_api', 'market_history_api', 'tag_api', 'follow_api']
 
@@ -405,7 +405,7 @@ Examples:
                 return result
 
             # enabling plugins
-            if client['type'] in ['steem', 'muse2']:
+            if core.affiliation(client['type']) == 'steem':
                 plugins = plugins or ['witness']  # always have at least the witness plugin
                 plugins = make_unique(client.get('plugins', plugins))
                 log.info('Running with plugins: {}'.format(plugins))
@@ -414,7 +414,7 @@ Examples:
                     run_args += ['--enable-plugin', plugin]
 
             # enabling api access
-            if client['type'] in ['steem', 'muse2']:
+            if core.affiliation(client['type']) == 'steem':
                 # always required for working with bts_tools, ensure they are always
                 # in this order at the beginning (so database_api=0, login_api=1, etc.)
                 # 'network_broadcast_api' required by the wallet
