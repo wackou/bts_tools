@@ -26,7 +26,7 @@ build_environments:
     steem:
         cmake_args: ['-DLOW_MEMORY_NODE=ON']  # [OPTIONAL] see https://github.com/steemit/steem/blob/master/doc/building.md
     muse2:
-        cmake_args: ['-DBUILD_MUSE_TEST=ON']
+        cmake_args: []  #'-DBUILD_MUSE_TEST=ON']
 
 
 #
