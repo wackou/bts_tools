@@ -50,18 +50,18 @@ def bts_process(node):
 
     if proc is not None:
         if proc.status() in [psutil.STATUS_RUNNING, psutil.STATUS_SLEEPING]:
-            log.warning('returning cached proc for binary on port {}: {}'.format(port, proc))
+            log.debug('returning cached proc for binary on port {}: {}'.format(port, proc))
             return proc
 
         else:
-            log.warning('found cached proc on port {}, but status is {}'.format(port, statuses.get(proc.status(), proc.status())))
+            log.debug('found cached proc on port {}, but status is {}'.format(port, statuses.get(proc.status(), proc.status())))
 
     # find the process corresponding to our node by looking at the rpc port
     #log.debug('find bts binary on {}:{}'.format(host, port))
     try:
         lines = run('lsof -i :{}'.format(port), verbose=False, log_on_fail=False, capture_io=True).stdout.split('\n')
     except RuntimeError:
-        log.warning('found no process listening on port {}'.format(port))
+        log.debug('found no process listening on port {}'.format(port))
         return None
 
     lines = [l for l in lines if 'LISTEN' in l]
