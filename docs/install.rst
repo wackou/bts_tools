@@ -14,7 +14,7 @@ Linux
 
 On Debian-derived OSes (Ubuntu, Mint, etc.), install with::
 
-      # apt-get install build-essential libyaml-dev python3-dev python3-pip
+      # apt-get install build-essential libyaml-dev python3-dev python3-pip lsof
 
 Mac OSX
 ~~~~~~~

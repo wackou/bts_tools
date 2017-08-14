@@ -336,7 +336,7 @@ def get_all_bin_names(client=None, build_env=None):
         try:
             env = config['clients'][client]
         except KeyError:
-            log.error('Unknown client: %s' % env)
+            log.error('Unknown client: %s' % client)
             sys.exit(1)
 
         return get_all_bin_names(build_env=env['type'])

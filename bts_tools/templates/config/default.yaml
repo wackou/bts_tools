@@ -1,6 +1,12 @@
-{% include 'logging.yaml' %}
 {% include 'build_environments.yaml' %}
 {% include 'clients.yaml' %}
+
+# the logging levels for the different submodules
+# can be any of DEBUG, INFO, WARNING, ERROR
+logging:
+    bts_tools: INFO
+    bts_tools.graphene: INFO
+    bts_tools.rpcutils: INFO
 
 # activate the debug flag on the wsgi app
 wsgi_debug: false
