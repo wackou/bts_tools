@@ -80,8 +80,6 @@ class Base58(object) :
             return _format.upper() + str(self)
         elif _format.lower() == "muse" :
             return _format.upper() + str(self)
-        elif _format.lower() == "muse2":
-            return 'MUSE' + str(self)
         elif _format.lower() == "steem":
             return 'STM' + str(self)
         elif _format.lower() == "test" :

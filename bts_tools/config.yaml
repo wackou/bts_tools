@@ -25,7 +25,7 @@ build_environments:
     cmake_args: []      # [OPTIONAL] shared among all build environments
     steem:
         cmake_args: ['-DLOW_MEMORY_NODE=ON']  # [OPTIONAL] see https://github.com/steemit/steem/blob/master/doc/building.md
-    muse2:
+    muse:
         cmake_args: []  #'-DBUILD_MUSE_TEST=ON']
 
 
@@ -79,7 +79,6 @@ clients:
     muse:
         type: muse
         data_dir: ~/.Muse
-        api_access: ~/api_access.json
         witness_user: xxxxxxxx       # defined in api_access.json
         witness_password: xxxxxxxx   # defined in api_access.json
         roles:

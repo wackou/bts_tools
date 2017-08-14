@@ -289,9 +289,11 @@ class GrapheneClient(object):
             _ = self.info()
             return 'online'
 
-        except (requests.exceptions.ConnectionError, # http connection refused
-                RPCError, # bts binary is not running, no connection attempted
-                RuntimeError): # host is down, ssh doesn't work
+        except (requests.exceptions.ConnectionError,  # http connection refused
+                RPCError,                             # bts binary is not running, no connection attempted
+                RuntimeError) as e:                   # host is down, ssh doesn't work
+            log.debug('Seems like {} wallet on {}:{} is offline because: {}'
+                      .format(self.type(), self.wallet_host, self.wallet_port, e))
             return 'offline'
 
         except UnauthorizedError:

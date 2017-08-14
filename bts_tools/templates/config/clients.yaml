@@ -17,7 +17,7 @@ clients:
     muse:
         type: muse
         data_dir: ~/.Muse
-        p2p_port: 1781
+        p2p_port: 33333
         witness_host: localhost
         witness_port: 8390
         wallet_host: localhost

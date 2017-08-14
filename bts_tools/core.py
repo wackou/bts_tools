@@ -287,15 +287,13 @@ def load_config(loglevels=None):
 
 
 DEFAULT_BIN_FILENAMES = {'bts': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
-                         'muse': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
-                         'muse2': ['mused/mused', 'cli_wallet/cli_wallet'],
+                         'muse': ['mused/mused', 'cli_wallet/cli_wallet'],
                          'steem': ['steemd/steemd', 'cli_wallet/cli_wallet'],
                          'ppy': ['witness_node/witness_node', 'cli_wallet/cli_wallet']
                          }
 
 DEFAULT_GUI_BIN_FILENAMES = {'bts': '',
                              'muse': '',
-                             'muse2': '',
                              'steem': '',
                              'ppy': ''
                              }
@@ -307,9 +305,9 @@ def affiliation(type):
 
     Currently, there are 2 main affiliations: 'bts' and 'steem'.
     """
-    if type in ['bts', 'ppy', 'muse']:
+    if type in ['bts', 'ppy']:
         return 'bts'
-    elif type in ['steem', 'muse2']:
+    elif type in ['steem', 'muse']:
         return 'steem'
     else:
         raise ValueError('No affiliation known for blockchain type: {}'.format(type))

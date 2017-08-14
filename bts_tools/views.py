@@ -238,7 +238,7 @@ def view_info():
     info = n.info()
     # TODO: we should cache the witness and committee member names, they never change
     info['active_witnesses'] = n.get_active_witnesses()
-    if n.type() in ['bts', 'muse']:
+    if n.type() in ['bts']:
         info['active_committee_members'] = [n.get_committee_member_name(cm)
                                             for cm in info['active_committee_members']]
     info_items = sorted(info.items())

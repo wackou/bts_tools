@@ -15,18 +15,10 @@ build_environments:
 
     muse:
         debug: false
-        git_repo: https://github.com/peertracksinc/muse.git
-        git_branch: muse
-        build_dir: ~/.Muse_build
-        bin_dir: ~/.Muse_bin
-        make_args: [witness_node, cli_wallet]
-
-    muse2:
-        debug: false
         git_repo: https://github.com/themuseblockchain/Muse-Source
         git_branch: master
-        build_dir: ~/.Muse2_build
-        bin_dir: ~/.Muse2_bin
+        build_dir: ~/.Muse_build
+        bin_dir: ~/.Muse_bin
         make_args: [mused, cli_wallet]
 
     steem:
