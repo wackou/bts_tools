@@ -49,12 +49,16 @@ def bts_process(node):
     proc = _process_cache.get(port)
 
     if proc is not None:
-        if proc.status() in [psutil.STATUS_RUNNING, psutil.STATUS_SLEEPING]:
-            log.debug('returning cached proc for binary on port {}: {}'.format(port, proc))
-            return proc
+        try:
+            if proc.status() in [psutil.STATUS_RUNNING, psutil.STATUS_SLEEPING]:
+                log.debug('returning cached proc for binary on port {}: {}'.format(port, proc))
+                return proc
 
-        else:
-            log.debug('found cached proc on port {}, but status is {}'.format(port, statuses.get(proc.status(), proc.status())))
+            else:
+                log.debug('found cached proc on port {}, but status is {}'.format(port, statuses.get(proc.status(), proc.status())))
+        except psutil.NoSuchProcess:
+            del _process_cache[port]  # remove stale entry
+
 
     # find the process corresponding to our node by looking at the rpc port
     #log.debug('find bts binary on {}:{}'.format(host, port))
