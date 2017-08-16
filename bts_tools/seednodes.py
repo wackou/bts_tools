@@ -49,17 +49,18 @@ SEED_NODES = {
 
     ],
     'muse': [
-        ('138.197.68.175:33333',        '', 'muse initial', ''),
-        ('muse.roelandp.nl:33333',      '', 'roelandp',     ''),
-        ('5.9.18.213:33333',            '', 'pfunk',        ''),
-        ('45.79.206.79:33333',          '', 'jesta',        ''),
-        ('muse-seed.altcap.io:33333',   '', 'ihashfury',    ''),
-        ('muse.agoric.systems:33333',   '', 'robrigo',      ''),
-        ('muse-seed.lafona.net:33333',  '', 'lafona',       ''),
-        ('seed.musenodes.com:33333',    '', 'wackou',       ''),
-        ('45.76.192.171:33333',         '', 'musepeer',     ''),
-        ('muse-seed.xeldal.com:33333',  '', 'xeldal',       ''),
-        ('muse.rondonson.com:33333',    '', 'rondonson',    '')
+        ('138.197.68.175:33333',          '', 'muse initial', ''),
+        ('muse.roelandp.nl:33333',        '', 'roelandp',     ''),
+        ('5.9.18.213:33333',              '', 'pfunk',        ''),
+        ('45.79.206.79:33333',            '', 'jesta',        ''),
+        ('muse-seed.altcap.io:33333',     '', 'ihashfury',    ''),
+        ('muse.agoric.systems:33333',     '', 'robrigo',      ''),
+        ('muse-seed.lafona.net:33333',    '', 'lafona',       ''),
+        ('seed.musenodes.com:33333',      '', 'wackou',       ''),
+        ('45.76.192.171:33333',           '', 'musepeer',     ''),
+        ('muse-seed.xeldal.com:33333',    '', 'xeldal',       ''),
+        ('muse.rondonson.com:33333',      '', 'rondonson',    ''),
+        ('seed.muse.blckchnd.com:33333',  '', 'blckchnd',     '')
     ],
     'steem': [
         ('seed.liondani.com:2016',           '',   'liondani',       'https://steemit.com/introduceyourself/@liondani/hi-liondani-here-aka-daniel-schwarz-happy-husband-father-steem-witness-steemit-enthusiast'),
