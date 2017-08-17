@@ -18,33 +18,71 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import os.path
 import psutil
 import logging
+from .core import run
 
 log = logging.getLogger(__name__)
 
-# TODO: should move all these functions inside of BTSProxy
+# TODO: should move all these functions inside of GrapheneClient
+
+
+# use a cache for the mapping {port: process}, as iterating over all processes with psutil is quite costly
+_process_cache = {}
+
+statuses = {psutil.STATUS_RUNNING: 'STATUS_RUNNING',
+            psutil.STATUS_SLEEPING: 'STATUS_SLEEPING',
+            psutil.STATUS_DISK_SLEEP: 'STATUS_DISK_SLEEP',
+            psutil.STATUS_STOPPED: 'STATUS_STOPPED',
+            psutil.STATUS_TRACING_STOP: 'STATUS_TRACING_STOP',
+            psutil.STATUS_ZOMBIE: 'STATUS_ZOMBIE',
+            psutil.STATUS_DEAD: 'STATUS_DEAD',
+            psutil.STATUS_WAKING: 'STATUS_WAKING',
+            psutil.STATUS_IDLE: 'STATUS_IDLE'}
+
 
 def bts_process(node):
-    if node is None:
-        log.error('DEPRECATED: call to process.bts_process() without specifying a node...')
+    if not node.is_witness_localhost():
         return None
 
-    if node.rpc_host != 'localhost':
+    port = node.witness_port
+    proc = _process_cache.get(port)
+
+    if proc is not None:
+        try:
+            if proc.status() in [psutil.STATUS_RUNNING, psutil.STATUS_SLEEPING]:
+                log.debug('returning cached proc for binary on port {}: {}'.format(port, proc))
+                return proc
+
+            else:
+                log.debug('found cached proc on port {}, but status is {}'.format(port, statuses.get(proc.status(), proc.status())))
+        except psutil.NoSuchProcess:
+            del _process_cache[port]  # remove stale entry
+
+
+    # find the process corresponding to our node by looking at the rpc port
+    #log.debug('find bts binary on {}:{}'.format(host, port))
+    try:
+        lines = run('lsof -i :{}'.format(port), verbose=False, log_on_fail=False, capture_io=True).stdout.split('\n')
+    except RuntimeError:
+        log.debug('found no process listening on port {}'.format(port))
         return None
 
-    #log.debug('find bts binary')
-    # find bitshares process
-    procs = [p for p in psutil.process_iter()
-             if node.bin_name in p.name()]
+    lines = [l for l in lines if 'LISTEN' in l]
+    if not lines:
+        return None
+    if len(lines) > 1:
+        log.warning('More than 1 potential bts process: {}'.format(lines))
 
-    # find the process corresponding to our node by looking at the http rpc port
-    for p in procs:
-        if node.rpc_port in [c.laddr[1] for c in p.connections()]:
-            return p
+    pid = int(lines[0].split()[1])
+    proc = psutil.Process(pid)
+    if node.bin_name in proc.name():
+        _process_cache[port] = proc
+        return proc
 
-    return None
+    else:
+        log.warning('Process pid={} listening on port {} doesn\'t seem to be of the correct type: {}'.format(pid, port, proc))
+        return None
 
 
 def bts_binary_running(node):
@@ -64,7 +102,7 @@ def binary_description(node):
     """Return a human readable version description of the running binary,
     either tag version or git revision.
     """
-    client_version = node.get_info()['client_version']
+    client_version = node.about()['client_version']
     p = bts_process(node)
     if p is None:
         return client_version

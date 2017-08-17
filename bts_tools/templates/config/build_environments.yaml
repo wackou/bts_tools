@@ -1,0 +1,36 @@
+#
+# list of configurations for building the bitshares client
+#
+# by default, if you don't specify a build env on the cmdline, the tools will
+# use the 'bts' environment
+#
+build_environments:
+    bts:
+        debug: false
+        git_repo: https://github.com/bitshares/bitshares-core.git
+        git_branch: master
+        build_dir: ~/.BitShares2_build
+        bin_dir: ~/.BitShares2_bin
+        make_args: [witness_node, cli_wallet]
+
+    muse:
+        debug: false
+        git_repo: https://github.com/themuseblockchain/Muse-Source
+        git_branch: master
+        build_dir: ~/.Muse_build
+        bin_dir: ~/.Muse_bin
+        make_args: [mused, cli_wallet]
+
+    steem:
+        debug: false
+        git_repo: https://github.com/steemit/steem.git
+        git_branch: master
+        build_dir: ~/.Steem_build
+        bin_dir: ~/.Steem_bin
+
+    ppy:
+        debug: false
+        git_repo: https://github.com/PBSA/peerplays.git
+        git_branch: master
+        build_dir: ~/.PeerPlays_build
+        bin_dir: ~/.PeerPlays_bin

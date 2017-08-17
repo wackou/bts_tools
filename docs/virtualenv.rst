@@ -45,5 +45,5 @@ your system.
 
 
 .. _virtualenvs: https://virtualenv.pypa.io/
-.. _virtualenvwrapper: https://virtualenvwrapper.readthedocs.org/
+.. _virtualenvwrapper: https://virtualenvwrapper.readthedocs.io/
 

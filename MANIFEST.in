@@ -1,5 +1,7 @@
 include *.rst
 include *.md
+exclude __*.md
+global-exclude .DS_Store
 include bts_tools/version.txt
 include bts_tools/config.yaml
 include bts_tools/slate.yaml

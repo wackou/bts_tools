@@ -1,0 +1,157 @@
+
+hostname: &hostname xxxxxxxx
+domain: xxxxxxxx.xxx
+
+# 'debian', 'debian9', 'stretch', 'debian8', 'jessie', 'ubuntu', 'ubuntu 16.04'
+os: ubuntu   # debian, ubuntu. more to come...
+
+unix_hostname: *hostname
+unix_user: xxxxxxxx
+unix_password: xxxxxxxx
+
+# if true, the graphene client will be built directly on the new node,
+# otherwise it gets deployed from the host currently running the install
+compile_on_new_host: True
+
+# usually need to set to True; use False only for debugging installs
+reboot: True
+
+# only prepare files for installation, do not actually perform the install on remote host
+only_prepare_install_bundle: False  # [OPTIONAL] [default=False]
+
+# TODO: mention somewhere that this will also install a "launch_tmux_sessions.py" in the home folder
+
+nginx:
+    # optional, will be defined as <hostname>.<domain> if not specified
+    server_name: xxxxxxxx
+
+    # define both ssl_key and ssl_cert to activate https on your nginx config
+    #ssl_key: xxxxxxxx.key
+    #ssl_cert: xxxxxxxx.crt
+
+# additional keys to be installed in .ssh/authorized_keys for both root and normal user
+#ssh_keys:
+#- ssh-rsa xxxxxxxx
+#- ssh-rsa xxxxxxxx
+
+# note: this is optional, will be used for the checkout of the bts_tools repo
+#       it is only required if you plan to commit or stash your changes there
+#       (eg: diff on the config.yaml file)
+git:
+    name: xxxxxxxx
+    email: xxxxxxxx
+
+
+# access to witness restricted APIs, used to create api_access.json
+witness_api_access:
+    user: &witness_user xxxxxxxx
+    password: &witness_password xxxxxxxx
+
+# config.yaml variables
+config_yaml:
+    hostname: *hostname
+
+    logging:
+        bts_tools.cmdline: DEBUG
+
+    make_args: ['-j4']
+
+    build_environments:
+        steem:
+            cmake_args: ['-DSKIP_BY_TX_ID=OFF', '-DLOW_MEMORY_NODE=ON']
+
+    geoip2:
+        user: xxxxxxxx
+        password: xxxxxxxx
+
+    clients:
+        bts:
+            type: bts
+            data_dir: ~/.BitShares2
+            api_access: ~/api_access.json   # FIXME: implement me! api_access bypass on the cmdline only implemented for steem (cmdline.py:383)
+            witness_host: localhost
+            witness_port: 8090
+            witness_user: *witness_user
+            witness_password: *witness_password
+            wallet_host: localhost
+            wallet_port: 8093
+            notification: [email, boxcar]
+            roles:
+            -
+                role: seed
+                name: *hostname
+            -
+                role: witness
+                name: xxxxxxxx
+                witness_id: 1.6.xxx
+                signing_key: 5xxxx
+            deploy:  # params only needed when deploying a new instance, will not end up in the final config.yaml file
+                blockchain_snapshot: ~/.BitShares2
+
+        muse:
+            type: muse
+            data_dir: ~/.Muse_seed
+            api_access: ~/api_access.json
+            witness_user: *witness_user
+            witness_password: *witness_password
+            notification: [email, boxcar]
+            roles:
+            -
+                role: seed
+                name: *hostname
+            #deploy:  # params only needed when deploying a new instance, will not end up in the final config.yaml file
+            #    blockchain_snapshot: ~/.Muse
+
+        steem:
+            type: steem
+            data_dir: ~/.Steem_seed
+            run_cli_args: ['--rpc-http-allowip', '127.0.0.1']
+            seed_nodes: ['seed.riversteem.com:2001', 'seed.steemed.net:2001', 'steem-seed1.abit-more.com:2001',
+                         'steem-id.altexplorer.xyz:2001', 'anyx.co:2001']
+            witness_host: localhost
+            witness_port: 8490
+            witness_user: *witness_user
+            witness_password: *witness_password
+            wallet_host: localhost
+            wallet_port: 8493
+            roles:
+            -
+                role: seed
+                name: *hostname
+                notification: [email, boxcar]
+            #-
+            #    role: api
+            #    name: *hostname
+            #deploy:  # params only needed when deploying a new instance, will not end up in the final config.yaml file
+            #    blockchain_snapshot: /tmp  # ~/.Steem
+
+    notification:
+        email:
+            smtp_server: smtp.example.com
+            smtp_user: user
+            smtp_password: secret-password
+            identity: "BTS Monitor <bts_monitor@example.com>"
+            recipient: me@example.com
+
+        boxcar:
+            tokens: []
+
+
+vps:
+    # config for vultr provider
+    vultr:
+        api_key: xxxxxxxx
+        name: *hostname
+        location: london
+        vps_plan: 16G     # can be: 1G, 2G, 4G, etc.
+        ssh_keys: [xxxxxxxx, xxxxxxxx]  # need to have at least the ssh key from the host performing the installation
+
+    # config for gandi provider
+    gandi:
+        api_key: xxxxxxxx
+        name: *hostname
+        location: paris
+        cores: 4
+        memory: 10240  # in MB
+        disk_size: 81920 # in MB
+        ssh_keys: [xxxxxxxx, xxxxxxxx]  # need to have at least the ssh key from the host performing the installation

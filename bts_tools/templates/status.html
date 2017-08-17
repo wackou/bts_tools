@@ -6,13 +6,13 @@
 {% block content %}
 
 {% set proc = rpc.main_node.process() %}
-<p>Monitoring <b>{{ rpc.main_node.rpc_host }}:{{ rpc.main_node.rpc_port }}</b>
+<p>Monitoring <b>{{ rpc.main_node.witness_host or rpc.main_node.rpc_host }}:{{ rpc.main_node.witness_port or rpc.main_node.rpc_port }}</b>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
     {% if proc %}
         PID: <b>{{ proc.pid }}</b>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        Client invocation: <b>{{ proc.cmdline() }}</b>
+        Client invocation: <b>{{ proc.cmdline() | hide_private_key }}</b>
     {% else %}
         <b>offline</b>
     {% endif %}
@@ -36,12 +36,16 @@ var cpu = [{% for pt in points %}[{{ pt[0]}}, {{ pt[1] }}], {% endfor %}];
 var mem = [{% for pt in points %}[{{ pt[0]}}, {{ pt[2] }}], {% endfor %}];
 var conn = [{% for pt in points %}[{{ pt[0]}}, {{ pt[3] }}], {% endfor %}];
 
-$.plot("#cpu_plot", [{data: cpu, label: "CPU %", lines: {fill: true}},
-                     {data: cpu_total, color: "rgb(255,241,210)", shadowSize: 0, lines: {fill: true}},
+$.plot("#cpu_plot", [{data: cpu_total, color: "rgb(255,241,210)", shadowSize: 0, lines: {fill: true}},
+                     {data: cpu, label: "CPU %", lines: {fill: true}},
                      {data: mem, label: "Memory (MB)", yaxis: 2}], {
     xaxes: [{mode: "time", timezone: "browser", lines: { fill: true } }],
     yaxes: [{min: 0, /*max: 100,*/ position: "right", tickFormatter: function(v, axis) { return v + " %" }},
-            {min: 0, position: "left", tickFormatter: function(v, axis) { return v + " MB" }}],
+            {min: 0,
+        {%- if total_ram -%}
+             max: {{ total_ram }},
+        {%- endif -%}
+            position: "left", tickFormatter: function(v, axis) { return v + " MB" }}],
 });
 
 $.plot("#connections_plot", [{data: conn, label: "Number of connections"}], {

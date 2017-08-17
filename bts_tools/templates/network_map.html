@@ -1,0 +1,137 @@
+{% extends "tableview.html" %}
+
+{% block stylesheet %}
+{{ super() }}
+
+<link rel="stylesheet" href="/static/css/network_map.css">
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+
+{% if points %}
+<script src="/static/js/proj4_2.3.14.js"></script>
+
+<script src="https://code.highcharts.com/maps/highmaps.js"></script>
+<script src="https://code.highcharts.com/maps/modules/data.js"></script>
+<script src="https://code.highcharts.com/maps/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/mapdata/custom/world.js"></script>
+
+<script type="text/javascript">
+
+$(function () {
+
+    var data_countries = [
+        {%- for name, nseeds in countries.items() -%}
+        {
+            "hc-key": "{{ name }}",
+            "value": {{ nseeds }}
+        },
+        {%- endfor -%}
+    ];
+
+
+    // Initiate the chart
+    $('#map_container').highcharts('Map', {
+
+        title : {
+            text : 'Connected peers'
+        },
+
+        mapNavigation: {
+            enabled: true,
+            buttonOptions: {
+                verticalAlign: 'bottom'
+            }
+        },
+
+        colorAxis: {
+        },
+
+        tooltip: {
+            headerFormat: '',
+            pointFormat: '<b>{point.addr}</b><br>Country: {point.country}<br>Platform: {point.platform}<br>Version: {point.version}'
+        },
+
+        series : [{
+            data : data_countries,
+            mapData: Highcharts.maps['custom/world'],
+            joinBy: 'hc-key',
+            name: 'Random data',
+            states: {
+                hover: {
+                    color: '#BADA55'
+                }
+            },
+            dataLabels: {
+                enabled: false,
+                format: '{point.name}'
+            },
+            tooltip: {
+                headerFormat: '',
+                pointFormat: '{point.name} - <b>{point.value}</b>'
+            }
+        },
+        {
+            // Specify points using lat/lon
+            type: 'mappoint',
+            name: 'Nodes per country',
+            color: Highcharts.getOptions().colors[1],
+            data:[
+            {%- for p in points -%}
+            {
+                {%- for k, v in p.items() -%}
+                    {%- set vstr = v.__repr__() -%}
+                    {{ k }}: {{ vstr | safe }},
+                {%- endfor -%}
+            },
+            {%- endfor -%}
+            ]
+        }]
+    });
+});
+</script>
+{% endif %}
+{% endblock %}
+
+
+{% block content %}
+
+{% set network_params = rpc.main_node.network_get_advanced_node_parameters() %}
+{% set connections = rpc.main_node.network_get_info()['connection_count'] %}
+
+<p>
+    Connections:
+    current: <b>{{ connections }}</b> &mdash;
+    desired: <b>{{ network_params['desired_number_of_connections'] }}</b> &mdash;
+    maximum: <b>{{ network_params['maximum_number_of_connections'] }}</b>
+</p>
+
+
+<div>
+
+{% if points %}
+  <!-- Nav tabs -->
+  <ul class="nav nav-tabs" role="tablist">
+    <li role="presentation" class="active"><a href="#map" aria-controls="maps" role="tab" data-toggle="tab">Map</a></li>
+    <li role="presentation"><a href="#detail" aria-controls="detail" role="tab" data-toggle="tab">Detail</a></li>
+  </ul>
+
+  <!-- Tab panes -->
+  <div class="tab-content">
+    <div role="tabpanel" class="tab-pane active" id="map">
+        <div id="map_container"></div>
+    </div>
+
+    <div role="tabpanel" class="tab-pane" id="detail">
+        {{ super() }}
+    </div>
+  </div>
+{% else %}
+    {{ super() }}
+{% endif %}
+
+</div>
+
+
+{% endblock %}

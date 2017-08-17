@@ -19,40 +19,55 @@
 #
 
 from ..notification import send_notification
-from ..monitor import StableStateMonitor
+from .. import core
+from datetime import datetime
 import logging
 
 log = logging.getLogger(__name__)
 
 
 def init_ctx(node, ctx, cfg):
-    ctx.producing_state = StableStateMonitor(3)
-    ctx.last_n_notified = 0
+    db = core.db[node.rpc_id]
+    if node.name not in db.setdefault('static', {}).setdefault('monitor_witnesses', []):
+        log.debug('Adding witness {} to monitor list for {}'.format(node.name, node.rpc_id))
+        db['static']['monitor_witnesses'].append(node.name)
+        db['static']['need_reindex'] = True
+
+    try:
+        ctx.total_produced = db['total_produced'][node.name]
+    except KeyError:
+        ctx.total_produced = 0
+
+    # start with a streak of 0 when we start the tools, as there's no way (currently)
+    # to know when was the last block missed
+    #db.setdefault('streak', {})[node.name] = 0
+
+
+def is_valid_node(node):
+    # FIXME: revisit block_age < 60 (node.is_synced()), this was meant when syncing at the beginning, but
+    #        during network crisis this might happen but we still want to monitor for missed blocks
+    return node.is_witness() and node.is_synced()  # only monitor if synced
 
 
 def monitor(node, ctx, cfg):
-    # monitor for missed blocks, only for delegate nodes
-    # FIXME: revisit block_age < 60 (node.is_synced()), this was meant when syncing at the beginning, but
-    #        during network crisis this might happen but we still want to monitor for missed blocks
-    # TODO: blocks_produced = get_streak()
-    #       if blocks_produced < last_blocks_produced:
-    #           # missed block somehow
-    #       last_blocks_produced = blocks_produced
-    if node.type != 'delegate':
-        return
+    db = core.db[node.rpc_id]
 
-    if not node.is_synced():  # only monitor if synced
-        return
+    total_missed = node.get_witness(node.name)['total_missed']
+    if db['total_missed'][node.name] < 0:  # not initialized yet
+        db['total_missed'][node.name] = total_missed
 
-    producing, n = node.get_streak()
-    ctx.producing_state.push(producing)
+    if total_missed > db['total_missed'][node.name]:
+        db['last_missed'][node.name] = datetime.utcnow()
+        db['streak'][node.name] = min(db['streak'][node.name], 0) - 1
+        msg = 'missed another block! (last {} missed // total {})'.format(-db['streak'][node.name], total_missed)
+        send_notification([node], msg, alert=True)
+    db['total_missed'][node.name] = total_missed
 
-    if not producing and ctx.producing_state.just_changed():
-        log.warning('Delegate %s just missed a block!' % node.name)
-        send_notification([node], 'just missed a block!', alert=True)
-        ctx.last_n_notified = 1
+    if db['total_produced'][node.name] > ctx.total_produced:
+        db['streak'][node.name] = max(db['streak'][node.name], 0) + 1
+        msg = 'produced block number {} (last {} produced)'.format(db['last_indexed_block'], db['streak'][node.name])
+        log.debug('Witness {} {}'.format(node.name, msg))
 
-    elif ctx.producing_state.stable_state() == False and n > ctx.last_n_notified:
-        log.warning('Delegate %s missed another block! (%d missed total)' % (node.name, n))
-        send_notification([node], 'missed another block! (%d missed total)' % n, alert=True)
-        ctx.last_n_notified = n
+    # TODO: these are duplicate and could be removed, right?
+    ctx.total_produced = db['total_produced'][node.name]
+    ctx.streak = db['streak']

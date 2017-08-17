@@ -14,7 +14,7 @@ Linux
 
 On Debian-derived OSes (Ubuntu, Mint, etc.), install with::
 
-      # apt-get install build-essential libyaml-dev python3-dev python3-pip
+      # apt-get install build-essential libyaml-dev python3-dev python3-pip lsof
 
 Mac OSX
 ~~~~~~~
@@ -55,7 +55,8 @@ Even though the tools are properly installed and functional, you also need some
 dependencies for being able to compile the BitShares client.
 
 The reference documentation for building the BitShares client can be found on
-the `BitShares wiki`_
+the `Graphene wiki`_
+
 
 Linux
 ~~~~~
@@ -64,6 +65,13 @@ On Debian-derived systems, install them with::
 
     # apt-get install build-essential git cmake libssl-dev libdb++-dev libncurses5-dev \
                       libreadline-dev libffi-dev libboost-all-dev
+
+For Steem, you will also need the qt5 libs::
+
+    # apt-get install build-essential git cmake libssl-dev libdb++-dev libncurses5-dev \
+                      libreadline-dev libffi-dev libboost-all-dev qt5-default qttools5-dev-tools
+
+
 
 Mac OSX
 ~~~~~~~
@@ -75,7 +83,7 @@ override OSX's native version, as it is antiquated.
 
 ::
 
-    $ brew install git cmake boost berkeley-db readline openssl
+    $ brew install git cmake boost readline openssl autoconf automake libtool   # FIXME: remove? berkeley-db
     $ brew link --force readline
 
 
@@ -106,4 +114,4 @@ Mac OSX
 TODO
 
 
-.. _BitShares wiki: http://wiki.bitshares.org/index.php/Developer/Build
+.. _Graphene wiki: https://github.com/cryptonomex/graphene/wiki#build-instructions

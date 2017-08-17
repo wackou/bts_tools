@@ -7,7 +7,7 @@ Launch the monitoring web app locally
 
 The main entry point to the monitoring app is the ``~/.bts_tools/config.yaml``
 file. You should edit it first and set the values to correspond to your
-delegate's configuration. See the :doc:`config_format` page for details.
+witness's configuration. See the :doc:`config_yaml` page for details.
 
 If this file doesn't exist yet, run the tools
 once (for instance: ``bts -h``) and it will create a default one.
@@ -104,14 +104,14 @@ Screenshots
 
 Monitoring the status of your running bts client binary:
 
-.. image:: ../bts_tools_screenshot.png
+.. image:: bts_tools_screenshot.png
    :alt: Status screenshot
 
 |
 
 You can host multiple delegates accounts in the same wallet, and check feed info:
 
-.. image:: ../bts_tools_screenshot2.png
+.. image:: bts_tools_screenshot2.png
    :alt: Info screenshot
 
 |
@@ -120,5 +120,5 @@ You can host multiple delegates accounts in the same wallet, and check feed info
 Monitoring multiple instances (ie: running on different hosts) at the same time,
 to have an overview while running backup nodes and re-compiling your main node:
 
-.. image:: ../bts_tools_screenshot3.png
+.. image:: bts_tools_screenshot3.png
    :alt: Info screenshot

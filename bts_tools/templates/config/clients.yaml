@@ -1,0 +1,42 @@
+#
+# list of clients that can be run
+#
+# by default, if you don't specify a client on the cmdline, the tools will
+# run the client using the 'bts' run environment
+#
+clients:
+    bts:
+        type: bts
+        data_dir: ~/.BitShares2
+        p2p_port: 1776
+        witness_host: localhost
+        witness_port: 8090
+        wallet_host: localhost
+        wallet_port: 8093
+
+    muse:
+        type: muse
+        data_dir: ~/.Muse
+        p2p_port: 33333
+        witness_host: localhost
+        witness_port: 8390
+        wallet_host: localhost
+        wallet_port: 8393
+
+    steem:
+        type: steem
+        data_dir: ~/.Steem
+        p2p_port: 2001
+        witness_host: localhost
+        witness_port: 8490
+        wallet_host: localhost
+        wallet_port: 8493
+
+    ppy:
+        type: ppy
+        data_dir: ~/.PeerPlays
+        p2p_port: 9777
+        witness_host: localhost
+        witness_port: 8590
+        wallet_host: localhost
+        wallet_port: 8593

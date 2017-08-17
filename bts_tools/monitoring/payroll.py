@@ -21,7 +21,7 @@
 from datetime import datetime, timedelta
 from os.path import join
 from .. import core
-from .. rpcutils import BTSProxy
+from .. rpcutils import GrapheneClient
 import dateutil
 from dateutil import parser
 import logging
@@ -32,11 +32,13 @@ log = logging.getLogger(__name__)
 def parse_date(date):
     return datetime.datetime.strptime(date, "%Y%m%dT%H%M")
 
-def monitor(node, ctx, cfg):
-    if 'payroll' not in node.monitoring or node.type != 'delegate':
-        return
 
-    if not ctx.info['wallet_unlocked']:
+def is_valid_node(node):
+    return node.is_witness()
+
+
+def monitor(node, ctx, cfg):
+    if node.is_locked():
         log.warning('Cannot perform payroll distribution when wallet is closed or locked')
         return
 
@@ -72,15 +74,15 @@ def monitor(node, ctx, cfg):
 
     try:
         # Get the pay balance available to distribute
-        account_info = node.get_account(node.name)  
-        pay_balance =  float(account_info['delegate_info']['pay_balance']) / bts_precision
+        account_info = node.blockchain_get_account(node.name)
+        pay_balance = float(account_info['delegate_info']['pay_balance']) / bts_precision
         log.debug('Balance available to withdraw: %s' % pay_balance)
 
         # If the delegate account balance is below the minimum resupply it.
         # We need to maintain this to pay feed publishing fees for example.  ? Probably not actually
-        # Delegate account balance is different from delegate pay balance.     
+        # Delegate account balance is different from delegate pay balance.
         minimum_balance = float(cfg['minimum_balance'])                      # Set min = 0 to disable
-        balance = float(BTSProxy.get_account_balance(node, node.name, 'BTS'))
+        balance = node.get_account_balance(node.name, 'BTS')
         if balance < minimum_balance:
             resupply = minimum_balance - balance  # Round it to an int to avoid problems
             if pay_balance > resupply:

@@ -26,20 +26,24 @@ here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.rst')).read()
 HISTORY = open(os.path.join(here, 'HISTORY.rst')).read()
 
-VERSION = '0.2-dev'
+VERSION = '0.4.14'
 
 
-install_requires = ['Flask', 'requests', 'psutil', 'arrow', 'pyyaml', 'dogpile.cache']
+install_requires = ['Flask', 'requests', 'psutil', 'arrow', 'pyyaml', 'dogpile.cache',
+                    'beautifulsoup4', 'maxminddb-geolite2', 'autobahn', 'ruamel.yaml',
+                    'doit', 'retrying', 'ecdsa', 'cachetools', 'wrapt',
+                    'geoip2', # for ip addr -> lat, lon  (need account on maxmind)
+                    'pendulum', 'bitcoinaverage'
+                    ]
 
 setup_requires = []
 
 entry_points = {
     'console_scripts': [
         'bts = bts_tools.cmdline:main_bts',
-        'dvs = bts_tools.cmdline:main_dvs',
-        'pts = bts_tools.cmdline:main_pts',
-        'pls = bts_tools.cmdline:main_pls',
-        'bts-rpc = bts_tools.cmdline:main_rpc_call'
+        'muse = bts_tools.cmdline:main_muse',
+        'steem = bts_tools.cmdline:main_steem',
+        'ppy = bts_tools.cmdline:main_ppy'
     ],
 }
 
@@ -47,10 +51,10 @@ entry_points = {
 args = dict(name='bts_tools',
             version=VERSION,
             description='BitShares delegate tools',
-            long_description=README,
+            long_description=README + '\n\n\n' + HISTORY,
             # Get strings from
             # http://pypi.python.org/pypi?%3Aaction=list_classifiers
-            classifiers=['Development Status :: 3 - Alpha',
+            classifiers=['Development Status :: 4 - Beta',
                          'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
                          'Operating System :: OS Independent',
                          'Programming Language :: Python :: 3',
@@ -72,7 +76,6 @@ version_file = os.path.join(here, 'bts_tools', 'version.txt')
 create_version_file = not os.path.exists(version_file)
 
 if create_version_file:
-    print('Creating version file with version = %s' % VERSION)
     with open(version_file, 'w') as f:
         try:
             p = subprocess.Popen('git describe --tags', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

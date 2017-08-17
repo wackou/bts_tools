@@ -1,0 +1,31 @@
+
+Format of the config.yaml file
+==============================
+
+The ``config.yaml`` file is the file where you configure the tools to match your environment.
+It is located in ``~/.bts_tools/config.yaml``. If you properly fill in
+all the values in it, there is no need for you to edit anything in the data-dir of the witness
+client (ie: no config.ini editing) and the tools can manage everything from the command line.
+This allows you to keep all the information in one single file, much easier to manage.
+
+Instead of going over all the parameters in an arbitrary order and explaining them, we will
+just show a working example file that is fully commented and serves as the reference documentation.
+
+Please make sure that you fully understand some :doc:`core_concepts` before proceeding.
+
+Also know that there are a lot of other options under the hood, but in order to not be overwhelming,
+those have default values and are contained in a bigger config.yaml file. At startup, your config file is merged into it
+before being used by the application. If you want to see the full configuration file generated from it,
+it is located in ``~/.bts_tools/full_config.yaml``
+
+And now, without further ado, here is the reference ``config.yaml`` file:
+
+
+.. _config-yaml-file:
+
+config.yaml
+-----------
+
+.. code-block:: yaml
+
+{{ config_yaml }}

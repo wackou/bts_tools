@@ -1,181 +1,163 @@
 ---
-# Config file containing the build, run and monitor environments and
-# other configuration variables
-#
-# This file should contain sensible default values in as many places as
-# possible, but you will have to at least specify your own values in the
-# following categories:
-#  - run_environments [for the cmdline tool]
-#  - nodes            [for the monitoring webapp]
-#
 # For a more detailed description of the format of this file, visit:
-# https://bts-tools.readthedocs.org/en/latest/config_format.html
+# https://bts-tools.readthedocs.io/en/latest/config_yaml.html
 #
+
+hostname: xxxxxxxx  # [OPTIONAL] label used as source of notification messages
 
 # the logging levels for the different submodules
 # can be any of DEBUG, INFO, WARNING, ERROR
 logging:
-    bts_tools: DEBUG
-    bts_tools.core: INFO
-    bts_tools.rpcutils: INFO
-    bts_tools.monitoring: INFO
-    bts_tools.notification: INFO
+    bts_tools.cmdline: DEBUG
     bts_tools.feeds: INFO
-    bts_tools.profile: INFO
-
-
-# flags to be passed to make; shared among all build environments
-make_args: ['-j2']
 
 #
-# list of configurations for building the bitshares client
+# These are the types of clients that you can build. `bts`, `steem`, `ppy`, etc.
+# Mostly the default should work and you shouldn't need to change those values.
+# Still, if you want to add other git remote repositories to pull from or
+# extra flags to use for compiling, this is the place to do so.
 #
-# by default, if you don't specify a build env on the cmdline, the tools will
-# use the 'bts' environment
+# The full list of build_environments can be found here:
+# https://github.com/wackou/bts_tools/blob/master/bts_tools/templates/config/build_environments.yaml
 #
 build_environments:
+    make_args: ['-j4']  # [OPTIONAL] shared among all build environments
+    cmake_args: []      # [OPTIONAL] shared among all build environments
+    steem:
+        cmake_args: ['-DLOW_MEMORY_NODE=ON']  # [OPTIONAL] see https://github.com/steemit/steem/blob/master/doc/building.md
+    muse:
+        cmake_args: []  #'-DBUILD_MUSE_TEST=ON']
+
+
+#
+# list of clients (witness accounts / seed nodes) that are being monitored
+#
+# the following file tries to keep a balanced distribution of the options between each client
+# in order to make for easier reading, but (unless otherwise noted) all the options declared
+# in a client also apply in the other ones
+#
+clients:
     bts:
-        git_repo: https://github.com/BitShares/bitshares.git
-        git_branch: master
-        build_dir: ~/.BitShares_build
-        bin_dir: ~/.BitShares_bin
-        bin_name: bitshares_client
-        gui_bin_name: BitShares
+        type: bts                         # [REQUIRED] build environment used for compiling the binary [bts, muse, steem, ppy, etc.]
+        data_dir: ~/.BitShares2           # [REQUIRED] the data dir of the client is where the blockchain data and the wallet file are stored
+        api_access: ~/api_access.json     # [REQUIRED] api_access.json should be created according to https://github.com/BitShares/bitshares-2#accessing-restricted-apis
+        seed_nodes:                       # [OPTIONAL]
+        - bts-seed1.abit-more.com:62015
+        - seed.bitsharesnodes.com:1776
+        p2p_port: 1778                    # [OPTIONAL] network port to be used for p2p communication of the witness node
+        track_accounts:                   # [OPTIONAL] [bts only] reduce RAM usage by specifying the only accounts that should be tracked
+        - 1.2.1       # witness-account
+        - 1.2.111226  # bittwenty
+        - 1.2.126782  # bittwenty.feed
+        witness_host: localhost           # [OPTIONAL] defaults to 'localhost', but can be a remote host if desired
+        witness_port: 8090                # [OPTIONAL] some defaults are provided for each different chain
+        witness_user: xxxxxxxx            # [REQUIRED] as in api_access.json
+        witness_password: xxxxxxxx        # [REQUIRED] as in api_access.json
+        wallet_host: localhost            # [OPTIONAL] defaults to 'localhost', but can be a remote host if desired
+        wallet_port: 8093                 # [OPTIONAL] some defaults are provided for each different chain
+        wallet_password: xxxxxxxx         # [OPTIONAL] only needed for feed publishing  # FIXME: not true, currently unused param
+        notification: email, telegram     # [OPTIONAL] type of notification channel to be used: [email, boxcar, telegram]
 
-    bts-dev:
-        git_repo: https://github.com/BitShares/bitshares.git
-        git_branch: develop
-        build_dir: ~/.BitSharesDev_build
-        bin_dir: ~/.BitSharesDev_bin
-        bin_name: bitshares_client
-        gui_bin_name: BitSharesTestNet
+        # roles are optional, and you can have as many as you want for a given client
+        # a client that doesn't define any role will not be monitored by the web interface,
+        # but can still be used for building and running a client
+        roles:
+        -
+            role: witness
+            name: xxxxxxxx           # [REQUIRED] name of the witness account on the blockchain
+            witness_id: 1.6.xxx      # [REQUIRED]
+            signing_key: 5xxxxxxxx   # [REQUIRED] private key used by this witness for signing
+        -
+            role: feed_publisher
+            name: xxxxxxxx           # [REQUIRED] name of the account that publishes the feed on the blockchain
+        -
+            role: seed
+            name: seed01             # [REQUIRED] name has no relevance for seed nodes, except for identifying them in the UI
 
-    dvs:
-        git_repo: https://github.com/BitShares/bitshares.git
-        git_branch: devshares
-        build_dir: ~/.DevShares_build
-        bin_dir: ~/.DevShares_bin
-        bin_name: devshares_client
-        gui_bin_name: DevShares
+    # most of the clients try to have sensible defaults as much as possible, but you
+    # need to specify at least: type, data_dir, api_access, witness_user, witness_password
+    muse:
+        type: muse
+        data_dir: ~/.Muse
+        witness_user: xxxxxxxx       # defined in api_access.json
+        witness_password: xxxxxxxx   # defined in api_access.json
+        roles:
+        -
+            role: seed
+            name: seed-muse
 
-    pts:
-        git_repo: https://github.com/PTS-DPOS/PTS.git
-        git_branch: master
-        build_dir: ~/.PTS_build
-        bin_dir: ~/.PTS_bin
-        bin_name: pts_client
-        gui_bin_name: PTS
+    steem:
+        type: steem
+        data_dir: ~/.Steem
+        run_args: ['--p2p-port', '1778', '--replay-blockchain']    # [OPTIONAL] additional args for running the witness client
+        shared_file_size: 80G                                      # [OPTIONAL] size for the shared memory file
+        run_cli_args: ['--rpc-http-allowip', '127.0.0.1']          # [OPTIONAL] additional args for running the cli wallet
+        plugins: ['witness']                                       # [OPTIONAL] defaults to ['witness', 'account_history']
+        seed_nodes: ["52.74.152.79:2001", "212.47.249.84:40696", "104.199.118.92:2001", "gtg.steem.house:2001"]
+        # FIXME: implement me!
+        override_default_seed_nodes: true  # [OPTIONAL] [default=false] if true, the client will only use the given seed nodes, otherwise it adds them to the list of built-in seed nodes
 
-    pts-dev:
-        git_repo: https://github.com/PTS-DPOS/PTS.git
-        git_branch: develop
-        build_dir: ~/.PTSdev_build
-        bin_dir: ~/.PTSdev_bin
-        bin_name: pts_client
-        gui_bin_name: PTS
+        # Steemd can now accept the contents of the api_access.json directly as argument on the command line,
+        # hence the field api_access.json is not required anymore here (and you don't need to create the file either),
+        # as bts_tools will generate the proper arguments from the user and password given here.
+        witness_user: xxxxxxxx
+        witness_password: xxxxxxxx
+        notification: telegram
+        roles:
+        -
+            role: witness  # for steem only, the 'witness_id' field is not required, only 'name' and 'signing_key'
+            name: xxxxxxxx
+            signing_key: 5xxxxxxxx
 
-    sparkle:
-        git_repo: https://github.com/sparkle5/Sparkle.git
-        git_branch: sparkle
-        build_dir: ~/.Sparkle_build
-        bin_dir: ~/.Sparkle_bin
-        bin_name: sparkle_client
-
-    pls:
-        git_repo: https://github.com/dacsunlimited/dac_play.git
-        git_branch: master
-        build_dir: ~/.Play_build
-        bin_dir: ~/.Play_bin
-        bin_name: play_client
-        gui_bin_name: PLAY
-
-
-
-# flags to be passed when running the client; shared among all run environments
-# TODO: add '--accept-incoming-connections=0', but for delegate nodes only (ie: not for seed nodes)
-#       see: https://bitsharestalk.org/index.php?topic=14150.msg184403#msg184403
-run_args: ['--min-delegate-connection-count=0', '--statistics-enabled']
-
-#
-# list of clients that can be run
-#
-# by default, if you don't specify a client on the cmdline, the tools will
-# run the client using the 'bts' run environment
-#
-run_environments:
-    bts:
-        type: bts
-
-    debug:
-        type: bts
-        debug: true
-
-    bts-dev:
-        type: bts-dev
-
-    dvs:
-        type: dvs
-
-    pts:
-        type: pts
-
-    pts-dev:
-        type: pts-dev
-
-    sparkle:
-        type: sparkle
-
-
-# activate the debug flag on the wsgi app
-wsgi_debug: false
-
-# whether to profile how much time the RPC calls take to render
-profile: false
-
-#
-# list of nodes (delegate accounts / seed nodes) that are being monitored
-#
-nodes:
-    -
-        client: bts
-        type: seed
-        name: seed-test
-        monitoring: [seed]
+    ppy:
+        type: ppy
+        data_dir: ~/.PeerPlays
+        seed_nodes: ['213.184.225.234:59500']
+        p2p_port: 9777
+        witness_host: localhost
+        witness_port: 8590
+        witness_user: xxxxxxxx
+        witness_password: xxxxxxxx
+        wallet_host: localhost
+        wallet_port: 8593
+        api_access: ~/api_access.json
+        roles:
+        -
+            role: seed
+            name: seed01ppy
 
 
 #
 # configuration of the monitoring plugins
+# most default values should work, see reference here:
+# https://github.com/wackou/bts_tools/blob/master/bts_tools/templates/config/monitoring.yaml
 #
 monitoring:
-    monitor_time_interval: 5
-
-    cpu_ram_usage:
-        plots_time_span: 86400
-
-    network_connections:
-        min_connections: 5
-
     seed:
         desired_number_of_connections: 200
         maximum_number_of_connections: 400
 
     feeds:
-        check_time_interval: 300
-        publish_time_interval: 2400
-        median_time_span: 1800
+        # some assets are not published by default as they are experimental or have some requirements
+        # eg: need to be an approved witness to publish
+        # if you want to publish them you need to say so explicitly here
+        enabled_assets: [RUBLE, ALTCAP, HERO]
 
-    payroll:
-        timezone_offset: 0                       # vps timezone difference from payee timezone (for logging purposes)
-        pay_interval: 14                         # How often (in days) between each payday
-        minimum_balance: 0                     # Amount to maintain in delegate account for fees
-        payday_file: last_payday.dat             # Holds the date & time of the last payout
-        transactions_file: transactions.txt      # Holds the list of payout transactions
-        accounts: [account1, account2]           # List of accounts to pay for testing
-        pay_rate: [60, 40]                       # Percentage to distribute to each account
+        # explicitly disable some assets (eg: due to black swan)
+        #disabled_assets: [RUB, SEK, GRIDCOIN, TCNY, CASH.BTC, CASH.USD, KRW, TUSD, SGD, HKD, BTWTY]
 
+        check_time_interval: 300            # interval at which the external feed providers should be queried, in seconds
+        median_time_span: 1800              # leave default
+
+        # if you have at least 1 feed_publisher role defined in your clients, then
+        # you need to uncomment at least one of the next 2 lines
+        #publish_time_interval: 2400        # use this to publish feeds at fixed time intervals (in seconds)
+        #publish_time_slot: 08              # use this to publish every hour at a fixed number of minutes (in minutes)
+
+        steem_dollar_adjustment: 1.0
 
 #
-# configuration of the notification types
+# configuration of the notification channels
 #
 notification:
     email:
@@ -186,4 +168,29 @@ notification:
         recipient: me@example.com
 
     boxcar:
-        tokens: []
+        tokens: [xxxxxxxx, xxxxxxxx]
+
+    telegram:
+        token: xxxxxxxx
+        chat_id: xxxxxxxx
+
+
+#
+# List of credentials for external services used by bts_tools
+#
+credentials:
+    bitcoinaverage: # developer account recommended, otherwise need to lower 'monitoring.feeds.check_time_interval'
+        secret_key: xxxxxxxx
+        public_key: xxxxxxxx
+
+    geoip2:
+        user: xxxxxxxx
+        password: xxxxxxxx
+
+    currencylayer:
+        access_key: xxxxxxxx
+
+    quandl:
+        api_key: xxxxxxxx
+
+

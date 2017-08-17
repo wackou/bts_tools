@@ -16,20 +16,14 @@ This should also show you the default version of the client that will be run.
 
 To run it, you just need to::
 
-    $ bts --norpc run
-
-The first time you run it, you need to pass it the ``--norpc`` param (or ``-r``)
-in order to not launch the RPC server, as it is not configured yet. After the
-first run, this will have created the ``~/.BitShares`` directory (``~/Library/Application Support/BitShares`` on OSX)
-and you should go there, edit the ``config.json`` file, and fill in the user and
-password for the RPC connection. Next time you will only need to::
-
     $ bts run
 
-to launch the client.
+After the first run, this will have created the ``~/.BitShares`` directory (``~/Library/Application Support/BitShares`` on OSX)
+and you should go there, edit the ``config.json`` file, and fill in the user and
+password for the RPC connection.
 
-At this point, you want to create a wallet, an account and register it as delegate.
-Please refer to the `BitShares wiki <http://wiki.bitshares.org/index.php/Delegate/How-To>`_
+At this point, you want to create a wallet, an account and register it as a witness.
+Please refer to the `BitShares documentation <http://docs.bitshares.org/bitshares/tutorials/witness-howto.html>`_
 for instructions.
 
 Pro Tip: running the client in tmux

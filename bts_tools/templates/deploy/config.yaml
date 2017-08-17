@@ -1,0 +1,21 @@
+---
+# For a more detailed description of the format of this file, visit:
+# https://bts-tools.readthedocs.io/en/latest/config_format.html
+#
+
+# the logging levels for the different submodules
+# can be any of DEBUG, INFO, WARNING, ERROR
+logging:
+    bts_tools: DEBUG
+    bts_tools.core: INFO
+    bts_tools.backbone: INFO
+    bts_tools.graphene: INFO
+    bts_tools.rpcutils: INFO
+    bts_tools.monitoring: INFO
+    bts_tools.notification: INFO
+    bts_tools.feeds: INFO
+    bts_tools.profile: INFO
+
+
+# flags to be passed to make; shared among all build environments
+make_args: ['-j4']

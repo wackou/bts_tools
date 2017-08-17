@@ -30,11 +30,11 @@ from .rpcutils import main_node as rpc
 
 def init(loglevels=None):
     from .core import load_config
-    from .rpcutils import load_nodes
+    from .rpcutils import load_graphene_clients
     from .feeds import load_feeds
 
     load_config(loglevels)
-    load_nodes()
+    load_graphene_clients()
     load_feeds()
 
     from . import core

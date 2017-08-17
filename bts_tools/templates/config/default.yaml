@@ -1,0 +1,43 @@
+{% include 'build_environments.yaml' %}
+{% include 'clients.yaml' %}
+
+# the logging levels for the different submodules
+# can be any of DEBUG, INFO, WARNING, ERROR
+logging:
+    bts_tools: INFO
+    bts_tools.graphene: INFO
+    bts_tools.rpcutils: INFO
+
+# activate the debug flag on the wsgi app
+wsgi_debug: false
+
+# profile the wsgi app and write .prof files to /tmp
+wsgi_profile: false
+
+# FIXME: deprecate
+# whether to profile how much time the RPC calls take to render (old implementation)
+profile: false
+
+detailed_log: false
+
+index_full_blockchain: false
+
+{% include 'monitoring.yaml' %}
+
+#
+# configuration of the notification types
+#
+notification:
+    email:
+        smtp_server: smtp.example.com
+        smtp_user: user
+        smtp_password: secret-password
+        identity: "BTS Monitor <bts_monitor@example.com>"
+        recipient: me@example.com
+
+    boxcar:
+        tokens: []
+
+    telegram:
+        token: 'xxxxxxxxxxxxxxxx'
+        chat_id: 12341234

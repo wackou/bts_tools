@@ -7,9 +7,27 @@
     <link rel="stylesheet" href="/static/css/bootstrap.3.1.1.min.css">
     <link rel="stylesheet" href="/static/css/jquery.dataTables.1.10RC1.css">
     <link rel="stylesheet" href="/static/css/dataTables.bootstrap.css">
+    <link rel="stylesheet" href="/static/css/famfamfam-flags.css">
     <link rel="stylesheet" href="/static/css/application.css">
     {% block stylesheet %}{% endblock %}
 </head>
+
+
+{% macro blue(text) -%}
+    <div class="btn btn-xs btn-info">{{ text }}</div>
+{%- endmacro %}
+
+{% macro green(text) -%}
+    <div class="btn btn-xs btn-success">{{ text }}</div>
+{%- endmacro %}
+
+{% macro orange(text) -%}
+    <div class="btn btn-xs btn-warning">{{ text }}</div>
+{%- endmacro %}
+
+{% macro red(text) -%}
+    <div class="btn btn-xs btn-danger">{{ text }}</div>
+{%- endmacro %}
 
 {% macro green_if_true(cond) -%}
     {% if cond %}
@@ -29,30 +47,34 @@
             <table class="table table-hover" style="margin-top: 0 !important; margin-bottom: 0 !important;">
             <thead><tr>
                 <th>Type</th>
-                <th>Host</th>
+                <th>RPC Host</th>
+                <th>IP</th>
+                <th>p2p port</th>
                 <th>Hosted nodes</th>
                 <th>Status</th>
-                <th>Block head</th>
+                <th>Head block</th>
                 <th>Wallet open</th>
                 <th>Wallet unlocked</th>
-                <th>Block production enabled</th>
+                <th>Signing key active</th>
             </tr></thead>
             <tbody>
             {% for host, node_names, node in rpc.client_instances() %}
                 <tr>
                     <td>
-                    {% set node_type = node.bts_type() %}
+                    {% set node_type = node.type() %}
                     {% if node_type %}
                         {% if node.is_online() %}
                             <div class="btn btn-xs btn-success">
                         {% else %}
                             <div class="btn btn-xs btn-danger">
                         {% endif %}
-                                {{ node.bts_type() }}
+                                {{ node.type() }}
                             </div>
                     {% endif %}
                     </td>
                     <td>{{ host }}</td>
+                    <td>{{ (network_utils.get_ip_nofail() if node.is_localhost() and node.is_online() else '') | add_ip_flag | safe }}</td>
+                    <td>{{ backbone.get_p2p_port(node) if node.is_online() else '' }}</td>
                     <td>{{ node_names|join(', ') }}</td>
                     {% if node.is_online() %}
                         <td>
@@ -60,19 +82,26 @@
                         </td>
                         <td>
                         {% if node.is_synced() %}
-                            <div class="btn btn-xs btn-success">
+                            {{ green(node.get_head_block_num()) }}
                         {% else %}
-                            <div class="btn btn-xs btn-info">
+                            {{ blue(node.get_head_block_num()) }}
                         {% endif %}
-                                {{ node.get_info()['blockchain_head_block_num'] }}
-                            </div>
                         </td>
 
-                        {% set info = node.get_info() %}
-                        <td>{{ green_if_true(info['wallet_open']) }}</td>
-                        <td>{{ green_if_true(info['wallet_unlocked']) }}</td>
-                        <td>{{ green_if_true(info['wallet_block_production_enabled']) }}</td>
-
+                        <td>{{ green_if_true(not node.is_new()) }}</td>
+                        <td>{{ green_if_true(not node.is_locked()) }}</td>
+                        <td>
+                            {% if node.is_witness() %}
+                                {% set is_active = node.is_signing_key_active() %}
+                                {% if is_active == 'not synced' -%}
+                                    {{ orange('waiting for sync') }}
+                                {%- elif is_active == 'unknown' -%}
+                                    {{ blue('unknown') }}
+                                {%- else -%}
+                                    {{ green_if_true(is_active) }}
+                                {%- endif %}
+                            {% endif %}
+                        </td>
                     {% else %}
                         <td><div class="btn btn-xs btn-danger">{{ node.status() }}</div></td>
                         <td></td>

@@ -4,3 +4,18 @@
 __pycache__
 dist
 docs/_build
+
+# graphene
+object_database
+witness_node_data_dir
+
+.doit.json
+
+# we don't want to commit these accidentally to git or even see them
+*.crt
+*.key
+deploy_config.*.yaml
+
+# development docs, untracked
+devdocs
+

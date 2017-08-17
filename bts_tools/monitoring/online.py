@@ -29,24 +29,26 @@ def init_ctx(node, ctx, cfg):
     ctx.online_state = StableStateMonitor(3)
 
 
+def is_valid_node(node):
+    return True
+
+
 def monitor(node, ctx, cfg):
     node_names = ', '.join(n.name for n in ctx.nodes)
 
     if not node.is_online():
-        log.debug('Nodes %s: offline' % node_names)
+        log.debug('Offline %s nodes: %s' % (ctx.nodes[0].type(), node_names))
         ctx.online_state.push('offline')
 
         if ctx.online_state.just_changed():
-            log.warning('Nodes %s just went offline...' % node_names)
-            send_notification(ctx.nodes, 'node just went offline...', alert=True)
+            send_notification(ctx.nodes, 'client just went offline...', alert=True)
 
         return False
 
-    log.debug('Nodes %s: online' % node_names)
+    log.debug('Online %s nodes: %s' % (ctx.nodes[0].type(), node_names))
     ctx.online_state.push('online')
 
     if ctx.online_state.just_changed():
-        log.info('Nodes %s just came online!' % node_names)
-        send_notification(ctx.nodes, 'node just came online!')
+        send_notification(ctx.nodes, 'client just came online!')
 
     return True

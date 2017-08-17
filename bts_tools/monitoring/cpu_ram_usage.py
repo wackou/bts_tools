@@ -48,21 +48,35 @@ def init_ctx(node, ctx, cfg):
 
     ctx.stats = deque(maxlen=min(desired_maxlen, maxlen))
 
-    if node.rpc_host == 'localhost' and cpu_total_ctx is None:
+    if node.rpc_host.is_witness_localhost() and cpu_total_ctx is None:
+        # FIXME: this doesn't work when we have multiple clients being monitored,
+        #        and the one supposed to fill in those values is offline.
+        #        they get set to 0, when other clients are running which could fill those values....
+        #        actually, we have more problems related to that, as seed nodes, graphene, etc.
+        #        don't show global stats anymore...
+
         # first monitoring thread that initializes its context gets to be
         # the one that will fill in the global cpu values
         cpu_total_ctx = ctx
         ctx.global_stats = deque(maxlen=min(desired_maxlen, maxlen))
 
 
+def is_valid_node(node):
+    return True
+
+
 def monitor(node, ctx, cfg):
     # only monitor cpu and network if we are monitoring localhost
-    if node.rpc_host == 'localhost':
+    if node.is_witness_localhost():
         p = node.process()
         if p is not None:
+            try:
+                connections = int(node.network_get_info()['connection_count'])
+            except Exception:  # TimeoutError when we just closed the witness, but the process still exists
+                connections = 0
             s = StatsFrame(cpu=p.cpu_percent(),
                            mem=p.memory_info().rss,
-                           connections=ctx.info['network_num_connections'],
+                           connections=connections,
                            timestamp=datetime.utcnow())
         else:
             s = StatsFrame(cpu=0, mem=0, connections=0, timestamp=datetime.utcnow())

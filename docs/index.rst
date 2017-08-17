@@ -6,16 +6,23 @@
 Welcome to the BTS Tools documentation!
 =======================================
 
+The BTS Tools will help you build, run and monitor any graphene-based client
+(currently BitShares, Steem, Muse, PeerPlays).
+
+.. note:: these tools were originally developed for the BitShares network, and
+          later expanded to support any graphene-based network. This means that everywhere
+          you will see BitShares mentioned in this documentation, it should be understood
+          as BitShares, Steem, PeerPlays or Muse. Similarly, ``bts`` can be interchanged
+          with ``steem``, ``ppy``, and ``muse``.
+
 There are 2 tools currently provided:
 
-- command line util allowing to quickly build and run the BitShares client
-- web app allowing to monitor a running instance of the client and send
+- a command line utility allowing to quickly build and run any graphene-based client
+- a web application allowing to monitor a running instance of the client and send
   an email or push notification on failure
 
-If you like these tools, please vote for `my delegate`_
-(web page: `http://digitalgaia.io/btstools.html <http://digitalgaia.io/btstools.html>`_)
-to support further development, and feel free to visit my page for other
-delegate proposals at `digitalgaia.io <http://digitalgaia.io>`_. Thanks!
+If you like these tools, please vote for `witness wackou`_ on the Steem, BitShares
+and Muse networks. Thanks!
 
 To get started, just type the following in a shell::
 
@@ -29,7 +36,7 @@ With the tools installed, you can refer to each section of the documentation
 for more information about how a certain aspect of the tools work.
 
 Otherwise, if you prefer a more hands-on approach to setting up a delegate from
-scratch, please head to the following section: :doc:`howto`
+scratch, please head to the following section: :doc:`howto`  [NOTE: deprecated]
 
 Documentation contents
 ----------------------
@@ -41,10 +48,12 @@ Documentation contents
    cmdline
    monitor
    variants
-   howto
-   config_format
+   core_concepts
+   config_yaml
    virtualenv
+   tips_and_tricks
+   howto
 
 
 
-.. _my delegate: bts://btstools.digitalgaia/approve
+.. _witness wackou: https://steemit.com/witness-category/@wackou/wackou-witness-post

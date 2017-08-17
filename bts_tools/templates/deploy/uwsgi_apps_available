@@ -1,0 +1,11 @@
+[uwsgi]
+uid = {{ unix_user }}
+gid = {{ unix_user }}
+chmod-socket = 666
+plugin = python{{ python_version.replace('.', '') }}
+virtualenv = /home/{{ unix_user }}/.virtualenvs/bts_tools
+enable-threads = true
+lazy-apps = true
+workers = 1
+module = bts_tools.wsgi
+callable = application

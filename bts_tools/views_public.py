@@ -59,7 +59,8 @@ def catch_error(f):
     def wrapper(*args, **kwargs):
         try:
             return f(*args, **kwargs)
-        except (core.RPCError, requests.exceptions.ConnectionError):
+        except (core.RPCError,
+                requests.exceptions.ConnectionError):
             core.is_online = False
             return offline()
         except core.UnauthorizedError:
@@ -123,7 +124,7 @@ def crossdomain(origin=None, methods=None, headers=None,
 def clear_rpc_cache(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        bts_tools.rpcutils.clear_rpc_cache()
+        rpc.main_node.clear_rpc_cache()
         return f(*args, **kwargs)
     return wrapper
 
@@ -156,7 +157,7 @@ def delegate_info(delegate_name):
     for i, d in enumerate(delegates):
         if d['name'] == delegate_name:
             delegate = d
-            rank = i
+            rank = i + 1
             break
     else:
         raise ValueError('Unknown delegate: %s' % delegate_name)

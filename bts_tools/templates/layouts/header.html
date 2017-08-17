@@ -1,10 +1,14 @@
 {% macro node_desc(node) -%}
-    {%- if node.type == 'delegate' -%}
-        <b>Delegate name: </b>
-    {%- elif node.type == 'seed' -%}
+    {%- if node.is_witness() -%}
+        <b>Witness name: </b>
+    {%- elif node.role == 'seed' -%}
         <b>Seed node: </b>
+    {%- elif node.role == 'backbone' -%}
+        <b>Backbone node: </b>
+    {%- elif node.role == 'api' -%}
+        <b>API node: </b>
     {%- else -%}
-        <b>Node: </b>
+        <b>Node (type={{ node.role }}): </b>
     {%- endif -%}
 
     {{ node.name }}
@@ -25,13 +29,20 @@
 			<ul class="nav navbar-nav">
                 <li {% if request.path == '/status' %}class="active"{% endif %}><a href="/status">Status</a></li>
                 <li {% if request.path == '/info' %}class="active"{% endif %}><a href="/info">Info</a></li>
-                <li {% if request.path == '/delegates' %}class="active"{% endif %}><a href="/delegates">Delegates</a></li>
+                <!--
+                <li {% if request.path == '/witness/{{ rpc.main_node.name }}' %}class="active"{% endif %}><a href="/witness/{{ rpc.main_node.name }}">Witness info</a></li>
+                <li {% if request.path == '/witnesses' %}class="active"{% endif %}><a href="/witnesses">Witnesses</a></li>
+                -->
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                         Network <span class="caret"></span>
                     </a>
 
                     <ul class="dropdown-menu" role="menu">
+                        <li><a href="/network/bts/seednodes">BitShares seed nodes status</a></li>
+                        <li><a href="/network/muse/seednodes">Muse seed nodes status</a></li>
+                        <li><a href="/network/steem/seednodes">Steem seed nodes status</a></li>
+                        <!--<li><a href="/backbone">Backbone status</a></li>-->
                         <li><a href="/peers">Connected peers</a></li>
                         <li><a href="/peers/potential">Potential peers</a></li>
                     </ul>
@@ -47,9 +58,9 @@
                             <span class="caret"></span></a>
 
                         <ul class="dropdown-menu" role="menu">
-                            {% for node in rpc.nodes %}
-                            <li><a href="/rpchost/{{ node.bts_type() }}/{{ node.name }}{{ request.path }}">
-                                <b>{{ node.bts_type() }}:</b> {{ node.name }}
+                            {% for host, node_names, node in rpc.client_instances() %}
+                            <li><a href="/rpchost/{{ node.type() }}/{{ node.rpc_host }}:{{ node.rpc_port }}/{{ node.name }}{{ request.path }}">
+                                <b>{{ node.type() }}:</b> {{ node.name }}
                             </a></li>
                             {% endfor %}
                         </ul>
@@ -62,29 +73,29 @@
                 {%- if rpc.main_node.is_online() -%}
                     {% set is_synced = rpc.main_node.is_synced() %}
 
-                    <li><a href="#"><div class="btn btn-xs btn-info">{{ rpc.main_node.bts_type() }}: {{ process.binary_description(rpc.main_node) }}</div>
+                    <li><a href="#"><div class="btn btn-xs btn-info">{{ rpc.main_node.type() }}: {{ process.binary_description(rpc.main_node) }}</div>
                     {%- if not is_synced -%}
                         {# if blockchain not up-to-date, information is not reliable #}
                         <div class="btn btn-xs btn-warning">NOT SYNCED</div>
                     {%- endif -%}
                     </a></li>
 
-                    {% if is_synced and rpc.main_node.type == 'delegate' %}
+                    {% if is_synced and rpc.main_node.is_witness() %}
                         {% if not rpc.main_node.is_active(rpc.main_node.name) %}
                             <li><a href="#"><div class="btn btn-xs btn-warning">STANDBY</div></a></li>
                         {% else %}
-                            <li><a href="#">
+                            <li><a href="https://steemd.com/witnesses">
                                 <b>Blocks:</b>
-                                {% set producing, n = rpc.main_node.get_streak() %}
-                                {% if n >= 0 %}
+                                {%- set producing, n = rpc.main_node.get_streak() -%}
+                                {%- if n >= 0 -%}
                                     {% if producing %}
                                         <div class="btn btn-xs btn-success">Last {{ n }} produced</div>
                                     {% else %}
                                         <div class="btn btn-xs btn-danger">Last {{ n }} missed </div>
                                     {% endif %}
-                                {% else %}
+                                {%- else -%}
                                     <div class="btn btn-xs btn-danger">NO DATA / ERROR</div>
-                                {% endif %}
+                                {%- endif -%}
                             </a></li>
                         {% endif %}
                     {% endif %}
