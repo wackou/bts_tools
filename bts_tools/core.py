@@ -346,12 +346,18 @@ def get_all_bin_names(client=None, build_env=None):
         raise ValueError('You need to specify either a build env or a client name')
 
 
-def get_full_bin_name(run_env=None, build_env=None):
-    return get_all_bin_names(run_env, build_env)[0]
+def get_full_bin_name(client=None, build_env=None):
+    return get_all_bin_names(client, build_env)[0]
+
+def get_full_cli_bin_name(client=None, build_env=None):
+    return get_all_bin_names(client, build_env)[1]
 
 
-def get_bin_name(run_env=None, build_env=None):
-    return os.path.basename(get_full_bin_name(run_env, build_env))
+def get_bin_name(client=None, build_env=None):
+    return os.path.basename(get_full_bin_name(client, build_env))
+
+def get_cli_bin_name(client=None, build_env=None):
+    return os.path.basename(get_full_cli_bin_name(client, build_env))
 
 
 IOStream = namedtuple('IOStream', 'status, stdout, stderr')

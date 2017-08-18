@@ -44,16 +44,16 @@ def deploy(build_env, remote_host):
     # strip binaries before sending, saves up to 10x space
     for bin_name in get_all_bin_names(env['name']):
         bin_name = os.path.basename(bin_name)
-        latest = os.path.basename(os.path.realpath(join(cmdline.BTS_BIN_DIR, bin_name)))
-        run('strip "{}/{}"'.format(cmdline.BTS_BIN_DIR, latest))
+        latest = os.path.basename(os.path.realpath(join(cmdline.BUILD_ENV['bin_dir'], bin_name)))
+        run('strip "{}/{}"'.format(cmdline.BUILD_ENV['bin_dir'], latest))
 
     # sync all
-    run('rsync -avzP "{}/" {}:"{}/"'.format(cmdline.BTS_BIN_DIR, remote_host, remote_bin_dir))
+    run('rsync -avzP "{}/" {}:"{}/"'.format(cmdline.BUILD_ENV['bin_dir'], remote_host, remote_bin_dir))
 
     # also symlink properly latest built binaries)
     for bin_name in get_all_bin_names(env['name']):
         bin_name = os.path.basename(bin_name)
-        latest = os.path.basename(os.path.realpath(join(cmdline.BTS_BIN_DIR, bin_name)))
+        latest = os.path.basename(os.path.realpath(join(cmdline.BUILD_ENV['bin_dir'], bin_name)))
         run('ssh {} "ln -fs {}/{} {}/{}"'.format(remote_host,
                                                  remote_bin_dir, latest,
                                                  remote_bin_dir, bin_name))

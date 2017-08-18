@@ -47,10 +47,10 @@ def static_from_root():
 @core.profile
 def offline():
     try:
-        build_env_name = rpc.main_node.run_env()['type']
+        build_env_name = rpc.main_node.client()['type']
         client_name = core.get_gui_bin_name(build_env_name)
     except:
-        client_name = 'BitShares'
+        client_name = 'Graphene (unidentified)'
 
     return render_template('error.html',
                            msg='The %s cli wallet is currently offline. '

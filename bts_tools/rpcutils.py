@@ -21,7 +21,7 @@
 from .core import UnauthorizedError, RPCError, run, get_data_dir, get_bin_name,\
     hashabledict, to_list, trace
 from .feed_providers import FeedPrice
-from .process import bts_binary_running, bts_process
+from .process import bts_binary_running, witness_process
 from .feeds import BIT_ASSETS, BIT_ASSETS_INDICES
 from .privatekey import PrivateKey
 from . import graphene  # needed to access DATABASE_API, NETWORK_API dynamically, can't import them directly
@@ -113,7 +113,7 @@ class GrapheneClient(object):
             data_dir = expanduser(data_dir)
 
             try:
-                log.info('Loading RPC config for %s from %s (run_env = %s)' % (self.name, data_dir, client_name))
+                log.info('Loading RPC config for %s from %s (client = %s)' % (self.name, data_dir, client_name))
                 config = configparser.ConfigParser()
                 config_str = '[bts]\n' + open(expanduser(join(data_dir, 'config.ini'))).read()
                 # config parser can't handle duplicate values, and we don't need seed nodes
@@ -164,7 +164,6 @@ class GrapheneClient(object):
         self.venv_path = venv_path
         self.witness_id = witness_id
         self.witness_signing_key = signing_key or self.witness_signing_key
-        self.bin_name = get_bin_name(client_name or 'bts')
 
         # direct json-rpc call
         def direct_call(funcname, *args):
@@ -394,9 +393,9 @@ class GrapheneClient(object):
         return self.ws_rpc_call(graphene.Api.DATABASE_API, 'get_objects', [oid])
 
     def process(self):
-        return bts_process(self)
+        return witness_process(self)
 
-    def run_env(self):
+    def client(self):
         name = self.client_name
         if not name:
             raise ValueError('No run environment defined for node %s. Maybe a remote node?' % self.name)
@@ -406,7 +405,7 @@ class GrapheneClient(object):
             raise ValueError('Unknown client: %s' % name)
 
     def build_env(self):
-        name = self.run_env()['type']
+        name = self.client()['type']
         try:
             return core.config['build_environments'][name]
         except KeyError:
@@ -422,7 +421,7 @@ class GrapheneClient(object):
 
         # if no cached value, try to get the client type from the config file
         try:
-            self._type = self.run_env()['type']
+            self._type = self.client()['type']
             return self._type
         except ValueError:
             pass

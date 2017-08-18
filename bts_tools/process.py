@@ -18,9 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from .core import run, get_bin_name
 import psutil
 import logging
-from .core import run
 
 log = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ statuses = {psutil.STATUS_RUNNING: 'STATUS_RUNNING',
             psutil.STATUS_IDLE: 'STATUS_IDLE'}
 
 
-def bts_process(node):
+def witness_process(node):
     if not node.is_witness_localhost():
         return None
 
@@ -72,24 +72,25 @@ def bts_process(node):
     if not lines:
         return None
     if len(lines) > 1:
-        log.warning('More than 1 potential bts process: {}'.format(lines))
+        log.warning('More than 1 potential witness process: {}'.format(lines))
 
     pid = int(lines[0].split()[1])
     proc = psutil.Process(pid)
-    if node.bin_name in proc.name():
-        _process_cache[port] = proc
-        return proc
 
-    else:
-        log.warning('Process pid={} listening on port {} doesn\'t seem to be of the correct type: {}'.format(pid, port, proc))
-        return None
+    bin_name = node.build_env().get('witness_filename') or get_bin_name(node.client_name)
+    if bin_name not in proc.name():
+        log.warning('Process pid={} listening on port {} doesn\'t seem to have the correct filename: '
+                    'expected={}, actual={}'.format(pid, port, bin_name, proc.name()))
+
+    _process_cache[port] = proc
+    return proc
 
 
 def bts_binary_running(node):
     """Return whether an instance of the bts binary could be found that is
     running or in a runnable state.
     """
-    p = bts_process(node)
+    p = witness_process(node)
     if p is not None:
         return p.status() not in {psutil.STATUS_STOPPED,
                                   psutil.STATUS_TRACING_STOP,
@@ -103,12 +104,13 @@ def binary_description(node):
     either tag version or git revision.
     """
     client_version = node.about()['client_version']
-    p = bts_process(node)
+    p = witness_process(node)
     if p is None:
         return client_version
     # if client is running locally, extract info from filename, usually more precise
     try:
-        desc = p.exe().split(node.bin_name + '_')[1]
+        bin_name = node.build_env().get('witness_filename') or get_bin_name(node.client_name)
+        desc = p.exe().split(bin_name + '_')[1]
     except IndexError:
         log.debug('Could not identify description from filename: %s' % p.exe())
         return client_version

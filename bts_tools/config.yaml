@@ -21,11 +21,16 @@ logging:
 # https://github.com/wackou/bts_tools/blob/master/bts_tools/templates/config/build_environments.yaml
 #
 build_environments:
-    make_args: ['-j4']  # [OPTIONAL] shared among all build environments
-    cmake_args: []      # [OPTIONAL] shared among all build environments
+    cmake_args: []                            # [OPTIONAL] shared among all build environments
+    make_args: ['-j4']                        # [OPTIONAL] shared among all build environments
+    bts:
+        cmake_args: []                        # [OPTIONAL] build environment specific
+        witness_filename: witness_node        # [OPTIONAL] filename for the compiled witness binary
+        wallet_filename: cli_wallet           # [OPTIONAL] filename for the compiled wallet binary
     steem:
         cmake_args: ['-DLOW_MEMORY_NODE=ON']  # [OPTIONAL] see https://github.com/steemit/steem/blob/master/doc/building.md
     muse:
+        boost_root: ~/boost1.60_install       # [OPTIONAL] if boost was installed manually
         cmake_args: []  #'-DBUILD_MUSE_TEST=ON']
 
 

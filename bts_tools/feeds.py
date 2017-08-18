@@ -62,7 +62,7 @@ BIT_ASSETS = BASE_ASSETS | OTHER_ASSETS | BIT_ASSETS_INDICES.keys()
 
 """List of feeds that should be shown on the UI and in the logs. Note that we
 always check and publish all feeds, regardless of this variable."""
-DEFAULT_VISIBLE_FEEDS = ['USD', 'BTC', 'CNY', 'GOLD', 'EUR']
+DEFAULT_VISIBLE_FEEDS = ['USD', 'BTC', 'CNY', 'SILVER', 'EUR']
 
 cfg = None
 

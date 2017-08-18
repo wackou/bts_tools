@@ -18,19 +18,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from os.path import join, dirname, exists, islink, expanduser
+from os.path import join, dirname, exists, islink, expanduser, basename
 from argparse import RawTextHelpFormatter
 from contextlib import suppress
 from pathlib import Path
 from ruamel import yaml
-from .core import (platform, run, get_data_dir, get_bin_name, get_gui_bin_name,
-                   get_all_bin_names, join_shell_cmd, hash_salt_password)
+from .core import (platform, run, get_data_dir, get_bin_name, get_gui_bin_name, get_cli_bin_name,
+                   get_all_bin_names, get_full_bin_name, hash_salt_password)
 from .privatekey import PrivateKey
 from . import core, init
 from .rpcutils import rpc_call, GrapheneClient
 import argparse
 import os
 import sys
+import copy
 import shutil
 import arrow
 import json
@@ -38,16 +39,9 @@ import logging
 
 log = logging.getLogger(__name__)
 
-BTS_GIT_REPO     = None
-BTS_GIT_BRANCH   = None
-BTS_BUILD_DIR    = None
-BTS_HOME_DIR     = None
-BTS_BIN_DIR      = None
-BTS_BIN_NAME     = None
-BTS_GUI_BIN_NAME = None
 
 BUILD_ENV = None
-RUN_ENV   = None
+CLIENT    = None
 
 
 def select_build_environment(env_name):
@@ -57,20 +51,19 @@ def select_build_environment(env_name):
         raise OSError('OS not supported yet, please submit a patch :)')
 
     try:
-        env = core.config['build_environments'][env_name]
-        env['name'] = env_name
+        env = copy.copy(core.config['build_environments'][env_name])
     except KeyError:
         log.error('Unknown build environment: %s' % env_name)
         sys.exit(1)
 
-    global BTS_GIT_REPO, BTS_GIT_BRANCH, BTS_BUILD_DIR, BTS_BIN_DIR, BUILD_ENV, BTS_BIN_NAME, BTS_GUI_BIN_NAME
-    BTS_GIT_REPO     = env['git_repo']
-    BTS_GIT_BRANCH   = env['git_branch']
-    BTS_BUILD_DIR    = expanduser(env['build_dir'])
-    BTS_BIN_DIR      = expanduser(env['bin_dir'])
-    BTS_BIN_NAME     = get_bin_name(build_env=env_name)
-    BTS_GUI_BIN_NAME = get_gui_bin_name(build_env=env_name)
+    env['name'] = env_name
+    env['build_dir'] = expanduser(env['build_dir'])
+    env['bin_dir'] = expanduser(env['bin_dir'])
+    env['witness_filename'] = env.get('witness_filename', get_bin_name(build_env=env_name))
+    env['wallet_filename'] = env.get('wallet_filename', get_cli_bin_name(build_env=env_name))
+    env['gui_bin_name'] = env.get('gui_bin_name', get_gui_bin_name(build_env=env_name))
 
+    global BUILD_ENV
     BUILD_ENV = env
     return env
 
@@ -78,7 +71,7 @@ def select_build_environment(env_name):
 def select_client(client):
     log.info("Running '%s' client" % client)
     try:
-        env = core.config['clients'][client]
+        env = copy.copy(core.config['clients'][client])
         env['name'] = client
     except KeyError:
         log.error('Unknown client: %s' % client)
@@ -86,10 +79,10 @@ def select_client(client):
 
     select_build_environment(env['type'])
 
-    global BTS_HOME_DIR, RUN_ENV
-    BTS_HOME_DIR = get_data_dir(client)
-    RUN_ENV = env
+    env['home_dir'] = get_data_dir(client)
 
+    global CLIENT
+    CLIENT = env
     return env
 
 
@@ -101,12 +94,12 @@ def is_valid_environment(env):
 def clone():
     def is_git_dir(path):
         try:
-            run('git rev-parse', run_dir=BTS_BUILD_DIR, verbose=False)
+            run('git rev-parse', run_dir=BUILD_ENV['build_dir'], verbose=False)
             return True
         except RuntimeError:
             return False
-    if not exists(BTS_BUILD_DIR) or not is_git_dir(BTS_BUILD_DIR):
-        run('git clone %s "%s"' % (BTS_GIT_REPO, BTS_BUILD_DIR))
+    if not exists(BUILD_ENV['build_dir']) or not is_git_dir(BUILD_ENV['build_dir']):
+        run('git clone %s "%s"' % (BUILD_ENV['git_repo'], BUILD_ENV['build_dir']))
 
 
 def clean_config():
@@ -124,7 +117,7 @@ def configure(debug=False):
     cmake_opts = []
     boost_root = BUILD_ENV.get('boost_root')
     if boost_root:
-        cmake_opts += ['-DBOOST_ROOT="{}"'.format(boost_root)]
+        cmake_opts += ['-DBOOST_ROOT="{}"'.format(expanduser(boost_root))]
 
     if debug:
         # do not compile really in debug, it's unusably slow otherwise
@@ -181,29 +174,37 @@ def install_last_built_bin():
         return bin_filename
 
     def install(src, dst):
-        print('Installing %s to %s' % (dst, BTS_BIN_DIR))
+        print('Installing %s to %s' % (basename(dst), BUILD_ENV['bin_dir']))
         if islink(src):
             result = join(dirname(src), os.readlink(src))
             print('Following symlink %s -> %s' % (src, result))
             src = result
-        dst = join(BTS_BIN_DIR, os.path.basename(dst))
+        dst = join(BUILD_ENV['bin_dir'], basename(dst))
         shutil.copy(src, dst)
         return dst
 
-    def install_and_symlink(bin_name):
+    def install_and_symlink(binary_type, bin_name):
+        """binary_type should be either 'witness' or 'wallet'
+        bin_name is the base name template that will be used to name the resulting file."""
+        if binary_type == 'witness':
+            bin_index = 0
+        elif binary_type == 'wallet':
+            bin_index = 1
+        else:
+            raise ValueError('binary_type needs to be either "witness" or "wallet"')
+        client = join(BUILD_ENV['build_dir'], 'programs', get_all_bin_names(build_env=BUILD_ENV['name'])[bin_index])
         bin_filename = decorated_filename(bin_name)
-        client = join(BTS_BUILD_DIR, 'programs', bin_name)
         c = install(client, bin_filename)
-        last_installed = join(BTS_BIN_DIR, os.path.basename(bin_name))
+        last_installed = join(BUILD_ENV['bin_dir'], basename(bin_name))
         with suppress(Exception):
             os.unlink(last_installed)
         os.symlink(c, last_installed)
 
-    if not exists(BTS_BIN_DIR):
-        os.makedirs(BTS_BIN_DIR)
+    if not exists(BUILD_ENV['bin_dir']):
+        os.makedirs(BUILD_ENV['bin_dir'])
 
-    for bname in get_all_bin_names(build_env=BUILD_ENV['name']):
-        install_and_symlink(bname)
+    install_and_symlink('witness', BUILD_ENV['witness_filename'])
+    install_and_symlink('wallet', BUILD_ENV['wallet_filename'])
 
 
 def main(flavor='bts'):
@@ -273,7 +274,7 @@ Examples:
         select_build_environment(args.environment)
 
         clone()
-        os.chdir(BTS_BUILD_DIR)
+        os.chdir(BUILD_ENV['build_dir'])
         run('git fetch --all')
 
         tag = args.args[0] if args.args else None
@@ -286,7 +287,7 @@ Examples:
         if tag:
             run('git checkout %s' % tag)
         else:
-            r = run('git checkout %s' % BTS_GIT_BRANCH)
+            r = run('git checkout %s' % BUILD_ENV['git_branch'])
             if r.status == 0:
                 run('git pull')
         run('git submodule update --init --recursive')
@@ -315,21 +316,21 @@ Examples:
         tag = args.args[0] if args.args else None
 
         if args.command == 'run':
-            bin_name = BTS_BIN_NAME
+            bin_name = BUILD_ENV['witness_filename']
         elif args.command == 'run_cli':
-            bin_name = 'cli_wallet'
+            bin_name = BUILD_ENV['wallet_filename']
 
         # FIXME: only use tag if it actually corresponds to one
         if False: #tag:
             # if git rev specified, runs specific version
             print('Running specific instance of the %s client: %s' % (flavor, tag))
-            bin_name = run('ls %s' % join(BTS_BIN_DIR,
+            bin_name = run('ls %s' % join(BUILD_ENV['bin_dir'],
                                           '%s_*%s*' % (bin_name, tag[:8])),
                            capture_io=True, verbose=False).stdout.strip()
             run_args += args.args[1:]
         else:
             # run last built version
-            bin_name = join(BTS_BIN_DIR, bin_name)
+            bin_name = join(BUILD_ENV['bin_dir'], bin_name)
             run_args += args.args
 
         if args.command == 'run':
@@ -492,23 +493,23 @@ Examples:
     elif args.command == 'run_gui':
         select_build_environment(args.environment)
         if platform == 'darwin':
-            run('open %s' % join(BTS_BUILD_DIR, 'programs/qt_wallet/bin/%s.app' % BTS_GUI_BIN_NAME))
+            run('open %s' % join(BUILD_ENV['build_dir'], 'programs/qt_wallet/bin/%s.app' % BUILD_ENV['gui_bin_name']))
         elif platform == 'linux':
-            run(join(BTS_BUILD_DIR, 'programs/qt_wallet/bin/%s' % BTS_GUI_BIN_NAME))
+            run(join(BUILD_ENV['build_dir'], 'programs/qt_wallet/bin/%s' % BUILD_ENV['gui_bin_name']))
 
     elif args.command == 'clean':
         select_build_environment(args.environment)
         print('\nCleaning build directory...')
-        run('rm -fr "%s"' % BTS_BUILD_DIR, verbose=True)
+        run('rm -fr "%s"' % BUILD_ENV['build_dir'], verbose=True)
 
     elif args.command == 'clean_homedir':
         select_client(args.environment)
         print('\nCleaning home directory...')
-        if not BTS_HOME_DIR:
+        if not CLIENT['home_dir']:
             print('ERROR: The home/data dir has not been specified in the build environment...')
             print('       Please check your config.yaml file')
             sys.exit(1)
-        cmd = 'rm -fr "%s"' % BTS_HOME_DIR
+        cmd = 'rm -fr "%s"' % CLIENT['home_dir']
         if args.environment != 'development':
             print('WARNING: you are about to delete your wallet on the real chain.')
             print('         you may lose some real money if you do this!...')
@@ -520,7 +521,7 @@ Examples:
     elif args.command == 'list':
         select_build_environment(args.environment)
         print('\nListing built binaries for environment: %s' % args.environment)
-        run('ls -ltr "%s"' % BTS_BIN_DIR)
+        run('ls -ltr "%s"' % BUILD_ENV['bin_dir'])
 
     elif args.command == 'monitor':
         print('\nLaunching monitoring web app...')
