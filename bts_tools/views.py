@@ -290,34 +290,34 @@ def view_info():
 
     if rpc.main_node.is_witness() and rpc.main_node.type() in ['bts']:
         published_feeds = rpc.main_node.get_witness_feeds(rpc.main_node.name, feeds.visible_feeds)
-        last_update = max(f.last_updated for f in published_feeds) if published_feeds else None
-        pfeeds = {f.asset: f.price for f in published_feeds}
-        bfeeds = {f.asset: f.price for f in rpc.main_node.get_blockchain_feeds(feeds.visible_feeds)}
-        lfeeds = dict(feeds.feeds)
-        mfeeds = {cur: feeds.median_str(cur) for cur in lfeeds}
+        if len(published_feeds) > 0:
+            last_update = max(f.last_updated for f in published_feeds) if published_feeds else None
+            pfeeds = {f.asset: f.price for f in published_feeds}
+            bfeeds = {f.asset: f.price for f in rpc.main_node.get_blockchain_feeds(feeds.visible_feeds)}
+            lfeeds = dict(feeds.feeds)
+            mfeeds = {cur: feeds.median_str(cur) for cur in lfeeds}
 
-        # format to string here instead of in template, more flexibility in python
-        def format_feeds(fds):
-            for asset in feeds.visible_feeds:
-                fmt, field_size = (('%.4g', 10)
-                                   if feeds.is_extended_precision(asset)
-                                   else ('%.4f', 7))
-                try:
-                    s = fmt % float(fds[asset])
-                except:
-                    s = 'N/A'
-                fds[asset] = s.rjust(field_size)
+            # format to string here instead of in template, more flexibility in python
+            def format_feeds(fds):
+                for asset in feeds.visible_feeds:
+                    fmt, field_size = (('%.4g', 10)
+                                      if feeds.is_extended_precision(asset)
+                                      else ('%.4f', 7))
+                    try:
+                        s = fmt % float(fds[asset])
+                    except:
+                        s = 'N/A'
+                    fds[asset] = s.rjust(field_size)
 
-        format_feeds(lfeeds)
-        format_feeds(mfeeds)
-        format_feeds(pfeeds)
-        format_feeds(bfeeds)
+            format_feeds(lfeeds)
+            format_feeds(mfeeds)
+            format_feeds(pfeeds)
+            format_feeds(bfeeds)
 
-        feeds_obj = dict(assets=feeds.visible_feeds, feeds=lfeeds, pfeeds=pfeeds,
-                         mfeeds=mfeeds, bfeeds=bfeeds, last_update=last_update)
-
-    else:
-        feeds_obj = {}
+            feeds_obj = dict(assets=feeds.visible_feeds, feeds=lfeeds, pfeeds=pfeeds,
+                            mfeeds=mfeeds, bfeeds=bfeeds, last_update=last_update)
+        else:
+            feeds_obj = {}
 
     if rpc.main_node.is_witness():
         info_items2 = sorted(rpc.main_node.get_witness(rpc.main_node.name).items())
