@@ -60,7 +60,8 @@ SEED_NODES = {
         ('45.76.192.171:33333',           '', 'musepeer',     ''),
         ('muse-seed.xeldal.com:33333',    '', 'xeldal',       ''),
         ('muse.rondonson.com:33333',      '', 'rondonson',    ''),
-        ('seed.muse.blckchnd.com:33333',  '', 'blckchnd',     '')
+        ('seed.muse.blckchnd.com:33333',  '', 'blckchnd',     ''),
+        ('muse.cervantes.one:33333',      '', 'cervantes',    '')
     ],
     'steem': [
         ('seed.liondani.com:2016',           '',   'liondani',       'https://steemit.com/introduceyourself/@liondani/hi-liondani-here-aka-daniel-schwarz-happy-husband-father-steem-witness-steemit-enthusiast'),
@@ -83,7 +84,7 @@ SEED_NODES = {
         ('46.252.27.1:1337',                 'de', 'jabbasteem',     'https://steemit.com/witness-category/@jabbasteem/witness-jabbasteem'),
         ('anyx.co:2001',                     '',   'anyx',           'https://steemit.com/witness-category/@anyx/witness-application-anyx'),
         ('seed.cubeconnex.com:2001',         '',   'bitcube',        'https://steemit.com/witness-category/@bitcube/bitcube-witness-post'),
-        ('212.47.249.84:40696',              'fr', 'ihashfury',      'https://steemit.com/witness-category/@ihashfury/ihashfury-witness-thread'),
+        ('steem-seed.altcap.io:40696',       'fr', 'ihashfury',      'https://steemit.com/witness-category/@ihashfury/ihashfury-witness-thread'),
         ('104.199.118.92:2001',              'us', 'clayop',         'https://steemit.com/witness-category/@clayop/witness-clayop'),
         ('104.40.230.35:2001',               '',   'aizensou',       'https://steemit.com/witness-category/@aizensou/witness-application-aizensou'),
         ('gtg.steem.house:2001',             '',   'gtg',            'https://steemit.com/witness-category/@gtg/witness-gtg'),
