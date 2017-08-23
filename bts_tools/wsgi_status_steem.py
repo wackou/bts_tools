@@ -56,6 +56,8 @@ def view_seed_nodes():
 
     return render_template('tableview_naked.html',
                            title='{} seed nodes'.format(chain),
+                           subtitle='Please edit <a href="https://github.com/wackou/bts_tools/blob/master/bts_tools/seednodes.py#L32">the file directly on github</a> to submit changes '
+                                    '<a href="https://help.github.com/articles/editing-files-in-another-user-s-repository/">(HOWTO)</a>',
                            headers=headers,
                            points=points,
                            countries=countries,

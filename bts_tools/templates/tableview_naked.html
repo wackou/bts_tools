@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>{{ chain }} seed nodes</title>
+    <title>{{ title }}</title>
 
     <link rel="stylesheet" href="/static/css/bootstrap.3.1.1.min.css">
     <link rel="stylesheet" href="/static/css/jquery.dataTables.1.10RC1.css">
@@ -23,6 +23,11 @@
 {################################ HTML CONTENT ################################}
 {% macro make_table(data, attrs, headers, title='') -%}
     <h3 align="center">{{ title }}</h3>
+
+    {% if subtitle %}
+        <div class="credit" align="center">{{ subtitle | safe }}</div>
+    {% endif %}
+
 
         <div>
 

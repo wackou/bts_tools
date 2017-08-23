@@ -61,7 +61,8 @@ SEED_NODES = {
         ('muse-seed.xeldal.com:33333',    '', 'xeldal',       ''),
         ('muse.rondonson.com:33333',      '', 'rondonson',    ''),
         ('seed.muse.blckchnd.com:33333',  '', 'blckchnd',     ''),
-        ('muse.cervantes.one:33333',      '', 'cervantes',    '')
+        ('muse.cervantes.one:33333',      '', 'cervantes',    ''),
+        ('muse.thetimsaid.com:33333',     '', 'timsaid',      '')
     ],
     'steem': [
         ('seed.liondani.com:2016',           '',   'liondani',       'https://steemit.com/introduceyourself/@liondani/hi-liondani-here-aka-daniel-schwarz-happy-husband-father-steem-witness-steemit-enthusiast'),
@@ -112,7 +113,8 @@ SEED_NODES = {
         ('seed.jerrybanfield.com:2001',      '',   'JerryBanfield',  'https://steemit.com/witness-category/@jerrybanfield/steem-witness-14-542-reporting-for-duty'),
         ('seed.blackrift.net:2001',          '',   'drakos',         'https://steemit.com/witness-category/@drakos/my-witness-application'),
         ('seed.followbtcnews.com:2001',      '',   'followbtcnews',  'https://steemit.com/witness-category/@followbtcnews/full-steem-ahead-vote-followbtcnews-for-witness'),
-        ('23.92.215.36:2001',                '',   'cloh76',         'https://steemit.com/witness-category/@cloh76/cloh76-witness-introduction-post-cloh76-witness')
+        ('23.92.215.36:2001',                '',   'cloh76',         'https://steemit.com/witness-category/@cloh76/cloh76-witness-introduction-post-cloh76-witness'),
+        ('node.mahdiyari.info:2001',         '',   'mahdi.yari',     '')
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),
