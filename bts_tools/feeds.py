@@ -45,18 +45,10 @@ BASE_ASSETS = {'BTC', 'USD', 'CNY', 'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', '
 
 YAHOO_ASSETS = BASE_ASSETS - {'BTC', 'USD', 'CNY'}
 
-OTHER_ASSETS = {'TUSD', 'CASH.USD', 'TCNY', 'CASH.BTC', 'ALTCAP', 'GRIDCOIN', 'STEEM',
+OTHER_ASSETS = {'ALTCAP', 'GRIDCOIN', 'STEEM',
                 'BTWTY', 'RUBLE', 'HERO'}
 
-# BIT_ASSETS_INDICES = {'SHENZHEN': 'CNY',
-#                       'SHANGHAI': 'CNY',
-#                       'NASDAQC': 'USD',
-#                       'NIKKEI': 'JPY',
-#                       'HANGSENG': 'HKD'}
-# deactivate those indices for now
-BIT_ASSETS_INDICES = {}
-
-BIT_ASSETS = BASE_ASSETS | OTHER_ASSETS | BIT_ASSETS_INDICES.keys()
+BIT_ASSETS = BASE_ASSETS | OTHER_ASSETS
 
 """List of feeds that should be shown on the UI and in the logs. Note that we
 always check and publish all feeds, regardless of this variable."""
@@ -370,12 +362,8 @@ def get_feed_prices(node):
 
     feeds = {}  # TODO: do we really want to reset the global var 'feeds' everytime we come here?
     feeds['BTC'] = btc_price
-    feeds['CASH.BTC'] = btc_price
     feeds['USD'] = usd_price
-    feeds['TUSD'] = usd_price
-    feeds['CASH.USD'] = usd_price
     feeds['CNY'] = cny_price
-    feeds['TCNY'] = cny_price
 
     feeds['HERO'] = usd_price / (1.05 ** ((pendulum.today() - pendulum.Pendulum(1913, 12, 23)).in_days() / 365.2425))
 
@@ -391,15 +379,7 @@ def get_feed_prices(node):
     #      see https://bitsharestalk.org/index.php/topic,24004.0/all.html
     feeds['RUBLE'] = feeds['RUB']
 
-    # 3- get the feeds for major composite indices
-    providers_quotes = {yahoo, GoogleFeedProvider(), BloombergFeedProvider()}
-
-    all_quotes = get_multi_feeds('query_quote',
-                                 BIT_ASSETS_INDICES.items(),
-                                 providers_quotes & active_providers)
-
-    for asset, base in BIT_ASSETS_INDICES.items():
-        feeds[asset] = 1 / all_quotes.price(asset, base, stddev_tolerance=0.02)
+    # 3- get the feeds for major composite indices   # REMOVED, was using yahoo, GoogleFeedProvider, BloombergFeedProvider
 
     # 4- get other assets
     altcap = get_multi_feeds('get', [('ALTCAP', 'BTC')], {coincap, cmc})
@@ -434,7 +414,7 @@ def median_str(cur):
 
 
 def is_extended_precision(asset):
-    return asset in {'BTC', 'GOLD', 'SILVER', 'BTWTY'} | set(BIT_ASSETS_INDICES.keys())
+    return asset in {'BTC', 'GOLD', 'SILVER', 'BTWTY'}
 
 
 def format_qualifier(asset):

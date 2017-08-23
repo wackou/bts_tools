@@ -27,25 +27,13 @@ monitoring:
     feeds:
         steem_dollar_adjustment: 1.00
         enabled_assets: []   # [RUBLE, BTWTY, ALTCAP, HERO]
-        disabled_assets: [RUB, SEK, GRIDCOIN, TCNY, CASH.BTC, CASH.USD, KRW, TUSD, SGD, HKD, BTWTY, GOLD]  # black swan
+        disabled_assets: [RUB, SEK, GRIDCOIN, KRW, SGD, HKD, BTWTY, GOLD]  # black swan
         asset_params:
             # TODO: MCR and MSSR should be the actual percentage (float) not a fixed-point integer
             default:
                 maintenance_collateral_ratio: 1750  # Call when collateral only pays off 175% the debt
                 maximum_short_squeeze_ratio: 1100   # Stop calling when collateral only pays off 110% of the debt
                 core_exchange_factor: 0.80          # 20% premium if paying fees in bitassets (avoids people draining the fee pool during price swings)
-            TCNY:
-                maintenance_collateral_ratio: 1750
-                maximum_short_squeeze_ratio: 1001
-            TUSD:
-                maintenance_collateral_ratio: 1750
-                maximum_short_squeeze_ratio: 1001
-            CASH.USD:  # TODO: remove as it's dead
-                maintenance_collateral_ratio: 1750
-                maximum_short_squeeze_ratio: 1001
-            CASH.BTC:  # TODO: remove as it's dead
-                maintenance_collateral_ratio: 1750
-                maximum_short_squeeze_ratio: 1001
             ALTCAP:
                 maintenance_collateral_ratio: 1360
                 maximum_short_squeeze_ratio: 1069
@@ -62,14 +50,3 @@ monitoring:
         # List of feeds that should be shown on the UI and in the logs. Note that we
         # always check and publish all feeds, regardless of this variable.
         visible_feeds: [USD, BTC, CNY, GOLD, EUR]
-
-    payroll:
-        timezone_offset: 0                       # vps timezone difference from payee timezone (for logging purposes)
-        pay_interval: 14                         # How often (in days) between each payday
-        minimum_balance: 0                       # Amount to maintain in delegate account for fees
-        payday_file: last_payday.dat             # Holds the date & time of the last payout
-        transactions_file: transactions.txt      # Holds the list of payout transactions
-        accounts: [account1, account2]           # List of accounts to pay for testing
-        pay_rate: [60, 40]                       # Percentage to distribute to each account
-
-

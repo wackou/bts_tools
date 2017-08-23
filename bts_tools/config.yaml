@@ -102,7 +102,7 @@ clients:
         # FIXME: implement me!
         override_default_seed_nodes: true  # [OPTIONAL] [default=false] if true, the client will only use the given seed nodes, otherwise it adds them to the list of built-in seed nodes
 
-        # Steemd can now accept the contents of the api_access.json directly as argument on the command line,
+        # Steemd (and Mused) can now accept the contents of the api_access.json directly as argument on the command line,
         # hence the field api_access.json is not required anymore here (and you don't need to create the file either),
         # as bts_tools will generate the proper arguments from the user and password given here.
         witness_user: xxxxxxxx
@@ -149,7 +149,7 @@ monitoring:
         enabled_assets: [RUBLE, ALTCAP, HERO]
 
         # explicitly disable some assets (eg: due to black swan)
-        #disabled_assets: [RUB, SEK, GRIDCOIN, TCNY, CASH.BTC, CASH.USD, KRW, TUSD, SGD, HKD, BTWTY]
+        #disabled_assets: [RUB, SEK, GRIDCOIN, KRW, SGD, HKD, BTWTY]
 
         check_time_interval: 300            # interval at which the external feed providers should be queried, in seconds
         median_time_span: 1800              # leave default

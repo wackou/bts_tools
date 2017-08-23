@@ -91,7 +91,7 @@ def monitoring_thread(*nodes):
     node_names = ', '.join(n.name for n in nodes)
 
     log.info('Starting thread monitoring on %s:%d for nodes %s' %
-             (client_node.rpc_host, client_node.rpc_port, node_names))
+             (client_node.wallet_host, client_node.wallet_port, node_names))
 
     # all different types of monitoring that should be considered by this thread
     all_monitoring = set(chain(*(node.monitoring for node in nodes))) | {'cpu_ram_usage'}

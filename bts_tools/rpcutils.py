@@ -22,7 +22,7 @@ from .core import UnauthorizedError, RPCError, run, get_data_dir, get_bin_name,\
     hashabledict, to_list, trace
 from .feed_providers import FeedPrice
 from .process import bts_binary_running, witness_process
-from .feeds import BIT_ASSETS, BIT_ASSETS_INDICES
+from .feeds import BIT_ASSETS
 from .privatekey import PrivateKey
 from . import graphene  # needed to access DATABASE_API, NETWORK_API dynamically, can't import them directly
 from . import core
@@ -147,7 +147,7 @@ class GrapheneClient(object):
         self.witness_user     = client.get('witness_user')
         self.witness_password = client.get('witness_password')
         self.wallet_host      = client.get('wallet_host')
-        self.wallet_port      = client.get('wallet_port') or client.get('rpc_port') or cfg_port or 0
+        self.wallet_port      = client.get('wallet_port') or cfg_port or 0
         self.wallet_user      = client.get('wallet_user')
         self.wallet_password  = client.get('wallet_password')
         self.proxy_host       = client.get('proxy_host')
@@ -155,10 +155,6 @@ class GrapheneClient(object):
         self.proxy_user       = client.get('proxy_user')
         self.proxy_password   = client.get('proxy_password')
 
-        self.rpc_port = self.proxy_port or self.wallet_port
-        self.rpc_user = self.wallet_user or client.get('rpc_user') or rpc.get('rpc_user') or ''
-        self.rpc_password = self.wallet_password or client.get('rpc_password') or rpc.get('rpc_password') or ''
-        self.rpc_host = self.wallet_host or client.get('rpc_host') or self.proxy_host or 'localhost'
         self.rpc_id = (self.rpc_host, self.wallet_port)
         self.ws_rpc_id = (self.witness_host, self.witness_port)
         self.venv_path = venv_path
@@ -191,7 +187,7 @@ class GrapheneClient(object):
 
         self.opts = kwargs
         if self.opts:
-            log.debug('Additional opts for node {} on {}:{} - {}'.format(self.name, self.rpc_host, self.rpc_port, self.opts))
+            log.debug('Additional opts for node {} - {}'.format(self.name, self.opts))
 
         # get a special "smart" cache for slots as it is a very expensive call
         self._slot_cache = make_region().configure('dogpile.cache.memory')
@@ -202,10 +198,8 @@ class GrapheneClient(object):
 
     def __str__(self):
         return '{}: {} {} "{}" on {}:{}'.format(self.client_name, self.type(), self.role, self.name, self.witness_host, self.witness_port)
-        #return '{} ({} / {}:{})'.format(self.name, self.type(), self.rpc_host, self.rpc_port)
 
     def __repr__(self):
-        #return '<GrapheneClient(%s, %s)>' % (self.client_name, self.name)
         return '<GrapheneClient(%s)>' % str(self)
 
     def __getattr__(self, funcname):
@@ -424,27 +418,9 @@ class GrapheneClient(object):
             self._type = self.client()['type']
             return self._type
         except ValueError:
-            pass
-
-        # if the previous didn't work (eg: remote node), try to talk to the client
-        # directly. This works only when the client is running.
-        try:
-            blockchain_name = self.about()['blockchain_name']
-        except Exception as e:
-            log.warning('Could not find blockchain name for {}:{}'.format(self.rpc_host, self.rpc_port))
-            return ''
-        if blockchain_name == 'BitShares':
-            self._type = 'bts'
-        elif blockchain_name == 'Steem':
-            self._type = 'steem'
-        elif blockchain_name == 'PeerPlays':
-            self._type = 'ppy'
-        elif blockchain_name == 'Muse':
-            self._type = 'muse'
-        else:
+            log.warning('Could not find blockchain name for {}'.format(self))
             return 'unknown'
 
-        return self._type
 
     def get_active_witnesses(self):
         if self.affiliation() == 'steem':

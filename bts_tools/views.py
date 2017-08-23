@@ -152,14 +152,14 @@ def view_status():
 
 def find_node(type, host, name):
     for node in rpc.nodes:
-        if node.type() == type and '{}:{}'.format(node.rpc_host, node.rpc_port) == host and node.name == name:
+        if node.type() == type and '{}:{}'.format(node.wallet_host, node.wallet_port) == host and node.name == name:
             return node
     raise ValueError('Node not found: {}/{}/{}'.format(type, host, name))
 
 
 def find_local_node(port):
     for node in rpc.nodes:
-        if node.is_localhost() and node.rpc_port == port:
+        if node.is_localhost() and node.wallet_port == port:
             return node
     raise ValueError('Node not found: localhost:{}'.format(port))
 
