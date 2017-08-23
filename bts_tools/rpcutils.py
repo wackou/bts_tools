@@ -514,7 +514,7 @@ class GrapheneClient(object):
                 result.append(FeedPrice(base_price / quote_price, asset, 'BTS'))
 
             except ZeroDivisionError :
-                print("No price feeds for asset %s available on the blockchain, yet!" % asset)
+                print("No price feeds for asset %s available on the blockchain!" % asset)
 
         return result
 
@@ -546,7 +546,7 @@ class GrapheneClient(object):
                     log.warning('No published feeds found for witness {} - id: {}'.format(witness_name, witness_id))
 
             except ZeroDivisionError:
-                print("No price feeds for asset %s available on the blockchain, yet!" % asset)
+                print("No price feeds for asset %s available on the blockchain!" % asset)
 
         return result
 

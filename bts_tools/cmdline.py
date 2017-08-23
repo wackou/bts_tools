@@ -33,8 +33,7 @@ import os
 import sys
 import copy
 import shutil
-import arrow
-import json
+import pendulum
 import logging
 
 log = logging.getLogger(__name__)
@@ -293,7 +292,7 @@ Examples:
         run('git submodule update --init --recursive')
         clean_config()
 
-        start = arrow.utcnow()
+        start = pendulum.utcnow()
 
         if args.command == 'build':
             configure(debug=BUILD_ENV.get('debug', False))
@@ -303,7 +302,7 @@ Examples:
             configure_gui()
             build_gui()
 
-        elapsed_seconds = (arrow.utcnow() - start).seconds
+        elapsed_seconds = (pendulum.utcnow() - start).in_seconds()
         mins = elapsed_seconds // 60
         secs = elapsed_seconds % 60
         msg = 'Compiled in%s%s' % ((' %d mins' % mins if mins else ''),

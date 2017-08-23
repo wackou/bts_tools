@@ -29,12 +29,10 @@ from .feed_providers import FeedPrice, FeedSet, YahooFeedProvider, BterFeedProvi
 from collections import deque, defaultdict
 from contextlib import suppress
 from concurrent.futures import ThreadPoolExecutor
-from datetime import date, datetime, timedelta
 import threading
 import itertools
 import statistics
 import json
-import arrow
 import pendulum
 import re
 import logging
@@ -172,7 +170,7 @@ def get_bit20_feed(node, usd_price):
         if f['memo'].startswith('COMPOSITION'):
             last_updated = re.search('\((.*)\)', f['memo'])
             if last_updated:
-                last_updated = arrow.get(last_updated.group(1), 'YYYY/MM/DD')
+                last_updated = pendulum.from_format(last_updated.group(1), '%Y/%m/%d')
 
             bit20 = json.loads(f['memo'].split(')', maxsplit=1)[1])
             log.debug('Found bit20 composition, last update = {}'.format(last_updated))
@@ -379,7 +377,7 @@ def get_feed_prices(node):
     feeds['CNY'] = cny_price
     feeds['TCNY'] = cny_price
 
-    feeds['HERO'] = usd_price / (1.05 ** ((date.today() - date(1913, 12, 23)).days / 365.2425))
+    feeds['HERO'] = usd_price / (1.05 ** ((pendulum.today() - pendulum.Pendulum(1913, 12, 23)).in_days() / 365.2425))
 
     log.debug('Got btc/usd price: {}'.format(btc_usd))
     log.debug('Got usd price: {}'.format(usd_price))

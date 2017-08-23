@@ -85,7 +85,7 @@ def monitoring_thread(*nodes):
                       'cpu_ram_usage', 'wallet_state', 'fork', 'free_disk_space']
 
     # plugins acting on each role (ie: 1 plugin instance for each role defined in a client)
-    ROLE_PLUGINS = ['missed', 'payroll', 'voted_in']
+    ROLE_PLUGINS = ['missed', 'voted_in']
 
     client_node = nodes[0]
     node_names = ', '.join(n.name for n in nodes)

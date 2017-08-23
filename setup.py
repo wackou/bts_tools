@@ -29,7 +29,7 @@ HISTORY = open(os.path.join(here, 'HISTORY.rst')).read()
 VERSION = '0.4.14'
 
 
-install_requires = ['Flask', 'requests', 'psutil', 'arrow', 'pyyaml', 'dogpile.cache',
+install_requires = ['Flask', 'requests', 'psutil', 'pyyaml', 'dogpile.cache',
                     'beautifulsoup4', 'maxminddb-geolite2', 'autobahn', 'ruamel.yaml',
                     'doit', 'retrying', 'ecdsa', 'cachetools', 'wrapt',
                     'geoip2', # for ip addr -> lat, lon  (need account on maxmind)

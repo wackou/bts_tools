@@ -25,7 +25,6 @@ from retrying import retry
 from requests.exceptions import Timeout
 from bitcoinaverage import RestfulClient
 import json
-import arrow
 import pendulum
 import requests
 import statistics
@@ -631,7 +630,7 @@ class CoinCapFeedProvider(FeedProvider):
         for f in feeds:
             result.append(self.feed_price(f['short'], 'USD', price=float(f['price']),
                                           volume=float(f['usdVolume']),
-                                          last_updated=arrow.get(f['time']/1000)))
+                                          last_updated=pendulum.from_timestamp(f['time']/1000)))
         return result
 
 
@@ -661,7 +660,7 @@ class CoinMarketCapFeedProvider(FeedProvider):
             try:
                 result.append(self.feed_price(f['symbol'], 'USD', price=float(f['price_usd']),
                                               volume=float(f['24h_volume_usd']) if f['24h_volume_usd'] else None,
-                                              last_updated=arrow.get(f['last_updated'])))
+                                              last_updated=pendulum.from_timestamp(f['last_updated'])))
             except TypeError:
                 # catches: TypeError: float() argument must be a string or a number, not 'NoneType'
                 # on: f['price_usd']
