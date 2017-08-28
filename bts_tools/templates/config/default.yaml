@@ -12,6 +12,7 @@ logging:
 wsgi_debug: false
 
 # profile the wsgi app and write .prof files to /tmp
+# see: http://www.alexandrejoseph.com/blog/2015-12-17-profiling-werkzeug-flask-app.html
 wsgi_profile: false
 
 # FIXME: deprecate
@@ -40,4 +41,4 @@ notification:
 
     telegram:
         token: 'xxxxxxxxxxxxxxxx'
-        chat_id: 12341234
+        recipient_id: 12341234

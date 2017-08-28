@@ -94,8 +94,8 @@ clients:
     steem:
         type: steem
         data_dir: ~/.Steem
-        run_args: ['--p2p-port', '1778', '--replay-blockchain']    # [OPTIONAL] additional args for running the witness client
         shared_file_size: 80G                                      # [OPTIONAL] size for the shared memory file
+        run_args: ['--replay-blockchain']                          # [OPTIONAL] additional args for running the witness client
         run_cli_args: ['--rpc-http-allowip', '127.0.0.1']          # [OPTIONAL] additional args for running the cli wallet
         plugins: ['witness']                                       # [OPTIONAL] defaults to ['witness', 'account_history']
         seed_nodes: ["52.74.152.79:2001", "212.47.249.84:40696", "104.199.118.92:2001", "gtg.steem.house:2001"]
@@ -176,8 +176,8 @@ notification:
         tokens: [xxxxxxxx, xxxxxxxx]
 
     telegram:
-        token: xxxxxxxx
-        chat_id: xxxxxxxx
+        token: xxxxxxxx         # create your Telegram bot at @BotFather (https://telegram.me/botfather)
+        recipient_id: xxxxxxxx  # get your telegram id at @MyTelegramID_bot (https://telegram.me/mytelegramid_bot)
 
 
 #

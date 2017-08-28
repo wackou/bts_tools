@@ -199,7 +199,7 @@ config.yaml
     
         telegram:
             token: xxxxxxxx
-            chat_id: xxxxxxxx
+            recipient_id: xxxxxxxx
     
     
     #

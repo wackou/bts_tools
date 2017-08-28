@@ -84,6 +84,7 @@ def monitor(node, ctx, cfg):
             progress = round(current_block_num / head_block_num * 100)
             log.info('[{:2d}%] Indexing block number {} on {}'.format(progress, current_block_num, node.rpc_id))
 
+        # TODO: optimize using get_block_range (BTS, maybe steem?)
         block = node.get_block(current_block_num)
 
         # TODO: investigate weird random steem block not found although head number is correct... this is a crappy workaround

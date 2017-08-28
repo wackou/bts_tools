@@ -58,7 +58,7 @@ config_yaml:
 
     build_environments:
         steem:
-            cmake_args: ['-DSKIP_BY_TX_ID=OFF', '-DLOW_MEMORY_NODE=ON']
+            cmake_args: ['-DSKIP_BY_TX_ID=OFF', '-DLOW_MEMORY_NODE=ON', '-DCLEAR_VOTES=ON']
 
     geoip2:
         user: xxxxxxxx

@@ -75,10 +75,10 @@ def send_notification_boxcar(msg, alert=False):
 def send_notification_telegram(msg, alert=False):
     log.debug('Sending notification trough Telegram: %s' % msg)
     token = core.config['notification']['telegram']['token']
-    chat_id = core.config['notification']['telegram']['chat_id']
+    recipient_id = core.config['notification']['telegram']['recipient_id']
 
     response = requests.get('https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}'
-                            .format(token, chat_id, urllib.parse.quote_plus(msg))).json()
+                            .format(token, recipient_id, urllib.parse.quote_plus(msg))).json()
 
     if response['ok']:
         log.info('Sent Telegram notification: %s' % msg)
