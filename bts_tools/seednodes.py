@@ -19,7 +19,7 @@
 #
 
 from bts_tools.network_utils import get_geoip_info, resolve_dns
-from collections import defaultdict
+from collections import defaultdict, deque
 import socket
 import time
 import threading
@@ -180,13 +180,13 @@ def check_all_seeds(chain):
     seed_nodes = [s[0] for s in SEED_NODES[chain]]
     seed_status = {}
     threads = {}
+
+    def set_seed_status(s):
+        log.debug('check seed status {}'.format(s))
+        seed_status[s] = check_seed_status(s)
+        log.debug('finished check seed status {}'.format(s))
+
     for seed in seed_nodes:
-        def set_seed_status(s):
-            log.debug('check seed status {}'.format(s))
-            seed_status[s] = check_seed_status(s)
-            log.debug('finished check seed status {}'.format(s))
-
-
         t = threading.Thread(target=set_seed_status, args=(seed,))
         threads[seed] = t
         t.start()
@@ -203,12 +203,34 @@ def check_all_seeds(chain):
     return seed_status
 
 
+_HISTORY = defaultdict(lambda: deque(maxlen=3))
 _SEEDS_STATUS = defaultdict(dict)
 
+
+def stable_status(chain, seed):
+    h = _HISTORY[chain]
+    if not h:
+        return 'no data'
+
+    seed_history = [st.get(seed, 'unknow seed') for st in h]
+    last_status = seed_history[-1]
+
+    if all(st == last_status for st in seed_history):
+        return last_status
+    if any(st == 'online' for st in seed_history):
+        return 'online'
+
+    log.warning('Could not decide status for {} seed {}: {}'.format(chain, seed, ','.join(seed_history)))
+
+    return ','.join(seed_history)
+
+
 def monitor_seed_nodes(chain):
-    global _SEEDS_STATUS
     while True:
-        _SEEDS_STATUS[chain] = check_all_seeds(chain)
+        _HISTORY[chain].append(check_all_seeds(chain))
+        seed_nodes = [s[0] for s in SEED_NODES[chain]]
+        _SEEDS_STATUS[chain] = {seed: stable_status(chain, seed)
+                                for seed in seed_nodes}
         time.sleep(300)
 
 
