@@ -155,7 +155,7 @@ class GrapheneClient(object):
         self.proxy_user       = client.get('proxy_user')
         self.proxy_password   = client.get('proxy_password')
 
-        self.rpc_id = (self.rpc_host, self.wallet_port)
+        self.rpc_id = (self.wallet_host, self.wallet_port)
         self.ws_rpc_id = (self.witness_host, self.witness_port)
         self.venv_path = venv_path
         self.witness_id = witness_id
@@ -304,7 +304,7 @@ class GrapheneClient(object):
         return 'second' in age
 
     def is_localhost(self):
-        return self.rpc_host in ['localhost', '127.0.0.1']
+        return self.wallet_host in ['localhost', '127.0.0.1']
 
     def is_witness_localhost(self):
         host = self.witness_host

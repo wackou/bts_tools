@@ -204,8 +204,8 @@ def json_rpc_call():
 
     try:
         node = find_local_node(port)
-        user = node.rpc_user
-        password = node.rpc_password
+        user = node.wallet_user
+        password = node.wallet_password
 
         # Intercept api calls meant for the bts_tools and do not forward them to the cli wallet
         if method in ['is_signing_key_active', 'network_get_info', 'network_get_connected_peers',

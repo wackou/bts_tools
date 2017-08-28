@@ -48,7 +48,7 @@ def init_ctx(node, ctx, cfg):
 
     ctx.stats = deque(maxlen=min(desired_maxlen, maxlen))
 
-    if node.rpc_host.is_witness_localhost() and cpu_total_ctx is None:
+    if node.is_witness_localhost() and cpu_total_ctx is None:
         # FIXME: this doesn't work when we have multiple clients being monitored,
         #        and the one supposed to fill in those values is offline.
         #        they get set to 0, when other clients are running which could fill those values....

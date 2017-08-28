@@ -123,9 +123,19 @@ def monitoring_thread(*nodes):
                                time_interval=core.config['monitoring']['monitor_time_interval'],
                                nodes=nodes)
 
+    def init_plugin(plugin_name, node, ctx):
+        try:
+            init_func = getattr(monitoring, plugin_name).init_ctx
+        except AttributeError:
+            return  # if plugin doesn't define an init_ctx function, simply return
+        try:
+            init_func(node, ctx, get_config(plugin_name))
+        except Exception as e:
+            log.warning('While initializing context for "{}" plugin on node {}'.format(plugin_name, node))
+            log.exception(e)
+
     for plugin_name in ['online'] + CLIENT_PLUGINS:
-        with suppress(AttributeError):
-            getattr(monitoring, plugin_name).init_ctx(client_node, global_ctx, get_config(plugin_name))
+        init_plugin(plugin_name, client_node, global_ctx)
 
     # note: we can use node.name as a key here, as they are all from a same client. However
     #       it is to be noted that 2 nodes with the same name (eg: witness monitoring and
@@ -134,8 +144,7 @@ def monitoring_thread(*nodes):
     for node in nodes:
         ctx = contexts.get(node.name, AttributeDict())
         for plugin_name in ROLE_PLUGINS:
-            with suppress(AttributeError):
-                getattr(monitoring, plugin_name).init_ctx(node, ctx, get_config(plugin_name))
+            init_plugin(plugin_name, node, ctx)
 
         contexts[node.name] = ctx
 
