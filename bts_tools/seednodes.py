@@ -115,7 +115,8 @@ SEED_NODES = {
         ('seed.blackrift.net:2001',          '',   'drakos',         'https://steemit.com/witness-category/@drakos/my-witness-application'),
         ('seed.followbtcnews.com:2001',      '',   'followbtcnews',  'https://steemit.com/witness-category/@followbtcnews/full-steem-ahead-vote-followbtcnews-for-witness'),
         ('23.92.215.36:2001',                '',   'cloh76',         'https://steemit.com/witness-category/@cloh76/cloh76-witness-introduction-post-cloh76-witness'),
-        ('node.mahdiyari.info:2001',         '',   'mahdiyari',      'https://steemit.com/witness-category/@mahdiyari/new-steem-seed-node-node-mahdiyari-info-2001')
+        ('node.mahdiyari.info:2001',         '',   'mahdiyari',      'https://steemit.com/witness-category/@mahdiyari/new-steem-seed-node-node-mahdiyari-info-2001'),
+        ('45.76.140.222:2001',               'gb', 'chillbill',      'https://steemit.com/witness-category/@chillbill/5ha4jt-chillbill-starts-a-steem-witness')
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),
