@@ -78,6 +78,8 @@ class Base58(object) :
             return base58CheckEncode(0x00, self._hex)
         elif _format.lower() == "bts" :
             return _format.upper() + str(self)
+        elif _format.lower() == "bts-testnet" :
+            return 'TEST' + str(self)
         elif _format.lower() == "muse" :
             return _format.upper() + str(self)
         elif _format.lower() == "steem":
