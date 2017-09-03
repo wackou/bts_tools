@@ -305,7 +305,7 @@ def affiliation(type):
 
     Currently, there are 2 main affiliations: 'bts' and 'steem'.
     """
-    if type in ['bts', 'ppy']:
+    if type in ['bts', 'bts-testnet', 'ppy']:
         return 'bts'
     elif type in ['steem', 'muse']:
         return 'steem'
@@ -340,7 +340,10 @@ def get_all_bin_names(client=None, build_env=None):
         return get_all_bin_names(build_env=env['type'])
 
     elif build_env is not None:
-        return DEFAULT_BIN_FILENAMES.get(build_env)
+        default_names = ['witness_node/witness_node', 'cli_wallet/cli_wallet']
+        if build_env not in DEFAULT_BIN_FILENAMES:
+            log.warning('Using default names for binaries, might not match those for {}: {}'.format(build_env, default_names))
+        return DEFAULT_BIN_FILENAMES.get(build_env, default_names)
 
     else:
         raise ValueError('You need to specify either a build env or a client name')

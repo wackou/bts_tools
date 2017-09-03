@@ -13,6 +13,14 @@ build_environments:
         bin_dir: ~/.BitShares2_bin
         make_args: [witness_node, cli_wallet]
 
+    bts-testnet:
+        debug: true
+        git_repo: https://github.com/BitSharesEurope/graphene-testnet
+        git_branch: testnet
+        build_dir: ~/.BitShares2_testnet_build
+        bin_dir: ~/.BitShares2_testnet_bin
+        make_args: [witness_node, cli_wallet]
+
     muse:
         debug: false
         git_repo: https://github.com/themuseblockchain/Muse-Source

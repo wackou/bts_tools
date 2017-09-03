@@ -14,6 +14,17 @@ clients:
         wallet_host: localhost
         wallet_port: 8093
 
+    bts-testnet:
+        type: bts-testnet
+        data_dir: ~/.BitShares2_testnet
+        p2p_port: 1777
+        witness_host: localhost
+        witness_port: 8190
+        wallet_host: localhost
+        wallet_port: 8193
+        seed_nodes: ['testnet.bitshares.eu:11010']
+        genesis_file: ~/.BitShares2_testnet_build/genesis.json
+
     muse:
         type: muse
         data_dir: ~/.Muse
