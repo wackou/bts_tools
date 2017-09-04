@@ -63,7 +63,8 @@ SEED_NODES = {
         ('seed.muse.blckchnd.com:33333',  '', 'blckchnd',     ''),
         ('muse.cervantes.one:33333',      '', 'cervantes',    ''),
         ('muse.thetimsaid.com:33333',     '', 'timsaid',      ''),
-        ('muse-seed.pt-kc.net:33333',     '', 'pt-kc',        '')    
+        ('muse-seed.pt-kc.net:33333',     '', 'pt-kc',        ''),
+        ('104.199.134.87:33333',          '', 'clayop',        '')        
     ],
     'steem': [
         ('seed.liondani.com:2016',           '',   'liondani',       'https://steemit.com/introduceyourself/@liondani/hi-liondani-here-aka-daniel-schwarz-happy-husband-father-steem-witness-steemit-enthusiast'),
