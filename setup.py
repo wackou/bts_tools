@@ -50,7 +50,7 @@ entry_points = {
 
 args = dict(name='bts_tools',
             version=VERSION,
-            description='BitShares delegate tools',
+            description='Graphene blockchains management tools',
             long_description=README + '\n\n\n' + HISTORY,
             # Get strings from
             # http://pypi.python.org/pypi?%3Aaction=list_classifiers
@@ -60,7 +60,7 @@ args = dict(name='bts_tools',
                          'Programming Language :: Python :: 3',
                          'Programming Language :: Python :: 3.4',
                          ],
-            keywords='BitShares delegate tools',
+            keywords='Graphene blockchain witness management tools bitshares steem peerplays muse',
             author='Nicolas Wack',
             author_email='wackou@gmail.com',
             url='https://github.com/wackou/bts_tools',
