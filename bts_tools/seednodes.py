@@ -119,7 +119,7 @@ SEED_NODES = {
         ('23.92.215.36:2001',                '',   'cloh76',         'https://steemit.com/witness-category/@cloh76/cloh76-witness-introduction-post-cloh76-witness'),
         ('node.mahdiyari.info:2001',         '',   'mahdiyari',      'https://steemit.com/witness-category/@mahdiyari/new-steem-seed-node-node-mahdiyari-info-2001'),
         ('45.76.140.222:2001',               'gb', 'chillbill',      'https://steemit.com/witness-category/@chillbill/5ha4jt-chillbill-starts-a-steem-witness'),
-        ('seed.windforce.farm:2001',         '',   'windforce',      '')
+        ('seed.windforce.farm:2001',         '',   'windforce',      'https://steemit.com/witness-category/@windforce/windforce-for-witness')
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),
