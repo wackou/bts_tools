@@ -30,7 +30,7 @@ config.yaml
 
     ---
     # For a more detailed description of the format of this file, visit:
-    # https://bts-tools.readthedocs.io/en/latest/config_format.html
+    # https://bts-tools.readthedocs.io/en/latest/config_yaml.html
     #
     
     hostname: xxxxxxxx  # [OPTIONAL] label used as source of notification messages
@@ -51,10 +51,18 @@ config.yaml
     # https://github.com/wackou/bts_tools/blob/master/bts_tools/templates/config/build_environments.yaml
     #
     build_environments:
-        make_args: ['-j4']  # [OPTIONAL] shared among all build environments
-        cmake_args: []      # [OPTIONAL] shared among all build environments
+        cmake_args: []                            # [OPTIONAL] shared among all build environments
+        make_args: ['-j4']                        # [OPTIONAL] shared among all build environments
+        bts:
+            cmake_args: []                        # [OPTIONAL] build environment specific
+            witness_filename: witness_node        # [OPTIONAL] filename for the compiled witness binary
+            wallet_filename: cli_wallet           # [OPTIONAL] filename for the compiled wallet binary
         steem:
             cmake_args: ['-DLOW_MEMORY_NODE=ON']  # [OPTIONAL] see https://github.com/steemit/steem/blob/master/doc/building.md
+        muse:
+            boost_root: ~/boost1.60_install       # [OPTIONAL] if boost was installed manually
+            cmake_args: []  #'-DBUILD_MUSE_TEST=ON']
+    
     
     #
     # list of clients (witness accounts / seed nodes) that are being monitored
@@ -106,7 +114,6 @@ config.yaml
         muse:
             type: muse
             data_dir: ~/.Muse
-            api_access: ~/api_access.json
             witness_user: xxxxxxxx       # defined in api_access.json
             witness_password: xxxxxxxx   # defined in api_access.json
             roles:
@@ -117,14 +124,15 @@ config.yaml
         steem:
             type: steem
             data_dir: ~/.Steem
-            run_args: ['--p2p-port', '1778', '--replay-blockchain']    # [OPTIONAL] additional args for running the witness client
+            shared_file_size: 80G                                      # [OPTIONAL] size for the shared memory file
+            run_args: ['--replay-blockchain']                          # [OPTIONAL] additional args for running the witness client
             run_cli_args: ['--rpc-http-allowip', '127.0.0.1']          # [OPTIONAL] additional args for running the cli wallet
             plugins: ['witness']                                       # [OPTIONAL] defaults to ['witness', 'account_history']
             seed_nodes: ["52.74.152.79:2001", "212.47.249.84:40696", "104.199.118.92:2001", "gtg.steem.house:2001"]
             # FIXME: implement me!
             override_default_seed_nodes: true  # [OPTIONAL] [default=false] if true, the client will only use the given seed nodes, otherwise it adds them to the list of built-in seed nodes
     
-            # Steemd can now accept the contents of the api_access.json directly as argument on the command line,
+            # Steemd (and Mused) can now accept the contents of the api_access.json directly as argument on the command line,
             # hence the field api_access.json is not required anymore here (and you don't need to create the file either),
             # as bts_tools will generate the proper arguments from the user and password given here.
             witness_user: xxxxxxxx
@@ -171,7 +179,7 @@ config.yaml
             enabled_assets: [RUBLE, ALTCAP, HERO]
     
             # explicitly disable some assets (eg: due to black swan)
-            #disabled_assets: [RUB, SEK, GRIDCOIN, TCNY, CASH.BTC, CASH.USD, KRW, TUSD, SGD, HKD, BTWTY]
+            #disabled_assets: [RUB, SEK, GRIDCOIN, KRW, SGD, HKD, BTWTY]
     
             check_time_interval: 300            # interval at which the external feed providers should be queried, in seconds
             median_time_span: 1800              # leave default
@@ -198,8 +206,8 @@ config.yaml
             tokens: [xxxxxxxx, xxxxxxxx]
     
         telegram:
-            token: xxxxxxxx
-            recipient_id: xxxxxxxx
+            token: xxxxxxxx         # create your Telegram bot at @BotFather (https://telegram.me/botfather)
+            recipient_id: xxxxxxxx  # get your telegram id at @MyTelegramID_bot (https://telegram.me/mytelegramid_bot)
     
     
     #
