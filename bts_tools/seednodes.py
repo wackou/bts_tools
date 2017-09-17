@@ -65,6 +65,7 @@ SEED_NODES = {
         ('muse.thetimsaid.com:33333',     '', 'timsaid',      ''),
         ('muse-seed.pt-kc.net:33333',     '', 'pt-kc',        ''),
         ('104.199.134.87:33333',          '', 'clayop',       ''),
+        ('88.198.90.17:33333',            '', 'johnstor5',    ''),
         ('51.15.136.238:33333',           '', 'aboutall',     'https://steemit.com/muse/@aboutall/muse-witness-proposal'),
         ('116.62.121.169:33333',          '', 'muse-up',      '')
     ],
