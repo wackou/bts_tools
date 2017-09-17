@@ -449,11 +449,15 @@ class GrapheneClient(object):
         return int(self.info()['head_block_num'])
 
     def get_streak(self, cached=True):
-        streak = core.db[self.rpc_id]['streak'][self.name]
-        if streak >= 0:
-            return True, streak
-        else:
-            return False, -streak
+        try:
+            streak = core.db[self.rpc_id]['streak'][self.name]
+            if streak >= 0:
+                return True, streak
+            else:
+                return False, -streak
+        except KeyError:
+            # no streak information yet in db
+            return True, -1
 
     def asset_data(self, asset):
         # bitAssets data (id, precision, etc.) don't ever change, so cache them forever

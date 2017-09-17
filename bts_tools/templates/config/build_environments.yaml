@@ -15,7 +15,7 @@ build_environments:
 
     bts-testnet:
         debug: true
-        git_repo: https://github.com/BitSharesEurope/graphene-testnet
+        git_repo: https://github.com/bitshares/bitshares-core.git
         git_branch: testnet
         build_dir: ~/.BitShares2_testnet_build
         bin_dir: ~/.BitShares2_testnet_bin
