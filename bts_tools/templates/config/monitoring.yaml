@@ -45,7 +45,7 @@ monitoring:
         #publish_time_interval: 2400         # use this to publish feeds at fixed time intervals (in seconds)
         #publish_time_slot: 0                # use this to publish every hour at a fixed number of minutes (in minutes)
         median_time_span: 1800
-        feed_providers: [Poloniex, Bittrex, Btc38, Yunbi,    # BTS valuation
+        feed_providers: [Poloniex, Bittrex, Yunbi,    # BTS valuation
                          Yahoo, Google, Bloomberg]  # market indices
         # List of feeds that should be shown on the UI and in the logs. Note that we
         # always check and publish all feeds, regardless of this variable.
