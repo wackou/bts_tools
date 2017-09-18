@@ -59,7 +59,7 @@
 
                         <ul class="dropdown-menu" role="menu">
                             {% for host, node_names, node in rpc.client_instances() %}
-                            <li><a href="/rpchost/{{ node.type() }}/{{ node.rpc_host }}:{{ node.rpc_port }}/{{ node.name }}{{ request.path }}">
+                            <li><a href="/rpchost/{{ node.type() }}/{{ node.wallet_host }}:{{ node.wallet_port }}/{{ node.name }}{{ request.path }}">
                                 <b>{{ node.type() }}:</b> {{ node.name }}
                             </a></li>
                             {% endfor %}

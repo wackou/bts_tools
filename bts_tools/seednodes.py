@@ -56,7 +56,7 @@ SEED_NODES = {
         ('muse-seed.altcap.io:33333',     '', 'ihashfury',    ''),
         ('muse.agoric.systems:33333',     '', 'robrigo',      ''),
         ('muse-seed.lafona.net:33333',    '', 'lafona',       ''),
-        ('seed.musenodes.com:33333',      '', 'wackou',       ''),
+        ('seed.musenodes.com:33333',      '', 'wackou',       'https://steemit.com/muse/@wackou/muse-blockchain-witness-proposal-wackou'),
         ('45.76.192.171:33333',           '', 'musepeer',     ''),
         ('muse-seed.xeldal.com:33333',    '', 'xeldal',       ''),
         ('muse.rondonson.com:33333',      '', 'rondonson',    ''),

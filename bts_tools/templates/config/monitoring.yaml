@@ -27,7 +27,7 @@ monitoring:
     feeds:
         steem_dollar_adjustment: 1.00
         enabled_assets: []   # [RUBLE, BTWTY, ALTCAP, HERO]
-        disabled_assets: [RUB, SEK, GRIDCOIN, KRW, SGD, HKD, BTWTY, GOLD]  # black swan
+        disabled_assets: [RUB, SEK, GRIDCOIN, KRW, SGD, HKD, BTWTY, GOLD, SILVER, NZD]  # black swan
         asset_params:
             # TODO: MCR and MSSR should be the actual percentage (float) not a fixed-point integer
             default:

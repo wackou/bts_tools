@@ -6,7 +6,7 @@
 {% block content %}
 
 {% set proc = rpc.main_node.process() %}
-<p>Monitoring <b>{{ rpc.main_node.witness_host or rpc.main_node.rpc_host }}:{{ rpc.main_node.witness_port or rpc.main_node.rpc_port }}</b>
+<p>Monitoring <b>{{ rpc.main_node.witness_host or rpc.main_node.wallet_host }}:{{ rpc.main_node.witness_port or rpc.main_node.wallet_port }}</b>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
     {% if proc %}
