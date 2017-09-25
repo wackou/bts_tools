@@ -36,6 +36,7 @@ import json
 import pendulum
 import re
 import logging
+import math
 
 log = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ BASE_ASSETS = {'BTC', 'USD', 'CNY', 'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', '
 YAHOO_ASSETS = BASE_ASSETS - {'BTC', 'USD', 'CNY'}
 
 OTHER_ASSETS = {'ALTCAP', 'GRIDCOIN', 'STEEM',
-                'BTWTY', 'RUBLE', 'HERO'}
+                'BTWTY', 'RUBLE', 'HERO', 'HERTZ'}
 
 BIT_ASSETS = BASE_ASSETS | OTHER_ASSETS
 
@@ -367,6 +368,9 @@ def get_feed_prices(node):
 
     feeds['HERO'] = usd_price / (1.05 ** ((pendulum.today() - pendulum.Pendulum(1913, 12, 23)).in_days() / 365.2425))
 
+    # HERTZ token algorithm
+    feeds['HERTZ'] = usd_price + ((usd_price * 0.5) * math.sin(((((pendulum.now().timestamp() - 1444745544)/2629746) % 1) * 2629746) * ((2*math.pi)/2629746)))
+
     log.debug('Got btc/usd price: {}'.format(btc_usd))
     log.debug('Got usd price: {}'.format(usd_price))
     log.debug('Got cny price: {}'.format(cny_price))
@@ -504,7 +508,7 @@ def get_disabled_assets():
 
     # these are not published by default as they are experimental or have some requirements
     # eg: need to be an approved witness to publish
-    disabled_assets.update({'BTWTY', 'RUBLE', 'ALTCAP', 'HERO'})
+    disabled_assets.update({'BTWTY', 'RUBLE', 'ALTCAP', 'HERO', 'HERTZ'})
 
     # enable plugins in cfg
     disabled_assets.difference_update(cfg_enabled)
