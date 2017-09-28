@@ -291,7 +291,7 @@ def get_seeds_view_data(chain, cached=False):
             try:
                 geo = get_geoip_info(resolve_dns(ip).split(':')[0])
                 country = geo['country_iso'].lower()
-            except ValueError:
+            except ValueError, AttributeError:
                 pass
 
         return '<span>%s %s</span>' % (get_flag(country), ip)
