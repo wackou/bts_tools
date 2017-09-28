@@ -47,7 +47,10 @@ def view_seed_nodes():
     points = network_utils.get_world_map_points_from_peers(peers)
     countries = defaultdict(int)
     for pt in points:
-        countries[pt['country_iso'].lower()] += 1
+        try:
+            countries[pt['country_iso'].lower()] += 1
+        except Exception:
+            pass
 
     seeds_status = seednodes.check_all_seeds_cached(chain)
     online_seeds = [seed for seed, status in seeds_status.items() if status == 'online']
