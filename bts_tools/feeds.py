@@ -269,6 +269,33 @@ def get_bit20_feed(node, usd_price):
 
     return 1 / bit20_value
 
+def get_hertz_feed(reference_timestamp, period_days, phase_days, reference_asset_value, amplitude):
+    # Are the following checks required to be able to publish a price feed?
+    #if node.type() != 'bts':
+    #    return
+    #if not node.is_online():
+    #    log.warning('Wallet is offline.')
+    #    return
+    #if not node.is_synced():
+    #    log.warning('Client is not synced yet.')
+    #    return
+    #if node.is_locked():
+    #    log.warning('Wallet is locked.')
+    #    return
+
+    # HERTZ token algorithm start
+    hz_reference_timestamp = pendulum.parse(reference_timestamp).timestamp() # Retrieving the Bitshares2.0 genesis block timestamp
+    hz_period = pendulum.SECONDS_PER_DAY * period_days
+    hz_phase = pendulum.SECONDS_PER_DAY * phase_days
+    hz_current_time = pendulum.now().timestamp() # Current timestamp for reference within the hertz script
+    hz_waveform = math.sin(((((hz_current_time - (hz_reference_timestamp + hz_phase))/hz_period) % 1) * hz_period) * ((2*math.pi)/hz_period)) # Only change for an alternative HERTZ ABA.
+    hertz_bts = reference_asset_value + ((amplitude * reference_asset_value) * hz_waveform)
+    # HERTZ token algorithm end
+
+    # get HERTZ value in BTS
+    log.debug('Value of the HERTZ asset in BTS: {} BTS'.format(hertz_usd))
+
+    return hertz_bts
 
 def get_feed_prices(node):
     provider_names = {p.lower() for p in cfg['feed_providers']}
@@ -368,9 +395,6 @@ def get_feed_prices(node):
 
     feeds['HERO'] = usd_price / (1.05 ** ((pendulum.today() - pendulum.Pendulum(1913, 12, 23)).in_days() / 365.2425))
 
-    # HERTZ token algorithm
-    feeds['HERTZ'] = usd_price + ((usd_price * 0.5) * math.sin(((((pendulum.now().timestamp() - 1444745544)/2629746) % 1) * 2629746) * ((2*math.pi)/2629746)))
-
     log.debug('Got btc/usd price: {}'.format(btc_usd))
     log.debug('Got usd price: {}'.format(usd_price))
     log.debug('Got cny price: {}'.format(cny_price))
@@ -403,7 +427,18 @@ def get_feed_prices(node):
         if bit20 is not None:
             feeds['BTWTY'] = bit20
 
-    # 6- update price history for all feeds
+    # 6- HERTZ asset
+    if 'HERTZ' not in get_disabled_assets():
+        hertz_reference_timestamp = "2015-10-13T14:12:24+00:00" # Bitshares 2.0 genesis block timestamp
+        hertz_amplitude = 0.5 # 50% fluctuating the price feed $+-0.50 // TODO: Potentially change this value to 0.25
+        hertz_period_days = 30.43 # 30.43 days converted to an UNIX timestamp // TODO: Potentially change this value to 28
+        hertz_phase_days = 0 # Initial HERTZ asset will have no phase offset, however an asset with phase 0.5*hertz_period_days would provide an opposite asset.
+
+        hertz = get_hertz_feed(hertz_reference_timestamp, hertz_period_days, hertz_phase_days, usd_price, hertz_am)
+        if hertz is not None:
+            feeds['HERTZ'] = hertz
+
+    # 7- update price history for all feeds
     for cur, price in feeds.items():
         price_history[cur].append(price)
 
