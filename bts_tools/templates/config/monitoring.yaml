@@ -38,10 +38,10 @@ monitoring:
                 maintenance_collateral_ratio: 1360
                 maximum_short_squeeze_ratio: 1069
             HERO:
-                maintenance_collateral_ratio: 1750
+                maintenance_collateral_ratio: 2000
                 maximum_short_squeeze_ratio: 1100
             HERTZ:
-                maintenance_collateral_ratio: 1750
+                maintenance_collateral_ratio: 2000
                 maximum_short_squeeze_ratio: 1100
 
         check_time_interval: 300
