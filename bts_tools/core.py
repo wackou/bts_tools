@@ -305,9 +305,9 @@ def affiliation(type):
 
     Currently, there are 2 main affiliations: 'bts' and 'steem'.
     """
-    if type in ['bts', 'bts-testnet', 'ppy']:
+    if type.split('-')[0] in ['bts', 'ppy']:
         return 'bts'
-    elif type in ['steem', 'muse']:
+    elif type.split('-')[0] in ['steem', 'muse']:
         return 'steem'
     else:
         raise ValueError('No affiliation known for blockchain type: {}'.format(type))

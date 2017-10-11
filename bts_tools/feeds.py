@@ -130,7 +130,7 @@ def get_bit20_feed(node, usd_price):
 
     # need to import the following key to be able to decrypt memos
     #   import_key "announce" 5KJJNfiSyzsbHoVb81WkHHjaX2vZVQ1Fqq5wE5ro8HWXe6qNFyQ
-    if node.type() != 'bts':
+    if node.type().split('-')[0] != 'bts':
         return
     if not node.is_online():
         log.warning('Wallet is offline, will not be able to read bit20 composition')
@@ -652,7 +652,7 @@ def check_feeds(nodes):
         feed_control.nfeed_checked += 1
 
         status = feed_control.publish_status(feeds)
-        log.debug('Got feeds: {}'.format(status))
+        log.debug('Got feeds on {}: {}'.format(nodes[0].type(), status))
 
         for node in nodes:
             if node.role != 'feed_publisher':
@@ -674,8 +674,8 @@ def check_feeds(nodes):
                     ratio = cfg['steem_dollar_adjustment']
                     price_obj = {'base': '{:.3f} SBD'.format(price),
                                  'quote': '{:.3f} STEEM'.format(1/ratio)}
-                    log.info('Node {} publishing feed price for steem: {:.3f} SBD (real: {:.3f} adjusted by {:.2f})'
-                             .format(node.name, price*ratio, price, ratio))
+                    log.info('Node {}:{} publishing feed price for steem: {:.3f} SBD (real: {:.3f} adjusted by {:.2f})'
+                             .format(node.type(), node.name, price*ratio, price, ratio))
                     node.publish_feed(node.name, price_obj, True)
                     node.opts['last_price'] = price
                     node.opts['last_published'] = pendulum.utcnow()
@@ -687,21 +687,24 @@ def check_feeds(nodes):
             # then we should still go on for the other nodes (and not let exceptions propagate)
             try:
                 if feed_control.should_publish():
+                    base_error_msg = 'Cannot publish feeds for {} witness {}: '.format(node.type(), node.name)
                     if not node.is_online():
-                        log.warning('Cannot publish feeds for witness %s: client is not running' % node.name)
+                        log.warning(base_error_msg + 'client is not running')
                         continue
                     if node.is_locked():
-                        log.warning('Cannot publish feeds for witness %s: wallet is locked' % node.name)
+                        log.warning(base_error_msg + 'wallet is locked')
                         continue
                     if not node.is_synced():
-                        log.warning('Cannot publish feeds for witness {}: client is not synced'.format(node.name))
+                        log.warning(base_error_msg + 'client is not synced')
                         continue
+
+                    base_msg = '{} witness {} feeds: '.format(node.type(), node.name)
                     # publish median value of the price, not latest one
                     median_feeds = {c: statistics.median(price_history[c]) for c in feeds}
                     disabled_assets = get_disabled_assets()
                     publish_feeds = {asset: price for asset, price in median_feeds.items() if asset not in disabled_assets}
-                    log.info('Node %s publishing feeds: %s' % (node.name, feed_control.format_feeds(publish_feeds)))
-                    log.debug('Not publishing: {}'.format(disabled_assets))
+                    log.info(base_msg + 'publishing feeds: {}'.format(feed_control.format_feeds(publish_feeds)))
+                    log.debug(base_msg + 'not publishing: {}'.format(disabled_assets))
 
                     # first, try to publish all of them in a single transaction
                     try:
@@ -721,11 +724,12 @@ def check_feeds(nodes):
 
                         # sign and broadcast
                         node.sign_builder_transaction(handle, True)
-                        log.debug('Successfully published feeds for {}'.format(', '.join(published)))
+                        log.debug(base_msg + 'successfully published feeds for {}'.format(', '.join(published)))
 
 
                     except Exception as e:
-                        log.warning('Tried to publish all feeds in a single transaction, but failed. Will try to publish each feed separately now')
+                        log.warning(base_msg + 'tried to publish all feeds in a single transaction, but failed. '
+                                               'Will try to publish each feed separately now')
                         msg_len = 400
                         log.debug(str(e)[:msg_len] + (' [...]' if len(str(e)) > msg_len else ''))
 
@@ -735,15 +739,15 @@ def check_feeds(nodes):
                         for asset, price in publish_feeds.items():
                             try:
                                 price = hashabledict(get_price_for_publishing(node, publish_feeds, asset, price))
-                                log.debug('Publishing {} {}'.format(asset, price))
+                                log.debug(base_msg + 'Publishing {} {}'.format(asset, price))
                                 node.publish_asset_feed(node.name, asset, price, True)  # True: sign+broadcast
                                 published.append(asset)
                             except Exception as e:
                                 #log.exception(e)
-                                log.warning('Failed to publish feed for asset {}'.format(asset))
+                                log.warning(base_msg + 'Failed to publish feed for asset {}'.format(asset))
                                 log.debug(str(e)[:msg_len] + ' [...]')
 
-                        log.debug('Successfully published feeds for {}'.format(', '.join(published)))
+                        log.debug(base_msg + 'successfully published feeds for {}'.format(', '.join(published)))
 
                     #last_published = datetime.utcnow()
                     feed_control.last_published = pendulum.utcnow()

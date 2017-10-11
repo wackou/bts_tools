@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
@@ -125,7 +126,8 @@ SEED_NODES = {
         ('45.76.140.222:2001',               'gb', 'chillbill',      'https://steemit.com/witness-category/@chillbill/5ha4jt-chillbill-starts-a-steem-witness'),
         ('seed.windforce.farm:2001',         '',   'windforce',      'https://steemit.com/witness-category/@windforce/windforce-for-witness'),
         ('seed.teamsteem.me:2001',           '',   'teamsteem',      'https://steemit.com/witness-category/@teamsteem/on-steem-everybody-wins-and-here-s-you-chance-to-join'),
-        ('steemd.steemkr.com:2001',          '',   'ludorum',        '')
+        ('steemd.steemkr.com:2001',          '',   'ludorum',        ''),
+        ('steem-seed.crypto.fans:2001',      '',   'sc-steemit / crypto.fans', '')
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),
@@ -148,7 +150,8 @@ SEED_NODES = {
         ('peerplays.bitcoiner.me:9777',    '', 'bitcoiner', ''),
         ('ppyseed.bacchist.me:42420',      '', 'bacchist-witness', ''),
         ('peerplays.bhuz.info:9777',       '', 'bhuz', ''),
-        ('node.peerblock.trade:9777',      '', 'bitcoin-sig', '')
+        ('node.peerblock.trade:9777',      '', 'bitcoin-sig', ''),
+        ('peerplays.crypto.fans:9777',     '', 'sc-steemit / crypto.fans', '')
     ]
 }
 
