@@ -36,6 +36,7 @@ import json
 import pendulum
 import re
 import logging
+import math
 
 log = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ BASE_ASSETS = {'BTC', 'USD', 'CNY', 'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', '
 YAHOO_ASSETS = BASE_ASSETS - {'BTC', 'USD', 'CNY'}
 
 OTHER_ASSETS = {'ALTCAP', 'GRIDCOIN', 'STEEM',
-                'BTWTY', 'RUBLE', 'HERO'}
+                'BTWTY', 'RUBLE', 'HERO', 'HERTZ'}
 
 BIT_ASSETS = BASE_ASSETS | OTHER_ASSETS
 
@@ -268,6 +269,17 @@ def get_bit20_feed(node, usd_price):
 
     return 1 / bit20_value
 
+def get_hertz_feed(reference_timestamp, current_timestamp, period_days, phase_days, reference_asset_value, amplitude):
+    """Given the reference timestamp, the current timestamp, the period (in days), the phase (in days), the reference asset value (ie 1.00) and the amplitude (> 0 && < 1), output the current hertz value.
+    You can use this for an alternative HERTZ asset!
+    """
+    hz_reference_timestamp = pendulum.parse(reference_timestamp).timestamp() # Retrieving the Bitshares2.0 genesis block timestamp
+    hz_period = pendulum.SECONDS_PER_DAY * period_days
+    hz_phase = pendulum.SECONDS_PER_DAY * phase_days
+    hz_waveform = math.sin(((((current_timestamp - (hz_reference_timestamp + hz_phase))/hz_period) % 1) * hz_period) * ((2*math.pi)/hz_period)) # Only change for an alternative HERTZ ABA.
+    hertz_value = reference_asset_value + ((amplitude * reference_asset_value) * hz_waveform)
+    log.debug('Value of the HERTZ asset in BTS: {} BTS'.format(hertz_value))
+    return hertz_value
 
 def get_feed_prices(node):
     provider_names = {p.lower() for p in cfg['feed_providers']}
@@ -399,7 +411,20 @@ def get_feed_prices(node):
         if bit20 is not None:
             feeds['BTWTY'] = bit20
 
-    # 6- update price history for all feeds
+    # 6- HERTZ asset
+    if 'HERTZ' not in get_disabled_assets():
+        hertz_reference_timestamp = "2015-10-13T14:12:24+00:00" # Bitshares 2.0 genesis block timestamp
+        hertz_current_timestamp = pendulum.now().timestamp() # Current timestamp for reference within the hertz script
+        hertz_amplitude = 1/3 # 33.33..% fluctuation
+        hertz_period_days = 28 # 30.43 days converted to an UNIX timestamp // TODO: Potentially change this value to 28
+        hertz_phase_days = 0.908056 # Time offset from genesis till the first wednesday, to set wednesday as the primary Hz day.
+        hertz_reference_asset_price = usd_price
+        
+        hertz = get_hertz_feed(hertz_reference_timestamp, hertz_current_timestamp, hertz_period_days, hertz_phase_days, hertz_reference_asset_price, hertz_amplitude)
+        if hertz is not None:
+            feeds['HERTZ'] = hertz
+
+    # 7- update price history for all feeds
     for cur, price in feeds.items():
         price_history[cur].append(price)
 
@@ -504,7 +529,7 @@ def get_disabled_assets():
 
     # these are not published by default as they are experimental or have some requirements
     # eg: need to be an approved witness to publish
-    disabled_assets.update({'BTWTY', 'RUBLE', 'ALTCAP', 'HERO'})
+    disabled_assets.update({'BTWTY', 'RUBLE', 'ALTCAP', 'HERO', 'HERTZ'})
 
     # enable plugins in cfg
     disabled_assets.difference_update(cfg_enabled)

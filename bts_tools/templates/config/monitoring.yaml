@@ -40,6 +40,9 @@ monitoring:
             HERO:
                 maintenance_collateral_ratio: 2000
                 maximum_short_squeeze_ratio: 1100
+            HERTZ:
+                maintenance_collateral_ratio: 2000
+                maximum_short_squeeze_ratio: 1100
 
         check_time_interval: 300
         #publish_time_interval: 2400         # use this to publish feeds at fixed time intervals (in seconds)
