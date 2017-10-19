@@ -76,7 +76,7 @@ def get_config(plugin):
     return core.config['monitoring'].get(plugin, {})
 
 
-def monitoring_thread(*nodes):
+def monitoring_thread(*nodes, delay=0):
     global global_stats_frames, stats_frames
 
     # FIXME: this should be read from config.yaml file
@@ -90,19 +90,23 @@ def monitoring_thread(*nodes):
     client_node = nodes[0]
     node_names = ', '.join(n.name for n in nodes)
 
-    log.info('Starting thread monitoring on %s:%d for nodes %s' %
-             (client_node.wallet_host, client_node.wallet_port, node_names))
+    # we sleep so that all threads try to run at different times, this spreads the load better
+    log.warning('Waiting {} seconds before starting monitoring thread for {} nodes: {}'.format(delay, client_node.type(), node_names))
+    time.sleep(delay)
+
+    log.info('Starting thread monitoring on %s:%d for %s node(s): %s' %
+             (client_node.wallet_host, client_node.wallet_port, client_node.type(), node_names))
 
     # all different types of monitoring that should be considered by this thread
     all_monitoring = set(chain(*(node.monitoring for node in nodes))) | {'cpu_ram_usage'}
 
     plugin_names = ', '.join(all_monitoring)
-    log.info('Nodes %s: monitoring plugins loaded = %s' % (node_names, plugin_names))
+    log.info('Node(s) %s: %s: monitoring plugins loaded = %s' % (client_node.type(), node_names, plugin_names))
     # check validity of name in all_monitoring and warn for non-existent plugins
     for m in all_monitoring:
         if (m not in CLIENT_PLUGINS and
             m not in ROLE_PLUGINS and
-            m not in {'feeds', 'delegate', 'watcher_delegate'}):
+            m not in {'feeds'}):
             log.warning('Unknown plugin specified in monitoring config: %s' % m)
 
     # launch async thread for communicating via websockets with a graphene witness client
@@ -115,7 +119,7 @@ def monitoring_thread(*nodes):
         t.start()
 
     # launch feed monitoring and publishing thread
-    if 'feeds' in all_monitoring and client_node.type() in ['bts', 'steem']:
+    if 'feeds' in all_monitoring and client_node.type().split('-')[0] in ['bts', 'steem']:
         check_feeds(nodes)
 
     # create one global context for the client, and local contexts for each node of this client

@@ -51,3 +51,13 @@ clients:
         witness_port: 8590
         wallet_host: localhost
         wallet_port: 8593
+
+    ppy-testnet:
+        type: ppy-testnet
+        data_dir: ~/.PeerPlays_testnet
+        p2p_port: 9778
+        witness_host: localhost
+        witness_port: 8690
+        wallet_host: localhost
+        wallet_port: 8693
+

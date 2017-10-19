@@ -42,3 +42,10 @@ build_environments:
         git_branch: master
         build_dir: ~/.PeerPlays_build
         bin_dir: ~/.PeerPlays_bin
+
+    ppy-testnet:
+        debug: false
+        git_repo: https://github.com/ppytest/ppytest.git
+        git_branch: testnet
+        build_dir: ~/.PeerPlays_testnet_build
+        bin_dir: ~/.PeerPlays_testnet_bin

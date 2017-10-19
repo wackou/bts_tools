@@ -382,9 +382,19 @@ Examples:
                         witness_id = role.get('witness_id')
                         private_key = role.get('signing_key')
                         if witness_id and private_key:
+                            witness_id = '"{}"'.format(witness_id)
                             public_key = format(PrivateKey(private_key).pubkey, client['type'])
-                            run_args += ['--witness-id', '"{}"'.format(witness_id),
-                                         '--private-key', '["{}", "{}"]'.format(public_key, private_key)]
+                            private_key_pair = '["{}", "{}"]'.format(public_key, private_key)
+                            # temporary workaround for https://github.com/bitshares/bitshares-core/issues/399
+                            if client['type'] == 'bts-testnet':
+                                log.error('BTS testnet version doesn\'t support the --private-key option, not using it. '
+                                          'Please edit the {}/config.ini file instead with the following values:'
+                                          .format(client['data_dir']))
+                                log.error('witness-id = {}'.format(witness_id))
+                                log.error('private-key = {}'.format(private_key_pair))
+                            else:
+                                run_args += ['--witness-id', witness_id,
+                                             '--private-key', private_key_pair]
 
                 elif role['role'] == 'seed':
                     apis += ['network_node_api']

@@ -117,9 +117,10 @@ def create_app(settings_override=None):
 
     core.load_db()
 
-    for (host, port), nodes in rpc.graphene_clients():
+    for i, ((host, port), nodes) in enumerate(rpc.graphene_clients()):
         # launch only 1 monitoring thread for each running instance of the client
-        t = threading.Thread(target=bts_tools.monitor.monitoring_thread, args=nodes)
+        delay = i * core.config['monitoring']['feeds']['check_time_interval'] / len(rpc.graphene_clients())
+        t = threading.Thread(target=bts_tools.monitor.monitoring_thread, args=nodes, kwargs={'delay': delay})
         t.daemon = True
         t.start()
 
