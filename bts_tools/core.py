@@ -561,9 +561,9 @@ def list_valid_plugins(plugin_type):
 
     base_dir = Path(base_module.__file__).parent
     result = []
-    for p in base_dir.iterdir():
+    for p in base_dir.glob('*.py'):
         basename = p.parts[-1]
-        if basename.endswith('.py') and not basename.startswith('_'):
+        if not basename.startswith('_'):
             plugin_name = basename[:-3]  # remove trailing '.py'
             # potential candidate, check for required functions
             plugin_members = dir(get_plugin(plugin_type, plugin_name))

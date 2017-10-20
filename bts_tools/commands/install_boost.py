@@ -48,7 +48,7 @@ def run_command(boost_ver=60,
     prefix = Path(prefix).expanduser()
 
     log.info('Downloading boost version 1.{} into: {}'.format(boost_ver, base_build_dir))
-    os.chdir(base_build_dir)
+    os.chdir(str(base_build_dir))
     if not Path('boost_1_{}_0.tar.gz'.format(boost_ver)).exists():
         run('wget http://downloads.sourceforge.net/project/boost/boost/1.{boost_ver}.0/boost_1_{boost_ver}_0.tar.gz'
             .format(boost_ver=boost_ver))
