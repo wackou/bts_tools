@@ -112,7 +112,7 @@ if [ $IS_DEBIAN -eq 1 ]; then
     sed -e 's/BOOST_STATIC_CONSTANT(limb_type, sign_bit_mask = 1u << (limb_bits - 1))/BOOST_STATIC_CONSTANT(limb_type, sign_bit_mask = static_cast<limb_type>(1u) << (limb_bits - 1))/g' boost/multiprecision/cpp_int.hpp | sponge boost/multiprecision/cpp_int.hpp
 
     ./bootstrap.sh
-    ./b2 -j$(grep -c ^processor /proc/cpuinfo) install
+    ./b2 -j$(grep -c ^processor /proc/cpuinfo) --prefix=$HOME/boost_1.${BOOST_VER}_install install
 
     cd ..
 

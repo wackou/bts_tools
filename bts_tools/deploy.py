@@ -98,6 +98,7 @@ def prepare_installation_bundle(cfg, build_dir):
 
     # inject the re module so it is available to templates
     cfg['re'] = re
+    cfg['set'] = set  # inject set as well (come on, flask, really?...)
 
     render_template = partial(render_template_file, cfg, build_dir, env)
 

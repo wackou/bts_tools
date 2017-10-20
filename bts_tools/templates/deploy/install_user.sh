@@ -76,16 +76,38 @@ if [ -f /tmp/launch_tmux_sessions.sh ]; then
 fi
 
 {% if compile_on_new_host %}
-    # compile client locally
-    {% for client in config_yaml['clients'] %}
-        {% set client_type = config_yaml['clients'][client].get('type', client) %}
-        echo "Building {{ client_type }} client for {{ client }}"
-        {{ client_type }} build
-    {% endfor %}
-{% else %}
-    echo "Not building client locally"
-{% endif %}
+# compile client locally
 
+# install needed version(s) of boost first
+    {%- set boost_required = set() -%}
+    {%- for client in config_yaml['clients'] -%}
+        {%- set client_type = config_yaml['clients'][client].get('type', client) -%}
+        {%- set boost_root = config_yaml['build_environments'].get(client_type, {}).get('boost_root', None) -%}
+
+        {%- if boost_root -%}
+            {#- if boost_root is defined, install it first before compiling -#}
+            {%- set boost_ver = re.findall('1.([0-9]+)', boost_root)[-1] -%}
+            {%- set tmp = boost_required.add(boost_ver) -%}
+        {%- endif -%}
+    {%- endfor -%}
+
+    {% for boost_ver in boost_required %}
+bts install_boost {{ boost_ver }}
+    {% endfor %}
+
+# compile all the various clients
+{% for client in config_yaml['clients'] -%}
+        {%- set client_type = config_yaml['clients'][client].get('type', client) -%}
+
+echo "Building {{ client_type }} client for {{ client }}"
+bts build {{ client_type }}
+
+{% endfor %}
+{% else %}
+
+echo "Not building client locally"
+
+{% endif %}
 
 # copy api_access.json files, if given
 # try copying any genesis file also in the home directory

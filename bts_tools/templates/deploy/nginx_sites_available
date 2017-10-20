@@ -80,7 +80,6 @@ server {
 server {
         listen 443;
         listen [::]:443;
-        charset utf-8;
 
         ssl on;
         ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
