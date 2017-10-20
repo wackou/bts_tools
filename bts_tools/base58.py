@@ -90,6 +90,8 @@ class Base58(object) :
             return _format.upper() + str(self)
         elif _format.lower() == "ppy":
             return _format.upper() + str(self)
+        elif _format.lower() == "ppy-testnet":
+            return 'PPYTEST' + str(self)
         else :
             sys.stderr.write("Format %s unkown. You've been warned!\n" % _format)
             return _format.upper() + str(self)

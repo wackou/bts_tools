@@ -96,6 +96,9 @@ def prepare_installation_bundle(cfg, build_dir):
     run('mkdir {d}'.format(d=build_dir))
     env = Environment(loader=PackageLoader('bts_tools', 'templates/deploy'))
 
+    # inject the re module so it is available to templates
+    cfg['re'] = re
+
     render_template = partial(render_template_file, cfg, build_dir, env)
 
     # 0.1- generate the install script
@@ -298,7 +301,7 @@ def deploy_node(build_env, config_file, host):
     select_build_environment(build_env)
     cfg = load_config(config_file)
 
-    # 1- create vps instance if needed
+    # 1- create vps instance if needed (note: this also fills in the 'host' variable when creating a new instance)
     try:
         if is_ip(host):
             cfg['host'] = host

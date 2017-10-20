@@ -34,6 +34,7 @@ import sys
 import copy
 import shutil
 import pendulum
+import psutil
 import logging
 
 log = logging.getLogger(__name__)
@@ -208,39 +209,50 @@ def install_last_built_bin():
 
 def main(flavor='bts'):
     # parse commandline args
-    DESC="""following commands are available:
+    DESC_COMMANDS = """following commands are available:
   - version                : show version of the tools
   - clean_homedir          : clean home directory. WARNING: this will delete your wallet!
   - save_blockchain_dir    : save a snapshot of the current state of the blockchain
   - restore_blockchain_dir : restore a snapshot of the current state of the blockchain
   - clean                  : clean build directory
-  - build                  : update and build %(bin)s client
-  - build_gui              : update and build %(bin)s gui client
-  - run                    : run latest compiled %(bin)s client, or the one with the given hash or tag
-  - run_cli                : run latest compiled %(bin)s cli wallet
-  - run_gui                : run latest compiled %(bin)s gui client
-  - list                   : list installed %(bin)s client binaries
+  - build                  : update and build {bin} client
+  - build_gui              : update and build {bin} gui client
+  - run                    : run latest compiled {bin} client, or the one with the given hash or tag
+  - run_cli                : run latest compiled {bin} cli wallet
+  - run_gui                : run latest compiled {bin} gui client
+  - list                   : list installed {bin} client binaries
   - monitor                : run the monitoring web app
   - deploy                 : deploy built binaries to a remote server
   - deploy_node            : full deploy of a seed or witness node on given ip address. Needs ssh root access
+"""
 
+    COMMAND_PLUGINS = {name: core.get_plugin('bts_tools.commands', name)
+                       for name in core.list_valid_plugins('bts_tools.commands')}
+    DESC_PLUGINS = '\n'.join('  - {:22} : {}'.format(name, plugin.short_description())
+                             for name, plugin in COMMAND_PLUGINS.items())
+
+    DESC_EXAMPLES = """
+    
 Examples:
-  $ %(bin)s build                 # build the latest %(bin)s client by default
-  $ %(bin)s build v0.4.27         # build specific version
-  $ %(bin)s build ppy-dev v0.1.8  # build a specific client/version
-  $ %(bin)s run                   # run the latest compiled client by default
-  $ %(bin)s run seed-test         # clients are defined in the config.yaml file
+  $ {bin} build                 # build the latest {bin} client by default
+  $ {bin} build v0.4.27         # build specific version
+  $ {bin} build ppy-dev v0.1.8  # build a specific client/version
+  $ {bin} run                   # run the latest compiled client by default
+  $ {bin} run seed-test         # clients are defined in the config.yaml file
 
-  $ %(bin)s build_gui   # FIXME: broken...
-  $ %(bin)s run_gui     # FIXME: broken...
+  $ {bin} build_gui   # FIXME: broken...
+  $ {bin} run_gui     # FIXME: broken...
 
-    """ % {'bin': flavor}
+    """
+
+    DESC = (DESC_COMMANDS + DESC_PLUGINS + DESC_EXAMPLES).format(bin=flavor)
+
     EPILOG="""You should also look into ~/.bts_tools/config.yaml to tune it to your liking."""
     parser = argparse.ArgumentParser(description=DESC, epilog=EPILOG,
                                      formatter_class=RawTextHelpFormatter)
     parser.add_argument('command', choices=['version', 'clean_homedir', 'clean', 'build', 'build_gui',
                                             'run', 'run_cli', 'run_gui', 'list', 'monitor',
-                                            'deploy', 'deploy_node'],
+                                            'deploy', 'deploy_node'] + list(COMMAND_PLUGINS.keys()),
                         help='the command to run')
     parser.add_argument('environment', nargs='?',
                         help='the build/run environment (bts, steem, ...)')
@@ -562,6 +574,10 @@ Examples:
         from .deploy import deploy_node  # can only import now due to potential circular import
 
         deploy_node(args.environment, config_file, host)
+
+    elif args.command in COMMAND_PLUGINS:
+        cmd = COMMAND_PLUGINS[args.command]
+        cmd.run_command(*args.args)
 
 
 def main_bts():

@@ -21,15 +21,17 @@ from os.path import join, dirname, expanduser, exists, abspath
 from collections import namedtuple, defaultdict
 from subprocess import Popen, PIPE
 from functools import wraps
-from contextlib import suppress
 from jinja2 import Environment, PackageLoader
+from pathlib import Path
+from ruamel import yaml
+import importlib
 import pwd
 import sys
 import os
+import re
 import shutil
 import shlex
 import signal
-from ruamel import yaml
 import hashlib
 import base64
 import time
@@ -544,3 +546,43 @@ def hash_salt_password(password):
     pw_hash = hashlib.sha256(pw_bytes + salt_bytes).digest()
     pw_hash_b64 = base64.b64encode(pw_hash)
     return pw_hash_b64.decode('utf-8'), salt_b64.decode('utf-8')
+
+
+# FIXME: this should probably be moved somewhere else
+def list_valid_plugins(plugin_type):
+    """This will look for files inside a python (sub)package and return a list of names
+    in this package which can be imported."""
+    base_module = importlib.import_module(plugin_type)
+    if 'REQUIRED_FUNCTIONS' not in dir(base_module):
+        msg = 'Module {} does not look to be a valid plugins directory. It needs to define ' \
+              'at least the REQUIRED_FUNCTIONS variables'.format(plugin_type)
+        log.error(msg)
+        return []
+
+    base_dir = Path(base_module.__file__).parent
+    result = []
+    for p in base_dir.iterdir():
+        basename = p.parts[-1]
+        if basename.endswith('.py') and not basename.startswith('_'):
+            plugin_name = basename[:-3]  # remove trailing '.py'
+            # potential candidate, check for required functions
+            plugin_members = dir(get_plugin(plugin_type, plugin_name))
+            for func in base_module.REQUIRED_FUNCTIONS:
+                if func not in plugin_members:
+                    log.warning('Function {} is not defined for potential plugin {}:{}, not importing it'
+                                .format(func, plugin_type, plugin_name))
+                    break
+            else:
+                result.append(plugin_name)
+    return result
+
+
+def get_plugin(plugin_type, plugin_name):
+    plugin = importlib.import_module('{}.{}'.format(plugin_type, plugin_name))
+    return plugin
+
+
+def replace_in_file(filename, old, new, **kwargs):
+    contents = open(filename).read()
+    contents = re.sub(old, new, contents, **kwargs)
+    open(filename, 'w').write(contents)
