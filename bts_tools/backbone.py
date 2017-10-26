@@ -29,7 +29,10 @@ log = logging.getLogger(__name__)
 def get_p2p_port(node):
     # NOTE: this returns 0 while the client is starting (ie: already responds
     #       to JSON-RPC but hasn't started the p2p code yet)
-    return int(node.network_get_info()['listening_on'].split(':')[1])
+    try:
+        return int(node.network_get_info()['listening_on'].split(':')[1])
+    except Exception:
+        return 0
 
 
 def node_list(node):

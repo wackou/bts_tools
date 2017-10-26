@@ -23,7 +23,7 @@ from datetime import datetime
 from functools import partial
 from autobahn.asyncio.websocket import WebSocketClientProtocol, WebSocketClientFactory
 from collections import defaultdict
-from concurrent.futures import Future
+from concurrent.futures import Future, TimeoutError
 from contextlib import suppress
 from enum import IntEnum
 import functools
@@ -97,7 +97,7 @@ def ws_rpc_call(host, port, api, method, *args):
         try:
             return result.result(timeout=10)
         except TimeoutError:
-            log.warning('timeout while calling {} {}({})'.format(api, method, ', '.join(args)))
+            log.warning('timeout while calling {} {}({}) on {}:{}'.format(api_name(api), method, ', '.join(args), host, port))
             return None
 
     # else: check whether it is in the cache
