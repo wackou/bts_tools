@@ -292,22 +292,25 @@ def get_feed_prices(node):
     # do not include:
     # - BTC as we don't get it from yahoo
     # - USD as it is our base currency
-    yahoo = YahooFeedProvider()
-    yahoo_prices = yahoo.get(YAHOO_ASSETS | {'CNY'}, 'USD')  # still get CNY, we might need it later
+    yahoo_prices = []
+    try:
+        yahoo = YahooFeedProvider()
+        yahoo_prices = yahoo.get(YAHOO_ASSETS | {'CNY'}, 'USD')  # still get CNY, we might need it later
 
-    base_usd_price = yahoo_prices
+    except Exception as e:
+        log.warning(e)
 
-    CURRENCYLAYER_ACTIVE = False
+    currency_layer_prices = []
+    CURRENCYLAYER_ACTIVE = True
     if CURRENCYLAYER_ACTIVE:
         try:
             currency_layer = CurrencyLayerFeedProvider()
             currency_layer_prices = currency_layer.get(YAHOO_ASSETS | {'CNY'}, 'USD')
 
-            base_usd_price = FeedSet(yahoo_prices + currency_layer_prices)
-
         except Exception as e:
             log.debug('Could not get feeds from CurrencyLayer: {}'.format(e))
 
+    base_usd_price = FeedSet(yahoo_prices + currency_layer_prices)
 
     # 1- get the BitShares price in major markets: BTC, USD and CNY
     btcavg = core.config['credentials']['bitcoinaverage']
