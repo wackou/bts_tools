@@ -90,10 +90,6 @@ def monitoring_thread(*nodes, delay=0):
     client_node = nodes[0]
     node_names = ', '.join(n.name for n in nodes)
 
-    # we sleep so that all threads try to run at different times, this spreads the load better
-    log.warning('Waiting {} seconds before starting monitoring thread for {} nodes: {}'.format(delay, client_node.type(), node_names))
-    time.sleep(delay)
-
     log.info('Starting thread monitoring on %s:%d for %s node(s): %s' %
              (client_node.wallet_host, client_node.wallet_port, client_node.type(), node_names))
 
@@ -120,7 +116,14 @@ def monitoring_thread(*nodes, delay=0):
 
     # launch feed monitoring and publishing thread
     if 'feeds' in all_monitoring and client_node.type().split('-')[0] in ['bts', 'steem']:
-        check_feeds(nodes)
+        def check_feeds_with_delay(delay=0):
+            # we sleep so that all threads try to run at different times, this spreads the load better
+            # and helps to have logs that are not interweaved too much
+            log.warning('Waiting {} seconds before starting feeds monitoring thread for {} nodes: {}'
+                        .format(delay, client_node.type(), node_names))  # FIXME: log.debug
+            time.sleep(delay)
+            check_feeds(nodes)
+        threading.Thread(target=check_feeds_with_delay, name='feed-thread').start()
 
     # create one global context for the client, and local contexts for each node of this client
     global_ctx = AttributeDict(loop_index=0,
@@ -164,10 +167,14 @@ def monitoring_thread(*nodes, delay=0):
     if monitoring.cpu_ram_usage.cpu_total_ctx == global_ctx:
         global_stats_frames = global_ctx.global_stats
 
+    # we sleep so that all threads try to run at different times, this spreads the load better
+    # and helps to have logs that are not interweaved too much
+    log.warning('Waiting {} seconds before starting monitoring thread for {} nodes: {}'.format(delay, client_node.type(), node_names))  # FIXME: log.debug
+    time.sleep(delay)
+
     while True:
         global_ctx.loop_index += 1
 
-        time.sleep(global_ctx.time_interval)
         # log.debug('-------- Monitoring status of the BitShares client --------')
         client_node.clear_rpc_cache()
 
@@ -176,6 +183,8 @@ def monitoring_thread(*nodes, delay=0):
             if not online:
                 # we still want to monitor global cpu usage when client is offline
                 monitoring.cpu_ram_usage.monitor(client_node, global_ctx, get_config('cpu_ram_usage'))
+
+                time.sleep(global_ctx.time_interval)  # sleep here before looping again
                 continue
 
             # start by indexing new blocks for given client
@@ -212,3 +221,5 @@ def monitoring_thread(*nodes, delay=0):
         except Exception as e:
             log.error('An exception occurred in the monitoring thread:')
             log.exception(e)
+
+        time.sleep(global_ctx.time_interval)
