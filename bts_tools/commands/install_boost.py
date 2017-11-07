@@ -21,6 +21,7 @@
 from ..core import run, replace_in_file
 from pathlib import Path
 import os
+import os.path
 import psutil
 import logging
 
@@ -44,8 +45,12 @@ def run_command(boost_ver=60, base_build_dir=None, prefix=None):
     # note: do not use default args in the function definition as os.environ['HOME'] is
     #       not defined when running from a non-shell session (eg: supervisord) and it
     #       makes the file un-importable
-    base_build_dir = Path(base_build_dir or os.environ['HOME']).expanduser()
-    prefix = Path(prefix or os.environ['HOME']).expanduser()
+    if sys.version_info < (3, 5):  # FIXME: remove when we require python 3.5
+        base_build_dir = os.path.expanduser(base_build_dir or os.environ['HOME'])
+        prefix = os.path.expanduser(prefix or os.environ['HOME'])
+    else:
+        base_build_dir = Path(base_build_dir or os.environ['HOME']).expanduser()
+        prefix = Path(prefix or os.environ['HOME']).expanduser()
 
     log.info('Downloading boost version 1.{} into: {}'.format(boost_ver, base_build_dir))
     os.chdir(str(base_build_dir))
