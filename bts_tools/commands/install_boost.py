@@ -21,6 +21,7 @@
 from ..core import run, replace_in_file
 from pathlib import Path
 import os
+import sys
 import os.path
 import psutil
 import logging
