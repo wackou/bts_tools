@@ -24,6 +24,7 @@ from datetime import datetime
 from retrying import retry
 from requests.exceptions import Timeout
 from bitcoinaverage import RestfulClient
+from cachetools.func import ttl_cache
 import json
 import pendulum
 import requests
@@ -386,7 +387,22 @@ class YahooFeedProvider(FeedProvider):
 
 
         return FeedSet([self.feed_price(self.to_bts(asset), base, price) for asset, price in zip(asset_list, asset_prices)])
-        return dict(zip((self.to_bts(asset) for asset in asset_list), asset_prices))
+
+
+class FixerFeedProvider(FeedProvider):
+    NAME = 'Fixer'
+
+    @check_online_status
+    @ttl_cache(ttl=7200)     # max requests per month = 12 * 24 < 1000, allows for free account
+    def get_all(self, base):
+        log.error('querying fixer.io')
+        log.error('-'*120)
+        rates = requests.get('https://api.fixer.io/latest?base={}'.format(base)).json()['rates']
+        return FeedSet(self.feed_price(asset, base, 1/price) for asset, price in rates.items())
+
+    @check_online_status
+    def get(self, asset, base):
+        return self.get_all(base)[asset]
 
 
 class GoogleFeedProvider(FeedProvider):

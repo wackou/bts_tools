@@ -24,7 +24,7 @@ from .feed_providers import FeedPrice, FeedSet, YahooFeedProvider, BterFeedProvi
     PoloniexFeedProvider, GoogleFeedProvider, BloombergFeedProvider, BitcoinAverageFeedProvider,\
     BitfinexFeedProvider, BitstampFeedProvider, YunbiFeedProvider,\
     CoinCapFeedProvider, CoinMarketCapFeedProvider, BittrexFeedProvider,\
-    CurrencyLayerFeedProvider,\
+    CurrencyLayerFeedProvider, FixerFeedProvider,\
     ALL_FEED_PROVIDERS
 from collections import deque, defaultdict
 from contextlib import suppress
@@ -293,12 +293,12 @@ def get_feed_prices(node):
     # - BTC as we don't get it from yahoo
     # - USD as it is our base currency
     yahoo_prices = []
-    try:
-        yahoo = YahooFeedProvider()
-        yahoo_prices = yahoo.get(YAHOO_ASSETS | {'CNY'}, 'USD')  # still get CNY, we might need it later
-
-    except Exception as e:
-        log.warning(e)
+    # try:
+    #     yahoo = YahooFeedProvider()
+    #     yahoo_prices = yahoo.get(YAHOO_ASSETS | {'CNY'}, 'USD')  # still get CNY, we might need it later
+    #
+    # except Exception as e:
+    #     log.warning(e)
 
     currency_layer_prices = []
     CURRENCYLAYER_ACTIVE = True
@@ -310,7 +310,15 @@ def get_feed_prices(node):
         except Exception as e:
             log.debug('Could not get feeds from CurrencyLayer: {}'.format(e))
 
-    base_usd_price = FeedSet(yahoo_prices + currency_layer_prices)
+    fixer_prices = []
+    try:
+        fixer_prices = FixerFeedProvider().get_all(base='USD')
+    except Exception as e:
+        log.warning('Could not get feeds from fixer.io: {}'.format(e))
+
+
+
+    base_usd_price = FeedSet(yahoo_prices + currency_layer_prices + fixer_prices)
 
     # 1- get the BitShares price in major markets: BTC, USD and CNY
     btcavg = core.config['credentials']['bitcoinaverage']

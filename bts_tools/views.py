@@ -235,10 +235,14 @@ def json_rpc_call():
 def view_info():
     attrs = defaultdict(list)
     n = rpc.main_node
-    info = n.info()
+    try:
+        info = n.info()
+    except Exception as e:
+        log.exception(e)
+        info = {}
     # TODO: we should cache the witness and committee member names, they never change
     info['active_witnesses'] = n.get_active_witnesses()
-    if n.type() in ['bts']:
+    if n.type() in ['bts', 'bts-testnet']:
         info['active_committee_members'] = [n.get_committee_member_name(cm)
                                             for cm in info['active_committee_members']]
     info_items = sorted(info.items())
