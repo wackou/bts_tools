@@ -369,7 +369,7 @@ def get_feed_prices(node):
     feeds_bts_cny = get_multi_feeds('get', [('BTS', 'CNY')], providers_bts_cny)
     if not feeds_bts_cny:
         # if we couldn't get the feeds for cny, go BTS->BTC, BTC->CNY
-        log.warning('Could not get any BTS/CNY feeds, going BTS->BTC, BTC->CNY')
+        log.debug('Could not get any BTS/CNY feeds, going BTS->BTC, BTC->CNY')
         bts_cny = btc_price * btc_usd / base_usd_price.price('CNY')
 
         # # if we couldn't get the feeds for cny, try picking up our last value

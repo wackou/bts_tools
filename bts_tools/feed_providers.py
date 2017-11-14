@@ -201,6 +201,7 @@ def check_online_status(f):
         except Exception as e:
             if FeedProvider.PROVIDER_STATES.get(self.NAME) != 'offline':
                 log.warning('Feed provider %s went offline (%s)' % (self.NAME, e.__class__.__name__))
+                log.debug(e)
                 FeedProvider.PROVIDER_STATES[self.NAME] = 'offline'
             raise
     return wrapper
@@ -395,8 +396,6 @@ class FixerFeedProvider(FeedProvider):
     @check_online_status
     @ttl_cache(ttl=7200)     # max requests per month = 12 * 24 < 1000, allows for free account
     def get_all(self, base):
-        log.error('querying fixer.io')
-        log.error('-'*120)
         rates = requests.get('https://api.fixer.io/latest?base={}'.format(base)).json()['rates']
         return FeedSet(self.feed_price(asset, base, 1/price) for asset, price in rates.items())
 
