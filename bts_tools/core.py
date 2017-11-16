@@ -96,10 +96,11 @@ def profile(f):
             stop_time = time.time()
             plog.debug('Function %s(%s): returned in %0.3f ms' % (f.__name__, args_str, (stop_time-start_time)*1000))
             return result
-        except Exception:
+        except Exception as e:
             stop_time = time.time()
             plog.debug('Function %s(%s): exception in %0.3f ms' % (f.__name__, args_str, (stop_time-start_time)*1000))
-            raise
+            plog.exception(e)
+            raise e
     return wrapper
 
 
@@ -289,15 +290,19 @@ def load_config(loglevels=None):
 
 
 DEFAULT_BIN_FILENAMES = {'bts': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
+                         'bts-testnet': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
                          'muse': ['mused/mused', 'cli_wallet/cli_wallet'],
                          'steem': ['steemd/steemd', 'cli_wallet/cli_wallet'],
-                         'ppy': ['witness_node/witness_node', 'cli_wallet/cli_wallet']
+                         'ppy': ['witness_node/witness_node', 'cli_wallet/cli_wallet'],
+                         'ppy-testnet': ['witness_node/witness_node', 'cli_wallet/cli_wallet']
                          }
 
 DEFAULT_GUI_BIN_FILENAMES = {'bts': '',
+                             'bts-testnet': '',
                              'muse': '',
                              'steem': '',
-                             'ppy': ''
+                             'ppy': '',
+                             'ppy-testnet': ''
                              }
 
 

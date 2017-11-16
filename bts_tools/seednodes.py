@@ -127,7 +127,8 @@ SEED_NODES = {
         ('seed.windforce.farm:2001',         '',   'windforce',      'https://steemit.com/witness-category/@windforce/windforce-for-witness'),
         ('seed.teamsteem.me:2001',           '',   'teamsteem',      'https://steemit.com/witness-category/@teamsteem/on-steem-everybody-wins-and-here-s-you-chance-to-join'),
         ('steemd.steemkr.com:2001',          '',   'ludorum',        ''),
-        ('steem-seed.crypto.fans:2001',      '',   'sc-steemit / crypto.fans', '')
+        ('steem-seed.crypto.fans:2001',      '',   'sc-steemit / crypto.fans', ''),
+        ('seed.jamzed.pl:2001',              '',   'jamzed',         '')
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),

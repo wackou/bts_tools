@@ -24,9 +24,9 @@ from datetime import datetime
 from retrying import retry
 from requests.exceptions import Timeout
 from bitcoinaverage import RestfulClient
-from cachetools.func import ttl_cache
-import json
+from cachetools import TTLCache, cachedmethod
 import pendulum
+import operator
 import requests
 import statistics
 import functools
@@ -291,7 +291,11 @@ class CurrencyLayerFeedProvider(FeedProvider):
     ASSET_MAP = {'GOLD': 'XAU',
                  'SILVER': 'XAG'}
 
+    # TTL = 2 hours, max requests per month = 12 * 30 < 1000, allows for free account
+    _cache = TTLCache(maxsize=8192, ttl=7200)
+
     @check_online_status
+    @cachedmethod(operator.attrgetter('_cache'))
     def get(self, asset_list, base):
         log.debug('checking feeds for %s / %s at CurrencyLayer' % (' '.join(asset_list), base))
         asset_list = [self.from_bts(asset) for asset in asset_list]
@@ -393,8 +397,11 @@ class YahooFeedProvider(FeedProvider):
 class FixerFeedProvider(FeedProvider):
     NAME = 'Fixer'
 
+    # TTL = 12 hours, Fixer only updates once a day
+    _cache = TTLCache(maxsize=8192, ttl=43200)
+
     @check_online_status
-    @ttl_cache(ttl=7200)     # max requests per month = 12 * 24 < 1000, allows for free account
+    @cachedmethod(operator.attrgetter('_cache'))
     def get_all(self, base):
         rates = requests.get('https://api.fixer.io/latest?base={}'.format(base)).json()['rates']
         return FeedSet(self.feed_price(asset, base, 1/price) for asset, price in rates.items())
@@ -448,8 +455,12 @@ class QuandlFeedProvider(FeedProvider):
     _DATASETS = {('GOLD', 'USD'): ['WGC/GOLD_DAILY_USD', 'LBMA/GOLD', 'PERTH/GOLD_USD_D'],
                  ('SILVER', 'USD'): ['LBMA/SILVER', 'PERTH/SLVR_USD_D']}
 
+    # TTL = 12 hours, updated daily only
+    _cache = TTLCache(maxsize=8192, ttl=43200)
+
     @check_online_status
     @check_market
+    @cachedmethod(operator.attrgetter('_cache'))
     def get(self, cur, base):
         log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
 
@@ -457,8 +468,7 @@ class QuandlFeedProvider(FeedProvider):
         for dataset in self._DATASETS[(cur, base)]:
             url = 'https://www.quandl.com/api/v3/datasets/{dataset}.json?start_date={date}'.format(
                 dataset=dataset,
-                date=datetime.datetime.strftime(datetime.datetime.now() - 3,
-                                                '%Y-%m-%d')
+                date=(pendulum.utcnow() - pendulum.interval(days=3)).strftime('%Y-%m-%d')
             )
             data = requests.get(url=url, timeout=self.TIMEOUT).json()
             if 'dataset' not in data:
@@ -466,7 +476,6 @@ class QuandlFeedProvider(FeedProvider):
             d = data['dataset']
             if len(d['data']):
                 prices.append(d['data'][0][1])
-        log.warning('prices: {}'.format(prices))
 
         return self.feed_price(cur, base, sum(prices) / len(prices))
 

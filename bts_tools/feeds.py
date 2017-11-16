@@ -24,7 +24,7 @@ from .feed_providers import FeedPrice, FeedSet, YahooFeedProvider, BterFeedProvi
     PoloniexFeedProvider, GoogleFeedProvider, BloombergFeedProvider, BitcoinAverageFeedProvider,\
     BitfinexFeedProvider, BitstampFeedProvider, YunbiFeedProvider,\
     CoinCapFeedProvider, CoinMarketCapFeedProvider, BittrexFeedProvider,\
-    CurrencyLayerFeedProvider, FixerFeedProvider,\
+    CurrencyLayerFeedProvider, FixerFeedProvider, QuandlFeedProvider, UpholdFeedProvider,\
     ALL_FEED_PROVIDERS
 from collections import deque, defaultdict
 from contextlib import suppress
@@ -301,14 +301,12 @@ def get_feed_prices(node):
     #     log.warning(e)
 
     currency_layer_prices = []
-    CURRENCYLAYER_ACTIVE = True
-    if CURRENCYLAYER_ACTIVE:
-        try:
-            currency_layer = CurrencyLayerFeedProvider()
-            currency_layer_prices = currency_layer.get(YAHOO_ASSETS | {'CNY'}, 'USD')
+    try:
+        currency_layer = CurrencyLayerFeedProvider()
+        currency_layer_prices = currency_layer.get(tuple(YAHOO_ASSETS | {'CNY'}), 'USD')
 
-        except Exception as e:
-            log.debug('Could not get feeds from CurrencyLayer: {}'.format(e))
+    except Exception as e:
+        log.debug('Could not get feeds from CurrencyLayer: {}'.format(e))
 
     fixer_prices = []
     try:
@@ -317,8 +315,17 @@ def get_feed_prices(node):
         log.warning('Could not get feeds from fixer.io: {}'.format(e))
 
 
+    # get gold and silver
+    quandl = QuandlFeedProvider()
+    uphold = UpholdFeedProvider()
+    gold_silver_prices = FeedSet([quandl.get('GOLD', 'USD'),
+                                  quandl.get('SILVER', 'USD'),
+                                  #uphold.get('GOLD', 'USD'),
+                                  #uphold.get('SILVER', 'USD')
+                                  ])
 
-    base_usd_price = FeedSet(yahoo_prices + currency_layer_prices + fixer_prices)
+
+    base_usd_price = FeedSet(yahoo_prices + currency_layer_prices + fixer_prices + gold_silver_prices)
 
     # 1- get the BitShares price in major markets: BTC, USD and CNY
     btcavg = core.config['credentials']['bitcoinaverage']
@@ -396,7 +403,11 @@ def get_feed_prices(node):
 
     # 2- now get the BitShares price in all other required currencies
     for asset in YAHOO_ASSETS:
-        feeds[asset] = usd_price / base_usd_price.price(asset)
+        try:
+            feeds[asset] = usd_price / base_usd_price.price(asset)
+        except Exception:
+            log.warning('no feed price for asset {}'.format(asset))
+
 
     # 2.1- RUBLE is used temporarily by RUDEX instead of bitRUB (black swan)
     #      see https://bitsharestalk.org/index.php/topic,24004.0/all.html
