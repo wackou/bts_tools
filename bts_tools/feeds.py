@@ -20,8 +20,8 @@
 
 from . import core
 from .core import hashabledict
-from .feed_providers import FeedPrice, FeedSet, YahooFeedProvider, BterFeedProvider, Btc38FeedProvider,\
-    PoloniexFeedProvider, GoogleFeedProvider, BloombergFeedProvider, BitcoinAverageFeedProvider,\
+from .feed_providers import FeedPrice, FeedSet, YahooFeedProvider, BterFeedProvider, Btc38FeedProvider, \
+    AexFeedProvider, PoloniexFeedProvider, GoogleFeedProvider, BloombergFeedProvider, BitcoinAverageFeedProvider,\
     BitfinexFeedProvider, BitstampFeedProvider, YunbiFeedProvider,\
     CoinCapFeedProvider, CoinMarketCapFeedProvider, BittrexFeedProvider,\
     CurrencyLayerFeedProvider, FixerFeedProvider,\
@@ -328,6 +328,7 @@ def get_feed_prices(node):
     bitstamp = BitstampFeedProvider()
     bittrex = BittrexFeedProvider()
     btc38 = Btc38FeedProvider()
+    aex = AexFeedProvider()
     bter = BterFeedProvider()
     cmc = CoinMarketCapFeedProvider()
     coincap = CoinCapFeedProvider()
@@ -361,7 +362,7 @@ def get_feed_prices(node):
     # 1.3- get the bts/cny valuation directly from cny markets. Going from bts/btc and
     #      btc/cny to bts/cny introduces a slight difference (2-3%) that doesn't exist on
     #      the actual chinese markets
-    providers_bts_cny = {bter, btc38, yunbi} & active_providers
+    providers_bts_cny = {bter, btc38, aex, yunbi} & active_providers
 
     # TODO: should go at the beginning: submit all fetching tasks to an event loop / threaded executor,
     # compute valuations once we have everything
