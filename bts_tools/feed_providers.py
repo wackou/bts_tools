@@ -592,6 +592,37 @@ class Btc38FeedProvider(FeedProvider):
                                volume=float(r['ticker']['vol']))
 
 
+class AexFeedProvider(FeedProvider):
+    NAME = 'Aex'
+    AVAILABLE_MARKETS = [('BTS', 'BTC'), ('BTS', 'CNY'), ('BTC', 'CNY')]
+
+    @check_online_status
+    @reuse_last_value_on_fail
+    @retry(retry_on_exception=lambda e: isinstance(e, requests.exceptions.Timeout),
+           wait_exponential_multiplier=5000,
+           stop_max_attempt_number=3)
+    @check_market
+    def get(self, cur, base):
+        log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
+        headers = {'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
+
+        'https://www.quandl.com/api/v3/datasets/{dataset}.json?start_date={date}'
+
+        r = requests.get('http://api.aex.com/ticker.php?c={}&mk_type={}'.format(cur.lower(), base.lower()),
+                         timeout=10,
+                         headers=headers)
+        try:
+            # see: http://stackoverflow.com/questions/24703060/issues-reading-json-from-txt-file
+            r.encoding = 'utf-8-sig'
+            r = r.json()
+        except ValueError:
+            log.error('Could not decode response from aex: %s' % r.text)
+            raise
+        return self.feed_price(cur, base,
+                               price=float(r['ticker']['last']), # TODO: (bid + ask) / 2 ?
+                               volume=float(r['ticker']['vol']))
+
+
 class YunbiFeedProvider(FeedProvider):
     NAME = 'Yunbi'
     AVAILABLE_MARKETS = [('BTS', 'BTC'), ('BTS', 'CNY'), ('BTC', 'CNY')]
