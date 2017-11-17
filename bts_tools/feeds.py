@@ -336,7 +336,7 @@ def get_feed_prices(node):
     yunbi = YunbiFeedProvider()
 
     # 1.1- first get the bts/btc valuation
-    providers_bts_btc = {poloniex, bittrex} & active_providers
+    providers_bts_btc = {aex, poloniex, bittrex} & active_providers
     if not providers_bts_btc:
         log.warning('No feed providers for BTS/BTC feed price')
     all_feeds = get_multi_feeds('get', [('BTS', 'BTC')], providers_bts_btc)
