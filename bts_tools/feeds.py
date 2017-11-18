@@ -72,7 +72,7 @@ def load_feeds():
     cfg = core.config['monitoring']['feeds']
     history_len = int(cfg['median_time_span'] / cfg['check_time_interval'])
     price_history = {cur: deque(maxlen=history_len) for cur in BIT_ASSETS}
-    visible_feeds = cfg.get('visible_feeds', DEFAULT_VISIBLE_FEEDS)
+    visible_feeds = cfg['bts'].get('visible_feeds', DEFAULT_VISIBLE_FEEDS)
     feed_control = BitSharesFeedControl(cfg=cfg, visible_feeds=visible_feeds)
 
 
@@ -192,9 +192,11 @@ def get_bit20_feed(node, usd_price):
             market_params = json.loads(f['memo'][len('MARKET :: '):])
             log.debug('Got market params for bit20: {}'.format(market_params))
             # FIXME: this affects the global config object
-            cfg['asset_params']['BTWTY'] = {'maintenance_collateral_ratio': market_params['MCR'],
-                                            'maximum_short_squeeze_ratio': market_params['MSSR'],
-                                            'core_exchange_factor': cfg['asset_params']['default']['core_exchange_factor']}
+            params = cfg['bts']['asset_params']
+            params['BTWTY'] = {'maintenance_collateral_ratio': market_params['MCR'],
+                               'maximum_short_squeeze_ratio': market_params['MSSR'],
+                               'core_exchange_factor': params.get('BTWTY', {}).get('core_exchange_factor',
+                                                                                   params['default']['core_exchange_factor'])}
             break
     else:
         log.debug('Did not find any custom market parameters in the last {} messages '
@@ -484,8 +486,8 @@ def get_fraction(price, asset_precision, base_precision, N=6):
 
 
 def get_price_for_publishing(node, median_feeds, asset, price):
-    c = dict(cfg['asset_params']['default'])  # make a copy, we don't want to update the default value
-    c.update(cfg['asset_params'].get(asset) or {})
+    c = dict(cfg['bts']['asset_params']['default'])  # make a copy, we don't want to update the default value
+    c.update(cfg['bts']['asset_params'].get(asset) or {})
     asset_id = node.asset_data(asset)['id']
     asset_precision = node.asset_data(asset)['precision']
 
@@ -539,8 +541,8 @@ def get_price_for_publishing(node, median_feeds, asset, price):
 
 
 def get_disabled_assets():
-    cfg_enabled = set(cfg.get('enabled_assets', []))
-    cfg_disabled = set(cfg.get('disabled_assets', []))
+    cfg_enabled = set(cfg['bts'].get('enabled_assets', []))
+    cfg_disabled = set(cfg['bts'].get('disabled_assets', []))
     for asset in cfg_enabled:
         if asset in cfg_disabled:
             log.warning("Asset {} is both in 'enabled_assets' and 'disabled_assets'. Disabling it".format(asset))
@@ -572,16 +574,16 @@ class BitSharesFeedControl(object):
 
         # FIXME: deprecate self.feed_period
         try:
-            self.feed_period = int(cfg['publish_time_interval'] / cfg['check_time_interval'])
+            self.feed_period = int(cfg['bts']['publish_time_interval'] / cfg['check_time_interval'])
         except KeyError:
             self.feed_period = None
 
-        self.check_time_interval = pendulum.interval(seconds=cfg.get('check_time_interval', 300))
+        self.check_time_interval = pendulum.interval(seconds=cfg.get('check_time_interval', 600))
         self.publish_time_interval = None
-        if 'publish_time_interval' in cfg:
-            self.publish_time_interval = pendulum.interval(seconds=cfg['publish_time_interval'])
+        if 'publish_time_interval' in cfg['bts']:
+            self.publish_time_interval = pendulum.interval(seconds=cfg['bts']['publish_time_interval'])
 
-        self.feed_slot = cfg.get('publish_time_slot', None)
+        self.feed_slot = cfg['bts'].get('publish_time_slot', None)
         if self.feed_slot is not None:
             self.feed_slot = int(self.feed_slot)
 
@@ -623,7 +625,7 @@ class BitSharesFeedControl(object):
             return True
 
         if self.feed_period is not None and self.nfeed_checked % self.feed_period == 0:
-            log.debug('Should publish because time interval has passed: {} seconds'.format(cfg['publish_time_interval']))
+            log.debug('Should publish because time interval has passed: {} seconds'.format(cfg['bts']['publish_time_interval']))
             return True
 
 
@@ -718,7 +720,7 @@ def check_feeds(nodes):
                         log.warning('Cannot publish feeds for steem witness %s: wallet is locked' % node.name)
                         continue
 
-                    ratio = cfg['steem_dollar_adjustment']
+                    ratio = cfg['steem']['steem_dollar_adjustment']
                     price_obj = {'base': '{:.3f} SBD'.format(price),
                                  'quote': '{:.3f} STEEM'.format(1/ratio)}
                     log.info('Node {}:{} publishing feed price for steem: {:.3f} SBD (real: {:.3f} adjusted by {:.2f})'

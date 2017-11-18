@@ -25,31 +25,37 @@ monitoring:
         min_required_space: 5G
 
     feeds:
-        steem_dollar_adjustment: 1.00
-        enabled_assets: []   # [RUBLE, BTWTY, ALTCAP, HERO]
-        disabled_assets: [RUB, SEK, GRIDCOIN, KRW, SGD, HKD, BTWTY, GOLD, SILVER, NZD]  # black swan
-        asset_params:
-            # TODO: MCR and MSSR should be the actual percentage (float) not a fixed-point integer
-            default:
-                maintenance_collateral_ratio: 1750  # Call when collateral only pays off 175% the debt
-                maximum_short_squeeze_ratio: 1100   # Stop calling when collateral only pays off 110% of the debt
-                core_exchange_factor: 0.80          # 20% premium if paying fees in bitassets (avoids people draining the fee pool during price swings)
-            ALTCAP:
-                maintenance_collateral_ratio: 1360
-                maximum_short_squeeze_ratio: 1069
-            HERO:
-                maintenance_collateral_ratio: 2000
-                maximum_short_squeeze_ratio: 1100
-            HERTZ:
-                maintenance_collateral_ratio: 2000
-                maximum_short_squeeze_ratio: 1100
-
-        check_time_interval: 300
-        #publish_time_interval: 2400         # use this to publish feeds at fixed time intervals (in seconds)
-        #publish_time_slot: 0                # use this to publish every hour at a fixed number of minutes (in minutes)
-        median_time_span: 1800
         feed_providers: [Poloniex, Bittrex, Yunbi,    # BTS valuation
                          Yahoo, Google, Bloomberg]  # market indices
-        # List of feeds that should be shown on the UI and in the logs. Note that we
-        # always check and publish all feeds, regardless of this variable.
-        visible_feeds: [USD, BTC, CNY, GOLD, EUR]
+
+        check_time_interval: 600
+        median_time_span: 1800
+
+        steem:
+            steem_dollar_adjustment: 1.00
+
+        bts:
+            enabled_assets: []   # [RUBLE, BTWTY, ALTCAP, HERO, HERTZ]
+            disabled_assets: [RUB, SEK, GRIDCOIN, KRW, SGD, HKD, BTWTY, GOLD, SILVER, NZD]  # black swan
+            asset_params:
+                # TODO: MCR and MSSR should be the actual percentage (float) not a fixed-point integer
+                default:
+                    maintenance_collateral_ratio: 1750  # Call when collateral only pays off 175% the debt
+                    maximum_short_squeeze_ratio: 1100   # Stop calling when collateral only pays off 110% of the debt
+                    core_exchange_factor: 0.80          # 20% premium if paying fees in bitassets (avoids people draining the fee pool during price swings)
+                ALTCAP:
+                    maintenance_collateral_ratio: 1360
+                    maximum_short_squeeze_ratio: 1069
+                HERO:
+                    maintenance_collateral_ratio: 2000
+                    maximum_short_squeeze_ratio: 1100
+                HERTZ:
+                    maintenance_collateral_ratio: 2000
+                    maximum_short_squeeze_ratio: 1100
+
+            #publish_time_interval: 2400         # use this to publish feeds at fixed time intervals (in seconds)
+            #publish_time_slot: 0                # use this to publish every hour at a fixed number of minutes (in minutes)
+
+            # List of feeds that should be shown on the UI and in the logs. Note that we
+            # always check and publish all feeds, regardless of this variable.
+            visible_feeds: [USD, BTC, CNY, GOLD, EUR]

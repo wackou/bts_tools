@@ -237,14 +237,14 @@ def load_config(loglevels=None):
 
 
     # check whether config.yaml has a correct format
-    m = config['monitoring']
-    if (m['feeds'].get('publish_time_interval') is None and
-        m['feeds'].get('publish_time_slot') is None):
+    m = config['monitoring']['feeds']
+    if (m['bts'].get('publish_time_interval') is None and
+        m['bts'].get('publish_time_slot') is None):
         log.warning('Will not be able to publish feeds. You need to specify '
                     'either publish_time_interval or publish_time_slot')
 
-    check_time_interval = m['feeds']['check_time_interval']
-    publish_time_interval = m['feeds'].get('publish_time_interval')
+    check_time_interval = m['check_time_interval']
+    publish_time_interval = m['bts'].get('publish_time_interval')
     if publish_time_interval:
         if publish_time_interval < check_time_interval:
             log.error('Feed publish time interval ({}) is smaller than check time interval ({})'.format(publish_time_interval, check_time_interval))
