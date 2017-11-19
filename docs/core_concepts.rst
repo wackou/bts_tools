@@ -7,7 +7,7 @@ key concepts that should be understood:
 
 
 - there are a number of blockchains for which we know a git repo that we can use to build a client.
-  these are called "build environments", and currently can be any one of [bts, steem, ppy, muse]
+  these are called "build environments", and currently can be any one of [bts, bts-testnet, steem, ppy, ppy-testnet, muse]
 - when a binary is compiled, you want to run an instance of it. This is called a "client" and
   each has its own data dir, network ports, etc. so you can run more than 1 simultaneously.
 - furthermore, each client can assume 1 or more "roles", which describe its function to the

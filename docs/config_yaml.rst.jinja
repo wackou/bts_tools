@@ -29,3 +29,37 @@ config.yaml
 .. code-block:: yaml
 
 {{ config_yaml }}
+
+
+minimal config.yaml
+-------------------
+
+Here's a minimally useful version of ``config.yaml`` that will build and run a BitShares seed node.
+
+.. code-block:: yaml
+
+    ---
+    hostname: xxxxxxxx
+
+    # the logging levels for the different submodules
+    # can be any of DEBUG, INFO, WARNING, ERROR
+    logging:
+        bts_tools.cmdline: DEBUG
+        bts_tools.feeds: INFO
+
+    build_environments:
+        make_args: ['-j4']
+
+    clients:
+        bts:
+            type: bts
+            data_dir: ~/.BitShares2
+            api_access: ~/api_access.json  # see https://github.com/BitShares/bitshares-2#accessing-restricted-apis
+            witness_user: xxxxxxxx
+            witness_password: xxxxxxxx
+            roles:
+            -
+                role: seed
+                name: seed01-bts
+
+
