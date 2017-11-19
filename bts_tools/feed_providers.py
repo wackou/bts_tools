@@ -21,10 +21,11 @@
 from . import core
 from bs4 import BeautifulSoup
 from datetime import datetime
+from functools import wraps
 from retrying import retry
 from requests.exceptions import Timeout
 from bitcoinaverage import RestfulClient
-from cachetools import TTLCache, cachedmethod
+from cachetools import TTLCache
 import pendulum
 import operator
 import requests
@@ -35,10 +36,45 @@ import logging
 log = logging.getLogger('bts_tools.feeds')
 
 
+def function_call_str(func_name, args, kwargs):
+    args_str = ', '.join(str(arg) for arg in args)
+    kwargs_str = ', '.join('{}={}'.format(k, v) for k, v in kwargs.items())
+    sep = ', ' if (args_str and kwargs_str) else ''
+    return '{}({}{}{})'.format(func_name, args_str, sep, kwargs_str)
+
+
+def cachedmethod(f):
+    """@cachedmethod should be applied to methods of classes that define the ``_cache`` attribute
+    as a ``cachetools.Cache`` instance."""
+    @wraps(f)
+    def wrapper(self, *args, **kwargs):
+        func_str = function_call_str(f.__qualname__, args, kwargs)
+        c = self._cache
+        if c is None:
+            log.warning('No cache available for {}'.format(func_str))
+            return f(self, *args, **kwargs)
+
+        key = (f.__name__, core.make_hashable(args), core.make_hashable(kwargs))
+        try:
+            cached_result = c[key]
+            log.debug('Returning cached value for {}: {}'.format(func_str, cached_result))
+            return c[key]
+        except KeyError:
+            pass  # key not found
+
+        log.debug('No cached value for {}, computing it...'.format(func_str))
+        result = f(self, *args, **kwargs)
+        c[key] = result
+
+        return result
+    return wrapper
+
+
 class FeedPrice(object):
     """Represent a feed price value. Contains additional metadata such as volume, etc.
 
     volume should be represented as number of <asset> units, not <base>."""
+
     def __init__(self, price, asset, base, volume=None, last_updated=None, provider=None):
         self.price = price
         self.asset = asset
@@ -56,14 +92,15 @@ class FeedPrice(object):
 
         import bts_tools.rpcutils as rpc
 
-        price = int(feed['feed']['settlement_price']['base']['amount']) / int(feed['feed']['settlement_price']['quote']['amount'])
+        s = feed['feed']['settlement_price']
+        price = int(s['base']['amount']) / int(s['quote']['amount'])
 
-        assert asset_id == feed['feed']['settlement_price']['base']['asset_id']
+        assert asset_id == s['base']['asset_id']
 
         asset_data = rpc.main_node.get_asset(asset_id)
         #print('asset data: {}'.format(asset_data))
         asset = asset_data['symbol']
-        base = rpc.main_node.get_asset(feed['feed']['settlement_price']['quote']['asset_id'])['symbol']
+        base = rpc.main_node.get_asset(s['quote']['asset_id'])['symbol']
 
         block_time = pendulum.parse(rpc.main_node.get_block(block_num)['timestamp'])
         f = FeedPrice(price, asset, base, last_updated=block_time)
@@ -87,7 +124,6 @@ class FeedPrice(object):
         #     print(f'[{f.last_updated}] {str(f)}  {1/f.price}')
         return feeds
 
-
     def __str__(self):
         return 'FeedPrice: {} {}/{}{}{}'.format(
             self.price, self.asset, self.base,
@@ -109,7 +145,8 @@ class FeedSet(list):
         if len(self) == 0:
             raise ValueError('FeedSet is empty, can\'t get value...')
         if len(self) > 1:
-            raise ValueError('FeedSet contains more than one feed. Please use self.weighted_mean() to compute the value')
+            raise ValueError('FeedSet contains more than one feed. '
+                             'Please use self.weighted_mean() to compute the value')
 
         return self[0].price
 
@@ -122,11 +159,13 @@ class FeedSet(list):
         if asset is None:
             asset_list = [f.asset for f in self]
             if asset_list.count(asset_list[0]) != len(asset_list):  # they're not all equal
-                raise ValueError('asset=None: cannot decide which asset to use for computing the price: {}'.format(set(asset_list)))
+                raise ValueError('asset=None: cannot decide which asset to use for computing the price: {}'
+                                 .format(set(asset_list)))
         if base is None:
             base_list = [f.base for f in self]
             if base_list.count(base_list[0]) != len(base_list):  # they're not all equal
-                raise ValueError('base=None: cannot decide which base to use for computing the price: {}'.format(set(base_list)))
+                raise ValueError('base=None: cannot decide which base to use for computing the price: {}'
+                                 .format(set(base_list)))
 
         asset = asset or self[0].asset
         base = base or self[0].base
@@ -162,6 +201,7 @@ class FeedSet(list):
         use_simple_mean = False
         if any(f.volume is None for f in self):
             log.debug('No volume defined for at least one feed: {}, using simple mean'.format(self))
+            # FIXME: should be using the median here instead
             use_simple_mean = True
             total_volume = len(self)
         else:
@@ -172,8 +212,8 @@ class FeedSet(list):
         log.debug('Weighted mean for {}/{}: {:.6g}'.format(asset, base, weighted_mean))
         log.debug('Exchange      Price          Volume          Contribution')
         for f in self:
-            percent = 100 * (f.volume or 1) / total_volume
-            log.debug('{:14s} {:12.4g} {:14.2f} {:14.2f}%'.format(f.provider, f.price, (f.volume or 1), percent))
+            percent = 100 * (1 if use_simple_mean else f.volume) / total_volume
+            log.debug('{:14s} {:12.4g} {:14.2f} {:14.2f}%'.format(f.provider, f.price, (1 if use_simple_mean else f.volume), percent))
 
         if stddev_tolerance:
             price_list = [f.price for f in self]
@@ -204,6 +244,7 @@ def check_online_status(f):
                 log.debug(e)
                 FeedProvider.PROVIDER_STATES[self.NAME] = 'offline'
             raise
+
     return wrapper
 
 
@@ -215,6 +256,7 @@ def check_market(f):
             log.warning(msg)
             raise core.NoFeedData(msg)
         return f(self, cur, base)
+
     return wrapper
 
 
@@ -242,7 +284,9 @@ def reuse_last_value_on_fail(f):
             else:
                 log.debug('Could not get feed price for {}/{}, no last value...'.format(cur, base))
                 raise
+
     return wrapper
+
 
 # TODO: make use of this: https://pymotw.com/3/abc/index.html
 class FeedProvider(object):
@@ -295,7 +339,7 @@ class CurrencyLayerFeedProvider(FeedProvider):
     _cache = TTLCache(maxsize=8192, ttl=7200)
 
     @check_online_status
-    @cachedmethod(operator.attrgetter('_cache'))
+    @cachedmethod
     def get(self, asset_list, base):
         log.debug('checking feeds for %s / %s at CurrencyLayer' % (' '.join(asset_list), base))
         asset_list = [self.from_bts(asset) for asset in asset_list]
@@ -312,25 +356,26 @@ class CurrencyLayerFeedProvider(FeedProvider):
             error = r['error']
             raise ValueError('Error code {}: {}'.format(error['code'], error['info']))
 
-        return FeedSet([self.feed_price(self.to_bts(asset), base, 1/r['quotes']['USD{}'.format(asset)]) for asset in asset_list])
+        return FeedSet([self.feed_price(self.to_bts(asset), base, 1 / r['quotes']['USD{}'.format(asset)])
+                        for asset in asset_list])
 
 
 class YahooFeedProvider(FeedProvider):
     NAME = 'Yahoo'
     _YQL_URL = 'http://query.yahooapis.com/v1/public/yql'
     ASSET_MAP = {'GOLD': 'XAU',
-                  'SILVER': 'XAG',
-                  'SHENZHEN': '399106.SZ',
-                  'SHANGHAI': '000001.SS',
-                  'NIKKEI': '^N225',
-                  'NASDAQC': '^IXIC',
-                  'HANGSENG': '^HSI'}
+                 'SILVER': 'XAG',
+                 'SHENZHEN': '399106.SZ',
+                 'SHANGHAI': '000001.SS',
+                 'NIKKEI': '^N225',
+                 'NASDAQC': '^IXIC',
+                 'HANGSENG': '^HSI'}
 
     @check_online_status
     def query_yql(self, query):
         r = requests.get(self._YQL_URL,
-                         params=dict(q = query,
-                                     env = 'http://datatables.org/alltables.env',
+                         params=dict(q=query,
+                                     env='http://datatables.org/alltables.env',
                                      format='json')).json()
         try:
             return r['query']['results']['quote']
@@ -390,8 +435,8 @@ class YahooFeedProvider(FeedProvider):
                 log.warning('Could not fetch correct price for silver from yahoo, response: {}'.format(r.text))
                 raise core.NoFeedData from e
 
-
-        return FeedSet([self.feed_price(self.to_bts(asset), base, price) for asset, price in zip(asset_list, asset_prices)])
+        return FeedSet([self.feed_price(self.to_bts(asset), base, price)
+                        for asset, price in zip(asset_list, asset_prices)])
 
 
 class FixerFeedProvider(FeedProvider):
@@ -401,10 +446,10 @@ class FixerFeedProvider(FeedProvider):
     _cache = TTLCache(maxsize=8192, ttl=43200)
 
     @check_online_status
-    @cachedmethod(operator.attrgetter('_cache'))
+    @cachedmethod
     def get_all(self, base):
         rates = requests.get('https://api.fixer.io/latest?base={}'.format(base)).json()['rates']
-        return FeedSet(self.feed_price(asset, base, 1/price) for asset, price in rates.items())
+        return FeedSet(self.feed_price(asset, base, 1 / price) for asset, price in rates.items())
 
     @check_online_status
     def get(self, asset, base):
@@ -415,10 +460,10 @@ class GoogleFeedProvider(FeedProvider):
     NAME = 'Google'
     _GOOGLE_URL = 'https://www.google.com/finance'
     ASSET_MAP = {'SHENZHEN': 'SHE:399106',
-                  'SHANGHAI': 'SHA:000001',
-                  'NIKKEI': 'NI225',
-                  'NASDAQC': '.IXIC',
-                  'HANGSENG': 'HSI'}
+                 'SHANGHAI': 'SHA:000001',
+                 'NIKKEI': 'NI225',
+                 'NASDAQC': '.IXIC',
+                 'HANGSENG': 'HSI'}
 
     @check_online_status
     def query_quote(self, q, base_currency=None):
@@ -433,11 +478,11 @@ class BloombergFeedProvider(FeedProvider):
     NAME = 'Bloomberg'
     _BLOOMBERG_URL = 'http://www.bloomberg.com/quote/{}'
     ASSET_MAP = {'SHENZHEN': 'SZCOMP:IND',
-                  'SHANGHAI': 'SHCOMP:IND',
-                  'NIKKEI': 'NKY:IND',
-                  'NASDAQC': 'CCMP:IND',
-                  'HANGSENG': 'HSI:IND',
-                  'GOLD': 'XAUUSD:CUR'}
+                 'SHANGHAI': 'SHCOMP:IND',
+                 'NIKKEI': 'NKY:IND',
+                 'NASDAQC': 'CCMP:IND',
+                 'HANGSENG': 'HSI:IND',
+                 'GOLD': 'XAUUSD:CUR'}
 
     @check_online_status
     def query_quote(self, q, base_currency=None):
@@ -460,7 +505,7 @@ class QuandlFeedProvider(FeedProvider):
 
     @check_online_status
     @check_market
-    @cachedmethod(operator.attrgetter('_cache'))
+    @cachedmethod
     def get(self, cur, base):
         log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
 
@@ -478,6 +523,57 @@ class QuandlFeedProvider(FeedProvider):
                 prices.append(d['data'][0][1])
 
         return self.feed_price(cur, base, sum(prices) / len(prices))
+
+
+class LivecoinFeedProvider(FeedProvider):
+    NAME = 'Livecoin'
+
+    @check_online_status
+    def get(self, asset, base):
+        log.debug('checking feeds for %s/%s at %s' % (asset, base, self.NAME))
+        data = requests.get('https://api.livecoin.net/exchange/ticker?currencyPair={}/{}'.format(asset, base)).json()
+
+        return self.feed_price(asset, base, data['last'], volume=data['volume'])
+
+
+class AEXFeedProvider(FeedProvider):
+    NAME = 'AEX'
+    AVAILABLE_MARKETS = [('BTS', 'BTC')]
+
+    def get_all(self, base):
+        # FIXME: implement me
+        # 'http://api.aex.com/ticker.php?c=all&mk_type={}'
+        pass
+
+    @check_online_status
+    @check_market
+    def get(self, asset, base):
+        log.debug('checking feeds for %s/%s at %s' % (asset, base, self.NAME))
+        headers = {'content-type': 'application/json',
+                   'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
+
+        data = requests.get('http://api.aex.com/ticker.php?c={}&mk_type={}'.format(asset.lower(), base.lower()), headers=headers).json()
+        data = data['ticker']
+
+        return self.feed_price(asset, base, float(data['last']), volume=float(data['vol']))
+
+
+class ZBFeedProvider(FeedProvider):
+    NAME = 'ZB'
+    AVAILABLE_MARKETS = [('BTS', 'BTC')]
+
+    @check_online_status
+    @check_market
+    def get(self, asset, base):
+        log.debug('checking feeds for %s/%s at %s' % (asset, base, self.NAME))
+        headers = {'content-type': 'application/json',
+                   'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
+
+        data = requests.get('http://api.zb.com/data/v1/ticker?market={}_{}'.format(asset.lower(), base.lower()), headers=headers).json()
+        t = data['ticker']
+        return self.feed_price(asset, base, float(t['last']), volume=float(t['vol']),
+                               last_updated=pendulum.from_timestamp(float(data['date'])/1000))
+
 
 
 class UpholdFeedProvider(FeedProvider):
@@ -597,7 +693,7 @@ class Btc38FeedProvider(FeedProvider):
             log.error('Could not decode response from btc38: %s' % r.text)
             raise
         return self.feed_price(cur, base,
-                               price=float(r['ticker']['last']), # TODO: (bid + ask) / 2 ?
+                               price=float(r['ticker']['last']),  # TODO: (bid + ask) / 2 ?
                                volume=float(r['ticker']['vol']))
 
 
@@ -628,25 +724,30 @@ class YunbiFeedProvider(FeedProvider):
 
 class CoinCapFeedProvider(FeedProvider):
     NAME = 'CoinCap'
-    AVAILABLE_MARKETS = [('ALTCAP', 'BTC')]
+    AVAILABLE_MARKETS = [('BTC', 'USD'), ('BTS', 'BTC'), ('ALTCAP', 'BTC')]
 
     @check_online_status
     @check_market
     def get(self, cur, base):
         log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
-        r = requests.get('http://www.coincap.io/global', timeout=self.TIMEOUT).json()
 
-        btc_cap = float(r['btcCap'])
-        alt_cap = float(r['altCap'])
-        price = btc_cap / alt_cap
+        if cur == 'ALTCAP':
+            r = requests.get('http://www.coincap.io/global', timeout=self.TIMEOUT).json()
 
-        #log.debug('{} - btc: {}'.format(self.NAME, btc_cap))
-        #log.debug('{} - total: {}'.format(self.NAME, btc_cap + alt_cap))
-        #log.debug('{} - alt: {}'.format(self.NAME, alt_cap))
-        log.debug('{} - ALTCAP price: {}'.format(self.NAME, price))
+            btc_cap = float(r['btcCap'])
+            alt_cap = float(r['altCap'])
+            price = btc_cap / alt_cap
+
+            #log.debug('{} - btc: {}'.format(self.NAME, btc_cap))
+            #log.debug('{} - total: {}'.format(self.NAME, btc_cap + alt_cap))
+            #log.debug('{} - alt: {}'.format(self.NAME, alt_cap))
+            log.debug('{} - ALTCAP price: {}'.format(self.NAME, price))
+
+        else:
+            bts = requests.get('http://coincap.io/page/{}'.format(cur)).json()
+            price = bts['price_{}'.format(base.lower())]
 
         return self.feed_price(cur, base, price=price)
-
 
     def get_all(self):
         feeds = requests.get('http://www.coincap.io/front').json()
@@ -654,26 +755,36 @@ class CoinCapFeedProvider(FeedProvider):
         for f in feeds:
             result.append(self.feed_price(f['short'], 'USD', price=float(f['price']),
                                           volume=float(f['usdVolume']),
-                                          last_updated=pendulum.from_timestamp(f['time']/1000)))
+                                          last_updated=pendulum.from_timestamp(f['time'] / 1000)))
         return result
 
 
 class CoinMarketCapFeedProvider(FeedProvider):
     NAME = 'CoinMarketCap'
-    AVAILABLE_MARKETS = [('ALTCAP', 'BTC')]
+    AVAILABLE_MARKETS = [('BTC', 'USD'), ('BTS', 'BTC'), ('ALTCAP', 'BTC')]
+
+    ASSET_MAP = {'BTC': 'bitcoin',
+                 'BTS': 'bitshares'
+                 }
 
     @check_online_status
     @check_market
     def get(self, cur, base):
         log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
-        r = requests.get('https://api.coinmarketcap.com/v1/global/').json()
-        btc_cap = r['bitcoin_percentage_of_market_cap']
-        alt_cap = 100 - btc_cap
-        price = btc_cap / alt_cap
 
-        #log.debug('{} - btc: {}'.format(self.NAME, btc_cap))
-        #log.debug('{} - alt: {}'.format(self.NAME, alt_cap))
-        log.debug('{} - ALTCAP price: {}'.format(self.NAME, price))
+        if cur == 'ALTCAP':
+            r = requests.get('https://api.coinmarketcap.com/v1/global/').json()
+            btc_cap = r['bitcoin_percentage_of_market_cap']
+            alt_cap = 100 - btc_cap
+            price = btc_cap / alt_cap
+
+            #log.debug('{} - btc: {}'.format(self.NAME, btc_cap))
+            #log.debug('{} - alt: {}'.format(self.NAME, alt_cap))
+            log.debug('{} - ALTCAP price: {}'.format(self.NAME, price))
+
+        else:
+            r = requests.get('https://api.coinmarketcap.com/v1/ticker/{}/?convert={}'.format(self.from_bts(cur), base)).json()
+            price = float(r[0]['price_{}'.format(base.lower())])
 
         return self.feed_price(cur, base, price=price)
 
@@ -702,8 +813,9 @@ class BittrexFeedProvider(FeedProvider):
     @check_market
     def get(self, cur, base):
         log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
-        r = requests.get('https://bittrex.com/api/v1.1/public/getmarketsummary?market={}-{}'.format(base, self.from_bts(cur)),
-                         timeout=self.TIMEOUT).json()
+        r = requests.get(
+            'https://bittrex.com/api/v1.1/public/getmarketsummary?market={}-{}'.format(base, self.from_bts(cur)),
+            timeout=self.TIMEOUT).json()
 
         summary = r['result'][0]
         #log.debug('Got feed price for {}: {} (from bittrex)'.format(cur, summary['Last']))

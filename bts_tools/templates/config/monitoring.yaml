@@ -25,16 +25,18 @@ monitoring:
         min_required_space: 5G
 
     feeds:
-        feed_providers: [Poloniex, Bittrex, Yunbi,    # BTS valuation
-                         Yahoo, Google, Bloomberg]  # market indices
-
         check_time_interval: 600
         median_time_span: 1800
 
         steem:
+            feed_providers: [Poloniex, Bittrex]
             steem_dollar_adjustment: 1.00
 
         bts:
+            feed_providers: [Poloniex, Bittrex, Bitfinex, BitStamp,
+                             CoinMarketCap, CoinCap, AEX, ZB, Livecoin, # BTS valuation
+                             Yahoo, Google, Bloomberg]  # market indices
+
             enabled_assets: []   # [RUBLE, BTWTY, ALTCAP, HERO, HERTZ]
             disabled_assets: [RUB, SEK, GRIDCOIN, KRW, SGD, HKD, BTWTY, GOLD, SILVER, NZD]  # black swan
             asset_params:

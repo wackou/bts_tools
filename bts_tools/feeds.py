@@ -25,6 +25,7 @@ from .feed_providers import FeedPrice, FeedSet, YahooFeedProvider, BterFeedProvi
     BitfinexFeedProvider, BitstampFeedProvider, YunbiFeedProvider,\
     CoinCapFeedProvider, CoinMarketCapFeedProvider, BittrexFeedProvider,\
     CurrencyLayerFeedProvider, FixerFeedProvider, QuandlFeedProvider, UpholdFeedProvider,\
+    LivecoinFeedProvider, AEXFeedProvider, ZBFeedProvider,\
     ALL_FEED_PROVIDERS
 from collections import deque, defaultdict
 from contextlib import suppress
@@ -284,11 +285,12 @@ def get_hertz_feed(reference_timestamp, current_timestamp, period_days, phase_da
     return hertz_value
 
 def get_feed_prices(node):
-    provider_names = {p.lower() for p in cfg['feed_providers']}
-    active_providers = set()
-    for name, provider in ALL_FEED_PROVIDERS.items():
-        if name in provider_names:
-            active_providers.add(provider())
+    active_providers = defaultdict(set)
+    for chain in ['bts', 'steem']:
+        provider_names = {p.lower() for p in cfg[chain]['feed_providers']}
+        for name, provider in ALL_FEED_PROVIDERS.items():
+            if name in provider_names:
+                active_providers[chain].add(provider())
 
     # get currency rates from yahoo
     # do not include:
@@ -318,13 +320,21 @@ def get_feed_prices(node):
 
 
     # get gold and silver
+    gold_silver_prices = []
+
     quandl = QuandlFeedProvider()
-    uphold = UpholdFeedProvider()
-    gold_silver_prices = FeedSet([quandl.get('GOLD', 'USD'),
-                                  quandl.get('SILVER', 'USD'),
-                                  #uphold.get('GOLD', 'USD'),
-                                  #uphold.get('SILVER', 'USD')
-                                  ])
+    try:
+        gold_silver_prices += [quandl.get('GOLD', 'USD'),
+                               quandl.get('SILVER', 'USD')]
+    except Exception as e:
+        log.debug('Could not get gold/silver feeds from Quandl')
+
+    # uphold = UpholdFeedProvider()
+    # try:
+    #     gold_silver_prices += [uphold.get('GOLD', 'USD'),
+    #                            uphold.get('SILVER', 'USD')]
+    # except Exception as e:
+    #     log.debug('Could not get gold/silver feeds from Uphold')
 
 
     base_usd_price = FeedSet(yahoo_prices + currency_layer_prices + fixer_prices + gold_silver_prices)
@@ -342,26 +352,33 @@ def get_feed_prices(node):
     coincap = CoinCapFeedProvider()
     poloniex = PoloniexFeedProvider()
     yunbi = YunbiFeedProvider()
+    livecoin = LivecoinFeedProvider()
+    aex = AEXFeedProvider()
+    zb = ZBFeedProvider()
 
     # 1.1- first get the bts/btc valuation
-    providers_bts_btc = {poloniex, bittrex} & active_providers
+    providers_bts_btc = {poloniex, bittrex, livecoin, aex, zb} & active_providers['bts']
     if not providers_bts_btc:
         log.warning('No feed providers for BTS/BTC feed price')
     all_feeds = get_multi_feeds('get', [('BTS', 'BTC')], providers_bts_btc)
 
     feeds_bts_btc = all_feeds.filter('BTS', 'BTC')
+
+    if not feeds_bts_btc:
+        # in last resort, just get our data from coinmarketcap and coincap
+        log.info('getting bts/btc directly from coinmarketcap, no other sources available')
+        feeds_bts_btc = FeedSet([cmc.get('BTS', 'BTC'),
+                                 coincap.get('BTS', 'BTC')])
+
     if not feeds_bts_btc:
         raise core.NoFeedData('Could not get any BTS/BTC feeds')
 
     btc_price = feeds_bts_btc.price()
 
     # 1.2- get the btc/usd (bitcoin avg)
-    try:
-        feeds_btc_usd = FeedSet([bitcoinavg.get('BTC', 'USD')])
-    except Exception:
-        # fall back on Bitfinex, Bitstamp if BitcoinAverage is down or not configured - TODO: add Kraken, others? CMC
-        log.debug('Could not get BTC/USD using BitcoinAverage, trying other sources')
-        feeds_btc_usd = get_multi_feeds('get', [('BTC', 'USD')], {bitfinex, bitstamp})
+    feeds_btc_usd = get_multi_feeds('get', [('BTC', 'USD')], {bitcoinavg, cmc, bitfinex, bitstamp} & active_providers['bts']) # coincap seems to be off sometimes, do not use it
+    if not feeds_btc_usd:
+        raise core.NoFeedData('Could not get any BTC/USD feeds')
 
     btc_usd = feeds_btc_usd.price()
 
@@ -370,7 +387,7 @@ def get_feed_prices(node):
     # 1.3- get the bts/cny valuation directly from cny markets. Going from bts/btc and
     #      btc/cny to bts/cny introduces a slight difference (2-3%) that doesn't exist on
     #      the actual chinese markets
-    providers_bts_cny = {bter, btc38, yunbi} & active_providers
+    providers_bts_cny = {bter, btc38, yunbi} & active_providers['bts']
 
     # TODO: should go at the beginning: submit all fetching tasks to an event loop / threaded executor,
     # compute valuations once we have everything
@@ -425,7 +442,7 @@ def get_feed_prices(node):
     gridcoin = get_multi_feeds('get', [('GRIDCOIN', 'BTC')], {poloniex, bittrex})
     feeds['GRIDCOIN'] = btc_price / gridcoin.price(stddev_tolerance=0.1)
 
-    steem_btc = get_multi_feeds('get', [('STEEM', 'BTC')], {poloniex, bittrex})
+    steem_btc = get_multi_feeds('get', [('STEEM', 'BTC')], {poloniex, bittrex} & active_providers['steem'])
     steem_usd = steem_btc.price() * btc_usd
     feeds['STEEM'] = steem_usd
 

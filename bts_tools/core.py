@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from os.path import join, dirname, expanduser, exists, abspath
-from collections import namedtuple, defaultdict
+from collections import namedtuple, defaultdict, abc
 from subprocess import Popen, PIPE
 from functools import wraps
 from jinja2 import Environment, PackageLoader
@@ -533,6 +533,22 @@ class hashabledict(dict):
 
     def __eq__(self, other):
         return self.__key() == other.__key()
+
+
+def make_hashable(obj):
+    if isinstance(obj, abc.MutableSequence):
+        return tuple(make_hashable(x) for x in obj)
+    elif isinstance(obj, abc.MutableMapping):
+        return tuple((k, make_hashable(v)) for k, v in sorted(obj.items()))
+    elif isinstance(obj, abc.MutableSet):
+        return frozenset(make_hashable(x) for x in obj)
+    else:
+        try:
+            hash(obj)
+        except TypeError:
+            raise TypeError('make_hashable() doesn\'t know how to deal with obj type: {}, for obj {}'.format(type(obj), obj))
+
+        return obj
 
 
 def to_list(obj):
