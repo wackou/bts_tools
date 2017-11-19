@@ -599,7 +599,10 @@ class BitcoinAverageFeedProvider(FeedProvider):
 
     def __init__(self, secret_key, public_key):
         super().__init__()
-        self.client = RestfulClient(secret_key=secret_key, public_key=public_key)
+        try:
+            self.client = RestfulClient(secret_key=secret_key, public_key=public_key)
+        except Exception:
+            self.client = None
 
     @check_online_status
     @check_market

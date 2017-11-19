@@ -340,9 +340,9 @@ def get_feed_prices(node):
     base_usd_price = FeedSet(yahoo_prices + currency_layer_prices + fixer_prices + gold_silver_prices)
 
     # 1- get the BitShares price in major markets: BTC, USD and CNY
-    btcavg = core.config['credentials']['bitcoinaverage']
+    btcavg = core.config['credentials'].get('bitcoinaverage', {})
 
-    bitcoinavg = BitcoinAverageFeedProvider(btcavg['secret_key'], btcavg['public_key'])
+    bitcoinavg = BitcoinAverageFeedProvider(btcavg.get('secret_key'), btcavg.get('public_key'))
     bitfinex = BitfinexFeedProvider()
     bitstamp = BitstampFeedProvider()
     bittrex = BittrexFeedProvider()
