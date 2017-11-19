@@ -20,8 +20,8 @@
 
 from . import core
 from .core import hashabledict
-from .feed_providers import FeedPrice, FeedSet, YahooFeedProvider, BterFeedProvider, Btc38FeedProvider,\
-    PoloniexFeedProvider, GoogleFeedProvider, BloombergFeedProvider, BitcoinAverageFeedProvider,\
+from .feed_providers import FeedPrice, FeedSet, BterFeedProvider, Btc38FeedProvider,\
+    PoloniexFeedProvider, BitcoinAverageFeedProvider,\
     BitfinexFeedProvider, BitstampFeedProvider, YunbiFeedProvider,\
     CoinCapFeedProvider, CoinMarketCapFeedProvider, BittrexFeedProvider,\
     CurrencyLayerFeedProvider, FixerFeedProvider, QuandlFeedProvider, UpholdFeedProvider,\

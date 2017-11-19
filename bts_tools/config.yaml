@@ -143,23 +143,32 @@ monitoring:
         maximum_number_of_connections: 400
 
     feeds:
-        # some assets are not published by default as they are experimental or have some requirements
-        # eg: need to be an approved witness to publish
-        # if you want to publish them you need to say so explicitly here
-        enabled_assets: [RUBLE, ALTCAP, HERO]
+        check_time_interval: 600   # [OPTIONAL, default=600] interval at which the external feed providers should be queried, in seconds
+        median_time_span: 1800     # [OPTIONAL, default=1800] time span over which the median of the feed price is computed. Shorter values are "fresher" but more sensitive to noise,
+                                   # higher values indicate a more stable indicator of price at the cost of lack of responsiveness / delay in getting update for a huge price hike
 
-        # explicitly disable some assets (eg: due to black swan)
-        #disabled_assets: [RUB, SEK, GRIDCOIN, KRW, SGD, HKD, BTWTY]
+        steem:
+            feed_providers: [Poloniex, Bittrex]
+            steem_dollar_adjustment: 1.0
 
-        check_time_interval: 300            # interval at which the external feed providers should be queried, in seconds
-        median_time_span: 1800              # leave default
+        bts:
+            feed_providers: [Poloniex, Bittrex,
+                             Bitfinex, BitStamp,
+                             CoinMarketCap, CoinCap, AEX, ZB, Livecoin]
 
-        # if you have at least 1 feed_publisher role defined in your clients, then
-        # you need to uncomment at least one of the next 2 lines
-        #publish_time_interval: 2400        # use this to publish feeds at fixed time intervals (in seconds)
-        #publish_time_slot: 08              # use this to publish every hour at a fixed number of minutes (in minutes)
+            # some assets are not published by default as they are experimental or have some requirements
+            # eg: need to be an approved witness to publish
+            # if you want to publish them you need to say so explicitly here
+            enabled_assets: [RUBLE, ALTCAP, HERO]  # BTWTY, HERTZ
 
-        steem_dollar_adjustment: 1.0
+            # explicitly disable some assets (eg: due to black swan)
+            #disabled_assets: [RUB, SEK, GRIDCOIN, KRW, SGD, HKD, BTWTY]
+
+            # if you have at least 1 feed_publisher role defined in your clients, then
+            # you need to uncomment at least one of the next 2 lines
+            #publish_time_interval: 2400        # use this to publish feeds at fixed time intervals (in seconds)
+            #publish_time_slot: 08              # use this to publish every hour at a fixed number of minutes (in minutes)
+
 
 #
 # configuration of the notification channels
