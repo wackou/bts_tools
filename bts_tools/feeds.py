@@ -611,7 +611,7 @@ class BitSharesFeedControl(object):
         display_feeds = []
         for c in set(self.visible_feeds) | set(feeds.keys()):
             if c not in feeds:
-                log.warning('No feed price available for {}, cannot display it'.format(c))
+                log.debug('No feed price available for {}, cannot display it'.format(c))
             else:
                 display_feeds.append(c)
         display_feeds = list(sorted(feeds))

@@ -6,6 +6,17 @@
 History
 =======
 
+0.5.0 (2017-11-19)
+------------------
+
+* API CHANGE: config.yaml has changed substantially and previous versions will NOT work
+              documentation is at: https://bts-tools.readthedocs.io/en/latest/config_yaml.html
+* finalized port to generic graphene code, full support for the following chains:
+  bts, bts-testnet, steem, ppy, ppy-testnet, muse
+* general code improvements and optimizations, documentation update
+* [bts] added Fixer, CurrencyLayer, Quandl, AEX, ZB, Livecoin as feed providers
+
+
 0.4.14 (2017-05-29)
 -------------------
 
