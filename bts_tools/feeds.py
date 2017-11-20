@@ -653,14 +653,14 @@ class BitSharesFeedControl(object):
             log.debug('Should publish because time interval has passed: {}'.format(self.publish_time_interval))
             return True
 
-        target = now.replace(minute=self.feed_slot, second=0, microsecond=0)
-        targets = [target.subtract(hours=1), target, target.add(hours=1)]
-        diff = [now-t for t in targets]
-        # check if we just passed our time slot
-        if any(pendulum.interval() < d and abs(d) < 1.5*self.check_time_interval for d in diff):
-
-            log.debug('Should publish because time slot has arrived: time {:02d}:{:02d}'.format(now.hour, now.minute))
-            return True
+        if self.feed_slot:
+            target = now.replace(minute=self.feed_slot, second=0, microsecond=0)
+            targets = [target.subtract(hours=1), target, target.add(hours=1)]
+            diff = [now-t for t in targets]
+            # check if we just passed our time slot
+            if any(pendulum.interval() < d and abs(d) < 1.1*self.check_time_interval for d in diff):
+                log.debug('Should publish because time slot has arrived: time {:02d}:{:02d}'.format(now.hour, now.minute))
+                return True
 
         # check_time_interval_minutes = cfg['check_time_interval'] // 60 + 1
         # if self.feed_slot is not None:
