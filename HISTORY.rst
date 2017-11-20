@@ -6,6 +6,13 @@
 History
 =======
 
+0.5.1 (2017-11-20)
+------------------
+
+* fixed issue when no BitcoinAverage credentials are provided
+* fixed issue with feeds being published every time they are checked
+
+
 0.5.0 (2017-11-19)
 ------------------
 
