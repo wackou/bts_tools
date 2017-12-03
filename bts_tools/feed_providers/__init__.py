@@ -36,7 +36,7 @@ log = logging.getLogger(__name__)
 
 REQUIRED_FUNCTIONS = ['get']  #, 'help', 'run_command']
 
-REQUIRED_VARS = ['NAME']
+REQUIRED_VARS = ['NAME', 'AVAILABLE_MARKETS']
 
 
 PROVIDER_STATES = {}
@@ -76,7 +76,7 @@ def cachedmodulefunc(f):
     return wrapper
 
 
-def check_online_status_func(f):
+def check_online_status(f):
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
         name = import_module(f.__module__).NAME
@@ -97,17 +97,22 @@ def check_online_status_func(f):
 
     return wrapper
 
-# def check_market(f):
-#     @functools.wraps(f)
-#     def wrapper(self, cur, base):
-#         if (cur, base) not in self.AVAILABLE_MARKETS:
-#             msg = '{} does not provide feeds for market {}/{}'.format(self.NAME, cur, base)
-#             log.warning(msg)
-#             raise core.NoFeedData(msg)
-#         return f(self, cur, base)
-#
-#     return wrapper
-#
+
+def check_market(f):
+    @functools.wraps(f)
+    def wrapper(cur, base):
+        mod = import_module(f.__module__)
+        # cur can be either a single asset or a list/set of them
+        asset_list = [cur] if isinstance(cur, str) else cur
+        for asset in asset_list:
+            if (asset, base) not in mod.AVAILABLE_MARKETS:
+                msg = '{} does not provide feeds for market {}/{}'.format(mod.NAME, asset, base)
+                log.warning(msg)
+                raise core.NoFeedData(msg)
+        return f(cur, base)
+
+    return wrapper
+
 
 def reuse_last_value_on_fail(f):
     @functools.wraps(f)

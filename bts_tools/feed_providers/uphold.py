@@ -18,8 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import FeedPrice, FeedSet, check_online_status_func, cachedmodulefunc, to_bts, from_bts
-from ..feeds import BIT_ASSETS
+from . import FeedPrice, FeedSet, check_online_status, cachedmodulefunc, to_bts, from_bts, check_market
+from ..feeds import BIT_ASSETS, FIAT_ASSETS
 from cachetools import TTLCache
 import requests
 import logging
@@ -33,7 +33,7 @@ NAME = 'Uphold'
 # Crypto: BTCUSD, ETHUSD, LTCUSD,
 # Metal: XAGUSD, XAUUSD
 # Other (fiat?): USDAED, USDBRL, USDILS, USDINR, USDKES, USDPHP, USDPLN, VOXUSD, XPDUSD, XPTUSD
-AVAILABLE_MARKETS = [('GOLD', 'USD'), ('SILVER', 'USD')]
+AVAILABLE_MARKETS = [(asset, 'USD') for asset in FIAT_ASSETS | {'GOLD', 'SILVER'}]
 
 
 ASSET_MAP = {'GOLD': 'XAU',
@@ -62,7 +62,7 @@ def feeds_from_reply(r):
     return result
 
 
-@check_online_status_func
+@check_online_status
 @cachedmodulefunc
 def get_all():
     r = requests.get('https://api.uphold.com/v0/ticker')
@@ -70,8 +70,8 @@ def get_all():
     return feeds_from_reply(r)
 
 
-@check_online_status_func
-#@check_market
+@check_online_status
+@check_market
 def get(self, cur, base):
     log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
 

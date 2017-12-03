@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import FeedPrice, check_online_status_func
+from . import FeedPrice, check_online_status, check_market
 import pendulum
 import requests
 import logging
@@ -32,8 +32,8 @@ AVAILABLE_MARKETS = [('BTC', 'USD'), ('BTS', 'BTC'), ('ALTCAP', 'BTC')]
 
 TIMEOUT = 60
 
-@check_online_status_func
-#@check_market
+@check_online_status
+@check_market
 def get(cur, base):
     log.debug('checking feeds for %s/%s at %s' % (cur, base, NAME))
 

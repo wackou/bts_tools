@@ -19,7 +19,7 @@
 #
 
 
-from . import FeedPrice, check_online_status_func, reuse_last_value_on_fail
+from . import FeedPrice, check_online_status, reuse_last_value_on_fail, check_market
 from retrying import retry
 import requests
 import logging
@@ -27,15 +27,16 @@ import logging
 log = logging.getLogger(__name__)
 
 NAME = 'Btc38'
+
 AVAILABLE_MARKETS = [('BTS', 'BTC'), ('BTS', 'CNY'), ('BTC', 'CNY')]
 
 
-@check_online_status_func
+@check_online_status
 @reuse_last_value_on_fail
 @retry(retry_on_exception=lambda e: isinstance(e, requests.exceptions.Timeout),
        wait_exponential_multiplier=5000,
        stop_max_attempt_number=3)
-#@check_market
+@check_market
 def get(cur, base):
     log.debug('checking feeds for %s/%s at %s' % (cur, base, NAME))
     headers = {'content-type': 'application/json',

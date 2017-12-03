@@ -19,7 +19,7 @@
 #
 
 
-from . import FeedPrice, check_online_status_func
+from . import FeedPrice, check_online_status, check_market
 import requests
 import logging
 
@@ -29,8 +29,8 @@ NAME = 'Bitstamp'
 AVAILABLE_MARKETS = [('BTC', 'USD')]
 TIMEOUT = 60
 
-@check_online_status_func
-#@check_market
+@check_online_status
+@check_market
 def get(cur, base):
     log.debug('checking feeds for %s/%s at %s' % (cur, base, NAME))
     r = requests.get('https://www.bitstamp.net/api/ticker/',

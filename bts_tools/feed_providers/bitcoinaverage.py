@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import FeedPrice, check_online_status_func
+from . import FeedPrice, check_online_status, check_market
 from .. import core
 from bitcoinaverage import RestfulClient
 import pendulum
@@ -27,11 +27,12 @@ import logging
 log = logging.getLogger(__name__)
 
 NAME = 'BitcoinAverage'
+
 AVAILABLE_MARKETS = [('BTC', 'USD')]
 
 
-@check_online_status_func
-#@check_market
+@check_online_status
+@check_market
 def get(cur, base):
     log.debug('checking feeds for %s/%s at %s' % (cur, base, NAME))
 

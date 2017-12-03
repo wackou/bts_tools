@@ -18,9 +18,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import FeedPrice, check_online_status_func, cachedmodulefunc, FeedSet
+from . import FeedPrice, check_online_status, cachedmodulefunc, FeedSet, check_market
 from . import from_bts, to_bts
 from .. import core
+from ..feeds import FIAT_ASSETS
 from cachetools import TTLCache
 import requests
 import logging
@@ -30,6 +31,8 @@ log = logging.getLogger(__name__)
 
 NAME = 'CurrencyLayer'
 
+AVAILABLE_MARKETS = [(asset, 'USD') for asset in FIAT_ASSETS | {'GOLD', 'SILVER'}]
+
 ASSET_MAP = {'GOLD': 'XAU',
              'SILVER': 'XAG'}
 
@@ -38,8 +41,9 @@ ASSET_MAP = {'GOLD': 'XAU',
 _cache = TTLCache(maxsize=8192, ttl=7200)
 
 
-@check_online_status_func
+@check_online_status
 @cachedmodulefunc
+@check_market
 def get(asset_list, base):
     log.debug('checking feeds for %s / %s at CurrencyLayer' % (' '.join(asset_list), base))
     asset_list = [from_bts(asset) for asset in asset_list]

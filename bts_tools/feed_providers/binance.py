@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import FeedPrice, check_online_status_func
+from . import FeedPrice, check_online_status, check_market
 import requests
 import logging
 
@@ -27,18 +27,18 @@ log = logging.getLogger(__name__)
 
 NAME = 'Binance'
 
+AVAILABLE_MARKETS = [('BTS', 'BTC')]
+
 def get_all(self, base):
     # FIXME: implement me
     # does not include volume information...
     # https://api.binance.com/api/v1/ticker/allPrices
     pass
 
-@check_online_status_func    # FIXME: only works for methods for now
+@check_online_status    # FIXME: only works for methods for now
+@check_market
 def get(asset, base):
     log.debug('checking feeds for %s/%s at %s' % (asset, base, NAME))
     data = requests.get('https://api.binance.com/api/v1/ticker/24hr?symbol={}{}'.format(asset, base)).json()
-
-    #return self.feed_price(asset, base, float(data['lastPrice']), volume=float(data['volume']))
-
 
     return FeedPrice(float(data['lastPrice']), asset, base, float(data['volume']))

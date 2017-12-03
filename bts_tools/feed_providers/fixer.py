@@ -18,7 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import FeedPrice, check_online_status_func, cachedmodulefunc, FeedSet
+from . import FeedPrice, check_online_status, cachedmodulefunc, FeedSet, check_market
+from ..feeds import FIAT_ASSETS
 from cachetools import TTLCache
 import requests
 import logging
@@ -28,18 +29,22 @@ log = logging.getLogger(__name__)
 
 NAME = 'Fixer'
 
+AVAILABLE_MARKETS = [(asset, 'USD') for asset in FIAT_ASSETS]
+
+
 # TTL = 12 hours, Fixer only updates once a day
 _cache = TTLCache(maxsize=8192, ttl=43200)
 
 
-@check_online_status_func
+@check_online_status
 @cachedmodulefunc
 def get_all(base):
     rates = requests.get('https://api.fixer.io/latest?base={}'.format(base)).json()['rates']
     return FeedSet(FeedPrice(1 / price, asset, base) for asset, price in rates.items())
 
 
-@check_online_status_func
+@check_online_status
+@check_market
 def get(asset, base):
     return get_all(base)[asset]
 

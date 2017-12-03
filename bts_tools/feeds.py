@@ -36,8 +36,10 @@ import math
 log = logging.getLogger(__name__)
 
 """BitAssets for which we check and publish feeds."""
-BASE_ASSETS = {'BTC', 'USD', 'CNY', 'GOLD', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN', 'RUB', 'SEK', 'SGD',
-               'AUD', 'SILVER', 'TRY', 'KRW', 'JPY', 'NZD', 'ARS'}
+FIAT_ASSETS = {'USD', 'CNY', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN', 'RUB', 'SEK', 'SGD',
+               'AUD', 'TRY', 'KRW', 'JPY', 'NZD', 'ARS'}
+
+BASE_ASSETS = {'BTC', 'GOLD', 'SILVER'} | FIAT_ASSETS
 
 OTHER_ASSETS = {'ALTCAP', 'GRIDCOIN', 'STEEM',
                 'BTWTY', 'RUBLE', 'HERO', 'HERTZ'}

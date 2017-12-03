@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import FeedPrice, check_online_status_func, from_bts, to_bts
+from . import FeedPrice, check_online_status, from_bts, to_bts, check_market
 import requests
 import logging
 
@@ -30,8 +30,8 @@ AVAILABLE_MARKETS = [('BTS', 'BTC'), ('STEEM', 'BTC'), ('GRIDCOIN', 'BTC')]
 ASSET_MAP = {'GRIDCOIN': 'GRC'}
 TIMEOUT = 60
 
-@check_online_status_func
-#@check_market
+@check_online_status
+@check_market
 def get(cur, base):
     log.debug('checking feeds for %s/%s at %s' % (cur, base, NAME))
     r = requests.get('https://poloniex.com/public?command=returnTicker',

@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import FeedPrice, check_online_status_func
+from . import FeedPrice, check_online_status, check_market
 import requests
 import logging
 
@@ -26,8 +26,10 @@ log = logging.getLogger(__name__)
 
 NAME = 'Livecoin'
 
+AVAILABLE_MARKETS = [('BTS', 'BTC')]
 
-@check_online_status_func
+@check_online_status
+@check_market
 def get(asset, base):
     log.debug('checking feeds for %s/%s at %s' % (asset, base, NAME))
     data = requests.get('https://api.livecoin.net/exchange/ticker?currencyPair={}/{}'.format(asset, base)).json()

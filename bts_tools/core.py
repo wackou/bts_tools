@@ -611,12 +611,20 @@ def list_valid_plugins(plugin_type):
             plugin_name = basename[:-3]  # remove trailing '.py'
             # potential candidate, check for required functions
             plugin_members = dir(get_plugin(plugin_type, plugin_name))
+            is_valid = True
             for func in base_module.REQUIRED_FUNCTIONS:
                 if func not in plugin_members:
                     log.warning('Function {} is not defined for potential plugin {}:{}, not importing it'
                                 .format(func, plugin_type, plugin_name))
+                    is_valid = False
                     break
-            else:
+            for var in getattr(base_module, 'REQUIRED_VARS', []):  # REQUIRED_VARS is optional
+                if var not in plugin_members:
+                    log.warning('Variable {} is not defined for potential plugin {}:{}, not importing it'
+                                .format(var, plugin_type, plugin_name))
+                    is_valid = False
+                    break
+            if is_valid:
                 result.append(plugin_name)
     return result
 

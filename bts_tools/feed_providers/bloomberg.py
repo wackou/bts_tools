@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import FeedPrice, check_online_status_func, from_bts, to_bts
+from . import FeedPrice, check_online_status, from_bts, to_bts
 from bs4 import BeautifulSoup
 import requests
 import logging
@@ -29,6 +29,7 @@ NAME = 'Bloomberg'
 
 _BLOOMBERG_URL = 'http://www.bloomberg.com/quote/{}'
 
+# note: left here as a reference, from bts 0.x times
 ASSET_MAP = {'SHENZHEN': 'SZCOMP:IND',
              'SHANGHAI': 'SHCOMP:IND',
              'NIKKEI': 'NKY:IND',
@@ -36,8 +37,9 @@ ASSET_MAP = {'SHENZHEN': 'SZCOMP:IND',
              'HANGSENG': 'HSI:IND',
              'GOLD': 'XAUUSD:CUR'}
 
+AVAILABLE_MARKETS = [('SHENZHEN', 'CNY'), ('NIKKEI', 'JPY')]
 
-@check_online_status_func
+@check_online_status
 def query_quote(q, base_currency=None):
     log.debug('checking quote for %s at %s' % (q, NAME))
     r = requests.get(_BLOOMBERG_URL.format(from_bts(q)))

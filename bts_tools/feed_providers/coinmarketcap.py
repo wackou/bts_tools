@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import FeedPrice, check_online_status_func, FeedSet, from_bts, to_bts
+from . import FeedPrice, check_online_status, FeedSet, from_bts, to_bts, check_market
 from .. import core
 import pendulum
 import requests
@@ -35,8 +35,8 @@ ASSET_MAP = {'BTC': 'bitcoin',
              'BTS': 'bitshares'
              }
 
-@check_online_status_func
-#@check_market
+@check_online_status
+@check_market
 def get(cur, base):
     log.debug('checking feeds for %s/%s at %s' % (cur, base, NAME))
 

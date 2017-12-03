@@ -19,7 +19,7 @@
 #
 
 
-from . import FeedPrice, check_online_status_func
+from . import FeedPrice, check_online_status, check_market
 import requests
 import logging
 
@@ -29,8 +29,8 @@ NAME = 'Bter'
 AVAILABLE_MARKETS = [('BTS', 'BTC'), ('BTS', 'CNY'), ('BTC', 'CNY')]
 TIMEOUT = 60
 
-@check_online_status_func
-#@check_market
+@check_online_status
+@check_market
 def get(cur, base):
     log.debug('checking feeds for %s/%s at %s' % (cur, base, NAME))
     r = requests.get('http://data.bter.com/api/1/ticker/%s_%s' % (cur.lower(), base.lower()),

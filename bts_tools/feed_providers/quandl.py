@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import FeedPrice, check_online_status_func, cachedmodulefunc
+from . import FeedPrice, check_online_status, cachedmodulefunc, check_market
 from cachetools import TTLCache
 import pendulum
 import requests
@@ -29,6 +29,8 @@ log = logging.getLogger(__name__)
 
 NAME = 'Quandl'
 
+AVAILABLE_MARKETS = [('GOLD', 'USD'), ('SILVER', 'USD')]
+
 DATASETS = {('GOLD', 'USD'): ['WGC/GOLD_DAILY_USD', 'LBMA/GOLD', 'PERTH/GOLD_USD_D'],
             ('SILVER', 'USD'): ['LBMA/SILVER', 'PERTH/SLVR_USD_D']}
 
@@ -37,8 +39,9 @@ _cache = TTLCache(maxsize=8192, ttl=43200)
 
 TIMEOUT = 60
 
-@check_online_status_func
+@check_online_status
 @cachedmodulefunc
+@check_market
 def get(cur, base):
     log.debug('checking feeds for %s/%s at %s' % (cur, base, NAME))
 
