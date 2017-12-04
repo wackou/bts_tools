@@ -36,8 +36,14 @@ AVAILABLE_MARKETS = [('BTC', 'USD')]
 def get(cur, base):
     log.debug('checking feeds for %s/%s at %s' % (cur, base, NAME))
 
-    secret_key = core.config['credentials']['bitcoinaverage']['secret_key']
-    public_key = core.config['credentials']['bitcoinaverage']['public_key']
+
+    try:
+        secret_key = core.config['credentials']['bitcoinaverage']['secret_key']
+        public_key = core.config['credentials']['bitcoinaverage']['public_key']
+    except KeyError:
+        raise KeyError('config.yaml does not specify both "credentials.bitcoinaverage.secret_key" and '
+                       '"credentials.bitcoinaverage.public_key" variables')
+
 
     client = RestfulClient(secret_key=secret_key, public_key=public_key)
     r = client.ticker_short_local()[cur + base]

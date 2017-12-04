@@ -89,9 +89,9 @@ def check_online_status(f):
 
         except Exception as e:
             if PROVIDER_STATES.get(name) != 'offline':
-                log.warning('Feed provider %s went offline (%s)' % (name, e.__class__.__name__))
+                log.warning('Feed provider {} went offline: {}'.format(name, e))
                 log.debug(e)
-                log.exception(e)
+                #log.exception(e)
                 PROVIDER_STATES[name] = 'offline'
             raise
 

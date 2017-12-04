@@ -6,6 +6,14 @@
 History
 =======
 
+
+0.5.2 (2017-12-04)
+------------------
+
+* [bts] added Uphold and Binance feed providers
+* refactored feed providers plugin system to be more easily extended
+
+
 0.5.1 (2017-11-20)
 ------------------
 
