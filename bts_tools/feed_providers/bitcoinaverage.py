@@ -31,7 +31,7 @@ NAME = 'BitcoinAverage'
 
 AVAILABLE_MARKETS = [('BTC', 'USD')]
 
-_cache = TTLCache(ttl=1200)  # 20 minutes should work for the free plan, developer plan can get rid of the cache if wanted
+_cache = TTLCache(maxsize=8192, ttl=1200)  # 20 minutes should work for the free plan, developer plan can get rid of the cache if wanted
 
 
 @check_online_status
@@ -55,4 +55,3 @@ def get(cur, base):
     return FeedPrice(float(r['last']), cur, base,
                      last_updated=pendulum.from_timestamp(r['timestamp']),
                      provider=NAME)
-
