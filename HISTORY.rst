@@ -7,6 +7,13 @@ History
 =======
 
 
+0.5.3 (2017-12-09)
+------------------
+
+* [bts] fixed feed publishing for bit20
+* [bts] enable feed publishing for all markets by default, no more black-swanned markets
+
+
 0.5.2 (2017-12-04)
 ------------------
 

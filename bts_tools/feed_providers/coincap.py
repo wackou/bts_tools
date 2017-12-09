@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import FeedPrice, check_online_status, check_market, FeedSet
+from . import FeedPrice, check_online_status, check_market, FeedSet, to_bts
 import pendulum
 import requests
 import logging
@@ -29,6 +29,8 @@ log = logging.getLogger(__name__)
 NAME = 'CoinCap'
 
 AVAILABLE_MARKETS = [('BTC', 'USD'), ('BTS', 'BTC'), ('ALTCAP', 'BTC')]
+
+ASSET_MAP = {'MIOTA': 'IOT'}
 
 TIMEOUT = 60
 
@@ -60,7 +62,7 @@ def get_all():
     feeds = requests.get('http://www.coincap.io/front').json()
     result = FeedSet()
     for f in feeds:
-        result.append(FeedPrice(float(f['price']), f['short'], 'USD',
+        result.append(FeedPrice(float(f['price']), to_bts(f['short']), 'USD',
                                 volume=float(f['usdVolume']) / float(f['price']),
                                 #last_updated=pendulum.from_timestamp(f['time'] / 1000),  # FIXME: time not present
                                 provider=NAME))
