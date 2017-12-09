@@ -20,6 +20,7 @@
 
 from . import FeedPrice, check_online_status, FeedSet, from_bts, to_bts, check_market
 from .. import core
+import json
 import pendulum
 import requests
 import logging
@@ -36,7 +37,7 @@ ASSET_MAP = {'BTC': 'bitcoin',
              }
 
 @check_online_status
-@check_market
+#@check_market
 def get(cur, base):
     log.debug('checking feeds for %s/%s at %s' % (cur, base, NAME))
 
@@ -62,12 +63,14 @@ def get_all():
     result = FeedSet()
     for f in feeds:
         try:
-            result.append(FeedPrice(float(f['price_usd']), f['symbol'], 'USD',
-                                          volume=float(f['24h_volume_usd']) if f['24h_volume_usd'] else None,
-                                          last_updated=pendulum.from_timestamp(f['last_updated'])))
-        except TypeError:
+            price = float(f['price_usd'])
+            volume = float(f['24h_volume_usd']) / price if f.get('24h_volume_usd') else None
+            result.append(FeedPrice(price, f['symbol'], 'USD', volume=volume,
+                                    last_updated=pendulum.from_timestamp(int(f['last_updated']))))
+        except TypeError as e:
             # catches: TypeError: float() argument must be a string or a number, not 'NoneType'
             # on: f['price_usd']
-            #log.debug('Could not get USD price for feed: {}'.format(json.dumps(f, indent=4)))
+            log.debug('Could not get USD price for feed: {}'.format(json.dumps(f, indent=4)))
+            log.exception(e)
             pass
     return result

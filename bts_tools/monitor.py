@@ -119,8 +119,8 @@ def monitoring_thread(*nodes, delay=0):
         def check_feeds_with_delay(delay=0):
             # we sleep so that all threads try to run at different times, this spreads the load better
             # and helps to have logs that are not interweaved too much
-            log.warning('Waiting {} seconds before starting feeds monitoring thread for {} nodes: {}'
-                        .format(delay, client_node.type(), node_names))  # FIXME: log.debug
+            log.debug('Waiting {} seconds before starting feeds monitoring thread for {} nodes: {}'
+                      .format(delay, client_node.type(), node_names))
             time.sleep(delay)
             check_feeds(nodes)
         threading.Thread(target=check_feeds_with_delay, name='feed-thread').start()

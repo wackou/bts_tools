@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import FeedPrice, check_online_status, check_market
+from . import FeedPrice, check_online_status, check_market, FeedSet
 import pendulum
 import requests
 import logging
@@ -33,7 +33,7 @@ AVAILABLE_MARKETS = [('BTC', 'USD'), ('BTS', 'BTC'), ('ALTCAP', 'BTC')]
 TIMEOUT = 60
 
 @check_online_status
-@check_market
+#@check_market
 def get(cur, base):
     log.debug('checking feeds for %s/%s at %s' % (cur, base, NAME))
 
@@ -61,7 +61,7 @@ def get_all():
     result = FeedSet()
     for f in feeds:
         result.append(FeedPrice(float(f['price']), f['short'], 'USD',
-                                volume=float(f['usdVolume']),
-                                last_updated=pendulum.from_timestamp(f['time'] / 1000),
+                                volume=float(f['usdVolume']) / float(f['price']),
+                                #last_updated=pendulum.from_timestamp(f['time'] / 1000),  # FIXME: time not present
                                 provider=NAME))
     return result

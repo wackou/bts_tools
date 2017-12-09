@@ -219,6 +219,7 @@ def get_bit20_feed(node, usd_price):
                 bit20_value_cmc += qty * price
             except ValueError as e:
                 log.debug('Unknown asset on CMC: {}'.format(bit20asset))
+                #log.exception(e)
                 cmc_missing_assets.append(bit20asset)
 
     except Exception as e:
@@ -234,6 +235,7 @@ def get_bit20_feed(node, usd_price):
 
             except ValueError as e:
                 log.debug('Unknown asset on CoinCap: {}'.format(bit20asset))
+                #log.exception(e)
                 coincap_missing_assets.append(bit20asset)
 
     except Exception as e:
