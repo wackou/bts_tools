@@ -38,7 +38,7 @@ monitoring:
                              Yahoo, Google, Bloomberg]  # market indices
 
             enabled_assets: []   # [RUBLE, BTWTY, ALTCAP, HERO, HERTZ]
-            disabled_assets: [RUB, SEK, GRIDCOIN, KRW, SGD, HKD, BTWTY, GOLD, SILVER, NZD]  # black swan
+            disabled_assets: []  # black swan
             asset_params:
                 # TODO: MCR and MSSR should be the actual percentage (float) not a fixed-point integer
                 default:
