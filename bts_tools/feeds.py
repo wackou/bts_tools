@@ -224,6 +224,7 @@ def get_bit20_feed(node, usd_price):
 
     except Exception as e:
         log.warning('Could not get bit20 assets feed from CoinMarketCap: {}'.format(e))
+        cmc_missing_assets = [asset for asset, qty in bit20['data']]
 
     try:
         coincap_assets = providers.CoinCap.get_all()
@@ -240,6 +241,7 @@ def get_bit20_feed(node, usd_price):
 
     except Exception as e:
         log.warning('Could not get bit20 assets feed from CoinCap: {}'.format(e))
+        coincap_missing_assets = [asset for asset, qty in bit20['data']]
 
 
     bit20_feeds = FeedSet()
@@ -255,10 +257,10 @@ def get_bit20_feed(node, usd_price):
     if not coincap_missing_assets:
         bit20_feeds.append(cc_feed)
     if not bit20_feeds:
-        log.warning('All providers have at least one asset not listed:')
-        log.warning('- CoinMarketCap: {}'.format(cmc_missing_assets))
-        log.warning('- CoinCap: {}'.format(coincap_missing_assets))
-        bit20_feeds = FeedSet([cmc_feed, cc_feed])
+        log.warning('No provider could provider feed for all assets:')
+        log.warning('- CoinMarketCap missing: {}'.format(cmc_missing_assets))
+        log.warning('- CoinCap missing: {}'.format(coincap_missing_assets))
+        raise core.NoFeedData('Could not get any BTWTY feed')
 
     bit20_value = bit20_feeds.price(stddev_tolerance=0.02)
     log.debug('Total value of bit20 asset: ${}'.format(bit20_value))
@@ -424,9 +426,12 @@ def get_feed_prices(node):
 
     # 5- Bit20 asset
     if 'BTWTY' not in get_disabled_assets():
-        bit20 = get_bit20_feed(node, usd_price)
-        if bit20 is not None:
-            feeds['BTWTY'] = bit20
+        try:
+            bit20 = get_bit20_feed(node, usd_price)
+            if bit20 is not None:
+                feeds['BTWTY'] = bit20
+        except core.NoFeedData as e:
+            log.warning(e)
 
     # 6- HERTZ asset
     if 'HERTZ' not in get_disabled_assets():

@@ -152,9 +152,14 @@ monitoring:
             steem_dollar_adjustment: 1.0
 
         bts:
-            feed_providers: [Poloniex, Bittrex,
-                             Bitfinex, BitStamp,
-                             CoinMarketCap, CoinCap, AEX, ZB, Livecoin]
+            feed_providers: [Poloniex, AEX, ZB, Livecoin, Binance,  # BTS/BTC markets
+                             # Bittrex,
+                             # Bter, Yunbi, BTC38,                  # BTS/CNY markets
+                             Bitfinex, BitStamp, BitcoinAverage, CoinMarketCap, CoinCap]
+
+            asset_params:
+                default:
+                    core_exchange_factor:  0.8
 
             # some assets are not published by default as they are experimental or have some requirements
             # eg: need to be an approved witness to publish

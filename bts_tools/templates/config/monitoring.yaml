@@ -33,9 +33,10 @@ monitoring:
             steem_dollar_adjustment: 1.00
 
         bts:
-            feed_providers: [Poloniex, Bittrex, Bitfinex, BitStamp,
-                             CoinMarketCap, CoinCap, AEX, ZB, Livecoin, # BTS valuation
-                             Yahoo, Google, Bloomberg]  # market indices
+            feed_providers: [Poloniex, AEX, ZB, Livecoin, Binance,  # BTS/BTC markets
+                             # Bittrex,
+                             # Bter, Yunbi, BTC38,                  # BTS/CNY markets
+                             Bitfinex, BitStamp, BitcoinAverage, CoinMarketCap, CoinCap]
 
             enabled_assets: []   # [RUBLE, BTWTY, ALTCAP, HERO, HERTZ]
             disabled_assets: []  # black swan

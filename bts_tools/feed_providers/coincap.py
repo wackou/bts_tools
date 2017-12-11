@@ -19,6 +19,7 @@
 #
 
 from . import FeedPrice, check_online_status, check_market, FeedSet, to_bts
+from retrying import retry
 import pendulum
 import requests
 import logging
@@ -35,6 +36,9 @@ ASSET_MAP = {'MIOTA': 'IOT'}
 TIMEOUT = 60
 
 @check_online_status
+@retry(retry_on_exception=lambda e: isinstance(e, requests.exceptions.Timeout),
+       wait_exponential_multiplier=5000,
+       stop_max_attempt_number=2)
 #@check_market
 def get(cur, base):
     log.debug('checking feeds for %s/%s at %s' % (cur, base, NAME))
