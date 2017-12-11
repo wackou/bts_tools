@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 
 NAME = 'Bittrex'
 
-AVAILABLE_MARKETS = [('BTS', 'BTC'), ('STEEM', 'BTC'), ('GRIDCOIN', 'BTC')]
+AVAILABLE_MARKETS = [('BTS', 'BTC'), ('STEEM', 'BTC'), ('GRIDCOIN', 'BTC'), ('GOLOS', 'BTC')]
 
 ASSET_MAP = {'GRIDCOIN': 'GRC'}
 

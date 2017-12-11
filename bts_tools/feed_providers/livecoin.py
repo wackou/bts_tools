@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 
 NAME = 'Livecoin'
 
-AVAILABLE_MARKETS = [('BTS', 'BTC')]
+AVAILABLE_MARKETS = [('BTS', 'BTC'), ('GOLOS', 'BTC')]
 
 @check_online_status
 @check_market

@@ -41,7 +41,7 @@ FIAT_ASSETS = {'USD', 'CNY', 'EUR', 'GBP', 'CAD', 'CHF', 'HKD', 'MXN', 'RUB', 'S
 
 BASE_ASSETS = {'BTC', 'GOLD', 'SILVER'} | FIAT_ASSETS
 
-OTHER_ASSETS = {'ALTCAP', 'GRIDCOIN', 'STEEM',
+OTHER_ASSETS = {'ALTCAP', 'GRIDCOIN', 'STEEM', 'GOLOS',
                 'BTWTY', 'RUBLE', 'HERO', 'HERTZ'}
 
 BIT_ASSETS = BASE_ASSETS | OTHER_ASSETS
@@ -423,6 +423,10 @@ def get_feed_prices(node):
     steem_btc = get_multi_feeds('get', [('STEEM', 'BTC')], active_providers_steem({providers.Poloniex, providers.Bittrex}))
     steem_usd = steem_btc.price() * btc_usd
     feeds['STEEM'] = steem_usd
+
+    golos_btc = get_multi_feeds('get', [('GOLOS', 'BTC')], active_providers_steem({providers.Bittrex, providers.Livecoin}))
+    golos_bts = btc_price / golos_btc.price()
+    feeds['GOLOS'] = golos_bts
 
     # 5- Bit20 asset
     if 'BTWTY' not in get_disabled_assets():
