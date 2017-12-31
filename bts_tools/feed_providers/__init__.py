@@ -24,6 +24,7 @@
 from importlib import import_module
 from functools import wraps
 from requests.exceptions import Timeout
+from collections.abc import Sequence, Set
 from .. import core
 import inspect
 import functools
@@ -239,12 +240,18 @@ class FeedSet(list):
     # NOTE: use list for now and not set because we're not sure what to hash or use for __eq__
 
     def filter(self, asset=None, base=None):
-        """Returns a new FeedSet containing only the feed prices about the given market"""
+        """Returns a new FeedSet containing only the feed prices about the given market(s)"""
         def is_valid(f):
-            if asset is not None and f.asset != asset:
-                return False
-            if base is not None and f.base != base:
-                return False
+            if asset is not None:
+                if isinstance(asset, str) and f.asset != asset:
+                    return False
+                elif isinstance(asset, (Sequence, Set)) and f.asset not in asset:
+                    return False
+            if base is not None:
+                if isinstance(base, str) and f.base != base:
+                    return False
+                elif isinstance(base, (Sequence, Set)) and f.base not in base:
+                    return False
             return True
 
         return FeedSet([f for f in self if is_valid(f)])

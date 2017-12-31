@@ -18,35 +18,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from . import FeedPrice, check_online_status, cachedmodulefunc, FeedSet, check_market
-from ..feeds import FIAT_ASSETS
-from cachetools import TTLCache
-import requests
+from . import FeedPrice, check_online_status, check_market, FeedSet
+import pendulum
 import logging
 
 log = logging.getLogger(__name__)
 
+NAME = 'Hero'
 
-NAME = 'Fixer'
-
-AVAILABLE_MARKETS = [(asset, 'USD') for asset in FIAT_ASSETS]
-
-
-# TTL = 12 hours, Fixer only updates once a day
-_cache = TTLCache(maxsize=8192, ttl=43200)
-
-
-@check_online_status
-@cachedmodulefunc
-def get_all(asset_list, base):
-    rates = requests.get('https://api.fixer.io/latest?base={}'.format(base)).json()['rates']
-    result = FeedSet(FeedPrice(1 / price, asset, base) for asset, price in rates.items())
-    result = result.filter(asset=[asset for asset, base in AVAILABLE_MARKETS])
-    return result
+AVAILABLE_MARKETS = [('HERO', 'USD')]
 
 
 @check_online_status
 @check_market
 def get(asset, base):
-    return get_all(base)[asset]
+    log.debug('checking feeds for %s/%s at %s' % (asset, base, NAME))
 
+    price_usd = 1.05 ** ((pendulum.today() - pendulum.Pendulum(1913, 12, 23)).in_days() / 365.2425)
+
+    return FeedPrice(price_usd, asset, base)

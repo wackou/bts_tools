@@ -62,21 +62,26 @@ def feeds_from_reply(r):
     return result
 
 
-@check_online_status
 @cachedmodulefunc
-def get_all():
+def _get_all():
     r = requests.get('https://api.uphold.com/v0/ticker')
     r = r.json()
     return feeds_from_reply(r)
 
 
 @check_online_status
+def get_all(asset_list, base):
+    log.debug('checking feeds for %s/%s at %s' % (asset_list, base, NAME))
+    return FeedSet(f for f in _get_all() if f.asset in asset_list and f.base == base)
+
+
+@check_online_status
 @check_market
-def get(self, cur, base):
-    log.debug('checking feeds for %s/%s at %s' % (cur, base, self.NAME))
+def get(cur, base):
+    log.debug('checking feeds for %s/%s at %s' % (cur, base, NAME))
 
     # try to get feed price using global ticker first
-    feed = get_all().filter(cur, base)
+    feed = _get_all().filter(cur, base)
     if feed:
         return feed.price()
 

@@ -20,10 +20,10 @@
 
 from . import core
 from .core import hashabledict
-from .feed_providers import FeedPrice, FeedSet
+from .feed_providers import FeedPrice, FeedSet, bit20
 from collections import deque, defaultdict
 from contextlib import suppress
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 import itertools
 import statistics
@@ -90,181 +90,8 @@ def get_multi_feeds(func, args, providers, stddev_tolerance=None):
     return result
 
 
-def is_valid_bit20_publication(trx):
-    """
-    check that the transaction is a valid one, ie:
-      - it contains a single operation
-      - it is a transfer from 'bittwenty' (1.2.111226) to 'bittwenty.feed' (1.2.126782)
-
-    note: this does not check the contents of the transaction, it only
-          authenticates it
-    """
-    try:
-        # we only want a single operation
-        if len(trx['op']['op']) != 2:  # (trx_id, content)
-            return False
-
-        # authenticates sender and receiver
-        trx_metadata = trx['op']['op'][1]
-        if trx_metadata['from'] != '1.2.111226':  # 'bittwenty'
-            log.debug('invalid sender for bit20 publication: {}'.format(json.dumps(trx, indent=4)))
-            return False
-        if trx_metadata['to'] != '1.2.126782':  # 'bittwenty.feed'
-            log.debug('invalid receiver for bit20 publication: {}'.format(json.dumps(trx, indent=4)))
-            return False
-
-        return True
-
-    except KeyError:
-        # trying to access a non-existent field -> probably looking at something we don't want
-        log.warning('invalid transaction for bit20 publication: {}'.format(json.dumps(trx, indent=4)))
-        return False
-
-
 def get_bit20_feed(node, usd_price):
-    # read composition of the index
-
-    # need to import the following key to be able to decrypt memos
-    #   import_key "announce" 5KJJNfiSyzsbHoVb81WkHHjaX2vZVQ1Fqq5wE5ro8HWXe6qNFyQ
-    if node.type().split('-')[0] != 'bts':
-        return
-    if not node.is_online():
-        log.warning('Wallet is offline, will not be able to read bit20 composition')
-        return
-    if not node.is_synced():
-        log.warning('Client is not synced yet, will not try to read bit20 composition')
-        return
-    if node.is_locked():
-        log.warning('Wallet is locked, will not be able to read bit20 composition')
-        return
-
-    bit20 = None  # contains the composition of the feed
-
-    bit20feed = node.get_account_history('bittwenty.feed', 15)
-
-    if not bit20feed:
-        # import the 'announce' key to be able to read the memo publications
-        log.info('Importing the "announce" key in the wallet')
-        node.import_key('announce', '5KJJNfiSyzsbHoVb81WkHHjaX2vZVQ1Fqq5wE5ro8HWXe6qNFyQ')
-        # try again
-        bit20feed = node.get_account_history('bittwenty.feed', 15)
-
-    # find bit20 composition
-    for f in bit20feed:
-        if not is_valid_bit20_publication(f):
-            log.warning('Hijacking attempt of the bit20 feed? trx: {}'.format(json.dumps(f, indent=4)))
-            continue
-
-        if f['memo'].startswith('COMPOSITION'):
-            last_updated = re.search('\((.*)\)', f['memo'])
-            if last_updated:
-                last_updated = pendulum.from_format(last_updated.group(1), '%Y/%m/%d')
-
-            bit20 = json.loads(f['memo'].split(')', maxsplit=1)[1])
-            log.debug('Found bit20 composition, last update = {}'.format(last_updated))
-            break
-
-    else:
-        log.warning('Did not find any bit20 composition in the last {} messages '
-                    'to account bittwenty.feed'.format(len(bit20feed)))
-        log.warning('Make sure in the following order that:')
-        log.warning('  - your wallet is unlocked')
-        log.warning('  - your client is synced')
-        log.warning('  - if you use the "track-accounts" option, make sure to include 1.2.111226 and 1.2.126782 accounts')
-        log.warning('  - the "account_history" plugin is active and that your client is compiled to support it')
-        log.warning('  - you have imported the private key needed for reading bittwenty.feed memos: '
-                    'import_key "announce" 5KJJNfiSyzsbHoVb81WkHHjaX2vZVQ1Fqq5wE5ro8HWXe6qNFyQ')
-        return
-
-    # look for custom market parameters
-    for f in bit20feed:
-        if not is_valid_bit20_publication(f):
-            log.warning('Hijacking attempt of the bit20 feed? trx: {}'.format(json.dumps(f, indent=4)))
-            continue
-
-        if f['memo'].startswith('MARKET'):
-            # only take the most recent into account
-            market_params = json.loads(f['memo'][len('MARKET :: '):])
-            log.debug('Got market params for bit20: {}'.format(market_params))
-            # FIXME: this affects the global config object
-            params = cfg['bts']['asset_params']
-            params['BTWTY'] = {'maintenance_collateral_ratio': market_params['MCR'],
-                               'maximum_short_squeeze_ratio': market_params['MSSR'],
-                               'core_exchange_factor': params.get('BTWTY', {}).get('core_exchange_factor',
-                                                                                   params['default']['core_exchange_factor'])}
-            break
-    else:
-        log.debug('Did not find any custom market parameters in the last {} messages '
-                  'to account bittwenty.feed'.format(len(bit20feed)))
-        log.debug('Make sure that your wallet is unlocked and you have imported '
-                  'the private key needed for reading bittwenty.feed memos: ')
-        log.debug('import_key "announce" 5KJJNfiSyzsbHoVb81WkHHjaX2vZVQ1Fqq5wE5ro8HWXe6qNFyQ')
-
-    if len(bit20['data']) < 3:
-        log.warning('Not enough assets in bit20 data: {}'.format(bit20['data']))
-        return
-
-    bit20_value_cmc = 0
-    cmc_missing_assets = []
-    bit20_value_cc = 0
-    coincap_missing_assets = []
-    providers = core.get_plugin_dict('bts_tools.feed_providers')
-
-    try:
-        cmc_assets = providers.CoinMarketCap.get_all()
-        for bit20asset, qty in bit20['data']:
-            try:
-                price = cmc_assets.price(bit20asset, 'USD')
-                log.debug('CoinMarketcap {} {} at ${} = ${}'.format(qty, bit20asset, price, qty * price))
-                bit20_value_cmc += qty * price
-            except ValueError as e:
-                log.debug('Unknown asset on CMC: {}'.format(bit20asset))
-                #log.exception(e)
-                cmc_missing_assets.append(bit20asset)
-
-    except Exception as e:
-        log.warning('Could not get bit20 assets feed from CoinMarketCap: {}'.format(e))
-        cmc_missing_assets = [asset for asset, qty in bit20['data']]
-
-    try:
-        coincap_assets = providers.CoinCap.get_all()
-        for bit20asset, qty in bit20['data']:
-            try:
-                price = coincap_assets.price(bit20asset, 'USD')
-                #log.debug('CoinCap {} {} at ${} = ${}'.format(qty, bit20asset, price, qty * price))
-                bit20_value_cc += qty * price
-
-            except ValueError as e:
-                log.debug('Unknown asset on CoinCap: {}'.format(bit20asset))
-                #log.exception(e)
-                coincap_missing_assets.append(bit20asset)
-
-    except Exception as e:
-        log.warning('Could not get bit20 assets feed from CoinCap: {}'.format(e))
-        coincap_missing_assets = [asset for asset, qty in bit20['data']]
-
-
-    bit20_feeds = FeedSet()
-    cmc_feed = FeedPrice(bit20_value_cmc, 'BTWTY', 'USD', provider=providers.CoinMarketCap.NAME)
-    cc_feed = FeedPrice(bit20_value_cc, 'BTWTY', 'USD', provider=providers.CoinCap.NAME)
-
-    # TODO: simple logic, could do something better here
-    # take the feed for the providers that provide a price for all the assets inside the index
-    # if none of them can (ie: they all have at least one asset that is not listed), then we
-    # take the weighted mean anyway, and hope for the best...
-    if not cmc_missing_assets:
-        bit20_feeds.append(cmc_feed)
-    if not coincap_missing_assets:
-        bit20_feeds.append(cc_feed)
-    if not bit20_feeds:
-        log.warning('No provider could provider feed for all assets:')
-        log.warning('- CoinMarketCap missing: {}'.format(cmc_missing_assets))
-        log.warning('- CoinCap missing: {}'.format(coincap_missing_assets))
-        raise core.NoFeedData('Could not get any BTWTY feed')
-
-    bit20_value = bit20_feeds.price(stddev_tolerance=0.02)
-    log.debug('Total value of bit20 asset: ${}'.format(bit20_value))
-
+    bit20_value = bit20.get_bit20_feed_usd(node)
     # get bit20 value in BTS
     bit20_value /= usd_price
     log.debug('Value of the bit20 asset in BTS: {} BTS'.format(bit20_value))
@@ -285,7 +112,124 @@ def get_hertz_feed(reference_timestamp, current_timestamp, period_days, phase_da
     return hertz_value
 
 
+def get_feed_prices_new(node):
+    cfg = core.config['monitoring']['feeds']
+
+    # 1- fetch all feeds
+    result = FeedSet()
+    feed_providers = core.get_plugin_dict('bts_tools.feed_providers')
+
+    def get_price(asset, base, provider):
+        log.warning('get_price {}/{} at {}'.format(asset, base, provider))
+        return provider.get(asset, base)
+
+    def get_price_multi(asset_list, base, provider):
+        log.warning('get_price_multi {}/{} at {}'.format(asset_list, base, provider))
+        return provider.get_all(asset_list, base)
+
+    with ThreadPoolExecutor(max_workers=6) as e:
+        futures = {}
+        for asset, base, providers in cfg['markets']:
+            if isinstance(providers, str):
+                providers = [providers]
+            for provider in providers:
+                if isinstance(asset, str):
+                    futures[e.submit(get_price, asset, base, feed_providers[provider])] = [asset, base, provider]
+                else:
+                    futures[e.submit(get_price_multi, asset, base, feed_providers[provider])] = [asset, base, provider]
+
+        # futures = {e.submit(get_price, asset, base, feed_providers[provider])
+        #            if isinstance(asset, str)
+        #            else e.submit(get_price_multi, asset, base, feed_providers[provider]): [asset, base, provider]
+        #            for asset, base, provider in cfg['markets']}
+
+        for f in as_completed(futures):
+            asset, base, provider = futures[f]
+            try:
+                feeds = f.result()
+                if isinstance(feeds, FeedPrice):
+                    feeds = FeedSet([feeds])
+                result += feeds
+                log.debug('Provider {} got feeds: {}'.format(provider, feeds))
+            except Exception as e:
+                log.warning('Could not fetch {}/{} on {}: {}'.format(asset, base, provider, e))
+                log.exception(e)
+
+    print(result)
+
+    def mkt(market_pair):
+        return tuple(market_pair.split('/'))
+
+    # 2- apply rules
+
+    def execute_rule(rule, *args):
+        if rule == 'compose':
+            log.debug('composing {} with {}'.format(args[0], args[1]))
+            (market1_asset, market1_base), (market2_asset, market2_base) = mkt(args[0]), mkt(args[1])
+            if market1_base != market2_asset:
+                raise ValueError('`base` in first market {}/{} is not the same as `asset` in second market {}/{}'
+                                 .format(market1_asset, market1_base, market2_asset, market2_base))
+
+            p1 = result.price(market1_asset, market1_base)
+            p2 = result.price(market2_asset, market2_base)
+            if p1 is None:
+                raise core.NoFeedData('No feed for market {}/{}'.format(market1_asset, market1_base))
+            if p2 is None:
+                raise core.NoFeedData('No feed for market {}/{}'.format(market2_asset, market2_base))
+
+            r = FeedPrice(price=p1 * p2, asset=market1_asset, base=market2_base)
+            result.append(r)
+
+        elif rule == 'invert':
+            log.debug('inverting {}'.format(args[0]))
+            asset, base = mkt(args[0])
+            r = FeedPrice(price=1 / result.price(asset, base),
+                          asset=base, base=asset,
+                          # volume=volume / price   # FIXME: volume needs to be in the opposite unit
+                          )
+            result.append(r)
+
+        elif rule == 'loop':
+            log.debug('applying rule {} to the following assets: {}'.format(args[1], args[0]))
+            rule, *args2 = args[1]
+            for a in args[0]:
+                args3 = tuple(arg.format(a) for arg in args2)
+                execute_rule(rule, *args3)
+
+        elif rule == 'copy':
+            log.debug('copying {} to {}'.format(args[0], args[1]))
+            src_asset, src_base = mkt(args[0])
+            dest_asset, dest_base = mkt(args[1])
+
+            #src_price = result.price(src, base)
+            r = FeedPrice(result.price(src_asset, src_base), dest_asset, dest_base)
+            result.append(r)
+
+        else:
+            raise ValueError('Invalid rule: {}'.format(rule))
+
+
+    for rule, *args in cfg['rules']:
+        try:
+            execute_rule(rule, *args)
+
+        except Exception as e:
+            log.warning('Could not execute rule: {} {}'.format(rule, args))
+            log.exception(e)
+
+    return result
+
+
 def get_feed_prices(node):
+    result = get_feed_prices_new(node)
+    feeds = {}
+    for f in result.filter(base='BTS'):
+        feeds[f.asset] = 1/f.price
+    feeds['ALTCAP'] = 1/result.filter('ALTCAP', 'BTC')[0].price
+
+    return feeds
+
+def get_feed_prices_old(node):
 
     def active_providers_bts(providers):
         feed_providers = {p.lower() for p in cfg['bts']['feed_providers']}

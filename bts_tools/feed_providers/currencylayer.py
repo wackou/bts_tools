@@ -41,10 +41,11 @@ ASSET_MAP = {'GOLD': 'XAU',
 _cache = TTLCache(maxsize=8192, ttl=7200)
 
 
+
 @check_online_status
 @cachedmodulefunc
 @check_market
-def get(asset_list, base):
+def get_all(asset_list, base):
     log.debug('checking feeds for %s / %s at CurrencyLayer' % (' '.join(asset_list), base))
     asset_list = [from_bts(asset) for asset in asset_list]
     base = base.upper()
@@ -63,3 +64,9 @@ def get(asset_list, base):
     return FeedSet(FeedPrice(1 / r['quotes']['USD{}'.format(asset)],
                              to_bts(asset), base)
                    for asset in asset_list)
+
+@check_online_status
+@check_market
+def get(asset, base):
+    all_feeds = get_all([asset for asset, _base in AVAILABLE_MARKETS], base)  # doesn't depend on `asset`, -> better caching
+    return all_feeds.filter(asset)[0]
