@@ -441,11 +441,11 @@ def get_feed_prices(node):
     if 'HERTZ' not in get_disabled_assets():
         hertz_reference_timestamp = "2015-10-13T14:12:24+00:00" # Bitshares 2.0 genesis block timestamp
         hertz_current_timestamp = pendulum.now().timestamp() # Current timestamp for reference within the hertz script
-        hertz_amplitude = 1/3 # 33.33..% fluctuation
+        hertz_amplitude = 0.14 # 33.33..% fluctuation
         hertz_period_days = 28 # 30.43 days converted to an UNIX timestamp // TODO: Potentially change this value to 28
         hertz_phase_days = 0.908056 # Time offset from genesis till the first wednesday, to set wednesday as the primary Hz day.
         hertz_reference_asset_price = usd_price
-        
+
         hertz = get_hertz_feed(hertz_reference_timestamp, hertz_current_timestamp, hertz_period_days, hertz_phase_days, hertz_reference_asset_price, hertz_amplitude)
         if hertz is not None:
             feeds['HERTZ'] = hertz
