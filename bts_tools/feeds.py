@@ -120,12 +120,16 @@ def get_feed_prices_new(node):
     feed_providers = core.get_plugin_dict('bts_tools.feed_providers')
 
     def get_price(asset, base, provider):
-        log.warning('get_price {}/{} at {}'.format(asset, base, provider))
+        #log.warning('get_price {}/{} at {}'.format(asset, base, provider))
         return provider.get(asset, base)
 
     def get_price_multi(asset_list, base, provider):
-        log.warning('get_price_multi {}/{} at {}'.format(asset_list, base, provider))
+        #log.warning('get_price_multi {}/{} at {}'.format(asset_list, base, provider))
         return provider.get_all(asset_list, base)
+
+    def get_price_with_node(asset, base, provider, node):
+        #log.warning('get_price_with_node {}/{} at {}, node = {}'.format(asset, base, provider, node))
+        return provider.get(asset, base, node)
 
     with ThreadPoolExecutor(max_workers=6) as e:
         futures = {}
@@ -133,9 +137,12 @@ def get_feed_prices_new(node):
             if isinstance(providers, str):
                 providers = [providers]
             for provider in providers:
-                if isinstance(asset, str):
+                if getattr(feed_providers[provider], 'REQUIRES_NODE', False) is True:
+                    futures[e.submit(get_price_with_node, asset, base, feed_providers[provider], node)] = [asset, base, provider]
+                elif isinstance(asset, str):
                     futures[e.submit(get_price, asset, base, feed_providers[provider])] = [asset, base, provider]
                 else:
+                    # asset is an asset_list
                     futures[e.submit(get_price_multi, asset, base, feed_providers[provider])] = [asset, base, provider]
 
         # futures = {e.submit(get_price, asset, base, feed_providers[provider])
@@ -154,8 +161,6 @@ def get_feed_prices_new(node):
             except Exception as e:
                 log.warning('Could not fetch {}/{} on {}: {}'.format(asset, base, provider, e))
                 log.exception(e)
-
-    print(result)
 
     def mkt(market_pair):
         return tuple(market_pair.split('/'))

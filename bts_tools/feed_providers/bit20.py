@@ -47,10 +47,13 @@ def is_valid_bit20_publication(trx):
 
         # authenticates sender and receiver
         trx_metadata = trx['op']['op'][1]
-        if trx_metadata['from'] != '1.2.111226':  # 'bittwenty'
+        authorized_accounts = ['1.2.111226',  # bittwenty
+                               '1.2.126782']  # bittwenty.feed
+
+        if trx_metadata['from'] not in authorized_accounts:
             log.debug('invalid sender for bit20 publication: {}'.format(json.dumps(trx, indent=4)))
             return False
-        if trx_metadata['to'] != '1.2.126782':  # 'bittwenty.feed'
+        if trx_metadata['to'] not in authorized_accounts:
             log.debug('invalid receiver for bit20 publication: {}'.format(json.dumps(trx, indent=4)))
             return False
 
@@ -209,13 +212,11 @@ def get_bit20_feed_usd(node):
     return bit20_value
 
 
-node = None
+REQUIRES_NODE = True
 
 @check_online_status
 @check_market
-def get(asset, base):
+def get(asset, base, node):
     log.debug('checking feeds for %s/%s at %s' % (asset, base, NAME))
-
-    node = rpcutils.nodes[0]  # FIXME
 
     return FeedPrice(get_bit20_feed_usd(node), asset, base)

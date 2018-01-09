@@ -69,7 +69,8 @@ SEED_NODES = {
         ('88.198.90.17:33333',            '', 'johnstor5',    ''),
         ('51.15.136.238:33333',           '', 'aboutall',     'https://steemit.com/muse/@aboutall/muse-witness-proposal'),
         ('116.62.121.169:33333',          '', 'muse-up',      ''),
-        ('muse.riverhead.ltd:33333',      '', 'riverhead',    'https://steemit.com/muse/@riverhead/muse-witness-proposal')
+        ('muse.riverhead.ltd:33333',      '', 'riverhead',    'https://steemit.com/muse/@riverhead/muse-witness-proposal'),
+        ('seed.muse.dgazek.tk:33333',     '', 'dgazek',       'https://steemit.com/muse/@dganic/dgazek-muse-witness-proposal')
     ],
     'steem': [
         ('seed.minnowshares.net:2001',           'de',   'reggaemuffin',       'https://steemit.com/witness-category/@reggaemuffin/witness-reggaemuffin'),

@@ -101,7 +101,8 @@ def check_online_status(f):
 
 def check_market(f):
     @functools.wraps(f)
-    def wrapper(cur, base):
+    def wrapper(*args, **kwargs):
+        cur, base, *_ = args
         mod = import_module(f.__module__)
         # cur can be either a single asset or a list/set of them
         asset_list = [cur] if isinstance(cur, str) else cur
@@ -110,19 +111,20 @@ def check_market(f):
                 msg = '{} does not provide feeds for market {}/{}'.format(mod.NAME, asset, base)
                 log.warning(msg)
                 raise core.NoFeedData(msg)
-        return f(cur, base)
+        return f(*args, **kwargs)
 
     return wrapper
 
 
 def reuse_last_value_on_fail(f):
     @functools.wraps(f)
-    def wrapper(cur, base):
+    def wrapper(*args, **kwargs):
+        cur, base, *_ = args
         MAX_FAILS = 5
         f.last_value = getattr(f, 'last_value', {})
         f.n_consecutive_fails = getattr(f, 'n_consecutive_fails', 0)
         try:
-            result = f(cur, base)
+            result = f(*args, **kwargs)
             f.last_value[(cur, base)] = result
             f.n_consecutive_fails = 0
             return result
