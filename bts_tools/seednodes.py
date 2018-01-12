@@ -66,7 +66,7 @@ SEED_NODES = {
         ('muse.thetimsaid.com:33333',     '', 'timsaid',      ''),
         ('muse-seed.pt-kc.net:33333',     '', 'pt-kc',        ''),
         ('104.199.134.87:33333',          '', 'clayop',       ''),
-        ('88.198.90.17:33333',            '', 'johnstor5',    ''),
+        ('88.198.90.17:33333',            'ca', 'johnstor5',    'https://steemit.com/witness/@raymonjohnstone/today-i-am-happy-to-introduce-my-witness-campaign-for-muse'),
         ('51.15.136.238:33333',           '', 'aboutall',     'https://steemit.com/muse/@aboutall/muse-witness-proposal'),
         ('116.62.121.169:33333',          '', 'muse-up',      ''),
         ('muse.riverhead.ltd:33333',      '', 'riverhead',    'https://steemit.com/muse/@riverhead/muse-witness-proposal'),
