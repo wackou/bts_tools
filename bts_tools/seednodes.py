@@ -154,7 +154,8 @@ SEED_NODES = {
         ('ppyseed.bacchist.me:42420',      '', 'bacchist-witness', ''),
         ('peerplays.bhuz.info:9777',       '', 'bhuz', ''),
         ('node.peerblock.trade:9777',      '', 'bitcoin-sig', ''),
-        ('peerplays.crypto.fans:9777',     '', 'sc-steemit / crypto.fans', '')
+        ('peerplays.crypto.fans:9777',     '', 'sc-steemit / crypto.fans', ''),
+        ('23.227.163.201:9777',            '', 'royal-flush', '')
     ]
 }
 
