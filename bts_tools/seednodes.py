@@ -72,7 +72,8 @@ SEED_NODES = {
         ('muse.riverhead.ltd:33333',      '', 'riverhead',    'https://steemit.com/muse/@riverhead/muse-witness-proposal')
     ],
     'steem': [
-        ('seed.minnowshares.net:2001',           'de',   'reggaemuffin',       'https://steemit.com/witness-category/@reggaemuffin/witness-reggaemuffin'),
+        ('seed1.blockbrothers.io:2001',      'de', 'blockbrothers',  'https://steemit.com/witness-category/@blockbrothers/the-blockbrothers-are-now-a-witness-for-the-steem-blockchain'),
+        ('seed.minnowshares.net:2001',       'de', 'reggaemuffin',   'https://steemit.com/witness-category/@reggaemuffin/witness-reggaemuffin'),
         ('seed.liondani.com:2016',           '',   'liondani',       'https://steemit.com/introduceyourself/@liondani/hi-liondani-here-aka-daniel-schwarz-happy-husband-father-steem-witness-steemit-enthusiast'),
         ('seed.riversteem.com:2001',         'nl', 'riverhead',      'https://steemit.com/witness-category/@riverhead/witness-proposal-riverhead'),
         ('52.74.152.79:2001',                'sg', 'smooth',         'https://steemit.com/witness-category/@smooth.witness/smooth-witness'),
