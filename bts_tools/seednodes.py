@@ -40,7 +40,7 @@ SEED_NODES = {
         ('seed06.bts-nodes.net:1776',      '', 'thom',             ''),
         ('seed07.bts-nodes.net:1776',      '', 'thom',             ''),
         ('seed.cubeconnex.com:1777',       '', 'cube',             ''),
-        ('54.85.252.77:39705',             '', 'lafona',           ''),
+        ('bts.lafona.net:1776',             '', 'lafona',           ''),
         ('104.236.144.84:1777',            '', 'puppies',          ''),
         ('seed.bitsharesdex.com:50696',    '', 'ihashfury',        ''),
         ('128.199.143.47:2015',            '', 'harvey',           ''),
@@ -66,14 +66,16 @@ SEED_NODES = {
         ('muse.thetimsaid.com:33333',     '', 'timsaid',      ''),
         ('muse-seed.pt-kc.net:33333',     '', 'pt-kc',        ''),
         ('104.199.134.87:33333',          '', 'clayop',       ''),
-        ('88.198.90.17:33333',            '', 'johnstor5',    ''),
+        ('88.198.90.17:33333',            'ca', 'johnstor5',    'https://steemit.com/witness/@raymonjohnstone/today-i-am-happy-to-introduce-my-witness-campaign-for-muse'),
         ('51.15.136.238:33333',           '', 'aboutall',     'https://steemit.com/muse/@aboutall/muse-witness-proposal'),
         ('116.62.121.169:33333',          '', 'muse-up',      ''),
         ('muse.riverhead.ltd:33333',      '', 'riverhead',    'https://steemit.com/muse/@riverhead/muse-witness-proposal'),
         ('seed.muse.dgazek.tk:33333',     '', 'dgazek',       'https://steemit.com/muse/@dganic/dgazek-muse-witness-proposal')
     ],
     'steem': [
-        ('seed.minnowshares.net:2001',           'de',   'reggaemuffin',       'https://steemit.com/witness-category/@reggaemuffin/witness-reggaemuffin'),
+        ('134.255.253.142:2001',             'de', 'maxlxl',  ''),
+        ('seed1.blockbrothers.io:2001',      'de', 'blockbrothers',  'https://steemit.com/witness-category/@blockbrothers/the-blockbrothers-are-now-a-witness-for-the-steem-blockchain'),
+        ('seed.minnowshares.net:2001',       'de', 'reggaemuffin',   'https://steemit.com/witness-category/@reggaemuffin/witness-reggaemuffin'),
         ('seed.liondani.com:2016',           '',   'liondani',       'https://steemit.com/introduceyourself/@liondani/hi-liondani-here-aka-daniel-schwarz-happy-husband-father-steem-witness-steemit-enthusiast'),
         ('seed.riversteem.com:2001',         'nl', 'riverhead',      'https://steemit.com/witness-category/@riverhead/witness-proposal-riverhead'),
         ('52.74.152.79:2001',                'sg', 'smooth',         'https://steemit.com/witness-category/@smooth.witness/smooth-witness'),
@@ -130,7 +132,8 @@ SEED_NODES = {
         ('steemd.steemkr.com:2001',          '',   'ludorum',        ''),
         ('steem-seed.crypto.fans:2001',      '',   'sc-steemit / crypto.fans', ''),
         ('seed.jamzed.pl:2001',              '',   'jamzed',         ''),
-        ('seed.curiesteem.com:2001',         '',   'curie',          '')
+        ('seed.curiesteem.com:2001',         '',   'curie',          ''),
+        ('seed.steem.prcolaco.com:2001',     'pt', 'prc',            'https://steemit.com/witness-category/@prc/prc-witness-proposal-after-creating-dsound-and-attending-steemfest-2-i-want-more')
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),
@@ -154,7 +157,8 @@ SEED_NODES = {
         ('ppyseed.bacchist.me:42420',      '', 'bacchist-witness', ''),
         ('peerplays.bhuz.info:9777',       '', 'bhuz', ''),
         ('node.peerblock.trade:9777',      '', 'bitcoin-sig', ''),
-        ('peerplays.crypto.fans:9777',     '', 'sc-steemit / crypto.fans', '')
+        ('peerplays.crypto.fans:9777',     '', 'sc-steemit / crypto.fans', ''),
+        ('23.227.163.201:9777',            '', 'royal-flush', '')
     ]
 }
 
