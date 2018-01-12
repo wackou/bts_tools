@@ -40,7 +40,7 @@ SEED_NODES = {
         ('seed06.bts-nodes.net:1776',      '', 'thom',             ''),
         ('seed07.bts-nodes.net:1776',      '', 'thom',             ''),
         ('seed.cubeconnex.com:1777',       '', 'cube',             ''),
-        ('54.85.252.77:39705',             '', 'lafona',           ''),
+        ('bts.lafona.net:1776',             '', 'lafona',           ''),
         ('104.236.144.84:1777',            '', 'puppies',          ''),
         ('seed.bitsharesdex.com:50696',    '', 'ihashfury',        ''),
         ('128.199.143.47:2015',            '', 'harvey',           ''),
