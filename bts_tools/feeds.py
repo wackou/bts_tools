@@ -117,6 +117,7 @@ def get_feed_prices_new(node):
 
     # 1- fetch all feeds
     result = FeedSet()
+    publish_list = []  # list of (asset, base) that need to be published
     feed_providers = core.get_plugin_dict('bts_tools.feed_providers')
 
     def get_price(asset, base, provider):
@@ -210,6 +211,11 @@ def get_feed_prices_new(node):
             r = FeedPrice(result.price(src_asset, src_base), dest_asset, dest_base)
             result.append(r)
 
+        elif rule == 'publish':
+            asset, base = mkt(args[0])
+            log.debug('will publish {}/{}'.format(asset, base))
+            publish_list.append((asset, base))
+
         else:
             raise ValueError('Invalid rule: {}'.format(rule))
 
@@ -222,17 +228,28 @@ def get_feed_prices_new(node):
             log.warning('Could not execute rule: {} {}'.format(rule, args))
             log.exception(e)
 
-    return result
+    return result, publish_list
 
 
 def get_feed_prices(node):
-    result = get_feed_prices_new(node)
+    result, publish_list = get_feed_prices_new(node)
     feeds = {}
     for f in result.filter(base='BTS'):
         feeds[f.asset] = 1/f.price
-    feeds['ALTCAP'] = 1/result.filter('ALTCAP', 'BTC')[0].price
 
-    return feeds
+    try:
+        feeds['ALTCAP'] = 1/result.filter('ALTCAP', 'BTC')[0].price
+    except Exception:
+        #log.debug('Did not have a price for ALTCAP/BTC')
+        pass
+
+    # update price history for all feeds
+    # FIXME: remove this from here (use of shared global var price_history)
+    for cur, price in feeds.items():
+        price_history[cur].append(price)
+
+    return feeds, publish_list
+
 
 def get_feed_prices_old(node):
 
@@ -648,7 +665,7 @@ def check_feeds(nodes):
     global feeds, feed_control
 
     try:
-        feeds = get_feed_prices(nodes[0]) # use first node if we need to query the blockchain, eg: for bit20 asset composition
+        feeds, publish_list = get_feed_prices(nodes[0]) # use first node if we need to query the blockchain, eg: for bit20 asset composition
         feed_control.nfeed_checked += 1
 
         status = feed_control.publish_status(feeds)
@@ -738,18 +755,18 @@ def check_feeds(nodes):
                         published = []
                         for asset, price in publish_feeds.items():
                             try:
-                                price = hashabledict(get_price_for_publishing(node, publish_feeds, asset, price))
-                                log.debug(base_msg + 'Publishing {} {}'.format(asset, price))
-                                node.publish_asset_feed(node.name, asset, price, True)  # True: sign+broadcast
+                                price_obj = hashabledict(get_price_for_publishing(node, publish_feeds, asset, price))
+                                log.debug(base_msg + 'Publishing {} {}'.format(asset, price_obj))
+                                node.publish_asset_feed(node.name, asset, price_obj, True)  # True: sign+broadcast
+                                log.debug('Successfully published feed for asset {}: {}'.format(asset, price))
                                 published.append(asset)
                             except Exception as e:
                                 #log.exception(e)
                                 log.warning(base_msg + 'Failed to publish feed for asset {}'.format(asset))
                                 log.debug(str(e)[:msg_len] + ' [...]')
 
-                        log.debug(base_msg + 'successfully published feeds for {}'.format(', '.join(published)))
+                        log.info(base_msg + 'Successfully published feeds for: {}'.format(', '.join(published)))
 
-                    #last_published = datetime.utcnow()
                     feed_control.last_published = pendulum.utcnow()
 
             except Exception as e:
