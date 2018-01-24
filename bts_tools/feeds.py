@@ -444,7 +444,10 @@ def get_feed_prices(node):
         hertz_phase_days = 0.908056 # Time offset from genesis till the first wednesday, to set wednesday as the primary Hz day.
         hertz_reference_asset_price = 1.00 # $1.00 static, never changes.
 
-        hertz = get_hertz_feed(hertz_reference_timestamp, hertz_current_timestamp, hertz_period_days, hertz_phase_days, hertz_reference_asset_price, hertz_amplitude)
+        try:
+            hertz = get_hertz_feed(hertz_reference_timestamp, hertz_current_timestamp, hertz_period_days, hertz_phase_days, hertz_reference_asset_price, hertz_amplitude)
+        except:
+            hertz = None
 
         if hertz is not None:
             if usd_price > 0:
