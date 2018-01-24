@@ -281,9 +281,7 @@ def get_hertz_feed(reference_timestamp, current_timestamp, period_days, phase_da
     hz_phase = pendulum.SECONDS_PER_DAY * phase_days
     hz_waveform = math.sin(((((current_timestamp - (hz_reference_timestamp + hz_phase))/hz_period) % 1) * hz_period) * ((2*math.pi)/hz_period)) # Only change for an alternative HERTZ ABA.
     hertz_value = reference_asset_value + ((amplitude * reference_asset_value) * hz_waveform)
-    log.debug('Value of the HERTZ asset in BTS: {} BTS'.format(hertz_value))
     return hertz_value
-
 
 def get_feed_prices(node):
 
@@ -444,11 +442,15 @@ def get_feed_prices(node):
         hertz_amplitude = 0.14 # 14% fluctuation (1% per day)
         hertz_period_days = 28 # 28 days
         hertz_phase_days = 0.908056 # Time offset from genesis till the first wednesday, to set wednesday as the primary Hz day.
-        hertz_reference_asset_price = usd_price
-        
+        hertz_reference_asset_price = 1.00 # $1.00 static, never changes.
+
         hertz = get_hertz_feed(hertz_reference_timestamp, hertz_current_timestamp, hertz_period_days, hertz_phase_days, hertz_reference_asset_price, hertz_amplitude)
+
         if hertz is not None:
-            feeds['HERTZ'] = hertz
+            if usd_price > 0:
+                final_hertz_value = usd_price / hertz
+                log.debug('Final hertz value: {} BTS'.format(hertz_value))
+                feeds['HERTZ'] = final_hertz_value
 
     # 7- update price history for all feeds
     for cur, price in feeds.items():
