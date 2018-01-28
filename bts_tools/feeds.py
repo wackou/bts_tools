@@ -452,7 +452,7 @@ def get_feed_prices(node):
         if hertz is not None:
             if usd_price > 0:
                 final_hertz_value = usd_price / hertz
-                log.debug('Final hertz value: {} BTS'.format(hertz_value))
+                log.debug('Final hertz value: {} BTS'.format(final_hertz_value))
                 feeds['HERTZ'] = final_hertz_value
 
     # 7- update price history for all feeds
