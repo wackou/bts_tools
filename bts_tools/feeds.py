@@ -98,26 +98,8 @@ def get_bit20_feed(node, usd_price):
 
     return 1 / bit20_value
 
-
-def get_hertz_feed(reference_timestamp, current_timestamp, period_days, phase_days, reference_asset_value, amplitude):
-    """Given the reference timestamp, the current timestamp, the period (in days), the phase (in days), the reference asset value (ie 1.00) and the amplitude (> 0 && < 1), output the current hertz value.
-    You can use this for an alternative HERTZ asset!
-    """
-    hz_reference_timestamp = pendulum.parse(reference_timestamp).timestamp() # Retrieving the Bitshares2.0 genesis block timestamp
-    hz_period = pendulum.SECONDS_PER_DAY * period_days
-    hz_phase = pendulum.SECONDS_PER_DAY * phase_days
-    hz_waveform = math.sin(((((current_timestamp - (hz_reference_timestamp + hz_phase))/hz_period) % 1) * hz_period) * ((2*math.pi)/hz_period)) # Only change for an alternative HERTZ ABA.
-    hertz_value = reference_asset_value + ((amplitude * reference_asset_value) * hz_waveform)
-    log.debug('Value of the HERTZ asset in BTS: {} BTS'.format(hertz_value))
-    return hertz_value
-
-
-def get_feed_prices_new(node):
-    cfg = core.config['monitoring']['feeds']
-
-    # 1- fetch all feeds
+def _fetch_feeds(node, cfg):
     result = FeedSet()
-    publish_list = []  # list of (asset, base) that need to be published
     feed_providers = core.get_plugin_dict('bts_tools.feed_providers')
 
     def get_price(asset, base, provider):
@@ -161,12 +143,16 @@ def get_feed_prices_new(node):
                 log.debug('Provider {} got feeds: {}'.format(provider, feeds))
             except Exception as e:
                 log.warning('Could not fetch {}/{} on {}: {}'.format(asset, base, provider, e))
-                log.exception(e)
+                #log.exception(e)
+
+    return result
+
+
+def _apply_rules(node, cfg, result):
+    publish_list = []  # list of (asset, base) that need to be published
 
     def mkt(market_pair):
         return tuple(market_pair.split('/'))
-
-    # 2- apply rules
 
     def execute_rule(rule, *args):
         if rule == 'compose':
@@ -207,18 +193,16 @@ def get_feed_prices_new(node):
             src_asset, src_base = mkt(args[0])
             dest_asset, dest_base = mkt(args[1])
 
-            #src_price = result.price(src, base)
             r = FeedPrice(result.price(src_asset, src_base), dest_asset, dest_base)
             result.append(r)
 
         elif rule == 'publish':
             asset, base = mkt(args[0])
-            log.debug('will publish {}/{}'.format(asset, base))
+            log.debug('should publish {}/{}'.format(asset, base))
             publish_list.append((asset, base))
 
         else:
             raise ValueError('Invalid rule: {}'.format(rule))
-
 
     for rule, *args in cfg['rules']:
         try:
@@ -231,8 +215,19 @@ def get_feed_prices_new(node):
     return result, publish_list
 
 
+def get_feed_prices_new(node, cfg):
+    #cfg = core.config['monitoring']['feeds']
+
+    # 1- fetch all feeds
+    result = _fetch_feeds(node, cfg)
+
+    # 2- apply rules
+    return _apply_rules(node, cfg, result)
+
+
+
 def get_feed_prices(node):
-    result, publish_list = get_feed_prices_new(node)
+    result, publish_list = get_feed_prices_new(node, core.config['monitoring']['feeds']['bts'])
     feeds = {}
     for f in result.filter(base='BTS'):
         feeds[f.asset] = 1/f.price
@@ -249,178 +244,6 @@ def get_feed_prices(node):
         price_history[cur].append(price)
 
     return feeds, publish_list
-
-
-def get_feed_prices_old(node):
-
-    def active_providers_bts(providers):
-        feed_providers = {p.lower() for p in cfg['bts']['feed_providers']}
-        return {p for p in providers if p.NAME.lower() in feed_providers}
-
-    def active_providers_steem(providers):
-        feed_providers = {p.lower() for p in cfg['steem']['feed_providers']}
-        return {p for p in providers if p.NAME.lower() in feed_providers}
-
-    providers = core.get_plugin_dict('bts_tools.feed_providers')
-
-    # 0- get forex data + gold/silved in USD
-    currency_layer_prices = []
-    try:
-        currency_layer_prices = providers.CurrencyLayer.get(BASE_ASSETS - {'BTC', 'USD'}, 'USD')
-    except Exception as e:
-        log.debug('Could not get feeds from CurrencyLayer: {}'.format(e))
-
-    fixer_prices = []
-    try:
-        fixer_prices = providers.Fixer.get_all(base='USD')
-    except Exception as e:
-        log.debug('Could not get feeds from fixer.io: {}'.format(e))
-
-    gold_silver_prices = []
-    try:
-        gold_silver_prices += [providers.Quandl.get('GOLD', 'USD'),
-                               providers.Quandl.get('SILVER', 'USD')]
-    except Exception as e:
-        log.debug('Could not get gold/silver feeds from Quandl: {}'.format(e))
-
-
-    base_usd_price = FeedSet(currency_layer_prices + fixer_prices + gold_silver_prices + providers.Uphold.get_all())
-
-    base_usd_price = base_usd_price.filter(base='USD')
-
-    # 1- get the BitShares price in major markets: BTC, USD and CNY
-
-    # 1.1- first get the bts/btc valuation
-    providers_bts_btc = active_providers_bts({providers.Poloniex,
-                                              providers.Bittrex,
-                                              providers.Livecoin,
-                                              providers.aex,
-                                              providers.zb,
-                                              providers.Binance})
-    if not providers_bts_btc:
-        log.warning('No feed providers for BTS/BTC feed price')
-    all_feeds = get_multi_feeds('get', [('BTS', 'BTC')], providers_bts_btc)
-
-    feeds_bts_btc = all_feeds.filter('BTS', 'BTC')
-
-    if not feeds_bts_btc:
-        # in last resort, just get our data from coinmarketcap and coincap
-        log.info('getting bts/btc directly from coinmarketcap, no other sources available')
-        feeds_bts_btc = FeedSet([providers.CoinMarketCap.get('BTS', 'BTC'),
-                                 providers.CoinCap.get('BTS', 'BTC')])
-
-    if not feeds_bts_btc:
-        raise core.NoFeedData('Could not get any BTS/BTC feeds')
-
-    btc_price = feeds_bts_btc.price()
-
-    # 1.2- get the btc/usd (bitcoin avg)
-    feeds_btc_usd = get_multi_feeds('get', [('BTC', 'USD')],
-                                    active_providers_bts({providers.BitcoinAverage,
-                                                          providers.CoinMarketCap,
-                                                          providers.Bitfinex,
-                                                          providers.Bitstamp}))  # coincap seems to be off sometimes, do not use it
-    if not feeds_btc_usd:
-        raise core.NoFeedData('Could not get any BTC/USD feeds')
-
-    btc_usd = feeds_btc_usd.price()
-
-    usd_price = btc_price * btc_usd
-
-    # 1.3- get the bts/cny valuation directly from cny markets. Going from bts/btc and
-    #      btc/cny to bts/cny introduces a slight difference (2-3%) that doesn't exist on
-    #      the actual chinese markets
-
-    # TODO: should go at the beginning: submit all fetching tasks to an event loop / threaded executor,
-    # compute valuations once we have everything
-    feeds_bts_cny = get_multi_feeds('get', [('BTS', 'CNY')],
-                                    active_providers_bts({providers.Bter,
-                                                          providers.BTC38,
-                                                          providers.Yunbi}))
-    if not feeds_bts_cny:
-        # if we couldn't get the feeds for cny, go BTS->BTC, BTC->CNY
-        log.debug('Could not get any BTS/CNY feeds, going BTS->BTC, BTC->CNY')
-        bts_cny = btc_price * btc_usd / base_usd_price.price('CNY')
-
-        # # if we couldn't get the feeds for cny, try picking up our last value
-        # if price_history.get('cny'):
-        #     log.warning('Could not get any BTS/CNY feeds, using last feed price')
-        #     bts_cny = price_history['cny'][-1]
-        # else:
-        #     raise core.NoFeedData('Could not get any BTS/CNY feeds')
-    else:
-        bts_cny = feeds_bts_cny.price()
-
-    cny_price = bts_cny
-
-    feeds = {}  # TODO: do we really want to reset the global var 'feeds' everytime we come here?
-    feeds['BTC'] = btc_price
-    feeds['USD'] = usd_price
-    feeds['CNY'] = cny_price
-
-    feeds['HERO'] = usd_price / (1.05 ** ((pendulum.today() - pendulum.Pendulum(1913, 12, 23)).in_days() / 365.2425))
-
-    log.debug('Got btc/usd price: {}'.format(btc_usd))
-    log.debug('Got usd price: {}'.format(usd_price))
-    log.debug('Got cny price: {}'.format(cny_price))
-
-    # 2- now get the BitShares price in all other required currencies
-    for asset in BASE_ASSETS - {'BTC', 'USD', 'CNY'}:
-        try:
-            feeds[asset] = usd_price / base_usd_price.price(asset, 'USD')
-        except Exception:
-            log.warning('no feed price for asset {}'.format(asset))
-
-
-    # 2.1- RUBLE is used temporarily by RUDEX instead of bitRUB (black swan)
-    #      see https://bitsharestalk.org/index.php/topic,24004.0/all.html
-    feeds['RUBLE'] = feeds['RUB']
-
-    # 3- get the feeds for major composite indices   # REMOVED, was using yahoo, GoogleFeedProvider, BloombergFeedProvider
-
-    # 4- get other assets
-    altcap = get_multi_feeds('get', [('ALTCAP', 'BTC')], {providers.CoinCap, providers.CoinMarketCap})
-    altcap = altcap.price(stddev_tolerance=0.08)
-    feeds['ALTCAP'] = altcap
-
-    gridcoin = get_multi_feeds('get', [('GRIDCOIN', 'BTC')], {providers.Poloniex, providers.Bittrex})
-    feeds['GRIDCOIN'] = btc_price / gridcoin.price(stddev_tolerance=0.1)
-
-    steem_btc = get_multi_feeds('get', [('STEEM', 'BTC')], active_providers_steem({providers.Poloniex, providers.Bittrex}))
-    steem_usd = steem_btc.price() * btc_usd
-    feeds['STEEM'] = steem_usd
-
-    golos_btc = get_multi_feeds('get', [('GOLOS', 'BTC')], active_providers_steem({providers.Bittrex, providers.Livecoin}))
-    golos_bts = btc_price / golos_btc.price()
-    feeds['GOLOS'] = golos_bts
-
-    # 5- Bit20 asset
-    if 'BTWTY' not in get_disabled_assets():
-        try:
-            bit20 = get_bit20_feed(node, usd_price)
-            if bit20 is not None:
-                feeds['BTWTY'] = bit20
-        except core.NoFeedData as e:
-            log.warning(e)
-
-    # 6- HERTZ asset
-    if 'HERTZ' not in get_disabled_assets():
-        hertz_reference_timestamp = "2015-10-13T14:12:24+00:00" # Bitshares 2.0 genesis block timestamp
-        hertz_current_timestamp = pendulum.now().timestamp() # Current timestamp for reference within the hertz script
-        hertz_amplitude = 0.14 # 14% fluctuation (1% per day)
-        hertz_period_days = 28 # 28 days
-        hertz_phase_days = 0.908056 # Time offset from genesis till the first wednesday, to set wednesday as the primary Hz day.
-        hertz_reference_asset_price = usd_price
-        
-        hertz = get_hertz_feed(hertz_reference_timestamp, hertz_current_timestamp, hertz_period_days, hertz_phase_days, hertz_reference_asset_price, hertz_amplitude)
-        if hertz is not None:
-            feeds['HERTZ'] = hertz
-
-    # 7- update price history for all feeds
-    for cur, price in feeds.items():
-        price_history[cur].append(price)
-
-    return feeds
 
 
 def median_str(cur):
@@ -453,15 +276,13 @@ def get_fraction(price, asset_precision, base_precision, N=6):
     return numerator, denominator
 
 
-def get_price_for_publishing(node, median_feeds, asset, price):
-    c = dict(cfg['bts']['asset_params']['default'])  # make a copy, we don't want to update the default value
-    c.update(cfg['bts']['asset_params'].get(asset) or {})
+def get_price_for_publishing(node, cfg, asset, base, price, feeds=None):
+    """feeds is only needed when base != BTS, to compute the CER (needs to be priced in BTS regardless of the base asset)"""
+    c = dict(cfg['asset_params']['default'])  # make a copy, we don't want to update the default value
+    c.update(cfg['asset_params'].get(asset) or {})
     asset_id = node.asset_data(asset)['id']
     asset_precision = node.asset_data(asset)['precision']
 
-    base = 'BTS'
-    if asset == 'ALTCAP':
-        base = 'BTC'
     base_id = node.asset_data(base)['id']
     base_precision = node.asset_data(base_id)['precision']
     bts_precision = node.asset_data('BTS')['precision']
@@ -472,10 +293,16 @@ def get_price_for_publishing(node, median_feeds, asset, price):
     # from the base currency to BTS, and use it to scale the CER price
 
     if base != 'BTS':
-        base_bts_price = median_feeds[base]
+        #log.warning(feeds)
+        try:
+            base_bts_price = feeds[(base, 'BTS')]
+        except KeyError:
+            log.warning("Can't publish the CER for {}/BTS because we don't have feed price for {}: available = {} "
+                        .format(asset, (base, 'BTS'), feeds))
         cer_numerator, cer_denominator = get_fraction(price * base_bts_price,
                                                       asset_precision, bts_precision)
-        cer_denominator *= c['core_exchange_factor']
+        cer_denominator *= c['core_exchange_factor']  # FIXME: should round here
+        #log.error('CER denom: {}'.format(cer_denominator))
     else:
         cer_numerator, cer_denominator = numerator, round(denominator * c['core_exchange_factor'])
 
@@ -508,6 +335,7 @@ def get_price_for_publishing(node, median_feeds, asset, price):
     return price_obj
 
 
+# FIXME: deprecate
 def get_disabled_assets():
     cfg_enabled = set(cfg['bts'].get('enabled_assets', []))
     cfg_disabled = set(cfg['bts'].get('disabled_assets', []))
@@ -613,17 +441,6 @@ class BitSharesFeedControl(object):
                 log.debug('Should publish because time slot has arrived: time {:02d}:{:02d}'.format(now.hour, now.minute))
                 return True
 
-        # check_time_interval_minutes = cfg['check_time_interval'] // 60 + 1
-        # if self.feed_slot is not None:
-        #     start_slot = self.feed_slot
-        #     end_slot = self.feed_slot + check_time_interval_minutes
-        #     if (((start_slot <= now.minute <= end_slot) or
-        #          (end_slot >= 60 and now.minute <= end_slot % 60)) and
-        #         now - self.last_published > timedelta(minutes=max(3*check_time_interval_minutes, 50))):
-        #
-        #         log.debug('Should publish because time slot has arrived: time {:02d}:{:02d} - target'.format(now.hour, now.minute))
-        #         return True
-
         log.debug('No need to publish feeds')
         return False
 
@@ -646,6 +463,57 @@ class BitSharesFeedControl(object):
             return True
         log.debug('No need for Steem to publish')
         return False
+
+
+def publish_bts_feed(node, publish_feeds, base_msg):
+    # first, try to publish all of them in a single transaction
+    try:
+        published = []
+        handle = node.begin_builder_transaction()
+        for (asset, base), price in sorted(publish_feeds.items()):
+            published.append(asset)
+            op = [19,  # id 19 corresponds to price feed update operation
+                  hashabledict({"asset_id": node.asset_data(asset)['id'],
+                                "feed": get_price_for_publishing(node, cfg['bts'], asset, base, price, publish_feeds),
+                                "publisher": node.get_account(node.name)["id"]})
+                  ]
+            node.add_operation_to_builder_transaction(handle, op)
+
+        # set fee
+        node.set_fees_on_builder_transaction(handle, '1.3.0')
+
+        # sign and broadcast
+        node.sign_builder_transaction(handle, True)
+        log.debug(base_msg + 'successfully published feeds for {}'.format(', '.join(published)))
+
+    except Exception as e:
+        log.warning(base_msg + 'tried to publish all feeds in a single transaction, but failed. '
+                               'Will try to publish each feed separately now')
+        msg_len = 400
+        log.debug(str(e)[:msg_len] + (' [...]' if len(str(e)) > msg_len else ''))
+
+        # if an error happened, publish feeds individually to make sure that
+        # at least the ones that work can get published
+        published = []
+        failed = []
+        for (asset, base), price in sorted(publish_feeds.items()):
+            try:
+                price_obj = hashabledict(get_price_for_publishing(node, cfg['bts'], asset, base, price, publish_feeds))
+                log.debug(base_msg + 'Publishing {} {}'.format(asset, price_obj))
+                node.publish_asset_feed(node.name, asset, price_obj, True)  # True: sign+broadcast
+                log.debug('Successfully published feed for asset {}: {}'.format(asset, price))
+                published.append(asset)
+
+            except Exception as e:
+                log.debug(base_msg + 'Failed to publish feed for asset {}'.format(asset))
+                #log.exception(e)
+                log.debug(str(e)[:msg_len] + ' [...]')
+                failed.append(asset)
+
+        if failed:
+            log.warning(base_msg + 'Failed to publish feeds for: {}'.format(', '.join(failed)))
+        if published:
+            log.info(base_msg + 'Successfully published feeds for: {}'.format(', '.join(published)))
 
 
 def check_feeds(nodes):
@@ -681,11 +549,8 @@ def check_feeds(nodes):
 
                 # publish median value of the price, not latest one
                 if feed_control.should_publish_steem(node, price):
-                    if not node.is_online():
-                        log.warning('Cannot publish feeds for steem witness %s: client is not running' % node.name)
-                        continue
-                    if node.is_locked():
-                        log.warning('Cannot publish feeds for steem witness %s: wallet is locked' % node.name)
+                    base_error_msg = 'Cannot publish feeds for steem witness {}: '.format(node.name)
+                    if check_node_is_ready(node, base_error_msg) is False:
                         continue
 
                     ratio = cfg['steem']['steem_dollar_adjustment']
@@ -699,73 +564,41 @@ def check_feeds(nodes):
 
                 continue
 
+            def check_node_is_ready(node, base_error_msg):
+                if not node.is_online():
+                    log.warning(base_error_msg + 'client is not running')
+                    return False
+                if node.is_locked():
+                    log.warning(base_error_msg + 'wallet is locked')
+                    return False
+                if not node.is_synced():
+                    log.warning(base_error_msg + 'client is not synced')
+                    return False
+                return True
 
             # if an exception occurs during publishing feeds for a delegate (eg: standby delegate),
             # then we should still go on for the other nodes (and not let exceptions propagate)
             try:
                 if feed_control.should_publish():
                     base_error_msg = 'Cannot publish feeds for {} witness {}: '.format(node.type(), node.name)
-                    if not node.is_online():
-                        log.warning(base_error_msg + 'client is not running')
-                        continue
-                    if node.is_locked():
-                        log.warning(base_error_msg + 'wallet is locked')
-                        continue
-                    if not node.is_synced():
-                        log.warning(base_error_msg + 'client is not synced')
+                    if check_node_is_ready(node, base_error_msg) is False:
                         continue
 
                     base_msg = '{} witness {} feeds: '.format(node.type(), node.name)
                     # publish median value of the price, not latest one
-                    median_feeds = {c: statistics.median(price_history[c]) for c in feeds}
-                    disabled_assets = get_disabled_assets()
-                    publish_feeds = {asset: price for asset, price in median_feeds.items() if asset not in disabled_assets}
+                    def get_base_for(asset):
+                        if asset == 'ALTCAP':
+                            return 'BTC'
+                        return 'BTS'
+
+                    median_feeds = {(c, get_base_for(c)): statistics.median(price_history[c]) for c in feeds}
+                    #disabled_assets = get_disabled_assets()
+                    #for asset, base in publish_list
+                    publish_feeds = {(asset, base): median_feeds[(asset, base)] for asset, base in publish_list}
                     log.info(base_msg + 'publishing feeds: {}'.format(feed_control.format_feeds(publish_feeds)))
-                    log.debug(base_msg + 'not publishing: {}'.format(disabled_assets))
+                    #log.debug(base_msg + 'not publishing: {}'.format(disabled_assets))
 
-                    # first, try to publish all of them in a single transaction
-                    try:
-                        published = []
-                        handle = node.begin_builder_transaction()
-                        for asset, price in publish_feeds.items():
-                            published.append(asset)
-                            op = [19,  # id 19 corresponds to price feed update operation
-                                  hashabledict({"asset_id": node.asset_data(asset)['id'],
-                                                "feed": get_price_for_publishing(node, publish_feeds, asset, price),
-                                                "publisher": node.get_account(node.name)["id"]})
-                                  ]
-                            node.add_operation_to_builder_transaction(handle, op)
-
-                        # set fee
-                        node.set_fees_on_builder_transaction(handle, '1.3.0')
-
-                        # sign and broadcast
-                        node.sign_builder_transaction(handle, True)
-                        log.debug(base_msg + 'successfully published feeds for {}'.format(', '.join(published)))
-
-
-                    except Exception as e:
-                        log.warning(base_msg + 'tried to publish all feeds in a single transaction, but failed. '
-                                               'Will try to publish each feed separately now')
-                        msg_len = 400
-                        log.debug(str(e)[:msg_len] + (' [...]' if len(str(e)) > msg_len else ''))
-
-                        # if an error happened, publish feeds individually to make sure that
-                        # at least the ones that work can get published
-                        published = []
-                        for asset, price in publish_feeds.items():
-                            try:
-                                price_obj = hashabledict(get_price_for_publishing(node, publish_feeds, asset, price))
-                                log.debug(base_msg + 'Publishing {} {}'.format(asset, price_obj))
-                                node.publish_asset_feed(node.name, asset, price_obj, True)  # True: sign+broadcast
-                                log.debug('Successfully published feed for asset {}: {}'.format(asset, price))
-                                published.append(asset)
-                            except Exception as e:
-                                #log.exception(e)
-                                log.warning(base_msg + 'Failed to publish feed for asset {}'.format(asset))
-                                log.debug(str(e)[:msg_len] + ' [...]')
-
-                        log.info(base_msg + 'Successfully published feeds for: {}'.format(', '.join(published)))
+                    publish_bts_feed(node, publish_feeds, base_msg)
 
                     feed_control.last_published = pendulum.utcnow()
 

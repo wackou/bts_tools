@@ -165,8 +165,14 @@ class GrapheneClient(object):
         def direct_call(funcname, *args):
             # we want to avoid connecting to the client and block because
             # it is in a stopped state (eg: in gdb after having crashed)
-            if self.is_localhost() and not bts_binary_running(self):
-                raise RPCError('Connection aborted: {} binary does not seem to be running'.format(self.type()))
+
+
+            if self.witness_host is not None and self.witness_port is not None:
+                # check pre-emptively whether the witness client is running to avoid timeouts on the rpc call
+                # TODO: verify we do indeed have timeouts
+                if (client_name in core.config.get('clients', []) and
+                    self.is_localhost() and not bts_binary_running(self)):
+                    raise RPCError('Connection aborted: {} binary does not seem to be running'.format(self.type()))
 
             if self.proxy_host is not None and self.proxy_port is not None:
                 return rpc_call(self.proxy_host, self.proxy_port,
@@ -197,7 +203,12 @@ class GrapheneClient(object):
         self._committee_member_names = {}
 
     def __str__(self):
-        return '{}: {} {} "{}" on {}:{}'.format(self.client_name, self.type(), self.role, self.name, self.witness_host, self.witness_port)
+        try:
+            type = self.type()  # can fail if not defined in the main config.yaml file
+        except Exception:
+            type = 'unknown'
+
+        return '{}: {} {} "{}" on {}:{}'.format(self.client_name, type, self.role, self.name, self.witness_host, self.witness_port)
 
     def __repr__(self):
         return '<GrapheneClient(%s)>' % str(self)
@@ -395,7 +406,8 @@ class GrapheneClient(object):
             raise ValueError('No run environment defined for node %s. Maybe a remote node?' % self.name)
         try:
             return core.config['clients'][name]
-        except KeyError:
+        except Exception as e:
+            #log.exception(e)
             raise ValueError('Unknown client: %s' % name)
 
     def build_env(self):
@@ -417,7 +429,7 @@ class GrapheneClient(object):
         try:
             self._type = self.client()['type']
             return self._type
-        except ValueError:
+        except Exception as e:  #ValueError:
             log.warning('Could not find blockchain name for {}'.format(self))
             return 'unknown'
 

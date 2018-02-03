@@ -281,6 +281,7 @@ Examples:
         args.args = [args.environment] + args.args
         args.environment = flavor
 
+    # FIXME: this needs to be implemented as plugins
     if args.command in {'build', 'build_gui'}:
         select_build_environment(args.environment)
 
@@ -368,6 +369,10 @@ Examples:
             seed_nodes = client.get('seed_nodes', [])
             for node in seed_nodes:
                 run_args += ['--seed-node', node]
+
+            checkpoints = client.get('checkpoints')
+            if checkpoints:
+                pass  # FIXME: implement me
 
             track_accounts = client.get('track_accounts', [])
             if track_accounts:

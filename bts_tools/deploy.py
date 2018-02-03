@@ -159,13 +159,29 @@ def deploy_base_node(cfg, build_dir, build_env):
     # TODO: all the following steps should actually be self-contained execution units available as plugins.
     #       this would allow to create ad-hoc scripts very quickly with very little text editing required.
 
+    run_remote('mkdir /tmp/install_done')
+
+    def is_installed(module):
+        status = run_remote('ls /tmp/install_done/{}'.format(module))
+        log.error('is installed: {}'.format(status))
+        return status == 0
+
+    def install_done(module):
+        status = run_remote('touch /tmp/install_done/{}'.format(module))
+        log.error('install done: {}'.format(status))
+        return status == 0
+
     # 1- ssh to host and scp or rsync the installation scripts and tarballs
     log.info('================ Copying install scripts to remote host ================')
     copy('{}/*'.format(build_dir), '/tmp/')
 
     # 2- run the installation script remotely
-    log.info('================ Installing remote host ================')
-    run_remote('cd /tmp; bash install_new_graphene_node.sh')
+    if not is_installed('base_node'):
+        log.info('================ Installing remote host ================')
+        run_remote('cd /tmp; bash install_new_graphene_node.sh')
+        install_done('base_node')
+    else:
+        log.info('================ Installing remote host (skipped) ================')
 
     # 2.0- copy config.yaml file to ~/.bts_tools/
     copy(join(build_dir, 'config.yaml'), '~/.bts_tools/config.yaml', user=cfg['unix_user'])
@@ -174,26 +190,35 @@ def deploy_base_node(cfg, build_dir, build_env):
     copy(join(build_dir, 'api_access.json'), '~/', user=cfg['unix_user'])
 
     # 2.1- install supervisord conf
-    log.info('* Installing supervisord config')
-    run_remote('apt-get install -yfV supervisor')
-    run_remote('systemctl enable supervisor')   # not enabled by default, at least on ubuntu 16.04 (bug?)
-    render_template('supervisord.conf')
-    copy(join(build_dir, 'supervisord.conf'), '/etc/supervisor/conf.d/bts_tools.conf')
+    if not is_installed('supervisor'):
+        log.info('* Installing supervisord config')
+        run_remote('apt-get install -yfV supervisor')
+        run_remote('systemctl enable supervisor')   # not enabled by default, at least on ubuntu 16.04 (bug?)
+        render_template('supervisord.conf')
+        copy(join(build_dir, 'supervisord.conf'), '/etc/supervisor/conf.d/bts_tools.conf')
+        install_done('supervisor')
+    else:
+        log.info('* Installing supervisord config (skipped)')
 
     # 2.2- install nginx
-    log.info('* Installing nginx...')
+    if not is_installed('nginx'):
+        log.info('* Installing nginx')
 
-    run_remote('apt-get install -yfV nginx >> /tmp/setupVPS.log 2>&1')
-    run_remote('rm -fr /etc/nginx-original; cp -R /etc/nginx /etc/nginx-original')
-    nginx = join(build_dir, 'etc', 'nginx')
-    run('mkdir -p {}'.format(join(nginx, 'sites-available')))
-    render_template('nginx_sites_available', join(nginx, 'sites-available', 'default'))
-    copy(join(nginx, 'sites-available', 'default'), '/etc/nginx/sites-available/default')
-    run_remote('cd /etc/nginx/sites-enabled; ln -fs ../sites-available/default')
-    # get remoter nginx.conf
-    # add:   limit_req_zone $binary_remote_addr zone=ws:10m rate=1r/s;
-    # write it back
-    run_remote('chown -R root:root /etc/nginx')
+        run_remote('apt-get install -yfV nginx >> /tmp/setupVPS.log 2>&1')
+        run_remote('rm -fr /etc/nginx-original; cp -R /etc/nginx /etc/nginx-original')
+        nginx = join(build_dir, 'etc', 'nginx')
+        run('mkdir -p {}'.format(join(nginx, 'sites-available')))
+        render_template('nginx_sites_available', join(nginx, 'sites-available', 'default'))
+        copy(join(nginx, 'sites-available', 'default'), '/etc/nginx/sites-available/default')
+        run_remote('cd /etc/nginx/sites-enabled; ln -fs ../sites-available/default')
+        # get remoter nginx.conf
+        # add:   limit_req_zone $binary_remote_addr zone=ws:10m rate=1r/s;
+        # write it back
+        run_remote('chown -R root:root /etc/nginx')
+
+        install_done('nginx')
+    else:
+        log.info('* Installing nginx (skipped)')
 
     # copy certs if provided
     run_remote('cd /etc/nginx; mkdir -p certs')
@@ -208,21 +233,27 @@ def deploy_base_node(cfg, build_dir, build_env):
     run_remote('service nginx restart')
 
     # 2.2- install uwsgi
-    log.info('* Installing uwsgi...')
+    if not is_installed('uwsgi'):
+        log.info('* Installing uwsgi')
 
-    run_remote('apt-get install -yfV uwsgi uwsgi-plugin-python3 >> /tmp/setupVPS.log 2>&1')
-    run_remote('rm -fr /etc/uwsgi-original; cp -R /etc/uwsgi /etc/uwsgi-original')
-    uwsgi = join(build_dir, 'etc', 'uwsgi')
-    run('mkdir -p {}'.format(join(uwsgi, 'apps-available')))
-    render_template('uwsgi_apps_available', join(uwsgi, 'apps-available', 'bts_tools.ini'))
-    copy(join(uwsgi, 'apps-available', 'bts_tools.ini'), '/etc/uwsgi/apps-available/bts_tools.ini')
-    run_remote('cd /etc/uwsgi/apps-enabled; ln -fs ../apps-available/bts_tools.ini')
-    run_remote('chown -R root:root /etc/uwsgi')
-    run_remote('service uwsgi restart')
+        run_remote('apt-get install -yfV uwsgi uwsgi-plugin-python3 >> /tmp/setupVPS.log 2>&1')
+        run_remote('rm -fr /etc/uwsgi-original; cp -R /etc/uwsgi /etc/uwsgi-original')
+        uwsgi = join(build_dir, 'etc', 'uwsgi')
+        run('mkdir -p {}'.format(join(uwsgi, 'apps-available')))
+        render_template('uwsgi_apps_available', join(uwsgi, 'apps-available', 'bts_tools.ini'))
+        copy(join(uwsgi, 'apps-available', 'bts_tools.ini'), '/etc/uwsgi/apps-available/bts_tools.ini')
+        run_remote('cd /etc/uwsgi/apps-enabled; ln -fs ../apps-available/bts_tools.ini')
+        run_remote('chown -R root:root /etc/uwsgi')
+        run_remote('service uwsgi restart')
+
+        install_done('uwsgi')
+    else:
+        log.info('* Installing uwsgi (skipped)')
 
     # 3- copy prebuilt binaries
     if cfg.get('compile_on_new_host', False):
         log.info('================ Not deploying any binaries, they have been compiled locally ================')
+
     else:
         log.info('================ Deploying prebuilt binaries ================')
         # deploy for all clients required
@@ -247,6 +278,9 @@ def deploy_base_node(cfg, build_dir, build_env):
             except Exception as e:
                 log.warning('Could not deploy {} blockchain dir because:'.format(client_name))
                 log.exception(e)
+
+    # 5- install netdata, preferably behind nginx
+    # FIXME: implement me!!
 
     # make sure log file survives a reboot
     run_remote('cp /tmp/setupVPS.log /root/')
