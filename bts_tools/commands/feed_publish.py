@@ -20,7 +20,7 @@
 
 from .. import core
 from ..rpcutils import GrapheneClient, rpc_call
-from ..feeds import get_feed_prices_new, publish_bts_feed, FeedPrice
+from ..feeds import get_feed_prices_new, publish_bts_feed
 from ruamel import yaml
 import sys
 import logging
@@ -29,11 +29,11 @@ log = logging.getLogger(__name__)
 
 
 def short_description():
-    return 'fetch all prices from feed sources'
+    return 'fetch all prices from feed sources and publishes them'
 
 
 def help():
-    return """feed_fetch <config_filename>'
+    return """feed_publish <config_filename>'
     
 config_filename: config file
 """
@@ -44,7 +44,8 @@ def run_command(config_filename=None):
         return
 
     cfg = yaml.safe_load(open(config_filename))
-    node = None
+    node = None  # read from config file
+
     try:
         node = GrapheneClient('feed_publisher', cfg['client']['witness_name'], 'bts', cfg.get('client', {}))
     except Exception as e:
@@ -60,12 +61,10 @@ def run_command(config_filename=None):
 
     result, publish_list = get_feed_prices_new(node, cfg)
 
-    print('\nGot feed prices:\n')
-    for f in sorted(result.filter(base='BTS'), key=lambda f: (f.asset, f.base)):
-        print(f)
-    print(FeedPrice(price=result.price('ALTCAP', 'BTC'), asset='ALTCAP', base='BTC'))
-        # print(repr(f))
-    # publish price
-    # for f in result.filter(base='BTS'):
-    #     print(repr(f))
-    # print(repr(result.filter('ALTCAP', 'BTC')))
+
+    base_msg = 'witness {} feeds: '.format(node.type(), node.name)
+
+    publish_feeds = {(asset, base): 1/result.price(asset, base) for asset, base in publish_list}
+    log.info(base_msg + 'publishing feeds: {}'.format(publish_feeds))
+
+    publish_bts_feed(node, publish_feeds, base_msg)
