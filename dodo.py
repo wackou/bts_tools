@@ -67,7 +67,15 @@ def task_gen_config_yaml_doc():
         with open('docs/config_yaml.rst', 'w') as out:
             out.write(t)
 
-    return {'actions': [update_config_yaml_doc],
+    def update_cmdline_help():
+        lines = run('bts -h', capture_io=True).stdout.split('\n')
+        help = '\n'.join(['    {}'.format(l) for l in lines])
+        t = Template(open('docs/cmdline.rst.jinja').read()).render(help=help)
+
+        with open('docs/cmdline.rst', 'w') as out:
+            out.write(t)
+
+    return {'actions': [update_config_yaml_doc, update_cmdline_help],
             'verbosity': 2}
 
 

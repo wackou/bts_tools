@@ -8,9 +8,9 @@ just run the ``bts`` script with the command you want to execute:
 
     $ bts -h
     usage: bts [-h] [-p PIDFILE] [-f]
-               {version,clean_homedir,clean,build,build_gui,run,run_cli,run_gui,list,monitor,deploy,deploy_node}
+               {version,clean_homedir,clean,build,build_gui,run,run_cli,run_gui,list,monitor,deploy,deploy_node,truncate,feed_publish,feed_fetch,install_boost}
                [environment] [args [args ...]]
-
+    
     following commands are available:
       - version                : show version of the tools
       - clean_homedir          : clean home directory. WARNING: this will delete your wallet!
@@ -20,39 +20,44 @@ just run the ``bts`` script with the command you want to execute:
       - build                  : update and build bts client
       - build_gui              : update and build bts gui client
       - run                    : run latest compiled bts client, or the one with the given hash or tag
-      - run_cli                : run latest compiled bts cli wallet (graphene)
+      - run_cli                : run latest compiled bts cli wallet
       - run_gui                : run latest compiled bts gui client
       - list                   : list installed bts client binaries
       - monitor                : run the monitoring web app
       - deploy                 : deploy built binaries to a remote server
       - deploy_node            : full deploy of a seed or witness node on given ip address. Needs ssh root access
-
+      - truncate               : download, compile and install the specified boost version
+      - feed_publish           : fetch all prices from feed sources and publishes them
+      - feed_fetch             : fetch all prices from feed sources
+      - install_boost          : download, compile and install the specified boost version
+        
     Examples:
       $ bts build                 # build the latest bts client by default
       $ bts build v0.4.27         # build specific version
       $ bts build ppy-dev v0.1.8  # build a specific client/version
       $ bts run                   # run the latest compiled client by default
       $ bts run seed-test         # clients are defined in the config.yaml file
-
+    
       $ bts build_gui   # FIXME: broken...
       $ bts run_gui     # FIXME: broken...
-
-
-
+    
+        
+    
     positional arguments:
-      {version,clean_homedir,clean,build,build_gui,run,run_cli,run_gui,list,monitor,deploy,deploy_node}
+      {version,clean_homedir,clean,build,build_gui,run,run_cli,run_gui,list,monitor,deploy,deploy_node,truncate,feed_publish,feed_fetch,install_boost}
                             the command to run
-      environment           the build/run environment (bts, pts, ...)
+      environment           the build/run environment (bts, steem, ...)
       args                  additional arguments to be passed to the given command
-
+    
     optional arguments:
       -h, --help            show this help message and exit
       -p PIDFILE, --pidfile PIDFILE
                             filename in which to write PID of child process
       -f, --forward-signals
                             forward unix signals to spawned witness client child process
-
+    
     You should also look into ~/.bts_tools/config.yaml to tune it to your liking.
+    
 
 
 
@@ -114,4 +119,3 @@ anywhere and will always be run from the build directory. This is done so in
 order to be as little intrusive as possible (ie: not mess with a wallet you
 already have installed) and as install procedures are not as clear-cut as for
 the command-line client.
-

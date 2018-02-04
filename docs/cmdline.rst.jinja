@@ -1,0 +1,72 @@
+
+Command-line tools
+==================
+
+just run the ``bts`` script with the command you want to execute:
+
+::
+
+    $ bts -h
+{{ help }}
+
+
+
+Building and running the BitShares command-line client
+------------------------------------------------------
+
+To build and run the command-line client, you can use the following two commands::
+
+    $ bts build
+    $ bts run
+
+By default, ``bts build`` will build the latest version of the BitShares client
+(available on the master branch). If you want to build a specific version, you
+can do so by specifying either the tag or the git hash.::
+
+    $ bts build 0.5.3
+    $ bts build 8c908f8
+
+After the command-line client is successfully built, it will be installed in
+the ``bin_dir`` directory as defined in the ``build_environments`` section of the
+``config.yaml`` file. The last built version will also be symlinked as
+``witness_node`` in that directory, and this is the binary that a call
+to ``bts run`` will execute.
+
+You can see a list of all binaries available by typing::
+
+    $ bts list
+
+
+Passing additional arguments to "bts run"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can pass additional arguments to "bts run" and the tools will forward them
+to the actual invocation of the bts client. This can be useful for options that
+you only use from time to time, eg: re-indexing the blockchain, or clearing the
+peer database. If they are args that start with a double dash (eg: --my-option),
+then you need to also prepend those with an isolated double dash, ie::
+
+    $ bts run -- --resync-blockchain --clear-peer-database
+
+otherwise, the "--resync-blockchain" and "--clear-peer-database" would be
+considered to be an option for the bts script, and not an argument that should
+be forwarded.
+
+
+Building and running the BitShares GUI client
+---------------------------------------------
+
+[FIXME: currently broken]
+
+To build and run the GUI client, the procedure is very similar to the one for
+the command-line client::
+
+    $ bts build_gui
+    $ bts run_gui
+
+There is one major difference though: the GUI client will not be installed
+anywhere and will always be run from the build directory. This is done so in
+order to be as little intrusive as possible (ie: not mess with a wallet you
+already have installed) and as install procedures are not as clear-cut as for
+the command-line client.
+

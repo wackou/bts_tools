@@ -177,22 +177,85 @@ config.yaml
             median_time_span: 1800     # [OPTIONAL, default=1800] time span over which the median of the feed price is computed. Shorter values are "fresher" but more sensitive to noise,
                                        # higher values indicate a more stable indicator of price at the cost of lack of responsiveness / delay in getting update for a huge price hike
     
+    
             steem:
                 feed_providers: [Poloniex, Bittrex]
                 steem_dollar_adjustment: 1.0
     
+                markets:
+                - [STEEM, BTC, [Poloniex, Bittrex]]
+                - [BTC, USD, [BitcoinAverage, CoinMarketCap, Bitstamp, Bitfinex]]
+    
+                rules:
+                - [compose, 'STEEM/BTC', 'BTC/USD']
+                - [publish, 'STEEM/USD']
+    
+    
+    
             bts:
-                feed_providers: [Poloniex, Bittrex,
-                                 Bitfinex, BitStamp,
-                                 CoinMarketCap, CoinCap, AEX, ZB, Livecoin]
+                fiat_assets: &fiat_assets [CNY, EUR, GBP, CAD, CHF, HKD, MXN, RUB, SEK, SGD,
+                                           AUD, TRY, KRW, JPY, NZD, ARS]  # does not include USD as we'll use it as base asset
     
-                # some assets are not published by default as they are experimental or have some requirements
-                # eg: need to be an approved witness to publish
-                # if you want to publish them you need to say so explicitly here
-                enabled_assets: [RUBLE, ALTCAP, HERO]  # BTWTY, HERTZ
+                fiat_gold_silver: &fiat_gold_silver [CNY, EUR, GBP, CAD, CHF, HKD, MXN, RUB, SEK, SGD,
+                                                     AUD, TRY, KRW, JPY, NZD, ARS, GOLD, SILVER]
     
-                # explicitly disable some assets (eg: due to black swan)
-                #disabled_assets: [RUB, SEK, GRIDCOIN, KRW, SGD, HKD, BTWTY]
+                markets:
+                # specify which markets and providers should be used to query for feed prices
+                # format:
+                #  - [<asset>, <base>, <provider_or_provider_list>]
+                #  asset can be an asset_list for providers that support it
+                #
+                - [BTS, BTC, [Poloniex, Livecoin, AEX, ZB, Binance]]
+                - [BTC, USD, [BitcoinAverage, CoinMarketCap, Bitstamp, Bitfinex]]
+                - [ALTCAP, BTC, [CoinMarketCap, CoinCap]]
+                - [GRIDCOIN, BTC, [Poloniex, Bittrex]]
+                - [STEEM, BTC, [Poloniex, Bittrex]]  # FIXME: remove this line once properly implemented for Steem
+                - [GOLOS, BTC, [Bittrex, Livecoin]]
+                - [GOLD, USD, [Quandl]]
+                - [SILVER, USD, [Quandl]]
+    
+                - [*fiat_gold_silver, USD, Uphold]
+                - [*fiat_gold_silver, USD, CurrencyLayer]
+                - [*fiat_assets, USD, Fixer]
+    
+                #- [BTWTY, USD, Bit20]
+                - [HERO, USD, Hero]
+                - [HERTZ, USD, Hertz]
+    
+                rules:
+                # ordered sequence of operations to manipulate the set of available feeds
+                # operates over a unique FeedSet containing all the information available
+                #
+                - [invert, 'BTS/BTC']              # -> BTC/BTS
+                - [compose, 'BTS/BTC', 'BTC/USD']  # -> BTS/USD
+                - [invert, 'BTS/USD']              # -> USD/BTS
+                #- [multiply, 'BTS/CNY', 1.02]  # 2% offset
+    
+                - [loop, *fiat_gold_silver, [compose, '{}/USD', 'USD/BTS']]
+                - [copy, 'RUB/USD', 'RUBLE/USD']
+                - [compose, 'RUBLE/USD', 'USD/BTS']
+    
+                #- [compose, 'BTWTY/USD', 'USD/BTS']
+                - [compose, 'HERO/USD', 'USD/BTS']
+                - [compose, 'HERTZ/USD', 'USD/BTS']
+                - [compose, 'GRIDCOIN/BTC', 'BTC/BTS']
+                - [compose, 'GOLOS/BTC', 'BTC/BTS']
+    
+                # publish rules - specify which prices should be published on the blockchain
+                - [publish, 'USD/BTS']
+                - [publish, 'BTC/BTS']
+                - [loop, *fiat_gold_silver, [publish, '{}/BTS']]
+                - [publish, 'RUBLE/BTS']
+                - [publish, 'ALTCAP/BTC']
+                #- [publish, 'BTWTY/BTS']
+                - [publish, 'HERO/BTS']
+                - [publish, 'HERTZ/BTS']
+                - [publish, 'GRIDCOIN/BTS']
+                - [publish, 'GOLOS/BTS']
+    
+                asset_params:
+                    default:
+                        core_exchange_factor:  0.8
     
                 # if you have at least 1 feed_publisher role defined in your clients, then
                 # you need to uncomment at least one of the next 2 lines
@@ -268,4 +331,91 @@ Here's a minimally useful version of ``config.yaml`` that will build and run a B
             -
                 role: seed
                 name: seed01-bts
+
+
+config_feeds.yaml
+-----------------
+
+This config.yaml file can be used for the ``bts feed_fetch`` and ``bts feed_publish`` commands:
+
+.. code-block:: yaml
+
+    ---
+    # For a more detailed description of the format of this file, visit:
+    # https://bts-tools.readthedocs.io/en/latest/config_yaml.html#config-feeds-yaml
+    #
+    
+    client:
+        wallet_host: localhost
+        wallet_port: 8093
+        witness_name: wackou  # bts account that is used to publish feed prices
+    
+    
+    fiat_assets: &fiat_assets [CNY, EUR, GBP, CAD, CHF, HKD, MXN, RUB, SEK, SGD,
+                               AUD, TRY, KRW, JPY, NZD, ARS]  # does not include USD as we'll use it as base asset
+    
+    fiat_gold_silver: &fiat_gold_silver [CNY, EUR, GBP, CAD, CHF, HKD, MXN, RUB, SEK, SGD,
+                                         AUD, TRY, KRW, JPY, NZD, ARS, GOLD, SILVER]
+    
+    markets:
+    # specify which markets and providers should be used to query for feed prices
+    # format:
+    #  - [<asset>, <base>, <provider_or_provider_list>]
+    #  asset can be an asset_list for providers that support it
+    #
+    - [BTS, BTC, [Poloniex, Livecoin, AEX, ZB, Binance]]
+    - [BTC, USD, [BitcoinAverage, CoinMarketCap, Bitstamp, Bitfinex]]
+    - [ALTCAP, BTC, [CoinMarketCap, CoinCap]]
+    - [GRIDCOIN, BTC, [Poloniex, Bittrex]]
+    - [STEEM, BTC, [Poloniex, Bittrex]]  # FIXME: remove this line once properly implemented for Steem
+    - [GOLOS, BTC, [Bittrex, Livecoin]]
+    - [GOLD, USD, [Quandl]]
+    - [SILVER, USD, [Quandl]]
+    
+    - [*fiat_gold_silver, USD, Uphold]
+    - [*fiat_gold_silver, USD, CurrencyLayer]
+    - [*fiat_assets, USD, Fixer]
+    
+    - [BTWTY, USD, Bit20]
+    - [HERO, USD, Hero]
+    - [HERTZ, USD, Hertz]
+    
+    
+    rules:
+    # ordered sequence of operations to manipulate the set of available feeds
+    # operates over a unique FeedSet containing all the information available
+    #
+    - [invert, 'BTS/BTC']              # -> BTC/BTS
+    - [compose, 'BTS/BTC', 'BTC/USD']  # -> BTS/USD
+    - [invert, 'BTS/USD']              # -> USD/BTS
+    #- [multiply, 'BTS/CNY', 1.02]  # 2% offset
+    
+    - [loop, *fiat_gold_silver, [compose, '{}/USD', 'USD/BTS']]
+    - [copy, 'RUB/USD', 'RUBLE/USD']
+    - [compose, 'RUBLE/USD', 'USD/BTS']
+    
+    - [compose, 'BTWTY/USD', 'USD/BTS']
+    - [compose, 'HERO/USD', 'USD/BTS']
+    - [compose, 'HERTZ/USD', 'USD/BTS']
+    - [compose, 'GRIDCOIN/BTC', 'BTC/BTS']
+    - [compose, 'GOLOS/BTC', 'BTC/BTS']
+    
+    # publish rules - specify which prices should be published on the blockchain
+    - [publish, 'USD/BTS']
+    - [publish, 'BTC/BTS']
+    - [loop, *fiat_gold_silver, [publish, '{}/BTS']]
+    - [publish, 'RUBLE/BTS']
+    - [publish, 'ALTCAP/BTC']
+    - [publish, 'BTWTY/BTS']
+    - [publish, 'HERO/BTS']
+    - [publish, 'HERTZ/BTS']
+    - [publish, 'GRIDCOIN/BTS']
+    - [publish, 'GOLOS/BTS']
+    
+    
+    asset_params:
+        default:
+            core_exchange_factor:  0.8
+    
+    
 
