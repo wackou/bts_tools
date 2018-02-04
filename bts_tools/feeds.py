@@ -242,6 +242,10 @@ def get_feed_prices(node):
     # FIXME: remove this from here (use of shared global var price_history)
     for cur, price in feeds.items():
         price_history[cur].append(price)
+    try:
+        price_history['STEEM'].append(result.price('STEEM', 'USD'))
+    except ValueError:
+        pass
 
     return feeds, publish_list
 
@@ -517,6 +521,18 @@ def check_feeds(nodes):
             if node.role != 'feed_publisher':
                 continue
 
+            def check_node_is_ready(node, base_error_msg):
+                if not node.is_online():
+                    log.warning(base_error_msg + 'client is not running')
+                    return False
+                if node.is_locked():
+                    log.warning(base_error_msg + 'wallet is locked')
+                    return False
+                if not node.is_synced():
+                    log.warning(base_error_msg + 'client is not synced')
+                    return False
+                return True
+
             # TODO: dealt with as an exceptional case for now, should be refactored
             if node.type() == 'steem':
                 price = statistics.median(price_history['STEEM'])
@@ -537,18 +553,6 @@ def check_feeds(nodes):
                     node.opts['last_published'] = pendulum.utcnow()
 
                 continue
-
-            def check_node_is_ready(node, base_error_msg):
-                if not node.is_online():
-                    log.warning(base_error_msg + 'client is not running')
-                    return False
-                if node.is_locked():
-                    log.warning(base_error_msg + 'wallet is locked')
-                    return False
-                if not node.is_synced():
-                    log.warning(base_error_msg + 'client is not synced')
-                    return False
-                return True
 
             # if an exception occurs during publishing feeds for a delegate (eg: standby delegate),
             # then we should still go on for the other nodes (and not let exceptions propagate)
