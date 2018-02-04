@@ -53,12 +53,17 @@ def task_pypi_doc():
 def task_gen_config_yaml_doc():
     """Build the config.yaml documentation from the comments in the provided default config.yaml file"""
 
+    def read_file(filename):
+        lines = open(filename).readlines()
+        # shift it to the right so it fits in a code block
+        return ''.join(['    {}'.format(l) for l in lines])
+
     # defined as inner function so as not to run it during task definition (ie: every time we call "doit")
     def update_config_yaml_doc():
-        config_yaml_lines = open('bts_tools/config.yaml').readlines()
-        # shift it to the right so it fits in a code block
-        config_yaml = ''.join(['    {}'.format(l) for l in config_yaml_lines])
-        t = Template(open('docs/config_yaml.rst.jinja').read()).render(config_yaml=config_yaml)
+        config_yaml = read_file('bts_tools/config.yaml')
+        config_feeds_yaml = read_file('bts_tools/config_feeds.yaml')
+        t = Template(open('docs/config_yaml.rst.jinja').read()).render(config_yaml=config_yaml,
+                                                                       config_feeds_yaml=config_feeds_yaml)
         with open('docs/config_yaml.rst', 'w') as out:
             out.write(t)
 

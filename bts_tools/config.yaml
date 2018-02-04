@@ -227,14 +227,6 @@ monitoring:
                 default:
                     core_exchange_factor:  0.8
 
-            # some assets are not published by default as they are experimental or have some requirements
-            # eg: need to be an approved witness to publish
-            # if you want to publish them you need to say so explicitly here
-            enabled_assets: [RUBLE, ALTCAP, HERO]  # BTWTY, HERTZ
-
-            # explicitly disable some assets (eg: due to black swan)
-            #disabled_assets: [RUB, SEK, GRIDCOIN, KRW, SGD, HKD, BTWTY]
-
             # if you have at least 1 feed_publisher role defined in your clients, then
             # you need to uncomment at least one of the next 2 lines
             #publish_time_interval: 2400        # use this to publish feeds at fixed time intervals (in seconds)

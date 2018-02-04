@@ -4,6 +4,6 @@ exclude __*.md
 global-exclude .DS_Store
 include bts_tools/version.txt
 include bts_tools/config.yaml
-include bts_tools/slate.yaml
+include bts_tools/config_feeds.yaml
 recursive-include bts_tools/static *
 recursive-include bts_tools/templates *

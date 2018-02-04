@@ -1,18 +1,12 @@
 ---
 # For a more detailed description of the format of this file, visit:
-# https://bts-tools.readthedocs.io/en/latest/config_yaml.html
+# https://bts-tools.readthedocs.io/en/latest/config_yaml.html#config-feeds-yaml
 #
 
 client:
     wallet_host: localhost
     wallet_port: 8093
     witness_name: wackou  # bts account that is used to publish feed prices
-
-# FIXME: implement me!
-publish_strategy:
-    interval: 2400       # use this to publish feeds at fixed time intervals (in seconds)
-    slot: 08             # use this to publish every hour at a fixed number of minutes past the hour (in minutes)
-    variance: 0.02       # use this to publish when the feed deviates more than x% from the last published value
 
 
 fiat_assets: &fiat_assets [CNY, EUR, GBP, CAD, CHF, HKD, MXN, RUB, SEK, SGD,

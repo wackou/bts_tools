@@ -6,6 +6,12 @@
 History
 =======
 
+0.6.0 (2018-xx-xx)
+------------------
+
+* [bts] complete revamp of the feed logic
+        WARNING: this is API incompatible with the previous versions. Check config.yaml
+
 
 0.5.3 (2017-12-09)
 ------------------

@@ -29,17 +29,9 @@ monitoring:
         median_time_span: 1800
 
         steem:
-            feed_providers: [Poloniex, Bittrex]
             steem_dollar_adjustment: 1.00
 
         bts:
-            feed_providers: [Poloniex, AEX, ZB, Livecoin, Binance,  # BTS/BTC markets
-                             # Bittrex,
-                             # Bter, Yunbi, BTC38,                  # BTS/CNY markets
-                             Bitfinex, BitStamp, BitcoinAverage, CoinMarketCap, CoinCap]
-
-            enabled_assets: []   # [RUBLE, BTWTY, ALTCAP, HERO, HERTZ]
-            disabled_assets: []  # black swan
             asset_params:
                 # TODO: MCR and MSSR should be the actual percentage (float) not a fixed-point integer
                 default:

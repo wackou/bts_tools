@@ -293,7 +293,7 @@ def get_price_for_publishing(node, cfg, asset, base, price, feeds=None):
     # from the base currency to BTS, and use it to scale the CER price
 
     if base != 'BTS':
-        #log.warning(feeds)
+        #log.debug(feeds)
         try:
             base_bts_price = feeds[(base, 'BTS')]
         except KeyError:
@@ -302,7 +302,6 @@ def get_price_for_publishing(node, cfg, asset, base, price, feeds=None):
         cer_numerator, cer_denominator = get_fraction(price * base_bts_price,
                                                       asset_precision, bts_precision)
         cer_denominator *= c['core_exchange_factor']  # FIXME: should round here
-        #log.error('CER denom: {}'.format(cer_denominator))
     else:
         cer_numerator, cer_denominator = numerator, round(denominator * c['core_exchange_factor'])
 
@@ -333,31 +332,6 @@ def get_price_for_publishing(node, cfg, asset, base, price, feeds=None):
     # log.debug('Publishing feed for {}/{}: {} as {}/{} - CER: {}/{}'
     #          .format(asset, base, price, numerator, denominator, cer_numerator, cer_denominator))
     return price_obj
-
-
-# FIXME: deprecate
-def get_disabled_assets():
-    cfg_enabled = set(cfg['bts'].get('enabled_assets', []))
-    cfg_disabled = set(cfg['bts'].get('disabled_assets', []))
-    for asset in cfg_enabled:
-        if asset in cfg_disabled:
-            log.warning("Asset {} is both in 'enabled_assets' and 'disabled_assets'. Disabling it".format(asset))
-
-    # Steem is disabled as it appears in the feed history but should not be published on BitShares
-    # NOTE: the proper fix would be to maintain feeds per client type, and not as a global object
-    disabled_assets = {'STEEM'}
-
-    # these are not published by default as they are experimental or have some requirements
-    # eg: need to be an approved witness to publish
-    disabled_assets.update({'BTWTY', 'RUBLE', 'ALTCAP', 'HERO', 'HERTZ'})
-
-    # enable plugins in cfg
-    disabled_assets.difference_update(cfg_enabled)
-
-    # disable plugins in cfg
-    disabled_assets.update(cfg_disabled)
-
-    return disabled_assets
 
 
 # TODO: Need 2 main classes: FeedHistory is a database of historical prices, allows querying,
@@ -592,8 +566,6 @@ def check_feeds(nodes):
                         return 'BTS'
 
                     median_feeds = {(c, get_base_for(c)): statistics.median(price_history[c]) for c in feeds}
-                    #disabled_assets = get_disabled_assets()
-                    #for asset, base in publish_list
                     publish_feeds = {(asset, base): median_feeds[(asset, base)] for asset, base in publish_list}
                     log.info(base_msg + 'publishing feeds: {}'.format(feed_control.format_feeds(publish_feeds)))
                     #log.debug(base_msg + 'not publishing: {}'.format(disabled_assets))
