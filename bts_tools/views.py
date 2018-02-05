@@ -291,6 +291,7 @@ def view_info():
     #    info_items, attrs = split_columns(info_items, attrs)
 
     global feeds
+    feeds_obj = {}
 
     if rpc.main_node.is_witness() and rpc.main_node.type() in ['bts']:
         published_feeds = rpc.main_node.get_witness_feeds(rpc.main_node.name, feeds.visible_feeds)
@@ -320,8 +321,6 @@ def view_info():
 
             feeds_obj = dict(assets=feeds.visible_feeds, feeds=lfeeds, pfeeds=pfeeds,
                             mfeeds=mfeeds, bfeeds=bfeeds, last_update=last_update)
-        else:
-            feeds_obj = {}
 
     if rpc.main_node.is_witness():
         info_items2 = sorted(rpc.main_node.get_witness(rpc.main_node.name).items())

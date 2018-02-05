@@ -87,11 +87,14 @@ def get_bit20_feed_usd(node):
     bit20feed = node.get_account_history('bittwenty.feed', 15)
 
     if not bit20feed:
-        # import the 'announce' key to be able to read the memo publications
-        log.info('Importing the "announce" key in the wallet')
-        node.import_key('announce', '5KJJNfiSyzsbHoVb81WkHHjaX2vZVQ1Fqq5wE5ro8HWXe6qNFyQ')
-        # try again
-        bit20feed = node.get_account_history('bittwenty.feed', 15)
+        BIT20_ANNOUNCE_KEY = '5KJJNfiSyzsbHoVb81WkHHjaX2vZVQ1Fqq5wE5ro8HWXe6qNFyQ'
+        announce_key_exists = any(priv == BIT20_ANNOUNCE_KEY for pub, priv in node.dump_private_keys())
+        if not announce_key_exists:
+            # import the 'announce' key to be able to read the memo publications
+            log.info('Importing the "announce" key in the wallet')
+            node.import_key('announce', BIT20_ANNOUNCE_KEY)
+            # try again
+            bit20feed = node.get_account_history('bittwenty.feed', 15)
 
     # find bit20 composition
     for f in bit20feed:
