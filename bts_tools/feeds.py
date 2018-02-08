@@ -216,8 +216,6 @@ def _apply_rules(node, cfg, result):
 
 
 def get_feed_prices_new(node, cfg):
-    #cfg = core.config['monitoring']['feeds']
-
     # 1- fetch all feeds
     result = _fetch_feeds(node, cfg)
 
@@ -226,26 +224,36 @@ def get_feed_prices_new(node, cfg):
 
 
 
-def get_feed_prices(node):
-    result, publish_list = get_feed_prices_new(node, core.config['monitoring']['feeds']['bts'])
+def get_feed_prices(node, cfg):
+    result, publish_list = get_feed_prices_new(node, cfg)
     feeds = {}
-    for f in result.filter(base='BTS'):
-        feeds[f.asset] = 1/f.price
 
-    try:
-        feeds['ALTCAP'] = 1/result.filter('ALTCAP', 'BTC')[0].price
-    except Exception:
-        #log.debug('Did not have a price for ALTCAP/BTC')
-        pass
+    base_blockchain = node.type().split('-')[0]
+    if base_blockchain == 'bts':
+        for f in result.filter(base='BTS'):
+            feeds[f.asset] = 1/f.price
+
+        try:
+            feeds['ALTCAP'] = 1/result.filter('ALTCAP', 'BTC')[0].price
+        except Exception:
+            #log.debug('Did not have a price for ALTCAP/BTC')
+            pass
+
+    elif base_blockchain == 'steem':
+        try:
+            feeds['STEEM'] = result.price('STEEM', 'USD')
+        except Exception:
+            pass
 
     # update price history for all feeds
     # FIXME: remove this from here (use of shared global var price_history)
     for cur, price in feeds.items():
         price_history[cur].append(price)
-    try:
-        price_history['STEEM'].append(result.price('STEEM', 'USD'))
-    except ValueError:
-        pass
+
+    # try:
+    #     price_history['STEEM'].append(result.price('STEEM', 'USD'))
+    # except ValueError:
+    #     pass
 
     return feeds, publish_list
 
@@ -511,7 +519,7 @@ def check_feeds(nodes):
     global feeds, feed_control
 
     try:
-        feeds, publish_list = get_feed_prices(nodes[0]) # use first node if we need to query the blockchain, eg: for bit20 asset composition
+        feeds, publish_list = get_feed_prices(nodes[0], core.config['monitoring']['feeds'][nodes[0].type()]) # use first node if we need to query the blockchain, eg: for bit20 asset composition
         feed_control.nfeed_checked += 1
 
         status = feed_control.publish_status(feeds)
@@ -533,50 +541,55 @@ def check_feeds(nodes):
                     return False
                 return True
 
-            # TODO: dealt with as an exceptional case for now, should be refactored
-            if node.type() == 'steem':
-                price = statistics.median(price_history['STEEM'])
 
-                # publish median value of the price, not latest one
-                if feed_control.should_publish_steem(node, price):
-                    base_error_msg = 'Cannot publish feeds for steem witness {}: '.format(node.name)
-                    if check_node_is_ready(node, base_error_msg) is False:
-                        continue
-
-                    ratio = cfg['steem']['steem_dollar_adjustment']
-                    price_obj = {'base': '{:.3f} SBD'.format(price),
-                                 'quote': '{:.3f} STEEM'.format(1/ratio)}
-                    log.info('Node {}:{} publishing feed price for steem: {:.3f} SBD (real: {:.3f} adjusted by {:.2f})'
-                             .format(node.type(), node.name, price*ratio, price, ratio))
-                    node.publish_feed(node.name, price_obj, True)
-                    node.opts['last_price'] = price
-                    node.opts['last_published'] = pendulum.utcnow()
-
-                continue
 
             # if an exception occurs during publishing feeds for a delegate (eg: standby delegate),
             # then we should still go on for the other nodes (and not let exceptions propagate)
             try:
-                if feed_control.should_publish():
-                    base_error_msg = 'Cannot publish feeds for {} witness {}: '.format(node.type(), node.name)
-                    if check_node_is_ready(node, base_error_msg) is False:
-                        continue
+                if node.type() == 'bts':
+                    if feed_control.should_publish():
+                        base_error_msg = 'Cannot publish feeds for {} witness {}: '.format(node.type(), node.name)
+                        if check_node_is_ready(node, base_error_msg) is False:
+                            continue
 
-                    base_msg = '{} witness {} feeds: '.format(node.type(), node.name)
+                        base_msg = '{} witness {} feeds: '.format(node.type(), node.name)
+                        # publish median value of the price, not latest one
+                        def get_base_for(asset):  # FIXME: deprecate / remove me
+                            if asset == 'ALTCAP':
+                                return 'BTC'
+                            return 'BTS'
+
+                        median_feeds = {(c, get_base_for(c)): statistics.median(price_history[c]) for c in feeds}
+                        publish_feeds = {(asset, base): median_feeds[(asset, base)] for asset, base in publish_list}
+                        log.info(base_msg + 'publishing feeds: {}'.format(feed_control.format_feeds(publish_feeds)))
+                        #log.debug(base_msg + 'not publishing: {}'.format(disabled_assets))
+
+                        publish_bts_feed(node, publish_feeds, base_msg)
+
+                        feed_control.last_published = pendulum.utcnow()
+
+                elif node.type() == 'steem':
+                    price = statistics.median(price_history['STEEM'])
+
                     # publish median value of the price, not latest one
-                    def get_base_for(asset):
-                        if asset == 'ALTCAP':
-                            return 'BTC'
-                        return 'BTS'
+                    if feed_control.should_publish_steem(node, price):
+                        base_error_msg = 'Cannot publish feeds for steem witness {}: '.format(node.name)
+                        if check_node_is_ready(node, base_error_msg) is False:
+                            continue
 
-                    median_feeds = {(c, get_base_for(c)): statistics.median(price_history[c]) for c in feeds}
-                    publish_feeds = {(asset, base): median_feeds[(asset, base)] for asset, base in publish_list}
-                    log.info(base_msg + 'publishing feeds: {}'.format(feed_control.format_feeds(publish_feeds)))
-                    #log.debug(base_msg + 'not publishing: {}'.format(disabled_assets))
+                        ratio = cfg['steem']['steem_dollar_adjustment']
+                        price_obj = {'base': '{:.3f} SBD'.format(price),
+                                     'quote': '{:.3f} STEEM'.format(1/ratio)}
+                        log.info('Node {}:{} publishing feed price for steem: {:.3f} SBD (real: {:.3f} adjusted by {:.2f})'
+                                 .format(node.type(), node.name, price*ratio, price, ratio))
+                        node.publish_feed(node.name, price_obj, True)
+                        node.opts['last_price'] = price
+                        node.opts['last_published'] = pendulum.utcnow()
 
-                    publish_bts_feed(node, publish_feeds, base_msg)
-
-                    feed_control.last_published = pendulum.utcnow()
+                # elif node.type() == 'muse':
+                #  ...
+                else:
+                    log.error('Unknown blockchain type for feeds publishing: {}'.format(node.type()))
 
             except Exception as e:
                 log.exception(e)

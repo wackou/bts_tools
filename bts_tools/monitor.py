@@ -123,13 +123,14 @@ def monitoring_thread(*nodes, delay=0):
                       .format(delay, client_node.type(), node_names))
             time.sleep(delay)
             check_feeds(nodes)
-        threading.Thread(target=check_feeds_with_delay, name='feed-thread').start()
+        threading.Thread(target=check_feeds_with_delay, name='feed-thread-{}'.format(client_node.type())).start()
 
     # create one global context for the client, and local contexts for each node of this client
     global_ctx = AttributeDict(loop_index=0,
                                time_interval=core.config['monitoring']['monitor_time_interval'],
                                nodes=nodes)
 
+    # FIXME: still needed?
     def init_plugin(plugin_name, node, ctx):
         try:
             init_func = getattr(monitoring, plugin_name).init_ctx
