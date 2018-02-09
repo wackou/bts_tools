@@ -99,7 +99,9 @@ def set_version(pos):
                     r"VERSION = '\S*'",
                     r"VERSION = '%s'" % version)
 
-    major_minor = '.'.join(version.split('.')[:2])
+    major_minor = '.'.join(version
+                           .split('a')[0].split('b')[0].split('rc')[0]  # remove alpha/beta/rc tags
+                           .split('.')[:2])  # keep 2 leftmost digits
 
     replace_version('docs/conf.py',
                     r"version = '\S*'",

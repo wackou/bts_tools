@@ -34,7 +34,7 @@ markets:
 - [*fiat_gold_silver, USD, CurrencyLayer]
 - [*fiat_assets, USD, Fixer]
 
-- [BTWTY, USD, Bit20]
+#- [BTWTY, USD, Bit20]
 - [HERO, USD, Hero]
 - [HERTZ, USD, Hertz]
 
@@ -52,7 +52,7 @@ rules:
 - [copy, 'RUB/USD', 'RUBLE/USD']
 - [compose, 'RUBLE/USD', 'USD/BTS']
 
-- [compose, 'BTWTY/USD', 'USD/BTS']
+#- [compose, 'BTWTY/USD', 'USD/BTS']
 - [compose, 'HERO/USD', 'USD/BTS']
 - [compose, 'HERTZ/USD', 'USD/BTS']
 - [compose, 'GRIDCOIN/BTC', 'BTC/BTS']
@@ -64,7 +64,7 @@ rules:
 - [loop, *fiat_gold_silver, [publish, '{}/BTS']]
 - [publish, 'RUBLE/BTS']
 - [publish, 'ALTCAP/BTC']
-- [publish, 'BTWTY/BTS']
+#- [publish, 'BTWTY/BTS']
 - [publish, 'HERO/BTS']
 - [publish, 'HERTZ/BTS']
 - [publish, 'GRIDCOIN/BTS']
