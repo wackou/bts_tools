@@ -135,7 +135,8 @@ SEED_NODES = {
         ('seed.jamzed.pl:2001',              '',   'jamzed',         ''),
         ('seed.curiesteem.com:2001',         '',   'curie',          ''),
         ('seed.steem.prcolaco.com:2001',     'pt', 'prc',            'https://steemit.com/witness-category/@prc/prc-witness-proposal-after-creating-dsound-and-attending-steemfest-2-i-want-more'),
-        ('85.10.196.211:2001',               'de', 'puncakbukit',    'https://steemit.com/witness-category/@puncakbukit/my-witness-thread')
+        ('85.10.196.211:2001',               'de', 'puncakbukit',    'https://steemit.com/witness-category/@puncakbukit/my-witness-thread'),
+        ('steem-seed.furion.me:2001',        'de', 'furion',         'https://steemit.com/@furion'),
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),
