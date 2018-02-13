@@ -20,8 +20,8 @@
 
 from . import core
 from .core import hashabledict
-from .feed_providers import FeedPrice, FeedSet, bit20
-from collections import deque, defaultdict
+from .feed_providers import FeedPrice, FeedSet
+from collections import deque
 from contextlib import suppress
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
@@ -89,14 +89,6 @@ def get_multi_feeds(func, args, providers, stddev_tolerance=None):
 
     return result
 
-
-def get_bit20_feed(node, usd_price):
-    bit20_value = bit20.get_bit20_feed_usd(node)
-    # get bit20 value in BTS
-    bit20_value /= usd_price
-    log.debug('Value of the bit20 asset in BTS: {} BTS'.format(bit20_value))
-
-    return 1 / bit20_value
 
 def _fetch_feeds(node, cfg):
     result = FeedSet()
