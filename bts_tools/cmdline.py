@@ -402,16 +402,8 @@ Examples:
                             witness_id = '"{}"'.format(witness_id)
                             public_key = format(PrivateKey(private_key).pubkey, client['type'])
                             private_key_pair = '["{}", "{}"]'.format(public_key, private_key)
-                            # temporary workaround for https://github.com/bitshares/bitshares-core/issues/399
-                            if client['type'] in ['bts', 'bts-testnet']:
-                                log.error('BTS and BTS testnet versions don\'t support the --private-key option, not using it. '
-                                          'Please edit the {}/config.ini file instead with the following values:'
-                                          .format(client['data_dir']))
-                                log.error('witness-id = {}'.format(witness_id))
-                                log.error('private-key = {}'.format(private_key_pair))
-                            else:
-                                run_args += ['--witness-id', witness_id,
-                                             '--private-key', private_key_pair]
+                            run_args += ['--witness-id', witness_id,
+                                         '--private-key', private_key_pair]
 
                 elif role['role'] == 'seed':
                     apis += ['network_node_api']
