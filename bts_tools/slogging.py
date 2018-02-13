@@ -22,6 +22,7 @@ from collections import deque
 from logging.handlers import TimedRotatingFileHandler
 from os.path import expanduser
 import logging
+import re
 import sys
 import os
 
@@ -32,6 +33,21 @@ RED_FONT = "\x1B[0;31m"
 RESET_FONT = "\x1B[0m"
 
 log_records = deque(maxlen=1000)
+
+
+def _sanitize_output(s):
+    return re.sub(r'5[0-9a-zA-Z]{50}', '5xxxx', s)
+
+
+def sanitize_output(s):
+    """Removes potentially critical information, such as:
+    - private keys
+
+    """
+    if isinstance(s, (list, tuple)):
+        return type(s)(_sanitize_output(x) for x in s)
+    return _sanitize_output(s)
+
 
 def setupLogging(colored=True, with_time=False, with_thread=False, filename=None, with_lineno=False):  # pragma: no cover
     """Set up a nice colored logger as the main application logger."""
@@ -45,6 +61,9 @@ def setupLogging(colored=True, with_time=False, with_thread=False, filename=None
                         ('[%(threadName)s]' if with_thread else '') +
                         ' -- %(message)s')
             logging.Formatter.__init__(self, self.fmt)
+
+        def format(self, record):
+            return _sanitize_output(super().format(record))
 
     class ColoredFormatter(logging.Formatter):
         def __init__(self, with_time, with_thread):
@@ -72,7 +91,7 @@ def setupLogging(colored=True, with_time=False, with_thread=False, filename=None
                 color = RED_FONT
 
             result = result.replace('-CC-', color)
-            return result
+            return _sanitize_output(result)
 
     if filename is not None:
         # make sure we can write to our log file
