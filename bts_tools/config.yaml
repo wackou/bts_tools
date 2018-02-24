@@ -147,11 +147,14 @@ monitoring:
         median_time_span: 1800     # [OPTIONAL, default=1800] time span over which the median of the feed price is computed. Shorter values are "fresher" but more sensitive to noise,
                                    # higher values indicate a more stable indicator of price at the cost of lack of responsiveness / delay in getting update for a huge price hike
 
+        # if you have at least 1 feed_publisher role defined in your clients, then
+        # you need to uncomment at least one of the next 2 lines
+        publish_strategy:
+            time_interval: 60      # use this to publish feeds at fixed time intervals (in seconds)
+            #time_slot: 23         # use this to publish every hour at a fixed number of minutes (in minutes)
+            #variance_ratio: 0.02  # FIXME: not implemented yet
 
         steem:
-            feed_providers: [Poloniex, Bittrex]
-            steem_dollar_adjustment: 1.0
-
             markets:
             - [STEEM, BTC, [Poloniex, Bittrex]]
             - [BTC, USD, [BitcoinAverage, CoinMarketCap, Bitstamp, Bitfinex]]
@@ -160,6 +163,7 @@ monitoring:
             - [compose, 'STEEM/BTC', 'BTC/USD']
             - [publish, 'STEEM/USD']
 
+            steem_dollar_adjustment: 1.0
 
 
         bts:
@@ -226,11 +230,6 @@ monitoring:
             asset_params:
                 default:
                     core_exchange_factor:  0.8
-
-            # if you have at least 1 feed_publisher role defined in your clients, then
-            # you need to uncomment at least one of the next 2 lines
-            #publish_time_interval: 2400        # use this to publish feeds at fixed time intervals (in seconds)
-            #publish_time_slot: 08              # use this to publish every hour at a fixed number of minutes (in minutes)
 
 
 #

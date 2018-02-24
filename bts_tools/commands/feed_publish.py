@@ -20,7 +20,8 @@
 
 from .. import core
 from ..rpcutils import GrapheneClient, rpc_call
-from ..feeds import get_feed_prices_new, publish_bts_feed
+from ..feeds import get_feed_prices_new, publish_bts_feed, check_node_is_ready
+from ..feed_publish import format_feeds
 from ruamel import yaml
 import sys
 import logging
@@ -65,6 +66,9 @@ def run_command(config_filename=None):
     base_msg = 'witness {} feeds: '.format(node.type(), node.name)
 
     publish_feeds = {(asset, base): 1/result.price(asset, base) for asset, base in publish_list}
-    log.info(base_msg + 'publishing feeds: {}'.format(publish_feeds))
+    log.info(base_msg + 'publishing feeds: {}'.format(format_feeds(publish_feeds)))
 
-    publish_bts_feed(node, publish_feeds, base_msg)
+    if not check_node_is_ready(node):
+        log.error('node is not ready, cannot publish')
+    else:
+        publish_bts_feed(node, cfg, publish_feeds, base_msg)

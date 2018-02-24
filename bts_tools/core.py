@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from os.path import join, dirname, expanduser, exists, abspath
-from collections import namedtuple, defaultdict, abc
+from collections import namedtuple, defaultdict, abc, Mapping
 from subprocess import Popen, PIPE
 from functools import wraps
 from jinja2 import Environment, PackageLoader
@@ -133,7 +133,7 @@ def trace(f):
         args_str = ', '.join(str(arg) for arg in args)
         if kwargs:
             args_str += ', ' + ', '.join('{}={}'.format(k, v) for k, v in kwargs)
-        print('Calling function: {}({}) on {}'.format(f.__name__, args_str, obj))
+        log.info('Calling function: {}({}) on {}'.format(f.__name__, args_str, obj))
 
         try:
             result = f(obj, *args, **kwargs)
@@ -231,11 +231,10 @@ def load_config(loglevels=None):
 
     def recursive_update(a, b):
         for k, v in b.items():
-            if k in a:
-                if isinstance(v, dict):
-                    recursive_update(a[k], v)
-                else:
-                    a[k] = v
+            if (k in a
+                and isinstance(a[k], dict)
+                and isinstance(v, Mapping)):
+                recursive_update(a[k], v)
             else:
                 a[k] = v
 
@@ -259,13 +258,14 @@ def load_config(loglevels=None):
 
     # check whether config.yaml has a correct format
     m = config['monitoring']['feeds']
-    if (m['bts'].get('publish_time_interval') is None and
-        m['bts'].get('publish_time_slot') is None):
+    strategy = m.get('publish_strategy', {})
+    if (strategy.get('time_interval') is None and
+        strategy.get('time_slot') is None):
         log.warning('Will not be able to publish feeds. You need to specify '
                     'either publish_time_interval or publish_time_slot')
 
     check_time_interval = m['check_time_interval']
-    publish_time_interval = m['bts'].get('publish_time_interval')
+    publish_time_interval = strategy.get('time_interval')
     if publish_time_interval:
         if publish_time_interval < check_time_interval:
             log.error('Feed publish time interval ({}) is smaller than check time interval ({})'.format(publish_time_interval, check_time_interval))

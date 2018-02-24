@@ -124,6 +124,10 @@ def monitoring_thread(*nodes, delay=0):
             time.sleep(delay)
             check_feeds(nodes)
         threading.Thread(target=check_feeds_with_delay, name='feed-thread-{}'.format(client_node.type())).start()
+    else:
+        log.debug('No feed monitoring thread for {} client on {}:{}'.format(client_node.type(),
+                                                                            client_node.witness_host,
+                                                                            client_node.witness_port))
 
     # create one global context for the client, and local contexts for each node of this client
     global_ctx = AttributeDict(loop_index=0,
