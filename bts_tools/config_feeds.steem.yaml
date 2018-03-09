@@ -5,7 +5,7 @@
 
 client:
     wallet_host: localhost
-    wallet_port: 8093
+    wallet_port: 8493
     witness_name: wackou  # steem account that is used to publish feed prices
 
 markets:
@@ -28,3 +28,6 @@ rules:
 # NOTE: not needed for Steem, we always publish STEEM/USD, and only that
 # TODO: revisit this decision once SMTs are out
 #- [publish, 'STEEM/USD']
+
+
+steem_dollar_adjustment: 1.0

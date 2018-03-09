@@ -23,7 +23,7 @@ from functools import wraps
 from collections import defaultdict
 from datetime import datetime
 from . import rpcutils as rpc
-from . import core, monitor, slogging, backbone, seednodes, network_utils, feeds
+from . import core, monitor, slogging, backbone, seednodes, network_utils, feed_publish
 from .seednodes import split_columns
 import bts_tools
 import psutil
@@ -306,7 +306,7 @@ def view_info():
             def format_feeds(fds):
                 for asset in feeds.visible_feeds:
                     fmt, field_size = (('%.4g', 10)
-                                      if feeds.is_extended_precision(asset)
+                                      if feed_publish.is_extended_precision(asset)
                                       else ('%.4f', 7))
                     try:
                         s = fmt % float(fds[asset])
