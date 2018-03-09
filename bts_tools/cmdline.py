@@ -34,7 +34,7 @@ import sys
 import copy
 import shutil
 import pendulum
-import psutil
+import inspect
 import logging
 
 log = logging.getLogger(__name__)
@@ -574,7 +574,10 @@ Examples:
 
     elif args.command in COMMAND_PLUGINS:
         cmd = COMMAND_PLUGINS[args.command]
-        cmd.run_command(*args.args)
+        if 'env' in inspect.signature(cmd.run_command).parameters:
+            cmd.run_command(*args.args, env=args.environment)
+        else:
+            cmd.run_command(*args.args)
 
 
 def main_bts():
