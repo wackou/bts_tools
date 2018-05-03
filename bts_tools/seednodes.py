@@ -136,7 +136,8 @@ SEED_NODES = {
         ('seed.curiesteem.com:2001',         '',   'curie',          ''),
         ('seed.steem.prcolaco.com:2001',     'pt', 'prc',            'https://steemit.com/witness-category/@prc/prc-witness-proposal-after-creating-dsound-and-attending-steemfest-2-i-want-more'),
         ('85.10.196.211:2001',               'de', 'puncakbukit',    'https://steemit.com/witness-category/@puncakbukit/my-witness-thread'),
-        ('seed1.cryptobot.news:2001',        '',   'libertyranger',  '')
+        ('seed1.cryptobot.news:2001',        '',   'libertyranger',  ''),
+        ('46.4.37.176:2001',               'de', 'yuriks2000',    'https://steemit.com/witness-category/@yuriks2000/new-witness-announcement-steemapp-dev-team-yuriks2000-is-on-board')
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),
