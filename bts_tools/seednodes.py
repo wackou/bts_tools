@@ -73,7 +73,7 @@ SEED_NODES = {
         ('seed.muse.dgazek.tk:33333',     '', 'dgazek',       'https://steemit.com/muse/@dganic/dgazek-muse-witness-proposal')
     ],
     'steem': [
-        ('148.251.237.104:2001',             'us', 'steem-bounty',   'https://steemit.com/witness-category/@steem-bounty/my-witness-thread'),
+        ('148.251.237.104:2001',             'us', 'steem-bounty',   'https://steemit.com/witness-category/@steem-bounty/announcing-our-new-steem-bounty-witness'),
         ('134.255.253.142:2001',             'de', 'maxlxl',  ''),
         ('seed1.blockbrothers.io:2001',      'de', 'blockbrothers',  'https://steemit.com/witness-category/@blockbrothers/the-blockbrothers-are-now-a-witness-for-the-steem-blockchain'),
         ('seed.minnowshares.net:2001',       'de', 'reggaemuffin',   'https://steemit.com/witness-category/@reggaemuffin/witness-reggaemuffin'),
@@ -135,9 +135,14 @@ SEED_NODES = {
         ('seed.jamzed.pl:2001',              '',   'jamzed',         ''),
         ('seed.curiesteem.com:2001',         '',   'curie',          ''),
         ('seed.steemit.lu:2001',             'lu', 'lux-witness',    'https://steemit.com/@lux-witness'),
+        ('node.steem.place:2001,             '',   'moisesmcardona', 'https://steemit.com/@moisesmcardona'),
         ('seed.steem.prcolaco.com:2001',     'pt', 'prc',            'https://steemit.com/witness-category/@prc/prc-witness-proposal-after-creating-dsound-and-attending-steemfest-2-i-want-more'),
         ('85.10.196.211:2001',               'de', 'puncakbukit',    'https://steemit.com/witness-category/@puncakbukit/my-witness-thread'),
-        ('seed1.cryptobot.news:2001',        '',   'libertyranger',  '')
+        ('seed1.cryptobot.news:2001',        '',   'libertyranger',  ''),
+        ('46.4.37.176:2001',                 'de', 'yuriks2000',     'https://steemit.com/witness-category/@yuriks2000/new-witness-announcement-steemapp-dev-team-yuriks2000-is-on-board'),
+        ('seed.usesteem.com:2001',           '',   'themarkymark',   'https://steemit.com/witness-category/@themarkymark/witness-themarkymark'),
+        ('seed.chainchopper.com:2001',       'us', 'justinadams',    'https://steemit.com/witness/@justinadams/the-people-can-we-get-a-witness-first-things-1st'),
+        ('steem-seed.furion.me:2001',        'de', 'furion',         'https://steemit.com/@furion'),
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),
