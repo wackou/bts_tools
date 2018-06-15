@@ -22,7 +22,7 @@ from flask import render_template, Flask, Blueprint, jsonify
 from werkzeug.serving import run_simple
 from werkzeug.wsgi import DispatcherMiddleware
 from bts_tools import core, init, seednodes, network_utils
-from bts_tools.frontend import format_datetime, hide_private_key, add_ip_flag
+from bts_tools.frontend import format_datetime, sanitize_output, add_ip_flag
 from collections import defaultdict
 import bts_tools
 import threading
@@ -87,7 +87,7 @@ def create_app(settings_override=None):
 
     # custom filter for showing dates
     app.jinja_env.filters['datetime'] = format_datetime
-    app.jinja_env.filters['hide_private_key'] = hide_private_key
+    app.jinja_env.filters['sanitize_output'] = sanitize_output
     app.jinja_env.filters['add_ip_flag'] = add_ip_flag
 
     # make bts_tools module available in all the templates

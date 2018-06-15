@@ -5,5 +5,6 @@ global-exclude .DS_Store
 include bts_tools/version.txt
 include bts_tools/config.yaml
 include bts_tools/config_feeds.yaml
+include bts_tools/config_feeds.steem.yaml
 recursive-include bts_tools/static *
 recursive-include bts_tools/templates *

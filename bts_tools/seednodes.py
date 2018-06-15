@@ -101,7 +101,7 @@ SEED_NODES = {
         ('104.199.118.92:2001',              'us', 'clayop',         'https://steemit.com/witness-category/@clayop/witness-clayop'),
         ('104.40.230.35:2001',               '',   'aizensou',       'https://steemit.com/witness-category/@aizensou/witness-application-aizensou'),
         ('gtg.steem.house:2001',             '',   'gtg',            'https://steemit.com/witness-category/@gtg/witness-gtg'),
-        ('seed.steem.network:2001',          'us', 'someguy123',     'https://steemit.com/witness-category/@someguy123/someguy123-witness-thread'),
+        ('steemseed-fin.privex.io:2001',     'fi', 'privex',         'https://steemit.com/witness-category/@privex/privex-announcement-launching-our-witness'),
         ('seed.zapto.org:2001',              '',   'geoffrey',       'https://steemit.com/witness-category/@geoffrey/witness-geoffrey'),
         ('seed.jesta.us:2001',               '',   'jesta',          'http://jesta.us'),
         #('seed.royaltiffany.me:2001',        '',   'royaltiffany',   'https://steemit.com/witness-category/@royaltiffany/royaltiffany-witness-thread'),
@@ -137,6 +137,7 @@ SEED_NODES = {
         ('seed.steem.prcolaco.com:2001',     'pt', 'prc',            'https://steemit.com/witness-category/@prc/prc-witness-proposal-after-creating-dsound-and-attending-steemfest-2-i-want-more'),
         ('85.10.196.211:2001',               'de', 'puncakbukit',    'https://steemit.com/witness-category/@puncakbukit/my-witness-thread'),
         ('steem-seed.furion.me:2001',        'de', 'furion',         'https://steemit.com/@furion'),
+        ('seed1.cryptobot.news:2001',        '',   'libertyranger',  '')
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),

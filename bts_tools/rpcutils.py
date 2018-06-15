@@ -553,7 +553,7 @@ def load_graphene_clients():
     for client_name, client in core.config['clients'].items():
         roles = client.get('roles', [])
         if not roles:
-            log.warning('Client "{}" doesn\'t define any roles, it will not be monitored by the web interface'.format(client_name))
+            log.debug('Client "{}" doesn\'t define any roles, it will not be monitored by the web interface'.format(client_name))
         for role in roles:
             kwargs = dict(client_name=client_name,
                           client=client,

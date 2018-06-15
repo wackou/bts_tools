@@ -20,8 +20,9 @@
 
 from . import core
 from .core import hashabledict
-from .feed_providers import FeedPrice, FeedSet, bit20
-from collections import deque, defaultdict
+from .feed_providers import FeedPrice, FeedSet
+from .feed_publish import publish_bts_feed, publish_steem_feed, BitSharesFeedControl
+from collections import deque
 from contextlib import suppress
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
@@ -89,14 +90,6 @@ def get_multi_feeds(func, args, providers, stddev_tolerance=None):
 
     return result
 
-
-def get_bit20_feed(node, usd_price):
-    bit20_value = bit20.get_bit20_feed_usd(node)
-    # get bit20 value in BTS
-    bit20_value /= usd_price
-    log.debug('Value of the bit20 asset in BTS: {} BTS'.format(bit20_value))
-
-    return 1 / bit20_value
 
 def _fetch_feeds(node, cfg):
     result = FeedSet()
@@ -265,285 +258,45 @@ def median_str(cur):
         return 'N/A'
 
 
-def is_extended_precision(asset):
-    return asset in {'BTC', 'GOLD', 'SILVER', 'BTWTY'}
-
-
-def format_qualifier(asset):
-    if is_extended_precision(asset):
-        return '%g'
-    return '%f'
-
-
-def get_fraction(price, asset_precision, base_precision, N=6):
-    """Find nice fraction with at least N significant digits in
-    both the numerator and denominator."""
-    numerator = int(price * 10 ** asset_precision)
-    denominator = 10 ** base_precision
-    multiplier = 0
-    while len(str(numerator)) < N or len(str(denominator)) < N:
-        multiplier += 1
-        numerator = round(price * 10 ** (asset_precision + multiplier))
-        denominator = 10 ** (base_precision + multiplier)
-    return numerator, denominator
-
-
-def get_price_for_publishing(node, cfg, asset, base, price, feeds=None):
-    """feeds is only needed when base != BTS, to compute the CER (needs to be priced in BTS regardless of the base asset)"""
-    c = dict(cfg['asset_params']['default'])  # make a copy, we don't want to update the default value
-    c.update(cfg['asset_params'].get(asset) or {})
-    asset_id = node.asset_data(asset)['id']
-    asset_precision = node.asset_data(asset)['precision']
-
-    base_id = node.asset_data(base)['id']
-    base_precision = node.asset_data(base_id)['precision']
-    bts_precision = node.asset_data('BTS')['precision']
-
-    numerator, denominator = get_fraction(price, asset_precision, base_precision)
-
-    # CER price needs to be priced in BTS always. Get conversion rate
-    # from the base currency to BTS, and use it to scale the CER price
-
-    if base != 'BTS':
-        #log.debug(feeds)
-        try:
-            base_bts_price = feeds[(base, 'BTS')]
-        except KeyError:
-            log.warning("Can't publish the CER for {}/BTS because we don't have feed price for {}: available = {} "
-                        .format(asset, (base, 'BTS'), feeds))
-        cer_numerator, cer_denominator = get_fraction(price * base_bts_price,
-                                                      asset_precision, bts_precision)
-        cer_denominator *= c['core_exchange_factor']  # FIXME: should round here
-    else:
-        cer_numerator, cer_denominator = numerator, round(denominator * c['core_exchange_factor'])
-
-    price_obj = {
-        'settlement_price': {
-            'quote': {
-                'asset_id': base_id,
-                'amount': denominator
-            },
-            'base': {
-                'asset_id': asset_id,
-                'amount': numerator
-            }
-        },
-        'maintenance_collateral_ratio': c['maintenance_collateral_ratio'],
-        'maximum_short_squeeze_ratio': c['maximum_short_squeeze_ratio'],
-        'core_exchange_rate': {
-            'quote': {
-                'asset_id': '1.3.0',
-                'amount': cer_denominator
-            },
-            'base': {
-                'asset_id': asset_id,
-                'amount': cer_numerator
-            }
-        }
-    }
-    # log.debug('Publishing feed for {}/{}: {} as {}/{} - CER: {}/{}'
-    #          .format(asset, base, price, numerator, denominator, cer_numerator, cer_denominator))
-    return price_obj
-
-
-# TODO: Need 2 main classes: FeedHistory is a database of historical prices, allows querying,
-#       and FeedControl is a strategy for deciding when to publish
-
-class BitSharesFeedControl(object):
-    def __init__(self, *, cfg, visible_feeds=DEFAULT_VISIBLE_FEEDS):
-        self.cfg = dict(cfg)
-        self.visible_feeds = list(visible_feeds)
-
-        # FIXME: deprecate self.feed_period
-        try:
-            self.feed_period = int(cfg['bts']['publish_time_interval'] / cfg['check_time_interval'])
-        except KeyError:
-            self.feed_period = None
-
-        self.check_time_interval = pendulum.interval(seconds=cfg.get('check_time_interval', 600))
-        self.publish_time_interval = None
-        if 'publish_time_interval' in cfg['bts']:
-            self.publish_time_interval = pendulum.interval(seconds=cfg['bts']['publish_time_interval'])
-
-        self.feed_slot = cfg['bts'].get('publish_time_slot', None)
-        if self.feed_slot is not None:
-            self.feed_slot = int(self.feed_slot)
-
-        self.nfeed_checked = 0
-        self.last_published = pendulum.utcnow().subtract(days=1)
-
-    def format_feeds(self, feeds):
-        display_feeds = []
-        for c in set(self.visible_feeds) | set(feeds.keys()):
-            if c not in feeds:
-                log.debug('No feed price available for {}, cannot display it'.format(c))
-            else:
-                display_feeds.append(c)
-        display_feeds = list(sorted(feeds))
-
-        fmt = ', '.join('%s %s' % (format_qualifier(c), c) for c in display_feeds)
-        msg = fmt % tuple(feeds[c] for c in display_feeds)
-        return msg
-
-    def publish_status(self, feeds):
-        status = ''
-        if self.publish_time_interval:
-            #status += ' [%d/%d]' % (self.nfeed_checked, self.feed_period)
-            status += ' [every {}]'.format(self.publish_time_interval)
-        if self.feed_slot:
-            status += ' [t=HH:{:02d}]'.format(self.feed_slot)
-
-        result = '{} {}'.format(self.format_feeds(feeds), status)
-        #log.debug('Got feeds: {}'.format(result))
-        return result
-
-
-    def should_publish(self):
-        # TODO: update according to: https://bitsharestalk.org/index.php?topic=9348.0;all
-
-        #return False
-        if self.nfeed_checked == 0:
-            log.debug('Should publish at least once at launch of the bts_tools')
-            return True
-
-        if self.feed_period is not None and self.nfeed_checked % self.feed_period == 0:
-            log.debug('Should publish because time interval has passed: {} seconds'.format(cfg['bts']['publish_time_interval']))
-            return True
-
-
-
-        now = pendulum.utcnow()
-
-        if self.publish_time_interval and now - self.last_published > self.publish_time_interval:
-            log.debug('Should publish because time interval has passed: {}'.format(self.publish_time_interval))
-            return True
-
-        if self.feed_slot:
-            target = now.replace(minute=self.feed_slot, second=0, microsecond=0)
-            targets = [target.subtract(hours=1), target, target.add(hours=1)]
-            diff = [now-t for t in targets]
-            # check if we just passed our time slot
-            if any(pendulum.interval() < d and abs(d) < 1.1*self.check_time_interval for d in diff):
-                log.debug('Should publish because time slot has arrived: time {:02d}:{:02d}'.format(now.hour, now.minute))
-                return True
-
-        log.debug('No need to publish feeds')
+def check_node_is_ready(node, base_error_msg=''):
+    if not node.is_online():
+        log.warning(base_error_msg + 'wallet is not running')
         return False
-
-    def should_publish_steem(self, node, price):
-        # check whether we need to publish again:
-        # - if published more than 12 hours ago, publish again
-        # - if published price different by more than 3%, publish again
-        if 'last_price' not in node.opts:  # make sure we have already published once
-            log.debug('Steem should publish for the first time since launch of bts_tools')
-            return True
-
-        last_published_interval = pendulum.interval(hours=12)
-        variance_trigger = 0.03
-
-        if pendulum.utcnow() - node.opts['last_published'] > last_published_interval:
-            log.debug('Steem should publish as it has not been published for {}'.format(last_published_interval))
-            return True
-        if abs(price - node.opts['last_price']) / node.opts['last_price'] >= variance_trigger:
-            log.debug('Steem should publish as price has moved more than {}%'.format(100*variance_trigger))
-            return True
-        log.debug('No need for Steem to publish')
+    if node.is_locked():
+        log.warning(base_error_msg + 'wallet is locked')
         return False
+    if not node.is_synced():
+        log.warning(base_error_msg + 'client is not synced')
+        return False
+    return True
 
 
-def publish_bts_feed(node, publish_feeds, base_msg):
-    # first, try to publish all of them in a single transaction
-    try:
-        published = []
-        handle = node.begin_builder_transaction()
-        for (asset, base), price in sorted(publish_feeds.items()):
-            published.append(asset)
-            op = [19,  # id 19 corresponds to price feed update operation
-                  hashabledict({"asset_id": node.asset_data(asset)['id'],
-                                "feed": get_price_for_publishing(node, cfg['bts'], asset, base, price, publish_feeds),
-                                "publisher": node.get_account(node.name)["id"]})
-                  ]
-            node.add_operation_to_builder_transaction(handle, op)
-
-        # set fee
-        node.set_fees_on_builder_transaction(handle, '1.3.0')
-
-        # sign and broadcast
-        node.sign_builder_transaction(handle, True)
-        log.debug(base_msg + 'successfully published feeds for {}'.format(', '.join(published)))
-
-    except Exception as e:
-        log.warning(base_msg + 'tried to publish all feeds in a single transaction, but failed. '
-                               'Will try to publish each feed separately now')
-        msg_len = 400
-        log.debug(str(e)[:msg_len] + (' [...]' if len(str(e)) > msg_len else ''))
-
-        # if an error happened, publish feeds individually to make sure that
-        # at least the ones that work can get published
-        published = []
-        failed = []
-        for (asset, base), price in sorted(publish_feeds.items()):
-            try:
-                price_obj = hashabledict(get_price_for_publishing(node, cfg['bts'], asset, base, price, publish_feeds))
-                log.debug(base_msg + 'Publishing {} {}'.format(asset, price_obj))
-                node.publish_asset_feed(node.name, asset, price_obj, True)  # True: sign+broadcast
-                log.debug('Successfully published feed for asset {}: {}'.format(asset, price))
-                published.append(asset)
-
-            except Exception as e:
-                log.debug(base_msg + 'Failed to publish feed for asset {}'.format(asset))
-                #log.exception(e)
-                log.debug(str(e)[:msg_len] + ' [...]')
-                failed.append(asset)
-
-        if failed:
-            log.warning(base_msg + 'Failed to publish feeds for: {}'.format(', '.join(failed)))
-        if published:
-            log.info(base_msg + 'Successfully published feeds for: {}'.format(', '.join(published)))
+def get_base_for(asset):  # FIXME: deprecate / remove me
+    if asset == 'ALTCAP':
+        return 'BTC'
+    return 'BTS'
 
 
 def check_feeds(nodes):
-    # need to:
     # 1- get all feeds from all feed providers (FP) at once. Only use FP designated as active
     # 2- compute price from the FeedSet using adequate strategy. FP can (should) be weighted
     #    (eg: BitcoinAverage: 4, BitFinex: 1, etc.) if no volume is present
     # 3- order of computation should be clearly defined and documented, or configurable in the yaml file (preferable)
     #
-    # details:
-    #
-    # 1-
-    # - for each asset, get the list of authorized and authenticated feed providers able to give a feed for it
-    # - for each feed provider, get the list of required assets
-    # - execute in parallel all requests and gather the results in a FeedSet
-
     global feeds, feed_control
 
     try:
         feeds, publish_list = get_feed_prices(nodes[0], core.config['monitoring']['feeds'][nodes[0].type()]) # use first node if we need to query the blockchain, eg: for bit20 asset composition
         feed_control.nfeed_checked += 1
 
-        status = feed_control.publish_status(feeds)
+        status = feed_control.publish_status({(k, get_base_for(k)): v for k, v in feeds.items()})
         log.debug('Got feeds on {}: {}'.format(nodes[0].type(), status))
 
         for node in nodes:
             if node.role != 'feed_publisher':
                 continue
 
-            def check_node_is_ready(node, base_error_msg):
-                if not node.is_online():
-                    log.warning(base_error_msg + 'client is not running')
-                    return False
-                if node.is_locked():
-                    log.warning(base_error_msg + 'wallet is locked')
-                    return False
-                if not node.is_synced():
-                    log.warning(base_error_msg + 'client is not synced')
-                    return False
-                return True
-
-
-
-            # if an exception occurs during publishing feeds for a delegate (eg: standby delegate),
+            # if an exception occurs during publishing feeds for a witness (eg: inactive witness),
             # then we should still go on for the other nodes (and not let exceptions propagate)
             try:
                 if node.type() == 'bts':
@@ -554,19 +307,13 @@ def check_feeds(nodes):
 
                         base_msg = '{} witness {} feeds: '.format(node.type(), node.name)
                         # publish median value of the price, not latest one
-                        def get_base_for(asset):  # FIXME: deprecate / remove me
-                            if asset == 'ALTCAP':
-                                return 'BTC'
-                            return 'BTS'
-
                         median_feeds = {(c, get_base_for(c)): statistics.median(price_history[c]) for c in feeds}
                         publish_feeds = {(asset, base): median_feeds[(asset, base)] for asset, base in publish_list}
                         log.info(base_msg + 'publishing feeds: {}'.format(feed_control.format_feeds(publish_feeds)))
-                        #log.debug(base_msg + 'not publishing: {}'.format(disabled_assets))
 
-                        publish_bts_feed(node, publish_feeds, base_msg)
+                        publish_bts_feed(node, cfg['bts'], publish_feeds, base_msg)
 
-                        feed_control.last_published = pendulum.utcnow()
+                        feed_control.last_published = pendulum.utcnow()  # FIXME: last_published is only for 'bts' now...
 
                 elif node.type() == 'steem':
                     price = statistics.median(price_history['STEEM'])
@@ -577,12 +324,7 @@ def check_feeds(nodes):
                         if check_node_is_ready(node, base_error_msg) is False:
                             continue
 
-                        ratio = cfg['steem']['steem_dollar_adjustment']
-                        price_obj = {'base': '{:.3f} SBD'.format(price),
-                                     'quote': '{:.3f} STEEM'.format(1/ratio)}
-                        log.info('Node {}:{} publishing feed price for steem: {:.3f} SBD (real: {:.3f} adjusted by {:.2f})'
-                                 .format(node.type(), node.name, price*ratio, price, ratio))
-                        node.publish_feed(node.name, price_obj, True)
+                        publish_steem_feed(node, cfg['steem'], price)
                         node.opts['last_price'] = price
                         node.opts['last_published'] = pendulum.utcnow()
 
