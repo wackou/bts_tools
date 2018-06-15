@@ -250,7 +250,7 @@ class BitSharesFeedControl(object):
 
 
 def publish_steem_feed(node, cfg, price):
-    ratio = cfg['steem']['steem_dollar_adjustment']
+    ratio = cfg.get('steem_dollar_adjustment', 1.0)
     price_obj = {'base': '{:.3f} SBD'.format(price),
                  'quote': '{:.3f} STEEM'.format(1 / ratio)}
     log.info('Node {}:{} publishing feed price for steem: {:.3f} SBD (real: {:.3f} adjusted by {:.2f})'

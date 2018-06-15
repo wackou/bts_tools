@@ -99,7 +99,7 @@ def get_bit20_feed_usd(node):
     # find bit20 composition
     for f in bit20feed:
         if not is_valid_bit20_publication(f):
-            log.warning('Hijacking attempt of the bit20 feed? trx: {}'.format(json.dumps(f, indent=4)))
+            log.debug('Hijacking attempt of the bit20 feed? trx: {}'.format(json.dumps(f, indent=4)))
             continue
 
         if f['memo'].startswith('COMPOSITION'):
@@ -126,7 +126,7 @@ def get_bit20_feed_usd(node):
     # look for custom market parameters
     for f in bit20feed:
         if not is_valid_bit20_publication(f):
-            log.warning('Hijacking attempt of the bit20 feed? trx: {}'.format(json.dumps(f, indent=4)))
+            log.debug('Hijacking attempt of the bit20 feed? trx: {}'.format(json.dumps(f, indent=4)))
             continue
 
         if f['memo'].startswith('MARKET'):

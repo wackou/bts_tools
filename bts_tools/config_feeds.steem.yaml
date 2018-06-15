@@ -1,0 +1,33 @@
+---
+# For a more detailed description of the format of this file, visit:
+# https://bts-tools.readthedocs.io/en/latest/config_yaml.html#config-feeds-yaml
+#
+
+client:
+    wallet_host: localhost
+    wallet_port: 8493
+    witness_name: wackou  # steem account that is used to publish feed prices
+
+markets:
+# specify which markets and providers should be used to query for feed prices
+# format:
+#  - [<asset>, <base>, <provider_or_provider_list>]
+#  asset can be an asset_list for providers that support it
+#
+- [STEEM, BTC, [Poloniex, Bittrex]]
+- [BTC, USD, [BitcoinAverage, CoinMarketCap, Bitstamp, Bitfinex]]
+
+
+rules:
+# ordered sequence of operations to manipulate the set of available feeds
+# operates over a unique FeedSet containing all the information available
+#
+- [compose, 'STEEM/BTC', 'BTC/USD']  # -> STEEM/USD
+
+# publish rules - specify which prices should be published on the blockchain
+# NOTE: not needed for Steem, we always publish STEEM/USD, and only that
+# TODO: revisit this decision once SMTs are out
+#- [publish, 'STEEM/USD']
+
+
+steem_dollar_adjustment: 1.0

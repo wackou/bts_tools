@@ -324,7 +324,7 @@ def check_feeds(nodes):
                         if check_node_is_ready(node, base_error_msg) is False:
                             continue
 
-                        publish_steem_feed(node, cfg, price)
+                        publish_steem_feed(node, cfg['steem'], price)
                         node.opts['last_price'] = price
                         node.opts['last_published'] = pendulum.utcnow()
 
