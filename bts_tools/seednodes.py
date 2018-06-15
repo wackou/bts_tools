@@ -134,10 +134,13 @@ SEED_NODES = {
         ('steem-seed.crypto.fans:2001',      '',   'sc-steemit / crypto.fans', ''),
         ('seed.jamzed.pl:2001',              '',   'jamzed',         ''),
         ('seed.curiesteem.com:2001',         '',   'curie',          ''),
+        ('node.steem.place:2001,             '',   'moisesmcardona', 'https://steemit.com/@moisesmcardona'),
         ('seed.steem.prcolaco.com:2001',     'pt', 'prc',            'https://steemit.com/witness-category/@prc/prc-witness-proposal-after-creating-dsound-and-attending-steemfest-2-i-want-more'),
         ('85.10.196.211:2001',               'de', 'puncakbukit',    'https://steemit.com/witness-category/@puncakbukit/my-witness-thread'),
         ('seed1.cryptobot.news:2001',        '',   'libertyranger',  ''),
-        ('seed.usesteem.com:2001',           '',   'themarkymark',   'https://steemit.com/witness-category/@themarkymark/witness-themarkymark')
+        ('seed.usesteem.com:2001',           '',   'themarkymark',   'https://steemit.com/witness-category/@themarkymark/witness-themarkymark'),
+        ('seed.chainchopper.com:2001',       'us', 'justinadams',    'https://steemit.com/witness/@justinadams/the-people-can-we-get-a-witness-first-things-1st'),
+        ('steem-seed.furion.me:2001',        'de', 'furion',         'https://steemit.com/@furion'),
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),
