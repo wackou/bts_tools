@@ -124,7 +124,7 @@ SEED_NODES = {
         ('steem-seed.lukestokes.info:2001',  '',   'lukestokes',     'https://steemit.com/witness-category/@lukestokes/vote-luke-stokes-for-witness-as-lukestokes-mhth'),
         ('85.10.227.254:2001',               '',   'christoff5221',  'https://steemit.com/witness-category/@christoff5221/witness-application-i-wish-to-become-a-witness-and-help-steem-steemit'),
         ('seed.jerrybanfield.com:2001',      '',   'JerryBanfield',  'https://steemit.com/witness-category/@jerrybanfield/steem-witness-14-542-reporting-for-duty'),
-        ('seed.blackrift.net:2001',          '',   'drakos',         'https://steemit.com/witness-category/@drakos/my-witness-application'),
+        ('seed.steemian.info:2001',          '',   'drakos',         'https://steemit.com/witness-category/@drakos/my-witness-application'),
         ('seed.followbtcnews.com:2001',      '',   'followbtcnews',  'https://steemit.com/witness-category/@followbtcnews/full-steem-ahead-vote-followbtcnews-for-witness'),
         ('5.9.200.119:2001',                 '',   'cloh76',         'https://steemit.com/witness-category/@cloh76/cloh76-witness-introduction-post-cloh76-witness'),
         ('node.mahdiyari.info:2001',         '',   'mahdiyari',      'https://steemit.com/witness-category/@mahdiyari/new-steem-seed-node-node-mahdiyari-info-2001'),
