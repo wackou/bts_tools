@@ -119,7 +119,7 @@ SEED_NODES = {
         ('seed.xeldal.com:12150',            '',   'xeldal',         'https://steemit.com/witness-category/@xeldal/xeldal-witness-information'),
         ('seed.brandonfrye.us:2001',         '',   'brandonfrye',    'https://steemit.com/witness-category/@brandonfrye/brandon-frye-steem-witness-application'),
         ('seed.firepower.ltd:2001',          '',   'firepower',      'https://steemit.com/steem/@firepower/india-steem-meetup-3-an-awesome-meetup-in-mangalore-the-city-where-it-all-began'),
-        ('175.118.46.144:2001',              'kr', 'koinbot',        'https://steemit.com/witness-category/@koinbot/koinbot-steem-witness-application')
+        ('steemseed.koinbot.org:2001',       'kr', 'koinbot',        'https://steemit.com/witness-category/@koinbot/koinbot-steem-witness-application')
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),
