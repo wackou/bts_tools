@@ -46,8 +46,8 @@ SEED_NODES = {
         ('128.199.143.47:2015',            '', 'harvey',           ''),
         ('seed.roelandp.nl:1776',          '', 'roelandp',         ''),
         ('node.blckchnd.com:4243',         '', 'blckchnd',         ''),
-        ('23.92.53.182:1776',              '', 'sahkan-bitshares', '')
-
+        ('23.92.53.182:1776',              '', 'sahkan-bitshares', ''),
+        ('seed.bts.bangzi.info:55501',     '', 'bangzi', '')
     ],
     'muse': [
         ('138.197.68.175:33333',          '', 'muse initial', ''),
