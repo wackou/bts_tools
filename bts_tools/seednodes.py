@@ -100,7 +100,6 @@ SEED_NODES = {
         ('seed.timcliff.com:2001',           '',   'timcliff',       'https://steemit.com/witness-category/@timcliff/i-m-timcliff-and-i-approve-this-message-my-witness-application'),
         ('seed.steemviz.com:2001',           '',   'ausbitbank',     'https://steemit.com/steem/@ausbitbank/new-seed-node-online-a-seedsteemvizcom'),
         ('steem-seed.lukestokes.info:2001',  '',   'lukestokes',     'https://steemit.com/witness-category/@lukestokes/vote-luke-stokes-for-witness-as-lukestokes-mhth'),
-        ('seed.jerrybanfield.com:2001',      '',   'JerryBanfield',  'https://steemit.com/witness-category/@jerrybanfield/steem-witness-14-542-reporting-for-duty'),
         ('seed.steemian.info:2001',          '',   'drakos',         'https://steemit.com/witness-category/@drakos/my-witness-application'),
         ('seed.followbtcnews.com:2001',      '',   'followbtcnews',  'https://steemit.com/witness-category/@followbtcnews/full-steem-ahead-vote-followbtcnews-for-witness'),
         ('node.mahdiyari.info:2001',         '',   'mahdiyari',      'https://steemit.com/witness-category/@mahdiyari/new-steem-seed-node-node-mahdiyari-info-2001'),
@@ -120,6 +119,8 @@ SEED_NODES = {
         ('seed.brandonfrye.us:2001',         '',   'brandonfrye',    'https://steemit.com/witness-category/@brandonfrye/brandon-frye-steem-witness-application'),
         ('seed.firepower.ltd:2001',          '',   'firepower',      'https://steemit.com/steem/@firepower/india-steem-meetup-3-an-awesome-meetup-in-mangalore-the-city-where-it-all-began'),
         ('steemseed.koinbot.org:2001',       'kr', 'koinbot',        'https://steemit.com/witness-category/@koinbot/koinbot-steem-witness-application')
+        ('seed1.cervantes.one:2001',         '',   'cervantes',      'https://steemit.com/@cervantes')
+        ('seed01.steemulant.com:2001',       '',   'quochuy',        'https://steemit.com/witness-category/@quochuy/new-steem-witness-announcement-greetings-from-quochuy')
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),
