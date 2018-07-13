@@ -74,7 +74,7 @@ SEED_NODES = {
         ('seed.muse.dgazek.tk:33333',     '', 'dgazek',       'https://steemit.com/muse/@dganic/dgazek-muse-witness-proposal')
     ],
     'steem': [
-        ('148.251.237.104:2001',             'us', 'steem-bounty',   'https://steemit.com/witness-category/@steem-bounty/announcing-our-new-steem-bounty-witness'),
+        ('seed.steem-bounty.com:2001',       'us', 'steem-bounty',   'https://steemit.com/witness-category/@steem-bounty/announcing-our-new-steem-bounty-witness'),
         ('seed1.blockbrothers.io:2001',      'de', 'blockbrothers',  'https://steemit.com/witness-category/@blockbrothers/the-blockbrothers-are-now-a-witness-for-the-steem-blockchain'),
         ('seed.minnowshares.net:2001',       'de', 'reggaemuffin',   'https://steemit.com/witness-category/@reggaemuffin/witness-reggaemuffin'),
         ('seed.liondani.com:2016',           '',   'liondani',       'https://steemit.com/introduceyourself/@liondani/hi-liondani-here-aka-daniel-schwarz-happy-husband-father-steem-witness-steemit-enthusiast'),
