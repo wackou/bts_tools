@@ -144,7 +144,7 @@ SEED_NODES = {
         ('seed.usesteem.com:2001',           '',   'themarkymark',   'https://steemit.com/witness-category/@themarkymark/witness-themarkymark'),
         ('seed.chainchopper.com:2001',       'us', 'justinadams',    'https://steemit.com/witness/@justinadams/the-people-can-we-get-a-witness-first-things-1st'),
         ('steem-seed.furion.me:2001',        'de', 'furion',         'https://steemit.com/@furion'),
-        ('10.244.0.9:2001',                  'au', 'piquet',         'https://steemit.com/@piquet')
+        ('steem-seed.freshterrain.com:2001', 'au', 'piquet',         'https://steemit.com/@piquet')
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),
