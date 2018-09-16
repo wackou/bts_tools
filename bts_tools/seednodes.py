@@ -144,6 +144,7 @@ SEED_NODES = {
         ('seed.usesteem.com:2001',           '',   'themarkymark',   'https://steemit.com/witness-category/@themarkymark/witness-themarkymark'),
         ('seed.chainchopper.com:2001',       'us', 'justinadams',    'https://steemit.com/witness/@justinadams/the-people-can-we-get-a-witness-first-things-1st'),
         ('steem-seed.furion.me:2001',        'de', 'furion',         'https://steemit.com/@furion'),
+        ('seed1.cervantes.one:2001',         'de', 'cervantes',      'https://steemit.com/spanish/@cervantes/proyecto-cervantes-2018-bienvenidos-a-un-nuevo-comienzo-lleno-de-evolucion'),
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),
