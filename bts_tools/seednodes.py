@@ -111,6 +111,7 @@ SEED_NODES = {
         ('46.4.37.176:2001',                 'de', 'yuriks2000',     'https://steemit.com/witness-category/@yuriks2000/new-witness-announcement-steemapp-dev-team-yuriks2000-is-on-board'),
         ('seed.chainchopper.com:2001',       'us', 'justinadams',    'https://steemit.com/witness/@justinadams/the-people-can-we-get-a-witness-first-things-1st'),
         ('steem-seed.furion.me:2001',        'de', 'furion',         'https://steemit.com/@furion'),
+        ('seed1.cervantes.one:2001',         'de', 'cervantes',      'https://steemit.com/spanish/@cervantes/proyecto-cervantes-2018-bienvenidos-a-un-nuevo-comienzo-lleno-de-evolucion'),
         ('steem-seed.freshterrain.com:2001', 'au', 'piquet',         'https://steemit.com/@piquet'),
         ('seed-east.steemit.com:2001',       '',   'steemit',        ''),
         ('seed-central.steemit.com:2001',    '',   'steemit',        ''),
