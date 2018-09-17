@@ -74,7 +74,6 @@ SEED_NODES = {
         ('seed.muse.dgazek.tk:33333',     '', 'dgazek',       'https://steemit.com/muse/@dganic/dgazek-muse-witness-proposal')
     ],
     'steem': [
-        ('seed.steem-bounty.com:2001',       'us', 'steem-bounty',   'https://steemit.com/witness-category/@steem-bounty/announcing-our-new-steem-bounty-witness'),
         ('seed1.blockbrothers.io:2001',      'de', 'blockbrothers',  'https://steemit.com/witness-category/@blockbrothers/the-blockbrothers-are-now-a-witness-for-the-steem-blockchain'),
         ('seed.minnowshares.net:2001',       'de', 'reggaemuffin',   'https://steemit.com/witness-category/@reggaemuffin/witness-reggaemuffin'),
         ('seed.liondani.com:2016',           '',   'liondani',       'https://steemit.com/introduceyourself/@liondani/hi-liondani-here-aka-daniel-schwarz-happy-husband-father-steem-witness-steemit-enthusiast'),
@@ -121,7 +120,10 @@ SEED_NODES = {
         ('seed.firepower.ltd:2001',          '',   'firepower',      'https://steemit.com/steem/@firepower/india-steem-meetup-3-an-awesome-meetup-in-mangalore-the-city-where-it-all-began'),
         ('steemseed.koinbot.org:2001',       'kr', 'koinbot',        'https://steemit.com/witness-category/@koinbot/koinbot-steem-witness-application'),
         ('seed1.cervantes.one:2001',         '',   'cervantes',      'https://steemit.com/@cervantes'),
-        ('seed01.steemulant.com:2001',       '',   'quochuy',        'https://steemit.com/witness-category/@quochuy/new-steem-witness-announcement-greetings-from-quochuy')
+        ('seed01.steemulant.com:2001',       '',   'quochuy',        'https://steemit.com/witness-category/@quochuy/new-steem-witness-announcement-greetings-from-quochuy'),
+        ('seed.steem-bounty.com:2001',       'us', 'steem-bounty',   'https://steemit.com/witness-category/@steem-bounty/announcing-our-new-steem-bounty-witness'),
+        ('136.243.80.197:2001',              'us', 'steem-bounty2',  'https://steemit.com/witness-category/@steem-bounty/announcing-our-new-steem-bounty-witness'), 
+        ('134.255.253.142:2001',             'de', 'maxlxl',  '')
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),
