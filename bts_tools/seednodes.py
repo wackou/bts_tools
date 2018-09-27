@@ -32,6 +32,7 @@ SEED_STATUS_TIMEOUT = 5  # in seconds
 
 SEED_NODES = {
     'bts': [
+        ('seed01.liondani.com:1776',       '', 'liondani',         ''),
         ('bts-seed1.abit-more.com:62015',  '', 'abit',             ''),
         ('seed.blocktrades.us:1776',       '', 'blocktrades',      ''),
         ('seed.bitsharesnodes.com:1776',   '', 'wackou',           ''),
