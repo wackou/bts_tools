@@ -118,7 +118,8 @@ SEED_NODES = {
         ('seed01.steemulant.com:2001',       '',   'quochuy',        'https://steemit.com/witness-category/@quochuy/new-steem-witness-announcement-greetings-from-quochuy'),
         ('seed.steem-bounty.com:2001',       'us', 'steem-bounty',   'https://steemit.com/witness-category/@steem-bounty/announcing-our-new-steem-bounty-witness'),
         ('136.243.80.197:2001',              'us', 'steem-bounty2',  'https://steemit.com/witness-category/@steem-bounty/announcing-our-new-steem-bounty-witness'), 
-        ('134.255.253.142:2001',             'de', 'maxlxl',  '')
+        ('134.255.253.142:2001',             'de', 'maxlxl',  ''),
+        ('seed.therealwolf.me:2001',         'fi', 'therealwolf',    'https://steemit.com/witness-update/@therealwolf/witness-essentials-hf20-ready') 
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),
