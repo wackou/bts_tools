@@ -117,7 +117,8 @@ SEED_NODES = {
         ('steemseed.koinbot.org:2001',       'kr', 'koinbot',        'https://steemit.com/witness-category/@koinbot/koinbot-steem-witness-application'),
         ('seed01.steemulant.com:2001',       '',   'quochuy',        'https://steemit.com/witness-category/@quochuy/new-steem-witness-announcement-greetings-from-quochuy'),
         ('seed.steem-bounty.com:2001',       'us', 'steem-bounty',   'https://steemit.com/witness-category/@steem-bounty/announcing-our-new-steem-bounty-witness'),
-        ('136.243.80.197:2001',              'us', 'steem-bounty2',  'https://steemit.com/witness-category/@steem-bounty/announcing-our-new-steem-bounty-witness'), 
+        ('136.243.80.197:2001',              'us', 'steem-bounty2',  'https://steemit.com/witness-category/@steem-bounty/announcing-our-new-steem-bounty-witness'),
+        ('witness.chitty.tech:2001',         'de', 'chitty',         'https://witness.chitty.tech'),
         ('134.255.253.142:2001',             'de', 'maxlxl',  '')
     ],
     'ppy': [
