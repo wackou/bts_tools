@@ -32,6 +32,7 @@ SEED_STATUS_TIMEOUT = 5  # in seconds
 
 SEED_NODES = {
     'bts': [
+        ('seed01.liondani.com:1776',       '', 'liondani',         ''),
         ('bts-seed1.abit-more.com:62015',  '', 'abit',             ''),
         ('seed.blocktrades.us:1776',       '', 'blocktrades',      ''),
         ('seed.bitsharesnodes.com:1776',   '', 'wackou',           ''),
@@ -116,10 +117,11 @@ SEED_NODES = {
         ('seed.firepower.ltd:2001',          '',   'firepower',      'https://steemit.com/steem/@firepower/india-steem-meetup-3-an-awesome-meetup-in-mangalore-the-city-where-it-all-began'),
         ('steemseed.koinbot.org:2001',       'kr', 'koinbot',        'https://steemit.com/witness-category/@koinbot/koinbot-steem-witness-application'),
         ('seed01.steemulant.com:2001',       '',   'quochuy',        'https://steemit.com/witness-category/@quochuy/new-steem-witness-announcement-greetings-from-quochuy'),
-        ('seed.steem-bounty.com:2001',       'us', 'steem-bounty',   'https://steemit.com/witness-category/@steem-bounty/announcing-our-new-steem-bounty-witness'),
-        ('136.243.80.197:2001',              'us', 'steem-bounty2',  'https://steemit.com/witness-category/@steem-bounty/announcing-our-new-steem-bounty-witness'),
+        ('136.243.80.197:2001',              'us', 'steem-bounty',   'https://steemit.com/witness-category/@steem-bounty/announcing-our-new-steem-bounty-witness'), 
         ('witness.chitty.tech:2001',         'de', 'chitty',         'https://witness.chitty.tech'),
-        ('134.255.253.142:2001',             'de', 'maxlxl',  '')
+        ('134.255.253.142:2001',             'de', 'maxlxl',  ''),
+        ('seed.therealwolf.me:2001',         'fi', 'therealwolf',    'https://steemit.com/witness-update/@therealwolf/witness-essentials-hf20-ready'),
+        ('seed.yabapmatt.com:2001',          'de', 'yabapmatt',      'https://steemit.com/witness-category/@yabapmatt/yabapmatt-s-monster-1-year-steemiversary-witness-update')
     ],
     'ppy': [
         ('seed.ppy.blckchnd.com:6112',     '', 'blckchnd', ''),
