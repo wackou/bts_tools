@@ -120,6 +120,7 @@ SEED_NODES = {
         ('seed.steem-bounty.com:2001',       'us', 'steem-bounty',   'https://steemit.com/witness-category/@steem-bounty/announcing-our-new-steem-bounty-witness'),
         ('136.243.80.197:2001',              'us', 'steem-bounty2',  'https://steemit.com/witness-category/@steem-bounty/announcing-our-new-steem-bounty-witness'), 
         ('134.255.253.142:2001',             'de', 'maxlxl',  ''),
+        ('seed.therealwolf.me:2001',         'fi', 'therealwolf',    'https://steemit.com/witness-update/@therealwolf/witness-essentials-hf20-ready'),
         ('seed.yabapmatt.com:2001',          'de', 'yabapmatt',      'https://steemit.com/witness-category/@yabapmatt/yabapmatt-s-monster-1-year-steemiversary-witness-update')
     ],
     'ppy': [
