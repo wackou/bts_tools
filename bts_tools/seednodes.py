@@ -105,7 +105,7 @@ SEED_NODES = {
         ('seed.jamzed.pl:2001',              '',   'jamzed',         ''),
         ('seed.curiesteem.com:2001',         '',   'curie',          ''),
         ('seed.steemit.lu:2001',             'lu', 'lux-witness',    'https://steemit.com/@lux-witness'),
-        ('seed.steem.prcolaco.com:2001',     'pt', 'prc',            'https://steemit.com/witness-category/@prc/prc-witness-proposal-after-creating-dsound-and-attending-steemfest-2-i-want-more'),
+        ('seed.steem.dsound.audio:2001',     'pt', 'dsound',         'https://steemit.com/witness-category/@dsound/dsound-dsound-steem-witness-proposal'),
         ('seed1.cryptobot.news:2001',        '',   'libertyranger',  ''),
         ('46.4.37.176:2001',                 'de', 'yuriks2000',     'https://steemit.com/witness-category/@yuriks2000/new-witness-announcement-steemapp-dev-team-yuriks2000-is-on-board'),
         ('seed.chainchopper.com:2001',       'us', 'justinadams',    'https://steemit.com/witness/@justinadams/the-people-can-we-get-a-witness-first-things-1st'),
