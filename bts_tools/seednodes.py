@@ -87,7 +87,7 @@ SEED_NODES = {
         ('lafonasteem.com:2001',             '',   'lafona',         'https://steemit.com/witness-category/@delegate.lafona/delegate'),
         ('anyx.co:2001',                     '',   'anyx',           'https://steemit.com/witness-category/@anyx/witness-application-anyx'),
         ('steem-seed.altcap.io:40696',       'fr', 'ihashfury',      'https://steemit.com/witness-category/@ihashfury/ihashfury-witness-thread'),
-        ('104.199.118.92:2001',              'us', 'clayop',         'https://steemit.com/witness-category/@clayop/witness-clayop'),
+        ('steemseed.clayop.com:2001',              'us', 'clayop',         'https://steemit.com/witness-category/@clayop/witness-clayop'),
         ('gtg.steem.house:2001',             '',   'gtg',            'https://steemit.com/witness-category/@gtg/witness-gtg'),
         ('steemseed-fin.privex.io:2001',     'fi', 'privex',         'https://steemit.com/witness-category/@privex/privex-announcement-launching-our-witness'),
         ('seed.jesta.us:2001',               '',   'jesta',          'http://jesta.us'),
